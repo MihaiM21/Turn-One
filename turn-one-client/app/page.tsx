@@ -12,11 +12,11 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden modern-gradient pt-16">
-        <div className="absolute inset-0 bg-[url('/turn-one-car/0009.png')] bg-cover bg-center opacity-50" />
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 animate-pulse" />
-        <div
+        <div className="absolute inset-0 bg-[url('/turn-one-car/0009.png')] bg-cover bg-center opacity-60" />
+        {/* <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 animate-pulse" /> */}
+        {/* <div
           className="absolute inset-0 bg-gradient-to-tr from-transparent via-primary/3 to-transparent animate-pulse"
-        />
+        /> */}
         <div className="relative container mx-auto px-4 py-24 lg:py-32">
           <div className="max-w-4xl mx-auto text-center">
             <Badge
@@ -191,7 +191,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-primary text-primary-foreground glow-effect">
+      <section className="py-24 bg-ring text-primary-foreground glow-effect">
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-3xl mx-auto animate-in fade-in-0 slide-in-from-bottom-6 duration-1000">
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-balance">Ready to Elevate Your F1 Analysis?</h2>

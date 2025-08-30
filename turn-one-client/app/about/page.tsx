@@ -96,7 +96,7 @@ export default function AboutPage() {
               <Card className="card-hover">
                 <CardHeader className="flex flex-row items-center gap-4">
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center glow-effect">
-                    <span className="text-primary font-bold text-lg">2020</span>
+                    <span className="text-primary font-bold text-lg">2023</span>
                   </div>
                   <div className="flex-1">
                     <CardTitle className="text-xl mb-2">The Beginning</CardTitle>
@@ -111,7 +111,7 @@ export default function AboutPage() {
               <Card className="card-hover">
                 <CardHeader className="flex flex-row items-center gap-4">
                   <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center accent-glow">
-                    <span className="text-accent font-bold text-lg">2021</span>
+                    <span className="text-accent font-bold text-lg">2024</span>
                   </div>
                   <div className="flex-1">
                     <CardTitle className="text-xl mb-2">First Platform Launch</CardTitle>
@@ -126,41 +126,13 @@ export default function AboutPage() {
               <Card className="card-hover">
                 <CardHeader className="flex flex-row items-center gap-4">
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center glow-effect">
-                    <span className="text-primary font-bold text-lg">2022</span>
-                  </div>
-                  <div className="flex-1">
-                    <CardTitle className="text-xl mb-2">Professional Partnerships</CardTitle>
-                    <CardDescription className="text-base">
-                      Established partnerships with racing teams and driver academies, providing professional-grade
-                      analysis tools for competitive motorsport.
-                    </CardDescription>
-                  </div>
-                </CardHeader>
-              </Card>
-
-              <Card className="card-hover">
-                <CardHeader className="flex flex-row items-center gap-4">
-                  <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center accent-glow">
-                    <span className="text-accent font-bold text-lg">2023</span>
+                    <span className="text-primary font-bold text-lg">2025</span>
                   </div>
                   <div className="flex-1">
                     <CardTitle className="text-xl mb-2">AI Integration</CardTitle>
                     <CardDescription className="text-base">
                       Integrated machine learning algorithms for predictive analysis and automated performance
                       optimization recommendations.
-                    </CardDescription>
-                  </div>
-                </CardHeader>
-              </Card>
-
-              <Card className="card-hover">
-                <CardHeader className="flex flex-row items-center gap-4">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center glow-effect">
-                    <span className="text-primary font-bold text-lg">2024</span>
-                  </div>
-                  <div className="flex-1">
-                    <CardTitle className="text-xl mb-2">Global Expansion</CardTitle>
-                    <CardDescription className="text-base">
                       Expanded to serve motorsport communities worldwide, processing over 10 million data points per
                       race weekend.
                     </CardDescription>
@@ -168,10 +140,12 @@ export default function AboutPage() {
                 </CardHeader>
               </Card>
 
+            
+
               <Card className="card-hover border-primary/40">
                 <CardHeader className="flex flex-row items-center gap-4">
                   <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center glow-effect">
-                    <span className="gradient-text font-bold text-lg">2025</span>
+                    <span className="gradient-text font-bold text-lg">2026</span>
                   </div>
                   <div className="flex-1">
                     <CardTitle className="text-xl mb-2 gradient-text">Next Generation Platform</CardTitle>
@@ -240,7 +214,7 @@ export default function AboutPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-primary text-primary-foreground glow-effect">
+      <section className="py-24 bg-ring text-primary-foreground glow-effect">
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-3xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-balance">Join Our Journey</h2>

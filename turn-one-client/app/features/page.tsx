@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { MainNav } from "@/components/navigation/main-nav"
 import {
   BarChart3,
   Zap,
@@ -102,6 +103,7 @@ export default function FeaturesPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <MainNav />
       {/* Hero Section */}
       <section className="relative py-20 px-4">
         <div className="max-w-6xl mx-auto text-center">
