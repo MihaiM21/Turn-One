@@ -37,17 +37,17 @@ export function MainNav({ variant = "homepage" }: MainNavProps) {
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled
             ? "bg-background/95 backdrop-blur-md border-b border-primary/20 shadow-lg shadow-primary/5"
-            : "bg-background/80 backdrop-blur-sm border-b border-border"
+            : ""
         }`}
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center space-x-3 group">
               <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center glow-effect group-hover:scale-110 transition-all duration-300">
-                  <Zap className="h-5 w-5 text-primary-foreground" />
+                <div className="w-10 h-10 flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+                  {/* <Zap className="h-5 w-5 text-primary-foreground" /> */}
+                  <img src="logo.png" alt="Logo Turn One" />
                 </div>
-                <div className="absolute inset-0 bg-primary/20 rounded-lg blur-md group-hover:blur-lg transition-all duration-300"></div>
               </div>
               <div className="flex flex-col">
                 <span className="text-foreground font-bold text-xl gradient-text group-hover:scale-105 transition-transform duration-300">
@@ -62,7 +62,7 @@ export function MainNav({ variant = "homepage" }: MainNavProps) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="relative text-muted-foreground hover:text-foreground transition-all duration-300 px-4 py-2 rounded-lg group overflow-hidden"
+                  className="relative text-foreground hover:text-foreground transition-all duration-300 px-4 py-2 rounded-lg group overflow-hidden"
                 >
                   <span className="relative z-10">{item.label}</span>
                   <div className="absolute inset-0 bg-primary/10 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
