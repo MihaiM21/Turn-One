@@ -29,7 +29,7 @@ export default function RootLayout({children,}: {
     children: React.ReactNode
 }) {
     return (
-        <html>
+        <html className="dark">
             <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
                 <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
                     <Suspense fallback={null}>
