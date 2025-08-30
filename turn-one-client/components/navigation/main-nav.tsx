@@ -44,16 +44,16 @@ export function MainNav({ variant = "homepage" }: MainNavProps) {
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center space-x-3 group">
               <div className="relative">
-                <div className="w-10 h-10 flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+                <div className="mt-1 w-10 h-10 flex items-center justify-center group-hover:scale-110 transition-all duration-300">
                   {/* <Zap className="h-5 w-5 text-primary-foreground" /> */}
-                  <img src="logo.png" alt="Logo Turn One" />
+                  <img src="logo.png" alt="Logo Turn One"/>
                 </div>
               </div>
               <div className="flex flex-col">
                 <span className="text-foreground font-bold text-xl gradient-text group-hover:scale-105 transition-transform duration-300">
                   Turn One
                 </span>
-                <span className="text-xs text-muted-foreground font-medium tracking-wider">F1 TELEMETRY</span>
+                <span className="text-xs text-muted-foreground font-medium tracking-wider">PERFORMANCE</span>
               </div>
             </Link>
 

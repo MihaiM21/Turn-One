@@ -12,7 +12,7 @@ export default function AboutPage() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden modern-gradient pt-24 pb-16">
-        <div className="absolute inset-0 bg-[url('/formula-1-car-racing-on-track-dynamic-motion-blur.png')] bg-cover bg-center opacity-10" />
+        <div className="absolute inset-0 bg-[url('/turn-one-car/0005.png')] bg-cover bg-center opacity-40" />
         <div className="relative container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <Badge variant="secondary" className="mb-6 text-sm font-medium accent-glow">
@@ -231,7 +231,7 @@ export default function AboutPage() {
                 className="text-lg px-8 py-6 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary bg-transparent"
                 asChild
               >
-                <Link href="/dashboard">Explore Platform</Link>
+                <Link href="/dashboard-example">Explore Platform</Link>
               </Button>
             </div>
           </div>

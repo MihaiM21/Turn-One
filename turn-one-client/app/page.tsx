@@ -7,11 +7,11 @@ import Link from "next/link"
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-100 bg-background">
       <MainNav variant="homepage" />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden modern-gradient pt-16">
+      <section className="min-h-220 overflow-hidden modern-gradient pt-16">
         <div className="absolute inset-0 bg-[url('/turn-one-car/0009.png')] bg-cover bg-center opacity-60" />
         {/* <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 animate-pulse" /> */}
         {/* <div
@@ -19,13 +19,13 @@ export default function HomePage() {
         /> */}
         <div className="relative container mx-auto px-4 py-24 lg:py-32">
           <div className="max-w-4xl mx-auto text-center">
-            <Badge
+            {/* <Badge
               variant="secondary"
               className="mb-6 text-sm font-medium accent-glow animate-in fade-in-0 slide-in-from-top-4 duration-700"
             >
-              Professional F1 Analysis Platform
-            </Badge>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-balance mb-6 animate-in fade-in-0 slide-in-from-bottom-6 duration-1000 delay-200">
+              Beyond the Race
+            </Badge> */}
+            <h1 className="mt-15 text-4xl md:text-6xl lg:text-7xl font-bold text-balance mb-6 animate-in fade-in-0 slide-in-from-bottom-6 duration-1000 delay-200">
               Turn One
               <span className="gradient-text block mt-2 pb-4">
                 Formula One Intelligence
@@ -41,7 +41,7 @@ export default function HomePage() {
                 className="text-lg px-8 py-6 glow-effect hover:scale-105 transition-all duration-300"
                 asChild
               >
-                <Link href="/dashboard">
+                <Link href="/dashboard-example">
                   <BarChart3 className="mr-2 h-5 w-5" />
                   Start Analysis
                 </Link>
@@ -206,7 +206,7 @@ export default function HomePage() {
                 className="text-lg px-8 py-6 accent-glow hover:scale-105 transition-all duration-300"
                 asChild
               >
-                <Link href="/dashboard">Start Analysis</Link>
+                <Link href="/dashboard-example">Start Analysis</Link>
               </Button>
               <Button
                 size="lg"
