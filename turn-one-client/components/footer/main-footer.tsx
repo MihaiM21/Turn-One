@@ -14,10 +14,9 @@ export function MainFooter() {
           <div className="space-y-4">
             <Link href="/" className="flex items-center space-x-3 group">
               <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center glow-effect group-hover:scale-110 transition-all duration-300">
-                  <Zap className="h-5 w-5 text-primary-foreground" />
+                <div className="w-10 h-10 flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+                  <img src="logo.png" alt="Logo Turn One" />
                 </div>
-                <div className="absolute inset-0 bg-primary/20 rounded-lg blur-md group-hover:blur-lg transition-all duration-300"></div>
               </div>
               <div className="flex flex-col">
                 <span className="text-foreground font-bold text-xl gradient-text">Turn One</span>
@@ -89,7 +88,7 @@ export function MainFooter() {
             <div className="space-y-3">
               <div className="flex items-center space-x-3 text-sm">
                 <Mail className="h-4 w-4 text-primary" />
-                <span className="text-muted-foreground">info@t1f1.com</span>
+                <span className="text-muted-foreground">contact@t1f1.com</span>
               </div>
               <div className="flex items-center space-x-3 text-sm">
                 <Phone className="h-4 w-4 text-primary" />
@@ -114,7 +113,7 @@ export function MainFooter() {
       <div className="border-t border-border bg-muted/30">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="text-sm text-muted-foreground">© {currentYear} Turn One F1. All rights reserved.</div>
+            <div className="text-sm text-muted-foreground">© {currentYear} Turn One. All rights reserved.</div>
             <div className="flex space-x-6 text-sm">
               <Link href="/privacy" className="text-muted-foreground hover:text-primary transition-colors">
                 Privacy Policy
