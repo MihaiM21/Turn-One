@@ -7,4 +7,5 @@ obj/
 # Node
 node_modules/
 .next/
+.idea/
 dist/
