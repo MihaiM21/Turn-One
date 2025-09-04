@@ -222,12 +222,12 @@ export default function FeaturesPage() {
             <Card className="card-hover">
               <CardHeader>
                 <Badge className="w-fit mb-2">Racing Teams</Badge>
-                <CardTitle>Professional Teams</CardTitle>
+                <CardTitle>Professionals</CardTitle>
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  F1 teams use our platform for race strategy, driver coaching, and car development. Real-time analysis
-                  helps optimize performance during practice and qualifying sessions.
+                  Professionals use our platform for race strategy, and car development. Real-time analysis
+                  helps them understand practice and qualifying sessions.
                 </CardDescription>
               </CardContent>
             </Card>

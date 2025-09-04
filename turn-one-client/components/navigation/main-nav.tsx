@@ -27,7 +27,7 @@ export function MainNav({ variant = "homepage" }: MainNavProps) {
     { href: "/features", label: "Features" },
     { href: "/services", label: "Services" },
     { href: "/pricing", label: "Pricing" },
-    { href: "/team", label: "Team" },
+    // { href: "/team", label: "Team" },
     { href: "/contact", label: "Contact" },
   ]
 
