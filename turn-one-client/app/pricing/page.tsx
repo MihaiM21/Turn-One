@@ -3,33 +3,36 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge"
 import { Check, X, Zap, Trophy, Crown } from "lucide-react"
 import { MainNav } from "@/components/navigation/main-nav"
+import Link from "next/link"
 
 export default function PricingPage() {
   const plans = [
+    
     {
       name: "Enthusiast",
-      price: "29",
+      price: "0",
       period: "month",
-      description: "Perfect for F1 fans getting started with telemetry analysis",
+      description: "Perfect for F1 fans getting started with telemetry analysis that want more insight the the free plan",
       icon: Zap,
       popular: false,
       features: [
         { name: "Basic lap time analysis", included: true },
-        { name: "Sector comparison (3 drivers)", included: true },
+        { name: "Sector comparison (2 drivers)", included: true },
         { name: "Speed trace visualization", included: true },
         { name: "Track maps (current season)", included: true },
-        { name: "Data export (CSV)", included: true },
         { name: "Email support", included: true },
+        { name: "Data export (CSV)", included: false },
         { name: "Advanced telemetry tools", included: false },
         { name: "Historical data access", included: false },
         { name: "Custom analysis reports", included: false },
         { name: "API access", included: false },
         { name: "Priority support", included: false },
+        
       ],
     },
     {
       name: "Professional",
-      price: "79",
+      price: "25",
       period: "month",
       description: "Advanced tools for serious motorsport analysts and teams",
       icon: Trophy,
@@ -43,14 +46,14 @@ export default function PricingPage() {
         { name: "Priority email support", included: true },
         { name: "Advanced telemetry tools", included: true },
         { name: "Historical data access", included: true },
-        { name: "Custom analysis reports", included: true },
-        { name: "Basic API access", included: true },
+        { name: "Custom analysis reports", included: false },
+        { name: "API access", included: false },
         { name: "Live chat support", included: false },
       ],
     },
     {
       name: "Elite",
-      price: "149",
+      price: "60",
       period: "month",
       description: "Complete F1 analysis suite for professional teams and broadcasters",
       icon: Crown,
@@ -61,7 +64,7 @@ export default function PricingPage() {
         { name: "AI-powered insights", included: true },
         { name: "Complete historical database", included: true },
         { name: "All export formats + API", included: true },
-        { name: "24/7 phone support", included: true },
+        { name: "24/7 support", included: true },
         { name: "Advanced telemetry tools", included: true },
         { name: "Historical data access", included: true },
         { name: "Custom analysis reports", included: true },
@@ -180,7 +183,7 @@ export default function PricingPage() {
               <div className="hover:bg-muted/30 p-4 rounded-lg transition-all duration-300">
                 <h3 className="text-lg font-semibold mb-2 text-primary">Is there a free trial?</h3>
                 <p className="text-muted-foreground">
-                  All plans include a 14-day free trial with full access to features.
+                  At the moment, we do not offer a free trial, but our Enthusiast plan is free to use with limited features.
                 </p>
               </div>
             </div>
@@ -189,7 +192,7 @@ export default function PricingPage() {
               <div className="hover:bg-muted/30 p-4 rounded-lg transition-all duration-300">
                 <h3 className="text-lg font-semibold mb-2 text-primary">Do you offer team discounts?</h3>
                 <p className="text-muted-foreground">
-                  Yes, we offer special pricing for racing teams and educational institutions. Contact us for details.
+                  Yes, we offer special pricing for teams and educational institutions. Contact us for details.
                 </p>
               </div>
 
@@ -222,10 +225,10 @@ export default function PricingPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="glow-effect hover:scale-105 transition-all duration-300">
-              Start Free Trial
+              <Link href="/dashboard">Start Free Trial</Link>
             </Button>
             <Button size="lg" variant="outline" className="hover:scale-105 transition-all duration-300 bg-transparent">
-              Contact Sales
+              <Link href="/contact">Contact Sales</Link>
             </Button>
           </div>
         </div>

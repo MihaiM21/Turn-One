@@ -10,15 +10,6 @@ import { MainFooter } from "@/components/footer/main-footer"
 import { Suspense } from "react"
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Turn One",
@@ -35,7 +26,6 @@ export default function RootLayout({children,}: {
                     <Suspense fallback={null}>
                         {children}
                         <MainFooter />
-                        <Toaster />
                     </Suspense>
                 </ThemeProvider>
             </body>

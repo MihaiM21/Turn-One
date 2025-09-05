@@ -17,6 +17,7 @@ import {
   Smartphone,
   Globe,
 } from "lucide-react"
+import Link from "next/link"
 
 export default function FeaturesPage() {
   const mainFeatures = [
@@ -118,10 +119,10 @@ export default function FeaturesPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="glow-effect">
-              Start Free Trial
+              <Link href="/dashboard">Start Free Trial</Link>
             </Button>
             <Button size="lg" variant="outline">
-              View Demo
+              <Link href="/demo">View Demo</Link>
             </Button>
           </div>
         </div>
@@ -269,7 +270,7 @@ export default function FeaturesPage() {
           <div className="grid md:grid-cols-4 gap-8 text-center">
             <div>
               <div className="text-4xl font-bold gradient-text mb-2">50+</div>
-              <div className="text-muted-foreground">Racing Teams</div>
+              <div className="text-muted-foreground">Content Creators</div>
             </div>
             <div>
               <div className="text-4xl font-bold gradient-text mb-2">1M+</div>
@@ -299,10 +300,10 @@ export default function FeaturesPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="glow-effect">
-              Start Free Trial
+              <Link href="/dashboard">Start Free Trial</Link>
             </Button>
             <Button size="lg" variant="outline">
-              Schedule Demo
+              <Link href="/demo">Demo Dashboard</Link>
             </Button>
           </div>
         </div>

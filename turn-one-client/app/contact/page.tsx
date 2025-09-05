@@ -133,10 +133,10 @@ export default function ContactPage() {
                           <CardTitle className="text-lg">Email Us</CardTitle>
                           <CardDescription>
                             <a
-                              href="mailto:hello@t1f1.com"
+                              href="mailto:contact@t1f1.com"
                               className="text-accent hover:text-accent/80 transition-colors"
                             >
-                              hello@t1f1.com
+                              contact@t1f1.com
                             </a>
                           </CardDescription>
                         </div>
@@ -225,7 +225,7 @@ export default function ContactPage() {
                       className="w-full justify-start glow-effect bg-transparent"
                       asChild
                     >
-                      <Link href="/dashboard">
+                      <Link href="/demo">
                         <MapPin className="mr-3 h-5 w-5" />
                         View Demo Dashboard
                       </Link>

@@ -26,7 +26,7 @@ export default function HomePage() {
               Beyond the Race
             </Badge> */}
             <h1 className="mt-15 text-4xl md:text-6xl lg:text-7xl font-bold text-balance mb-6 animate-in fade-in-0 slide-in-from-bottom-6 duration-1000 delay-200">
-              Turn One
+              TURN ONE
               <span className="gradient-text block mt-2 pb-4">
                 Formula One Intelligence
               </span>
@@ -41,7 +41,7 @@ export default function HomePage() {
                 className="text-lg px-8 py-6 glow-effect hover:scale-105 transition-all duration-300"
                 asChild
               >
-                <Link href="/dashboard-example">
+                <Link href="/dashboard">
                   <BarChart3 className="mr-2 h-5 w-5" />
                   Start Analysis
                 </Link>
@@ -52,7 +52,7 @@ export default function HomePage() {
                 className="text-lg px-8 py-6 bg-transparent accent-glow hover:scale-105 transition-all duration-300"
                 asChild
               >
-                <Link href="#features">Learn More</Link>
+                <Link href="/">Visit store</Link>
               </Button>
             </div>
           </div>
@@ -206,7 +206,7 @@ export default function HomePage() {
                 className="text-lg px-8 py-6 accent-glow hover:scale-105 transition-all duration-300"
                 asChild
               >
-                <Link href="/dashboard-example">Start Analysis</Link>
+                <Link href="/dashboard">Start Analysis</Link>
               </Button>
               <Button
                 size="lg"

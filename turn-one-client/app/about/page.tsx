@@ -231,7 +231,7 @@ export default function AboutPage() {
                 className="text-lg px-8 py-6 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary bg-transparent"
                 asChild
               >
-                <Link href="/dashboard-example">Explore Platform</Link>
+                <Link href="/services">Explore Platform</Link>
               </Button>
             </div>
           </div>

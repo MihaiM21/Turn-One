@@ -12,7 +12,7 @@ export default function ServicesPage() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden modern-gradient pt-24 pb-16">
-        <div className="absolute inset-0 bg-[url('/formula-1-car-racing-on-track-dynamic-motion-blur.png')] bg-cover bg-center opacity-10" />
+        <div className="absolute inset-0 bg-[url('/turn-one-car/0005.png')] bg-cover bg-center opacity-10" />
         <div className="relative container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <Badge variant="secondary" className="mb-6 text-sm font-medium accent-glow">
@@ -311,7 +311,7 @@ export default function ServicesPage() {
       </section>
 
       {/* Service Tiers */}
-      <section className="py-24">
+      {/* <section className="py-24">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
@@ -408,10 +408,10 @@ export default function ServicesPage() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* CTA Section */}
-      <section className="py-24 bg-primary text-primary-foreground glow-effect">
+      <section className="py-24 bg-ring text-primary-foreground glow-effect">
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-3xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-balance">Ready to Transform Your F1 Analysis?</h2>
