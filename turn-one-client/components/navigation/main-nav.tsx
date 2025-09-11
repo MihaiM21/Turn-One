@@ -81,7 +81,9 @@ export function MainNav({ variant = "homepage" }: MainNavProps) {
                   Dashboard
                 </Link>
               </Button>
+              
             </div>
+            
 
             <Button
               variant="ghost"
@@ -91,6 +93,7 @@ export function MainNav({ variant = "homepage" }: MainNavProps) {
             >
               {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
+            
           </div>
 
           {isMenuOpen && (
@@ -107,6 +110,7 @@ export function MainNav({ variant = "homepage" }: MainNavProps) {
                     {item.label}
                   </Link>
                 ))}
+                
                 <div className="border-t border-border pt-4 mt-4">
                   <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground glow-effect">
                     <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
@@ -114,6 +118,7 @@ export function MainNav({ variant = "homepage" }: MainNavProps) {
                       Dashboard
                     </Link>
                   </Button>
+                  
                 </div>
               </div>
             </div>

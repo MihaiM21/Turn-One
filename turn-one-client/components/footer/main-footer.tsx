@@ -96,7 +96,7 @@ export function MainFooter() {
               </div>
               <div className="flex items-center space-x-3 text-sm">
                 <MapPin className="h-4 w-4 text-primary" />
-                <span className="text-muted-foreground">Monaco, Monte Carlo</span>
+                <span className="text-muted-foreground">At the racetrack</span>
               </div>
             </div>
             <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground glow-effect">
