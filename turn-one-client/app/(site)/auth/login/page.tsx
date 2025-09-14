@@ -10,6 +10,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { ArrowLeft } from "lucide-react"
+import { login, LoginData } from "@/lib/auth"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -20,25 +21,31 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    //const supabase = createClient()
     setIsLoading(true)
     setError(null)
 
-    // try {
-    //   //const { error } = await supabase.auth.signInWithPassword({
-    //     email,
-    //     password,
-    //     options: {
-    //       emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
-    //     },
-    //   })
-    //   if (error) throw error
-    //   router.push("/dashboard")
-    // } catch (error: unknown) {
-    //   setError(error instanceof Error ? error.message : "An error occurred")
-    // } finally {
-    //   setIsLoading(false)
-    // }
+    try {
+      const loginData: LoginData = {
+        email,
+        password
+      }
+      
+      const response = await login(loginData)
+      
+      if (response.success) {
+        // Save the token to local storage
+        localStorage.setItem('token', response.token)
+        
+        // Redirect to dashboard
+        router.push("/dashboard")
+      } else {
+        throw new Error(response.message || "Login failed")
+      }
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Invalid email or password")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (

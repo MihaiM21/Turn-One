@@ -8,6 +8,7 @@ import type React from "react"
 import { Toaster } from "react-hot-toast"
 import { MainFooter } from "@/components/footer/main-footer"
 import { Suspense } from "react"
+import { AuthProvider } from "@/components/auth/auth-provider"
 import "./globals.css";
 
 
@@ -20,13 +21,14 @@ export default function RootLayout({children,}: {
     children: React.ReactNode
 }) {
     return (
-        <html className="dark">
+        <html className="dark" style={{colorScheme:"dark"}}>
             <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
                 <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-                    <Suspense fallback={null}>
-                        {children}
-                        <MainFooter />
-                    </Suspense>
+                    <AuthProvider>
+                        <Suspense fallback={null}>
+                            {children}
+                        </Suspense>
+                    </AuthProvider>
                 </ThemeProvider>
             </body>
         </html>

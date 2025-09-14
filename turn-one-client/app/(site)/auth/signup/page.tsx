@@ -2,7 +2,6 @@
 
 import type React from "react"
 
-//import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,42 +10,54 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { ArrowLeft } from "lucide-react"
+import { RegisterData, register } from "@/lib/auth"
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [firstName, setFirstName] = useState("")
-  const [lastName, setLastName] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [username, setUsername] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
-//   const handleSignUp = async (e: React.FormEvent) => {
-//     e.preventDefault()
-//     const supabase = createClient()
-//     setIsLoading(true)
-//     setError(null)
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError(null)
 
-//     try {
-//       const { error } = await supabase.auth.signUp({
-//         email,
-//         password,
-//         options: {
-//           emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
-//           data: {
-//             first_name: firstName,
-//             last_name: lastName,
-//           },
-//         },
-//       })
-//       if (error) throw error
-//       router.push("/auth/check-email")
-//     } catch (error: unknown) {
-//       setError(error instanceof Error ? error.message : "An error occurred")
-//     } finally {
-//       setIsLoading(false)
-//     }
-//   }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match")
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      // Create the registration data object
+      const registerData: RegisterData = {
+        email,
+        username,
+        password,
+        confirmPassword
+      }
+      
+      const response = await register(registerData)
+      
+      if (response.success) {
+        // Save the token to local storage
+        localStorage.setItem('token', response.token)
+        
+        // Redirect to dashboard
+        router.push("/dashboard")
+      } else {
+        throw new Error(response.message || "Registration failed")
+      }
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "An error occurred during registration")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-red-950 to-black flex items-center justify-center p-6">
@@ -66,36 +77,20 @@ export default function SignUpPage() {
             <CardDescription className="text-red-100">Create your F1 telemetry account</CardDescription>
           </CardHeader>
           <CardContent>
-            <form  className="space-y-4"> {/* onSubmit={handleSignUp} */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-white">
-                    First Name
-                  </Label>
-                  <Input
-                    id="firstName"
-                    type="text"
-                    placeholder="John"
-                    required
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    className="bg-black/50 border-red-800/30 text-white placeholder:text-red-200/50"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-white">
-                    Last Name
-                  </Label>
-                  <Input
-                    id="lastName"
-                    type="text"
-                    placeholder="Doe"
-                    required
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    className="bg-black/50 border-red-800/30 text-white placeholder:text-red-200/50"
-                  />
-                </div>
+            <form onSubmit={handleSignUp} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username" className="text-white">
+                  Username
+                </Label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="johndoe"
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="bg-black/50 border-red-800/30 text-white placeholder:text-red-200/50"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-white">
@@ -121,6 +116,19 @@ export default function SignUpPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="bg-black/50 border-red-800/30 text-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-white">
+                  Confirm Password
+                </Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   className="bg-black/50 border-red-800/30 text-white"
                 />
               </div>

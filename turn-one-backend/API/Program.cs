@@ -59,6 +59,7 @@ builder.Services.AddCors(options =>
             policy.WithOrigins("http://localhost:3000") // Add your client app URL
                   .AllowAnyHeader()
                   .AllowAnyMethod()
+                  .WithExposedHeaders("Authorization")
                   .AllowCredentials();
         });
 });
