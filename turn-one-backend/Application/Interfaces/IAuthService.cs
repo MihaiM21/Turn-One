@@ -1,7 +1,7 @@
 
 using Application.DTOs;
 
-namespace TurnOne.Application.Interfaces
+namespace Application.Interfaces
 {
     public interface IAuthService
     {

@@ -1,25 +1,55 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Activity, Clock, Gauge, Trophy } from "lucide-react"
+import { fetchAPIDailyStats, fetchAPITotalStats} from "@/lib/dataAcquisition"
+import { useState, useEffect } from "react"
 
+interface TotalStats {
+  total_sessions: number;
+}
+interface DailyStats {
+  date: string;
+  total_sessions: number;
+}
 export function TelemetryOverview() {
+  const [dailyStats, setDailyStats] = useState<DailyStats | null>(null);
+  const [totalStats, setTotalStats] = useState<TotalStats | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = localStorage.getItem("token");
+
+      try {
+        const daily = await fetchAPIDailyStats('dummy-token');
+        const total = await fetchAPITotalStats('dummy-token');
+
+        setDailyStats(daily);
+        setTotalStats(total);
+      } catch (error) {
+        console.error("Error fetching API stats:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const stats = [
     {
-      title: "Best Lap Time",
-      value: "1:23.456",
-      change: "-0.234s",
+      title: "Total Sessions Analyzed",
+      value: totalStats ? totalStats.total_sessions.toString() : "Loading...",
+      change: "+40% this month",
       icon: Clock,
       trend: "improvement",
     },
     {
-      title: "Top Speed",
-      value: "342 km/h",
-      change: "+12 km/h",
+      title: "Average Response Time",
+      value: "542 ms",
+      change: "-12 ms",
       icon: Gauge,
       trend: "improvement",
     },
     {
-      title: "Sessions Analyzed",
-      value: "47",
+      title: "Sessions Analyzed Today",
+      value: dailyStats ? dailyStats.total_sessions.toString() : "Loading...",
       change: "+3 today",
       icon: Activity,
       trend: "neutral",

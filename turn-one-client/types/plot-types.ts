@@ -35,3 +35,35 @@
       session_name: string;
     };
   }
+
+  export interface SessionResultsData {
+    Driver: string;
+    Team: string;
+    LapTime: string;
+    LapTimeDelta: number;
+    Color: string;
+  }
+
+  export interface ThrottleBrakeTelemetryPoint {
+    distance: number;
+    speed: number;
+    throttle: number;
+    brake: number;
+    lap_time: number;
+    driver: string;
+  }
+
+  export interface ThrottleBrakeComparisonData {
+    driver1: string;
+    driver2: string;
+    driver1_color: string;
+    driver2_color: string;
+    telemetry: ThrottleBrakeTelemetryPoint[];
+    session_info: {
+      year: number;
+      race: string;
+      event: string;
+      event_name: string;
+      session_name: string;
+    };
+  }

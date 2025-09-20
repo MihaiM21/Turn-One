@@ -35,3 +35,28 @@ export const fetchTrackComparison = async (
 ) => {
   return fetchWithAuth(`track-comparison-2drivers-data?year=${year}&gp=${gp}&session=${session}&driver1=${driver1}&driver2=${driver2}`, token);
 }
+
+export const fetchSessionResults = async (token: string, year: number, gp: number, session: string) => {
+  return fetchWithAuth(`qualifying-results-data?year=${year}&gp=${gp}&session=${session}`, token);
+}
+
+export const fetchThrottleBrakeComparison = async (
+  token: string, 
+  year: number, 
+  gp: number, 
+  session: string, 
+  driver1: string, 
+  driver2: string
+) => {
+  return fetchWithAuth(`throttleBrake-comparison-2drivers-data?year=${year}&gp=${gp}&session=${session}&driver1=${driver1}&driver2=${driver2}`, token);
+}
+
+export const fetchAPIDailyStats = async (token: string) => {
+  return fetchWithAuth('analytics/daily', token);
+}
+// export const fetchAPIMonthlyStats = async (token: string) => {
+//   return fetchWithAuth('analytics/monthly', token);
+// }
+export const fetchAPITotalStats = async (token: string) => {
+  return fetchWithAuth('analytics/total', token);
+}

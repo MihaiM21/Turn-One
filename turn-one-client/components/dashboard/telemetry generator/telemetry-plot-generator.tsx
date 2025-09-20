@@ -9,8 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Download, Play, Settings, TrendingUp, Zap, Clock, Gauge, CircleGauge, ChevronsUp, MonitorCog, Users, UserRound, ChartSpline } from "lucide-react"
-import { fetchTopSpeeds, fetchThrottleAverages, fetchTrackComparison } from "@/lib/dataAcquisition"
-import { TopSpeedData, ThrottleAverageData, TrackComparisonData } from "@/types/plot-types"
+import { fetchTopSpeeds, fetchThrottleAverages, fetchTrackComparison, fetchSessionResults, fetchThrottleBrakeComparison } from "@/lib/dataAcquisition"
+import { TopSpeedData, ThrottleAverageData, TrackComparisonData, ThrottleBrakeComparisonData } from "@/types/plot-types"
 import { grandPrixCalendar } from "@/lib/constants/grand-prix"
 import { TopSpeedGraph } from "./plots/top-speed"
 import { GForceGraph } from "./plots/gforce"
@@ -19,7 +19,10 @@ import { LapTimeAnalysisGraph } from "./plots/lap-time-analysis"
 import { TireTempGraph } from "./plots/tire-temp"
 import { ThrottleAverageGraph } from "./plots/throttle_average_comparison"
 import { TrackComparisonGraph } from "./plots/track-comparison"
-import { da } from "date-fns/locale"
+import { SessionResultsGraph } from "./plots/session-results"
+import { ThrottleBrakeComparisonGraph } from "./plots/throttle-brake-comparison"
+import { SessionResultsData } from "@/types/plot-types"
+import { da, id } from "date-fns/locale"
 import { drivers } from "@/lib/constants/drivers"
 import { LoadingPlot } from "./loading_plot"
 import { set } from "date-fns"
@@ -79,10 +82,11 @@ export function TelemetryPlotGenerator() {
     { id: "throttle_average", name: "Throttle Average", icon: CircleGauge, description: "Compare average throttle across drivers" },
     { id: "driver_analysis", name: "Driver Analysis", icon: UserRound, description: "Driver performance analysis" },
     { id: "track_comparison", name: "H2H Track Comparison", icon: Users, description: "Head-to-head track comparison visualization" },
-    { id: "chevronsup", name: "Chevrons Up", icon: ChevronsUp, description: "Just a test icon" },
     { id: "throttle_brake", name: "H2H Throttle & Brake", icon: ChartSpline, description: "Compare throttle and brake inputs across drivers on their fastest laps" },
+    { id: "session_results", name: "Session Results", icon: MonitorCog, description: "Visualize session results and lap time deltas" },
     //Premium features
     { id: "laptime", name: "Lap Time Analysis", icon: Clock, description: "Compare lap times and sector performance" },
+    { id: "chevronsup", name: "Chevrons Up", icon: ChevronsUp, description: "Just a test icon" },
     { id: "speed", name: "Speed Trace", icon: Gauge, description: "Speed, throttle, and brake analysis" },
     { id: "tire", name: "Tire Temperature", icon: TrendingUp, description: "Tire temperature evolution" },
     { id: "gforce", name: "G-Force Analysis", icon: Zap, description: "Lateral and longitudinal forces" },
@@ -99,7 +103,9 @@ export function TelemetryPlotGenerator() {
   const [throttleAverageData, setThrottleAverageData] = useState<ThrottleAverageData[]>([])
   const [throttleDomain, setThrottleDomain] = useState<[number, number]>([85, 100])
   const [trackComparisonData, setTrackComparisonData] = useState<TrackComparisonData | null>(null)
-  const [throttleBrakeData, setThrottleBrakeData] = useState<any>(null)
+  const [sessionResultsData, setSessionResultsData] = useState<SessionResultsData[]>([])
+  const [sessionResultsDomain, setSessionResultsDomain] = useState<[number, number]>([0, 3])
+  const [throttleBrakeData, setThrottleBrakeData] = useState<ThrottleBrakeComparisonData | null>(null)
 
   const handleGeneratePlot = () => {
     setIsGenerating(true)
@@ -189,15 +195,131 @@ export function TelemetryPlotGenerator() {
         console.error('Please select two different drivers for track comparison')
         setIsGenerating(false)
       }
+    }else if(selectedPlotType === "session_results"){ 
+      fetchSessionResults('dummy-token', Number(selectedYear), Number(selectedGp), selectedSession)
+        .then((data) => {
+          // Process the data - it should already match our interface
+          const processedData = data as SessionResultsData[]
+          
+          // Calculate domain based on lap time deltas
+          const maxDelta = Math.max(...processedData.map(d => d.LapTimeDelta))
+          const domain: [number, number] = [0, Math.ceil(maxDelta + 0.5)]
+          
+          setSessionResultsData(processedData)
+          setSessionResultsDomain(domain)
+        })
+        .catch((error) => {
+          console.error('Error fetching session results:', error)
+          // Use sample data for testing
+          const sampleData: SessionResultsData[] = [
+            {
+              "Driver": "NOR",
+              "Team": "McLaren",
+              "LapTime": "01:41.223",
+              "LapTimeDelta": 0,
+              "Color": "#FF8000"
+            },
+            {
+              "Driver": "VER",
+              "Team": "Red Bull Racing",
+              "LapTime": "01:41.445",
+              "LapTimeDelta": 0.222,
+              "Color": "#3671C6"
+            },
+            {
+              "Driver": "PIA",
+              "Team": "McLaren",
+              "LapTime": "01:41.477",
+              "LapTimeDelta": 0.254,
+              "Color": "#FF8000"
+            },
+            {
+              "Driver": "HAM",
+              "Team": "Ferrari",
+              "LapTime": "01:41.499",
+              "LapTimeDelta": 0.276,
+              "Color": "#E80020"
+            },
+            {
+              "Driver": "ANT",
+              "Team": "Mercedes",
+              "LapTime": "01:41.876",
+              "LapTimeDelta": 0.653,
+              "Color": "#27F4D2"
+            },
+            {
+              "Driver": "RUS",
+              "Team": "Mercedes",
+              "LapTime": "01:41.964",
+              "LapTimeDelta": 0.741,
+              "Color": "#27F4D2"
+            },
+            {
+              "Driver": "ALB",
+              "Team": "Williams",
+              "LapTime": "01:41.983",
+              "LapTimeDelta": 0.76,
+              "Color": "#64C4FF"
+            },
+            {
+              "Driver": "BEA",
+              "Team": "Haas F1 Team",
+              "LapTime": "01:41.985",
+              "LapTimeDelta": 0.762,
+              "Color": "#FFFFFF"
+            },
+            {
+              "Driver": "LAW",
+              "Team": "Racing Bulls",
+              "LapTime": "01:42.146",
+              "LapTimeDelta": 0.923,
+              "Color": "#6692FF"
+            },
+            {
+              "Driver": "LEC",
+              "Team": "Ferrari",
+              "LapTime": "01:42.209",
+              "LapTimeDelta": 0.986,
+              "Color": "#E80020"
+            }
+          ]
+          
+          const maxDelta = Math.max(...sampleData.map(d => d.LapTimeDelta))
+          const domain: [number, number] = [0, Math.ceil(maxDelta + 0.5)]
+          
+          setSessionResultsData(sampleData)
+          setSessionResultsDomain(domain)
+        })
+        .finally(() => {
+          setIsGenerating(false)
+        })
     }else if(selectedPlotType === "throttle_brake"){ 
       if (selectedDriver1 && selectedDriver2 && selectedDriver1 !== selectedDriver2) {
         // Clear previous data and start fresh
         setThrottleBrakeData(null)
+        
         // Set up a timeout to prevent infinite loading
         const timeoutId = setTimeout(() => {
           console.error('Throttle & Brake comparison request timed out')
           setIsGenerating(false)
         }, 30000) // 30 second timeout
+        
+        fetchThrottleBrakeComparison('dummy-token', Number(selectedYear), Number(selectedGp), selectedSession, selectedDriver1, selectedDriver2)
+          .then((data) => {
+            clearTimeout(timeoutId)
+            setThrottleBrakeData(data as ThrottleBrakeComparisonData)
+          })
+          .catch((error) => {
+            clearTimeout(timeoutId)
+            console.error('Error fetching throttle & brake comparison:', error)
+          })
+          .finally(() => {
+            clearTimeout(timeoutId)
+            setIsGenerating(false)
+          })
+      } else {
+        console.error('Please select two different drivers for throttle & brake comparison')
+        setIsGenerating(false)
       }
     }else {
       // Default case for other plot types or unsupported types
@@ -243,6 +365,25 @@ export function TelemetryPlotGenerator() {
                 <LoadingPlot />
               </>
             ) : "No track comparison data available"}
+          </div>
+        )
+      case "session_results":
+        return (
+          <SessionResultsGraph 
+            data={sessionResultsData} 
+            deltaDomain={sessionResultsDomain} 
+          />
+        )
+      case "throttle_brake":
+        return throttleBrakeData ? (
+          <ThrottleBrakeComparisonGraph data={throttleBrakeData} />
+        ) : (
+          <div className="flex flex-col items-center justify-center h-[700px] text-muted-foreground space-y-4">
+            {isGenerating ? (
+              <>
+                <LoadingPlot />
+              </>
+            ) : "No throttle & brake comparison data available"}
           </div>
         )
       default:
@@ -373,7 +514,7 @@ export function TelemetryPlotGenerator() {
               </div>
             </div>)}
             
-            {selectedPlotType === "track_comparison" && (
+            {(selectedPlotType === "track_comparison" || selectedPlotType === "throttle_brake") && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Driver 1 */}
               <div className="space-y-2">
@@ -409,11 +550,7 @@ export function TelemetryPlotGenerator() {
               </div>
             </div>)}
             
-            {/* Token */}
-            <div className="space-y-2">
-              <Label htmlFor="token">Tokens left: </Label>
-              <Input id="token" placeholder="TODO show number of tokens" className="bg-background/50 border-border/50" />
-            </div>
+          
             {/* <div className="space-y-2">
               <Label htmlFor="laps">Lap Range</Label>
               <Input id="laps" placeholder="1-20" className="bg-background/50 border-border/50" />
@@ -530,6 +667,64 @@ export function TelemetryPlotGenerator() {
                             : '-'}%
                         </div>
                         <div className="text-muted-foreground">Throttle Delta</div>
+                      </div>
+                    </>
+                  ) : selectedPlotType === "session_results" ? (
+                    <>
+                      <div className="bg-muted/20 rounded-lg p-3 text-center">
+                        <div className="text-lg font-bold text-primary">
+                          {sessionResultsData[0]?.LapTime || '-'}
+                        </div>
+                        <div className="text-muted-foreground">Fastest Lap</div>
+                        <div className="text-xs text-muted-foreground">{sessionResultsData[0]?.Driver || '-'}</div>
+                      </div>
+                      <div className="bg-muted/20 rounded-lg p-3 text-center">
+                        <div className="text-lg font-bold text-primary">
+                          +{sessionResultsData[sessionResultsData.length - 1]?.LapTimeDelta?.toFixed(3) || '-'}s
+                        </div>
+                        <div className="text-muted-foreground">Largest Gap</div>
+                        <div className="text-xs text-muted-foreground">{sessionResultsData[sessionResultsData.length - 1]?.Driver || '-'}</div>
+                      </div>
+                      <div className="bg-muted/20 rounded-lg p-3 text-center">
+                        <div className="text-lg font-bold text-primary">
+                          {sessionResultsData.length > 0
+                            ? (sessionResultsData.reduce((acc, curr) => acc + (curr.LapTimeDelta || 0), 0) / sessionResultsData.length).toFixed(3)
+                            : '-'}s
+                        </div>
+                        <div className="text-muted-foreground">Avg. Gap</div>
+                      </div>
+                      <div className="bg-muted/20 rounded-lg p-3 text-center">
+                        <div className="text-lg font-bold text-primary">
+                          {sessionResultsData.length || 0}
+                        </div>
+                        <div className="text-muted-foreground">Total Drivers</div>
+                      </div>
+                    </>
+                  ) : selectedPlotType === "throttle_brake" ? (
+                    <>
+                      <div className="bg-muted/20 rounded-lg p-3 text-center">
+                        <div className="text-lg font-bold text-primary">
+                          {throttleBrakeData?.driver1 || '-'} vs {throttleBrakeData?.driver2 || '-'}
+                        </div>
+                        <div className="text-muted-foreground">Head to Head</div>
+                      </div>
+                      <div className="bg-muted/20 rounded-lg p-3 text-center">
+                        <div className="text-lg font-bold text-primary">
+                          {throttleBrakeData?.telemetry?.length || 0}
+                        </div>
+                        <div className="text-muted-foreground">Data Points</div>
+                      </div>
+                      <div className="bg-muted/20 rounded-lg p-3 text-center">
+                        <div className="text-lg font-bold text-primary">
+                          {throttleBrakeData?.session_info?.event_name || '-'}
+                        </div>
+                        <div className="text-muted-foreground">Event</div>
+                      </div>
+                      <div className="bg-muted/20 rounded-lg p-3 text-center">
+                        <div className="text-lg font-bold text-primary">
+                          {throttleBrakeData?.session_info?.session_name || '-'}
+                        </div>
+                        <div className="text-muted-foreground">Session</div>
                       </div>
                     </>
                   ) : (

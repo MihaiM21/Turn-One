@@ -1,10 +1,10 @@
 using System.Text;
+using Application.Interfaces;
 using Infrastructure;
+using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using TurnOne.Application.Interfaces;
-using TurnOne.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -70,6 +70,7 @@ builder.Services.AddDbContext<TurnOneDbContext>(options =>
 
 // Register services
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 
 // Configure JWT authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

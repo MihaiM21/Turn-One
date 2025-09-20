@@ -76,7 +76,9 @@ export function DashboardHeader() {
                 size="sm"
                 className="text-muted-foreground hover:text-foreground hover:bg-muted/20 hover:scale-105 transition-all duration-300"
               >
-                <Settings className="h-4 w-4" />
+                <Link href="/settings">
+                  <Settings className="h-4 w-4" />
+                </Link>
               </Button>
 
               <Button
@@ -84,7 +86,9 @@ export function DashboardHeader() {
                 size="sm"
                 className="text-muted-foreground hover:text-foreground hover:bg-muted/20 hover:scale-105 transition-all duration-300"
               >
-                <User className="h-4 w-4" />
+                <Link href="/account">
+                  <User className="h-4 w-4" />
+                </Link>
               </Button>
             </div>
           </div>

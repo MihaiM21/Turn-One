@@ -31,7 +31,12 @@ import {
 } from "@/components/ui/sidebar"
 import { useAuth } from "@/components/auth/auth-provider"
 import { useRouter } from "next/navigation"
-
+import {fetchTokenStatus, fetchUserProfile} from "@/lib/userService"
+import { useState } from "react"
+import { TokenStatus, UserProfile } from "@/types/user-types"
+import { toast } from "./ui/use-toast"
+import { useEffect } from "react"
+import Link from "next/link"
 
 
 export function NavUser({
@@ -44,15 +49,58 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const [profileData, setProfileData] = useState<UserProfile>({
+      id: "",
+      email: "",
+      username: "",
+      avatarUrl: "",
+      plan: "BASIC",
+      planStartDate: "",
+      planEndDate: "",
+      autoRenew: false,
+      tokens: 0,
+      lastTokenRefillDate: "",
+      createdAt: "",
+      lastLogin: ""
+    })
+  const [tokenStatus, setTokenStatus] = useState<TokenStatus | null>(null)
+  const { isAuthenticated } = useAuth()
 
   const { logout } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+      if (isAuthenticated) {
+        loadUserData()
+      }
+    }, [isAuthenticated])
 
   const handleLogout = () => {
     logout();
     router.push('/');
   };
-  
+  const loadUserData = async () => {
+    try {
+      const token = localStorage.getItem('token') || ''
+      
+      // Load profile data from auth/me endpoint
+      const profileResponse = await fetchUserProfile(token)
+      console.log('Profile response:', profileResponse)
+      setProfileData(profileResponse)
+
+      // Load token status from subscription/token-status
+      try {
+        const tokenResponse = await fetchTokenStatus(token)
+        console.log('Token status response:', tokenResponse)
+        setTokenStatus(tokenResponse)
+      } catch (error) {
+        console.log('No token status data available')
+      }
+
+    } catch (error) {
+      console.error('Error loading user data:', error)
+    }
+  }
 
   return (
     <SidebarMenu>
@@ -64,12 +112,12 @@ export function NavUser({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarImage src={profileData.avatarUrl} alt={profileData.username} />
                 <AvatarFallback className="rounded-lg">T1</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                <span className="truncate text-xs">{user.email}</span>
+                <span className="truncate font-medium">{profileData.username}</span>
+                <span className="truncate text-xs">Remaining Tokens: {tokenStatus?.tokensRemaining}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -83,12 +131,12 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name}/>
+                  <AvatarImage src={profileData.avatarUrl} alt={profileData.username} />
                   <AvatarFallback className="rounded-lg">T1</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
-                  <span className="truncate text-xs">{user.email}</span>
+                  <span className="truncate font-medium">{profileData.username}</span>
+                  <span className="truncate text-xs">{profileData.email}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -99,12 +147,15 @@ export function NavUser({
                 Upgrade to Pro
               </DropdownMenuItem>
             </DropdownMenuGroup>
+            
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheck />
-                Account
-              </DropdownMenuItem>
+              <Link href="/account">
+                <DropdownMenuItem>     
+                    <BadgeCheck />
+                    Account
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuItem>
                 <CreditCard />
                 Billing

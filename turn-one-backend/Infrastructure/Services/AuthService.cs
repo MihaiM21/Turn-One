@@ -7,9 +7,9 @@ using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using TurnOne.Application.Interfaces;
+using Application.Interfaces;
 
-namespace TurnOne.Infrastructure.Services
+namespace Infrastructure.Services
 {
     public class AuthService : IAuthService
     {
@@ -122,8 +122,16 @@ namespace TurnOne.Infrastructure.Services
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Email, user.Email)
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim("Plan", user.Plan.ToString()),
+                new Claim("CreatedAt", user.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))
             };
+            
+            // Add avatar URL claim if it exists
+            if (!string.IsNullOrEmpty(user.AvatarUrl))
+            {
+                claims.Add(new Claim("AvatarUrl", user.AvatarUrl));
+            }
             
             // Use HMAC-SHA256 instead of HMAC-SHA512 which requires a shorter key length
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature);
