@@ -56,10 +56,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000") // Add your client app URL
+            policy.WithOrigins("http://localhost:3000", "https://localhost:3000") // Add your client app URL
                   .AllowAnyHeader()
                   .AllowAnyMethod()
-                  .WithExposedHeaders("Authorization")
+                  .WithExposedHeaders("Authorization", "X-F1-Cookies")
                   .AllowCredentials();
         });
 });
@@ -71,6 +71,10 @@ builder.Services.AddDbContext<TurnOneDbContext>(options =>
 // Register services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
+
+// Add HttpClient for F1 API proxy
+builder.Services.AddHttpClient();
 
 // Configure JWT authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

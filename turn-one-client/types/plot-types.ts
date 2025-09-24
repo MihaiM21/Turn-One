@@ -67,3 +67,11 @@
       session_name: string;
     };
   }
+
+  export interface LapTimeData{
+    driver: string;
+    lap_numbers: number;
+    lap_times_seconds: number;
+    lap_times_formatted: string;
+    compound: string;
+  }

@@ -12,7 +12,9 @@ import {
   PieChart,
   Send,
   Settings2,
+  Shield,
   SquareTerminal,
+  Activity,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -43,20 +45,11 @@ const data = {
       url: "/dashboard",
       icon: SquareTerminal,
       isActive: true,
-      // items: [
-      //   {
-      //     title: "History",
-      //     url: "#",
-      //   },
-      //   {
-      //     title: "Starred",
-      //     url: "#",
-      //   },
-      //   {
-      //     title: "Settings",
-      //     url: "#",
-      //   },
-      // ],
+    },
+    {
+      title: "Live Dashboard",
+      url: "/live",
+      icon: Activity,
     },
     {
       title: "Generator",
@@ -162,6 +155,38 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   data.user.email = user?.email || 'user@example.com';
   data.user.avatar = user?.avatar || '/basic-avatar.webp';
 
+  // Check if user is admin by decoding JWT token from localStorage
+  const isAdmin = React.useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    
+    const token = localStorage.getItem('token');
+    if (!token) return false;
+
+    try {
+      // Decode JWT payload (base64)
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.role === 'ADMIN' || payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] === 'ADMIN';
+    } catch {
+      return false;
+    }
+  }, [user]);
+
+  // Create navigation items with conditional admin section
+  const navigationItems = React.useMemo(() => {
+    const baseItems = [...data.navMain];
+    
+    if (isAdmin) {
+      baseItems.push({
+        title: "Admin Panel",
+        url: "/admin",
+        icon: Shield,
+        isActive: false,
+      });
+    }
+    
+    return baseItems;
+  }, [isAdmin]);
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -183,7 +208,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navigationItems} />
         {/* <NavProjects projects={data.projects} /> */}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>

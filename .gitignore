@@ -3,6 +3,7 @@ bin/
 obj/
 *.user
 *.suo
+.db
 
 # Node
 node_modules/

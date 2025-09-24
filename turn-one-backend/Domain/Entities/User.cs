@@ -9,6 +9,7 @@ public class User
     public string Username { get; set; } = null!;
     public string Password { get; set; } = null!;
     public string? AvatarUrl { get; set; }
+    public Role Role { get; set; } = Role.USER;
     
     public PlanType Plan { get; set; } = PlanType.BASIC;
     public DateTime PlanStartDate { get; set; } = DateTime.UtcNow;

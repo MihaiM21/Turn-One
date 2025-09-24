@@ -59,4 +59,21 @@ export const changeUserPassword = async (token: string, passwordData: any) => {
   });
 }
 
+// Token Management API functions
+export const consumeToken = async (token: string) => {
+  return fetchWithAuth('subscription/consume-token', token, {
+    method: 'POST',
+  });
+}
+
+export const consumeTokens = async (token: string, amount: number) => {
+  return fetchWithAuth('subscription/consume-tokens', token, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(amount),
+  });
+}
+
 

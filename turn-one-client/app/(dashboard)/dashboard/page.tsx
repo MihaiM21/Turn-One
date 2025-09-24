@@ -12,6 +12,7 @@ import { WeatherImpact } from "@/components/dashboard/live dashboard/weather-imp
 import { DriverComparison } from "@/components/dashboard/live dashboard/driver-comparison"
 import { SessionManager } from "@/components/dashboard/live dashboard/session-manager"
 import { PerformanceTrends } from "@/components/dashboard/live dashboard/performance-trends"
+import { F1ConnectionStatus } from "@/components/dashboard/live dashboard/f1-connection-status"
 
 
 import { AppSidebar } from "@/components/app-sidebar"
@@ -42,6 +43,8 @@ export default function DashboardPage() {
             <main className="container mx-auto px-4 py-8 space-y-8">
               
             <SessionManager />
+            
+            {/* <F1ConnectionStatus /> */}
         
             <TelemetryOverview />
 

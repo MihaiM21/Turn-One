@@ -5,12 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Download, Play, Settings, TrendingUp, Zap, Clock, Gauge, CircleGauge, ChevronsUp, MonitorCog, Users, UserRound, ChartSpline } from "lucide-react"
-import { fetchTopSpeeds, fetchThrottleAverages, fetchTrackComparison, fetchSessionResults, fetchThrottleBrakeComparison } from "@/lib/dataAcquisition"
-import { TopSpeedData, ThrottleAverageData, TrackComparisonData, ThrottleBrakeComparisonData } from "@/types/plot-types"
+import { Download, Play, Settings, TrendingUp, Zap, Clock, Gauge, CircleGauge, ChevronsUp, MonitorCog, Users, UserRound, ChartSpline, AlertTriangle, Coins } from "lucide-react"
+import { fetchTopSpeeds, fetchThrottleAverages, fetchTrackComparison, fetchSessionResults, fetchThrottleBrakeComparison ,fetchLaptimeData } from "@/lib/dataAcquisition"
+import { TopSpeedData, ThrottleAverageData, TrackComparisonData, ThrottleBrakeComparisonData, LapTimeData } from "@/types/plot-types"
 import { grandPrixCalendar } from "@/lib/constants/grand-prix"
 import { TopSpeedGraph } from "./plots/top-speed"
 import { GForceGraph } from "./plots/gforce"
@@ -22,20 +21,14 @@ import { TrackComparisonGraph } from "./plots/track-comparison"
 import { SessionResultsGraph } from "./plots/session-results"
 import { ThrottleBrakeComparisonGraph } from "./plots/throttle-brake-comparison"
 import { SessionResultsData } from "@/types/plot-types"
-import { da, id } from "date-fns/locale"
 import { drivers } from "@/lib/constants/drivers"
 import { LoadingPlot } from "./loading_plot"
-import { set } from "date-fns"
+import { useTokens } from "@/hooks/use-tokens"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useAuth } from "@/components/auth/auth-provider"
+import { isPageStatic } from "next/dist/build/utils"
 
 
-// TODO Replace with real telemetry data fetching and processing logic
-const lapTimeData = [
-  { lap: 1, time: 92.5, driver: "VER", sector1: 28.2, sector2: 31.1, sector3: 33.2 },
-  { lap: 2, time: 91.8, driver: "VER", sector1: 27.9, sector2: 30.8, sector3: 33.1 },
-  { lap: 3, time: 91.2, driver: "VER", sector1: 27.7, sector2: 30.5, sector3: 33.0 },
-  { lap: 4, time: 90.9, driver: "VER", sector1: 27.5, sector2: 30.3, sector3: 33.1 },
-  { lap: 5, time: 91.1, driver: "VER", sector1: 27.6, sector2: 30.4, sector3: 33.1 },
-]
 
 const speedData = [
   { distance: 0, speed: 0, throttle: 0, brake: 0 },
@@ -68,7 +61,7 @@ const gForceData = [
 ]
 
 export function TelemetryPlotGenerator() {
-  const [selectedPlotType, setSelectedPlotType] = useState("laptime")
+  const [selectedPlotType, setSelectedPlotType] = useState("topspeeds")
   const [selectedDriver, setSelectedDriver] = useState("VER")
   const [selectedDriver1, setSelectedDriver1] = useState("VER")
   const [selectedDriver2, setSelectedDriver2] = useState("HAM")
@@ -77,19 +70,24 @@ export function TelemetryPlotGenerator() {
   const [selectedGp, setSelectedGp] = useState("1")
   const [isGenerating, setIsGenerating] = useState(false)
 
+  // Token management
+  const { isAuthenticated } = useAuth()
+  const authToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+  const { userProfile, hasTokens, getTokenCount, deductToken, error: tokenError } = useTokens(authToken)
+
   const plotTypes = [
-    { id: "topspeeds", name: "Top Speeds", icon: Gauge, description: "Compare top speeds across teams" },
-    { id: "throttle_average", name: "Throttle Average", icon: CircleGauge, description: "Compare average throttle across drivers" },
-    { id: "driver_analysis", name: "Driver Analysis", icon: UserRound, description: "Driver performance analysis" },
-    { id: "track_comparison", name: "H2H Track Comparison", icon: Users, description: "Head-to-head track comparison visualization" },
-    { id: "throttle_brake", name: "H2H Throttle & Brake", icon: ChartSpline, description: "Compare throttle and brake inputs across drivers on their fastest laps" },
-    { id: "session_results", name: "Session Results", icon: MonitorCog, description: "Visualize session results and lap time deltas" },
+    { id: "topspeeds", name: "Top Speeds", icon: Gauge, description: "Compare top speeds across teams", isPro: false },
+    { id: "throttle_average", name: "Throttle Average", icon: CircleGauge, description: "Compare average throttle across drivers", isPro: false },
+    { id: "laptime", name: "Lap Time Analysis", icon: Clock, description: "Compare lap times and sector performance", isPro: false },
+    { id: "track_comparison", name: "H2H Track Comparison", icon: Users, description: "Head-to-head track comparison visualization", isPro: false },
+    { id: "throttle_brake", name: "H2H Throttle & Brake", icon: ChartSpline, description: "Compare throttle and brake inputs across drivers on their fastest laps", isPro: false },
+    { id: "session_results", name: "Session Results", icon: MonitorCog, description: "Visualize session results and lap time deltas", isPro: false },
     //Premium features
-    { id: "laptime", name: "Lap Time Analysis", icon: Clock, description: "Compare lap times and sector performance" },
-    { id: "chevronsup", name: "Chevrons Up", icon: ChevronsUp, description: "Just a test icon" },
-    { id: "speed", name: "Speed Trace", icon: Gauge, description: "Speed, throttle, and brake analysis" },
-    { id: "tire", name: "Tire Temperature", icon: TrendingUp, description: "Tire temperature evolution" },
-    { id: "gforce", name: "G-Force Analysis", icon: Zap, description: "Lateral and longitudinal forces" },
+    { id: "driver_analysis", name: "Driver Analysis", icon: UserRound, description: "Driver performance analysis", isPro: true },
+    { id: "chevronsup", name: "Chevrons Up", icon: ChevronsUp, description: "Just a test icon", isPro: true },
+    { id: "speed", name: "Speed Trace", icon: Gauge, description: "Speed, throttle, and brake analysis", isPro: true },
+    { id: "tire", name: "Tire Temperature", icon: TrendingUp, description: "Tire temperature evolution", isPro: true },
+    { id: "gforce", name: "G-Force Analysis", icon: Zap, description: "Lateral and longitudinal forces", isPro: true },
     
   ]
 
@@ -106,226 +104,147 @@ export function TelemetryPlotGenerator() {
   const [sessionResultsData, setSessionResultsData] = useState<SessionResultsData[]>([])
   const [sessionResultsDomain, setSessionResultsDomain] = useState<[number, number]>([0, 3])
   const [throttleBrakeData, setThrottleBrakeData] = useState<ThrottleBrakeComparisonData | null>(null)
+  const [lapTimeData, setLapTimeData] = useState<LapTimeData[]>([])
 
-  const handleGeneratePlot = () => {
+  const handleGeneratePlot = async () => {
+    // Check if user is authenticated
+    if (!isAuthenticated || !authToken) {
+      alert('Please log in to generate plots')
+      return
+    }
+
+    // Check if user has tokens
+    if (!hasTokens()) {
+      alert('You need tokens to generate plots. Please purchase more tokens or wait for your monthly refill.')
+      return
+    }
+
     setIsGenerating(true)
-    if (selectedPlotType === "topspeeds") {
+    let plotGeneratedSuccessfully = false
 
-      fetchTopSpeeds('dummy-token', Number(selectedYear), Number(selectedGp), selectedSession) //
-        .then((data) => {
-          // Process and sort the data by top speed
-          const processedData = Object.values(data as Record<string, { Team: string; 'Top Speed (km/h)': number; Color: string }>)
+    try {
+      if (selectedPlotType === "topspeeds") {
+        const data = await fetchTopSpeeds(authToken, Number(selectedYear), Number(selectedGp), selectedSession)
+        
+        let processedData: { team: string; speed: number; color: string }[] = []
+        
+        // Check if data is in grouped format (FP2 GP1 2025 format)
+        if (data && typeof data === 'object' && 'Color' in data && 'Team' in data && 'Top Speed (km/h)' in data) {
+          // Handle grouped format: {Color: {0: '#color1', 1: '#color2'}, Team: {0: 'Team1', 1: 'Team2'}, 'Top Speed (km/h)': {0: 329, 1: 327}}
+          const colors = data.Color as Record<string, string>
+          const teams = data.Team as Record<string, string>
+          const speeds = data['Top Speed (km/h)'] as Record<string, number>
+          
+          // Convert to array format
+          processedData = Object.keys(teams).map(key => ({
+            team: teams[key],
+            speed: speeds[key],
+            color: colors[key]
+          }))
+        } else {
+          // Handle array format: [{Team: 'Team1', 'Top Speed (km/h)': 329, Color: '#color1'}, ...]
+          processedData = Object.values(data as Record<string, { Team: string; 'Top Speed (km/h)': number; Color: string }>)
             .map(item => ({
               team: item.Team,
               speed: item['Top Speed (km/h)'],
               color: item.Color
             }))
-            .sort((a, b) => b.speed - a.speed)
-            
-          // Calculate domain with margins
-          const minSpeed = Math.min(...processedData.map(d => d.speed))
-          const maxSpeed = Math.max(...processedData.map(d => d.speed))
-          const margin = 5 // 5 km/h margin on each side
-          const domain: [number, number] = [Math.floor(minSpeed - margin), Math.ceil(maxSpeed + margin)]
+        }
+        
+        // Sort the data by top speed
+        processedData.sort((a, b) => b.speed - a.speed)
           
-          setTopSpeedsData(processedData)
-          setSpeedDomain(domain)
-        })
-        .catch((error) => {
-          console.error('Error fetching top speeds:', error)
-        })
-        .finally(() => {
-          setIsGenerating(false)
-        })
-    } else if (selectedPlotType === "throttle_average") {
+        // Calculate domain with margins
+        const minSpeed = Math.min(...processedData.map(d => d.speed))
+        const maxSpeed = Math.max(...processedData.map(d => d.speed))
+        const margin = 5 // 5 km/h margin on each side
+        const domain: [number, number] = [Math.floor(minSpeed - margin), Math.ceil(maxSpeed + margin)]
+        
+        setTopSpeedsData(processedData)
+        setSpeedDomain(domain)
+        plotGeneratedSuccessfully = true
 
-      fetchThrottleAverages('dummy-token', Number(selectedYear), Number(selectedGp), selectedSession) //
-        .then((data) => {
-          // Process and sort the data by throttle average
-          const processedData = Object.values(data as Record<string, { Driver: string; 'Average Throttle (%)': number; Color: string }>)
-            .map(item => ({
-              driver: item.Driver,
-              throttle: item['Average Throttle (%)'], // Fixed: was 'Throttle Average (%)' but API returns 'Average Throttle (%)'
-              color: item.Color
-            }))
-            .sort((a, b) => b.throttle - a.throttle)
-          
-          console.log('Processed Throttle Data:', processedData)
-          
-          // Calculate domain with margins
-          const minThrottle = Math.min(...processedData.map(d => d.throttle))
-          const maxThrottle = Math.max(...processedData.map(d => d.throttle))
-          const margin = 5 // 5% margin on each side
-          const domain: [number, number] = [Math.floor(minThrottle - margin), Math.ceil(maxThrottle + margin)]
+      } else if (selectedPlotType === "throttle_average") {
+        const data = await fetchThrottleAverages(authToken, Number(selectedYear), Number(selectedGp), selectedSession)
+        
+        // Process and sort the data by throttle average
+        const processedData = Object.values(data as Record<string, { Driver: string; 'Average Throttle (%)': number; Color: string }>)
+          .map(item => ({
+            driver: item.Driver,
+            throttle: item['Average Throttle (%)'],
+            color: item.Color
+          }))
+          .sort((a, b) => b.throttle - a.throttle)
+        
+        // Calculate domain with margins
+        const minThrottle = Math.min(...processedData.map(d => d.throttle))
+        const maxThrottle = Math.max(...processedData.map(d => d.throttle))
+        const margin = 5 // 5% margin on each side
+        const domain: [number, number] = [Math.floor(minThrottle - margin), Math.ceil(maxThrottle + margin)]
 
-          setThrottleAverageData(processedData)
-          setThrottleDomain(domain)
-        })
-        .catch((error) => {
-          console.error('Error fetching throttle average:', error)
-        })
-        .finally(() => {
-          setIsGenerating(false)
-        })
-    } else if (selectedPlotType === "track_comparison") {
-      if (selectedDriver1 && selectedDriver2 && selectedDriver1 !== selectedDriver2) {
-        // Clear previous data and start fresh
-        setTrackComparisonData(null)
-        
-        // Set up a timeout to prevent infinite loading
-        const timeoutId = setTimeout(() => {
-          console.error('Track comparison request timed out')
-          setIsGenerating(false)
-        }, 30000) // 30 second timeout
-        
-        fetchTrackComparison('dummy-token', Number(selectedYear), Number(selectedGp), selectedSession, selectedDriver1, selectedDriver2)
-          .then((data) => {
-            clearTimeout(timeoutId)
-            setTrackComparisonData(data)
-          })
-          .catch((error) => {
-            clearTimeout(timeoutId)
-            console.error('Error fetching track comparison:', error)
-          })
-          .finally(() => {
-            clearTimeout(timeoutId)
-            setIsGenerating(false)
-          })
-      }else {
-        console.error('Please select two different drivers for track comparison')
-        setIsGenerating(false)
-      }
-    }else if(selectedPlotType === "session_results"){ 
-      fetchSessionResults('dummy-token', Number(selectedYear), Number(selectedGp), selectedSession)
-        .then((data) => {
-          // Process the data - it should already match our interface
-          const processedData = data as SessionResultsData[]
+        setThrottleAverageData(processedData)
+        setThrottleDomain(domain)
+        plotGeneratedSuccessfully = true
+
+      } else if (selectedPlotType === "track_comparison") {
+        if (selectedDriver1 && selectedDriver2 && selectedDriver1 !== selectedDriver2) {
+          setTrackComparisonData(null)
           
-          // Calculate domain based on lap time deltas
-          const maxDelta = Math.max(...processedData.map(d => d.LapTimeDelta))
-          const domain: [number, number] = [0, Math.ceil(maxDelta + 0.5)]
-          
-          setSessionResultsData(processedData)
-          setSessionResultsDomain(domain)
-        })
-        .catch((error) => {
-          console.error('Error fetching session results:', error)
-          // Use sample data for testing
-          const sampleData: SessionResultsData[] = [
-            {
-              "Driver": "NOR",
-              "Team": "McLaren",
-              "LapTime": "01:41.223",
-              "LapTimeDelta": 0,
-              "Color": "#FF8000"
-            },
-            {
-              "Driver": "VER",
-              "Team": "Red Bull Racing",
-              "LapTime": "01:41.445",
-              "LapTimeDelta": 0.222,
-              "Color": "#3671C6"
-            },
-            {
-              "Driver": "PIA",
-              "Team": "McLaren",
-              "LapTime": "01:41.477",
-              "LapTimeDelta": 0.254,
-              "Color": "#FF8000"
-            },
-            {
-              "Driver": "HAM",
-              "Team": "Ferrari",
-              "LapTime": "01:41.499",
-              "LapTimeDelta": 0.276,
-              "Color": "#E80020"
-            },
-            {
-              "Driver": "ANT",
-              "Team": "Mercedes",
-              "LapTime": "01:41.876",
-              "LapTimeDelta": 0.653,
-              "Color": "#27F4D2"
-            },
-            {
-              "Driver": "RUS",
-              "Team": "Mercedes",
-              "LapTime": "01:41.964",
-              "LapTimeDelta": 0.741,
-              "Color": "#27F4D2"
-            },
-            {
-              "Driver": "ALB",
-              "Team": "Williams",
-              "LapTime": "01:41.983",
-              "LapTimeDelta": 0.76,
-              "Color": "#64C4FF"
-            },
-            {
-              "Driver": "BEA",
-              "Team": "Haas F1 Team",
-              "LapTime": "01:41.985",
-              "LapTimeDelta": 0.762,
-              "Color": "#FFFFFF"
-            },
-            {
-              "Driver": "LAW",
-              "Team": "Racing Bulls",
-              "LapTime": "01:42.146",
-              "LapTimeDelta": 0.923,
-              "Color": "#6692FF"
-            },
-            {
-              "Driver": "LEC",
-              "Team": "Ferrari",
-              "LapTime": "01:42.209",
-              "LapTimeDelta": 0.986,
-              "Color": "#E80020"
-            }
-          ]
-          
-          const maxDelta = Math.max(...sampleData.map(d => d.LapTimeDelta))
-          const domain: [number, number] = [0, Math.ceil(maxDelta + 0.5)]
-          
-          setSessionResultsData(sampleData)
-          setSessionResultsDomain(domain)
-        })
-        .finally(() => {
-          setIsGenerating(false)
-        })
-    }else if(selectedPlotType === "throttle_brake"){ 
-      if (selectedDriver1 && selectedDriver2 && selectedDriver1 !== selectedDriver2) {
-        // Clear previous data and start fresh
-        setThrottleBrakeData(null)
+          const data = await fetchTrackComparison(authToken, Number(selectedYear), Number(selectedGp), selectedSession, selectedDriver1, selectedDriver2)
+          setTrackComparisonData(data)
+          plotGeneratedSuccessfully = true
+        } else {
+          throw new Error('Please select two different drivers for track comparison')
+        }
+
+      } else if (selectedPlotType === "session_results") {
+        const data = await fetchSessionResults(authToken, Number(selectedYear), Number(selectedGp), selectedSession)
         
-        // Set up a timeout to prevent infinite loading
-        const timeoutId = setTimeout(() => {
-          console.error('Throttle & Brake comparison request timed out')
-          setIsGenerating(false)
-        }, 30000) // 30 second timeout
+        // Process the data
+        const processedData = data as SessionResultsData[]
+        const maxDelta = Math.max(...processedData.map(d => d.LapTimeDelta))
+        const domain: [number, number] = [0, Math.ceil(maxDelta + 0.5)]
         
-        fetchThrottleBrakeComparison('dummy-token', Number(selectedYear), Number(selectedGp), selectedSession, selectedDriver1, selectedDriver2)
-          .then((data) => {
-            clearTimeout(timeoutId)
-            setThrottleBrakeData(data as ThrottleBrakeComparisonData)
-          })
-          .catch((error) => {
-            clearTimeout(timeoutId)
-            console.error('Error fetching throttle & brake comparison:', error)
-          })
-          .finally(() => {
-            clearTimeout(timeoutId)
-            setIsGenerating(false)
-          })
+        setSessionResultsData(processedData)
+        setSessionResultsDomain(domain)
+        plotGeneratedSuccessfully = true
+
+      } else if (selectedPlotType === "throttle_brake") {
+        if (selectedDriver1 && selectedDriver2 && selectedDriver1 !== selectedDriver2) {
+          setThrottleBrakeData(null)
+          
+          const data = await fetchThrottleBrakeComparison(authToken, Number(selectedYear), Number(selectedGp), selectedSession, selectedDriver1, selectedDriver2)
+          setThrottleBrakeData(data as ThrottleBrakeComparisonData)
+          plotGeneratedSuccessfully = true
+        } else {
+          throw new Error('Please select two different drivers for throttle & brake comparison')
+        }
+
+      } else if (selectedPlotType === "laptime"){
+        const data = await fetchLaptimeData(authToken, Number(selectedYear), Number(selectedGp), selectedSession, selectedDriver)
+        setLapTimeData(data)
+        plotGeneratedSuccessfully = true
       } else {
-        console.error('Please select two different drivers for throttle & brake comparison')
-        setIsGenerating(false)
+        // Default case for other plot types
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        plotGeneratedSuccessfully = true
       }
-    }else {
-      // Default case for other plot types or unsupported types
-      setTimeout(() => {
-        setIsGenerating(false)
-      }, 2000)
+
+      // If plot generation was successful, deduct a token
+      if (plotGeneratedSuccessfully) {
+        const tokenDeducted = await deductToken()
+        if (tokenDeducted) {
+          console.log('Token deducted successfully for plot generation')
+        } else {
+          console.warn('Failed to deduct token after successful plot generation')
+        }
+      }
+
+    } catch (error) {
+      console.error('Error generating plot:', error)
+      alert('Error generating plot: ' + (error as Error).message)
+    } finally {
+      setIsGenerating(false)
     }
   }
 
@@ -404,10 +323,42 @@ export function TelemetryPlotGenerator() {
               <CardDescription>Generate custom F1 telemetry visualizations</CardDescription>
             </div>
           </div>
-          <Badge variant="secondary" className="accent-glow">
-            AI Powered
-          </Badge>
+          <div className="flex items-center space-x-3">
+            {isAuthenticated && userProfile && (
+              <Badge variant="outline" className="border-yellow-500/50 text-yellow-500 bg-yellow-500/10">
+                <Coins className="h-3 w-3 mr-1" />
+                {getTokenCount()} tokens
+              </Badge>
+            )}
+            <Badge variant="secondary" className="accent-glow">
+              AI Powered
+            </Badge>
+          </div>
         </div>
+        
+        {/* Token warning */}
+        {isAuthenticated && !hasTokens() && (
+          <Alert className="border-yellow-500/50 bg-yellow-500/10">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              You don't have enough tokens to generate plots. Each plot costs 1 token.
+              <br />
+              <span className="text-sm text-muted-foreground">
+                Tokens refill monthly or you can purchase more in your account settings.
+              </span>
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {/* Token error */}
+        {tokenError && (
+          <Alert className="border-red-500/50 bg-red-500/10">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              {tokenError}
+            </AlertDescription>
+          </Alert>
+        )}
       </CardHeader>
 
       <CardContent className="space-y-6">
@@ -419,10 +370,15 @@ export function TelemetryPlotGenerator() {
                 <TabsTrigger
                   key={type.id}
                   value={type.id}
-                  className="flex flex-col items-center space-y-1 p-3 data-[state=active]:bg-primary data-[state=active]:text-muted transition-all duration-200 hover:bg-primary/30"
+                  className="flex flex-col items-center space-y-1 p-3 data-[state=active]:bg-primary data-[state=active]:text-muted transition-all duration-200 hover:bg-primary/30 relative"
                 >
                   <IconComponent className="h-4 w-4" />
                   <span className="text-xs font-medium">{type.name}</span>
+                  {type.isPro && (
+                    <Badge variant="secondary" className="absolute -top-1 -right-1 text-[8px] px-1 py-0 h-4 bg-primary/90 text-primary-foreground font-bold accent-glow border border-primary/50">
+                      PRO
+                    </Badge>
+                  )}
                 </TabsTrigger>
               )
             })}
@@ -478,7 +434,7 @@ export function TelemetryPlotGenerator() {
                 </Select>
               </div>
             </div>
-            {selectedPlotType === "speed" && (
+            {(selectedPlotType === "speed" || selectedPlotType === "laptime") && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Driver 1 */}
               <div className="space-y-2">
@@ -496,7 +452,7 @@ export function TelemetryPlotGenerator() {
                   </SelectContent>
                 </Select>
               </div>
-              {/* Driver 2 */}
+              {selectedPlotType === "speed" && (
               <div className="space-y-2">
                 <Label htmlFor="driver">Driver</Label>
                 <Select value={selectedDriver} onValueChange={setSelectedDriver}>
@@ -511,7 +467,7 @@ export function TelemetryPlotGenerator() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </div>)}
             </div>)}
             
             {(selectedPlotType === "track_comparison" || selectedPlotType === "throttle_brake") && (
@@ -559,8 +515,8 @@ export function TelemetryPlotGenerator() {
             <div className="flex items-center space-x-4">
               <Button
                 onClick={handleGeneratePlot}
-                disabled={isGenerating}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground glow-effect hover:scale-105 transition-all duration-300"
+                disabled={isGenerating || !hasTokens() || !isAuthenticated}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground glow-effect hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isGenerating ? (
                   <>
@@ -571,6 +527,9 @@ export function TelemetryPlotGenerator() {
                   <>
                     <Play className="h-4 w-4 mr-2" />
                     Generate Plot
+                    <span className="ml-2 text-xs bg-yellow-500/20 px-2 py-1 rounded text-yellow-300">
+                      1 token
+                    </span>
                   </>
                 )}
               </Button>

@@ -1,5 +1,6 @@
 'use client';
 
+import { Console } from 'console';
 import { useState, useEffect } from 'react';
 
 const API_URL = 'http://localhost:5000/api';
@@ -49,6 +50,10 @@ export const fetchThrottleBrakeComparison = async (
   driver2: string
 ) => {
   return fetchWithAuth(`throttleBrake-comparison-2drivers-data?year=${year}&gp=${gp}&session=${session}&driver1=${driver1}&driver2=${driver2}`, token);
+}
+
+export const fetchLaptimeData = async (token: string, year: number, gp: number, session: string, driver: string) => {
+  return fetchWithAuth(`laptimes?year=${year}&gp=${gp}&session=${session}&driver=${driver}`, token);
 }
 
 export const fetchAPIDailyStats = async (token: string) => {

@@ -1,0 +1,154 @@
+const API_URL = 'http://localhost:5271/api';
+
+const getToken = () => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('token');
+    }
+    return null;
+};
+
+export const checkAdminAccess = async () => {
+    const token = getToken();
+    if (!token) {
+        return { success: false, error: 'No token found' };
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/admin/check`, {
+            headers: {
+                'Authorization': token,
+            },
+        });
+
+        if (!response.ok) {
+            return { success: false, error: 'Access denied' };
+        }
+
+        const data = await response.json();
+        if (!data.isAdmin) {
+            return { success: false, error: 'Not admin' };
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error('Error checking admin access:', error);
+        return { success: false, error: 'Failed to verify admin access' };
+    }
+};
+
+export const fetchUsers = async () => {
+    const token = getToken();
+    if (!token) {
+        return { success: false, error: 'No token found' };
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/admin/users`, {
+            headers: {
+                'Authorization': token,
+            },
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, data };
+        } else {
+            return { success: false, error: 'Failed to fetch users' };
+        }
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        return { success: false, error: 'Failed to fetch users' };
+    }
+};
+
+export const updateUserPlan = async (userId: string, planType: string) => {
+    const token = getToken();
+    if (!token) {
+        return { success: false, error: 'No token found' };
+    }
+    try {
+        let planNumber = null;
+        if(planType === 'BASIC') {
+            planNumber = 0;
+        }
+        else if(planType === 'PRO') {
+            planNumber = 1;
+        }
+        else if(planType === 'ELITE') {
+            planNumber = 2;
+        }
+        else if(planType === 'CONTENT_CREATOR') {
+            planNumber = 3;
+        }
+        const response = await fetch(`${API_URL}/admin/users/${userId}/plan`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token,
+            },
+            body: JSON.stringify({ planNumber }),
+        });
+
+        if (response.ok) {
+            return { success: true };
+        } else {
+            return { success: false, error: 'Failed to update user plan' };
+        }
+    } catch (error) {
+        console.error('Error updating user plan:', error);
+        return { success: false, error: 'Failed to update user plan' };
+    }
+};
+
+export const updateUserRole = async (userId: string, role: string) => {
+    const token = getToken();
+    if (!token) {
+        return { success: false, error: 'No token found' };
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/admin/users/${userId}/role`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token,
+            },
+            body: JSON.stringify({ role }),
+        });
+
+        if (response.ok) {
+            return { success: true };
+        } else {
+            return { success: false, error: 'Failed to update user role' };
+        }
+    } catch (error) {
+        console.error('Error updating user role:', error);
+        return { success: false, error: 'Failed to update user role' };
+    }
+};
+
+export const deleteUser = async (userId: string) => {
+    const token = getToken();
+    if (!token) {
+        return { success: false, error: 'No token found' };
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/admin/users/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': token,
+            },
+        });
+
+        if (response.ok) {
+            return { success: true };
+        } else {
+            const errorData = await response.json();
+            return { success: false, error: errorData.message || 'Failed to delete user' };
+        }
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        return { success: false, error: 'Failed to delete user' };
+    }
+};
