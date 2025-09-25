@@ -2,9 +2,9 @@ name: Enterprise CI/CD Pipeline
 
 on:
   push:
-    branches: [ master, develop, 'release/*', 'hotfix/*' ]
+    branches: [ master, dev, 'release/*', 'hotfix/*' ]
   pull_request:
-    branches: [ master, develop ]
+    branches: [ master, dev ]
     types: [opened, synchronize, reopened, ready_for_review]
 
 env:
