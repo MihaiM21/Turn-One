@@ -1,0 +1,47 @@
+name: Simple CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Build and Test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    # Test .NET API
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+        
+    - name: Restore .NET dependencies
+      run: dotnet restore FootballAPI/FootballAPI.csproj
+      
+    - name: Build .NET API
+      run: dotnet build FootballAPI/FootballAPI.csproj --no-restore
+      
+    - name: Run .NET tests
+      run: dotnet test FootballAPI.Tests/FootballAPI.Tests.csproj --no-build --verbosity normal
+      
+    # Test Angular Client
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: FootballClient/package-lock.json
+        
+    - name: Install Node.js dependencies
+      run: npm ci
+      working-directory: ./FootballClient
+      
+    - name: Build Angular client
+      run: npm run build
+      working-directory: ./FootballClient

@@ -6,7 +6,11 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "type-check": "tsc --noEmit",
+    "audit": "npm audit --audit-level=moderate",
+    "security": "npm audit && npm audit fix"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

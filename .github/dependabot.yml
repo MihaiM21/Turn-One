@@ -1,0 +1,65 @@
+version: 2
+updates:
+  # Enable version updates for npm
+  - package-ecosystem: "npm"
+    directory: "/turn-one-client"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    target-branch: "develop"
+    reviewers:
+      - "MihaiM21"
+    assignees:
+      - "MihaiM21"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  # Enable version updates for NuGet
+  - package-ecosystem: "nuget"
+    directory: "/turn-one-backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    target-branch: "develop"
+    reviewers:
+      - "MihaiM21"
+    assignees:
+      - "MihaiM21"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    target-branch: "develop"
+    reviewers:
+      - "MihaiM21"
+    assignees:
+      - "MihaiM21"
+    commit-message:
+      prefix: "chore(ci)"
+      include: "scope"
+
+  # Enable version updates for Docker
+  - package-ecosystem: "docker"
+    directory: "/docker"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    target-branch: "develop"
+    reviewers:
+      - "MihaiM21"
+    assignees:
+      - "MihaiM21"
+    commit-message:
+      prefix: "chore(docker)"
+      include: "scope"
