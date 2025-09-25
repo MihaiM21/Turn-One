@@ -722,7 +722,7 @@ export default function AdminDashboard() {
                   </div>
                   <h3 className="text-foreground text-lg font-medium mb-2">No users found</h3>
                   <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-                    Try adjusting your search terms or filter settings to find the users you're looking for.
+                    Try adjusting your search terms or filter settings to find the users you&apos;re looking for.
                   </p>
                 </div>
               )}

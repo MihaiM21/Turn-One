@@ -26,7 +26,7 @@ export default function ContactPage() {
               <span className="block mt-2">Turn One</span>
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground text-pretty mb-8 max-w-3xl mx-auto">
-              Ready to revolutionize your F1 analysis? Let's discuss how Turn One can accelerate your motorsport
+              Ready to revolutionize your F1 analysis? Let&apos;s discuss how Turn One can accelerate your motorsport
               intelligence.
             </p>
           </div>
@@ -43,8 +43,8 @@ export default function ContactPage() {
                 <div className="mb-8">
                   <h2 className="text-3xl font-bold mb-4 gradient-text">Send Us a Message</h2>
                   <p className="text-lg text-muted-foreground text-pretty">
-                    Whether you're interested in our services, need technical support, or want to discuss a custom
-                    solution, we're here to help.
+                    Whether you&apos;re interested in our services, need technical support, or want to discuss a custom
+                    solution, we&apos;re here to help.
                   </p>
                 </div>
 

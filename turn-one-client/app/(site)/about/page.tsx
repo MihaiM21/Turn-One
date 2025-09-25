@@ -228,7 +228,7 @@ export default function AboutPage() {
                     </div>
                     <CardTitle>Innovation</CardTitle>
                     <CardDescription>
-                      Constantly pushing the boundaries of what's possible in motorsport data analysis and visualization.
+                      Constantly pushing the boundaries of what&apos;s possible in motorsport data analysis and visualization.
                     </CardDescription>
                   </CardHeader>
                 </Card>

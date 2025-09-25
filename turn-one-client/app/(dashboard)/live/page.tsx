@@ -562,7 +562,7 @@ export default function LiveDashboard() {
                             </span>
                           </div>
                           <p className="text-xs text-muted-foreground mb-1">{radio.team}</p>
-                          <p className="text-sm italic leading-relaxed">"{radio.message}"</p>
+                          <p className="text-sm italic leading-relaxed">&ldquo;{radio.message}&rdquo;</p>
                         </div>
                       ))}
                     </div>

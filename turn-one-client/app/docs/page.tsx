@@ -118,7 +118,7 @@ export default function DocsPage() {
                 <li>Select one or two drivers to compare</li>
                 <li>Input your API token for data access</li>
                 <li>Choose the plot type from the available options</li>
-                <li>Click "Generate Plot" to visualize the data</li>
+                <li>Click &ldquo;Generate Plot&rdquo; to visualize the data</li>
                 <li>Use the export feature to save or share your analysis</li>
               </ol>
             </div>
