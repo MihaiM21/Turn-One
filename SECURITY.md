@@ -14,20 +14,10 @@ We currently support the following versions with security updates:
 If you discover a security vulnerability, please follow these steps:
 
 1. **Do not** create a public issue
-2. Email security@turnone.com with details
+2. Email contact@t1f1.com with details
 3. Include steps to reproduce if possible
 4. Allow up to 72 hours for initial response
 
-## Security Measures
-
-This project implements:
-
-- Automated security scanning with Trivy
-- Dependency vulnerability checks
-- Code quality analysis with SonarCloud
-- Container security best practices
-- Non-root container execution
-- Regular dependency updates via Dependabot
 
 ## Response Timeline
 

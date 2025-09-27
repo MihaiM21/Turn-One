@@ -15,8 +15,10 @@ DEPLOYMENT_PATH="${DEPLOYMENT_PATH:-/tmp/turn-one-deployment}"
 deploy_to_vps() {
     local environment=$1
     local deployment_package=$2
+    local domain=$3
     
     echo "🚀 Deploying to $environment VPS..."
+    echo "Domain: $domain"
     echo "Package: $deployment_package"
     
     # Create SSH key file
@@ -88,9 +90,15 @@ health_check() {
 main() {
     local environment=${1:-"staging"}
     local deployment_package=${2:-""}
+    local domain=${3:-""}
     
     if [ -z "$deployment_package" ]; then
         echo "❌ Deployment package not specified"
+        exit 1
+    fi
+    
+    if [ -z "$domain" ]; then
+        echo "❌ Domain not specified"
         exit 1
     fi
     
@@ -100,7 +108,7 @@ main() {
     fi
     
     # Deploy to VPS
-    deploy_to_vps "$environment" "$deployment_package"
+    deploy_to_vps "$environment" "$deployment_package" "$domain"
     
     # Run health checks
     if health_check "$environment"; then
