@@ -15,26 +15,7 @@ import { PerformanceTrends } from "@/components/dashboard/live dashboard/perform
 import { F1ConnectionStatus } from "@/components/dashboard/live dashboard/f1-connection-status"
 
 
-import { AppSidebar } from "@/components/app-sidebar"
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
-import ProtectedRoute from "@/components/auth/protected-route"
-import { useAuth } from "@/components/auth/auth-provider"
-import { Button } from "@/components/ui/button"
-import { useRouter } from "next/navigation"
-
 export default function DashboardPage() {
-  const { user, logout } = useAuth();
-  const router = useRouter();
-
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
-
   return (
           <div className="min-h-screen bg-gradient-to-br from-black via-red-950/20 to-black">
           
