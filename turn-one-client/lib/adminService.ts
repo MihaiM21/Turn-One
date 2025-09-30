@@ -100,7 +100,7 @@ export const updateUserPlan = async (userId: string, planType: string) => {
     }
 };
 
-export const updateUserRole = async (userId: string, role: string) => {
+export const updateUserRole = async (userId: string, role: number) => {
     const token = getToken();
     if (!token) {
         return { success: false, error: 'No token found' };
