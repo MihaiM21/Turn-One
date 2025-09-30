@@ -46,7 +46,7 @@ export type F1StatusCallback = (status: 'connected' | 'connecting' | 'disconnect
 export class F1LiveDataService {
   private readonly signalrUrl = "livetiming.formula1.com/signalr";
   private readonly signalrHub = "Streaming";
-  private readonly proxyUrl = `${process.env.BACKEND_URL}/f1livetiming`; // Use backend proxy
+  private readonly proxyUrl = `${API_URL}/f1livetiming`; // Use backend proxy
   private readonly retryFreq = 15000;
   private readonly maxRetries = 5;
   
