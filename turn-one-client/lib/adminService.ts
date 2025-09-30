@@ -61,24 +61,21 @@ export const fetchUsers = async () => {
     }
 };
 
-export const updateUserPlan = async (userId: string, planType: string) => {
+export const updateUserPlan = async (userId: string, planTypeString: string) => {
     const token = getToken();
     if (!token) {
         return { success: false, error: 'No token found' };
     }
     try {
-        let planNumber = null;
-        if(planType === 'BASIC') {
-            planNumber = 0;
+        let planType = null;
+        if(planTypeString === 'BASIC') {
+            planType = 0;
         }
-        else if(planType === 'PRO') {
-            planNumber = 1;
+        else if(planTypeString === 'PRO') {
+            planType = 1;
         }
-        else if(planType === 'ELITE') {
-            planNumber = 2;
-        }
-        else if(planType === 'CONTENT_CREATOR') {
-            planNumber = 3;
+        else if(planTypeString === 'ELITE') {
+            planType = 2;
         }
         const response = await fetch(`${API_URL}/admin/users/${userId}/plan`, {
             method: 'PUT',
@@ -86,7 +83,7 @@ export const updateUserPlan = async (userId: string, planType: string) => {
                 'Content-Type': 'application/json',
                 'Authorization': token,
             },
-            body: JSON.stringify({ planNumber }),
+            body: JSON.stringify({ planType }),
         });
 
         if (response.ok) {

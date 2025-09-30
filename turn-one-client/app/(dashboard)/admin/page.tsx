@@ -37,7 +37,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import * as adminService from '@/lib/adminService';
 import * as userService from '@/lib/userService';
-import { set } from 'date-fns';
 
 interface User {
   id: string;
@@ -153,7 +152,6 @@ export default function AdminDashboard() {
   };
 
   const updateUserPlan = async (userId: string, planType: string) => {
-    // Validate plan change restrictions
     const user = users.find(u => u.id === userId);
     if (!user) return;
 
@@ -416,6 +414,7 @@ export default function AdminDashboard() {
                 <SelectContent>
                   <SelectItem value="ALL">All Roles</SelectItem>
                   <SelectItem value="USER">Users</SelectItem>
+                  <SelectItem value="CONTENT_CREATOR">Content Creators</SelectItem>
                   <SelectItem value="ADMIN">Admins</SelectItem>
                 </SelectContent>
               </Select>
@@ -428,7 +427,6 @@ export default function AdminDashboard() {
                   <SelectItem value="BASIC">Basic</SelectItem>
                   <SelectItem value="PRO">Pro</SelectItem>
                   <SelectItem value="ELITE">Elite</SelectItem>
-                  <SelectItem value="CONTENT_CREATOR">Content Creator</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={sortBy} onValueChange={setSortBy}>
@@ -575,7 +573,7 @@ export default function AdminDashboard() {
                               Change the subscription plan for <span className="font-semibold">{user.username}</span>
                               <br />
                               <span className="text-xs text-orange-500 mt-1 block">
-                                Note: You can only upgrade to Content Creator or downgrade from Content Creator
+                                Note: Changing plans may affect user access and features.
                               </span>
                             </DialogDescription>
                           </DialogHeader>
@@ -627,7 +625,7 @@ export default function AdminDashboard() {
                           <div className="py-6">
                             <Select value={newRole} onValueChange={setNewRole}>
                               <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select a role" />
+                                <SelectValue placeholder={roleNames[user.role] || user.role} />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="USER">User</SelectItem>

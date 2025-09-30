@@ -31,7 +31,7 @@ export default function DashboardPage() {
 
             
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <LapTimeAnalysis />
               <SectorComparison />
             </div>
@@ -54,7 +54,7 @@ export default function DashboardPage() {
               <TireAnalysis />
               <FuelConsumption />
               <WeatherImpact />
-            </div>
+            </div> */}
           </main>
         </div>
   );
