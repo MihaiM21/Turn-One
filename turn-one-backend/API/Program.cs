@@ -5,6 +5,9 @@ using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Domain.Entities;
+using Domain.Enums;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -129,6 +132,34 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+//Seed
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<TurnOneDbContext>();
+
+    if (!db.Users.Any(u => u.Email == "mihai@t1f1.com"))
+    {
+        db.Users.Add(new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "mihai@t1f1.com",
+            Username = "Mihai",
+            Password = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? BCrypt.Net.BCrypt.HashPassword("default123"),
+            Role = Role.ADMIN,
+            Plan = PlanType.ELITE,
+            PlanStartDate = DateTime.UtcNow,
+            PlanEndDate = DateTime.UtcNow.AddYears(15),
+            AutoRenew = true,
+            CreatedAt = DateTime.UtcNow,
+            LastLogin = DateTime.UtcNow,
+            Tokens = 30,
+            LastTokenRefillDate = DateTime.UtcNow
+        });
+        db.SaveChanges();
+    }
+}
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
