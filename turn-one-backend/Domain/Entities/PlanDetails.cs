@@ -33,20 +33,12 @@ public class PlanDetails
         TokenPurchaseDiscount = 0.25m // 25% discount
     };
     
-    public static readonly PlanDetails ContentCreator = new()
-    {
-        Type = PlanType.CONTENT_CREATOR,
-        MonthlyTokens = 500,
-        MonthlyPrice = -1m, // -1 indicates this plan cannot be purchased
-        TokenPurchaseDiscount = 0.30m // 30% discount
-    };
     
     public static PlanDetails GetPlanDetails(PlanType type) => type switch
     {
         PlanType.BASIC => Basic,
         PlanType.PRO => Pro,
         PlanType.ELITE => Elite,
-        PlanType.CONTENT_CREATOR => ContentCreator,
         _ => Basic
     };
 }

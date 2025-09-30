@@ -36,13 +36,15 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import * as adminService from '@/lib/adminService';
+import * as userService from '@/lib/userService';
+import { set } from 'date-fns';
 
 interface User {
   id: string;
   email: string;
   username: string;
-  role: 'USER' | 'ADMIN';
-  plan: 'BASIC' | 'PRO' | 'ELITE' | 'CONTENT_CREATOR';
+  role: 'USER' | 'CONTENT_CREATOR' | 'ADMIN';
+  plan: 'BASIC' | 'PRO' | 'ELITE';
   tokens: number;
   createdAt: string;
   lastLogin?: string;
@@ -52,8 +54,8 @@ interface CurrentUser {
   id: string;
   email: string;
   username: string;
-  role: 'USER' | 'ADMIN';
-  plan: 'BASIC' | 'PRO' | 'ELITE' | 'CONTENT_CREATOR';
+  role: 'USER' | 'CONTENT_CREATOR' | 'ADMIN';
+  plan: 'BASIC' | 'PRO' | 'ELITE';
   tokens: number;
 }
 
@@ -61,13 +63,19 @@ const planNames: Record<string, string> = {
   BASIC: '0 - Basic',
   PRO: '1 - Pro',
   ELITE: '2 - Elite',
-  CONTENT_CREATOR: '3 - Content Creator',
   // Also handle numeric values in case API returns numbers
-  '0': '0 - Basic',
-  '1': '1 - Pro', 
-  '2': '2 - Elite',
-  '3': '3 - Content Creator'
+  '0': 'Basic',
+  '1': 'Pro', 
+  '2': 'Elite',
 };
+const roleNames: Record<string, string> = {
+  USER: 'User',
+  CONTENT_CREATOR: 'Content Creator',
+  ADMIN: 'Admin',
+  '0': 'User',
+  '1': 'Content Creator',
+  '2': 'Admin',
+}
 
 const planColors: Record<string, string> = {
   BASIC: 'bg-muted text-muted-foreground',
@@ -122,22 +130,8 @@ export default function AdminDashboard() {
   const fetchCurrentUser = async () => {
     // Get current user info from token or API
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    if (token) {
-      try {
-        // For now, we'll use a placeholder. In a real app, decode token or call API
-        const mockCurrentUser: CurrentUser = {
-          id: 'current-user',
-          username: 'Admin User',
-          email: 'admin@turnone.com',
-          role: 'ADMIN',
-          plan: 'ELITE', // This should come from actual user data
-          tokens: 50000
-        };
-        setCurrentUser(mockCurrentUser);
-      } catch (error) {
-        console.error('Failed to fetch current user:', error);
-      }
-    }
+    const response = await userService.fetchUserProfile(token || '');
+    setCurrentUser(response);
   };
 
   const fetchUsers = async () => {
@@ -163,15 +157,6 @@ export default function AdminDashboard() {
     const user = users.find(u => u.id === userId);
     if (!user) return;
 
-    const isValidChange = canChangePlan(user.plan, planType);
-    if (!isValidChange) {
-      toast({
-        title: "Invalid Plan Change",
-        description: "You can only upgrade users to Content Creator or remove Content Creator status.",
-        variant: "destructive",
-      });
-      return;
-    }
 
     const result = await adminService.updateUserPlan(userId, planType);
     
@@ -191,19 +176,23 @@ export default function AdminDashboard() {
     }
   };
 
-  const canChangePlan = (currentPlan: string, newPlan: string): boolean => {
-    // Only allow changes to/from Content Creator
-    if (currentPlan === 'CONTENT_CREATOR') {
-      // Can downgrade from Content Creator to any plan
-      return true;
-    } else {
-      // Can only upgrade to Content Creator
-      return newPlan === 'CONTENT_CREATOR';
-    }
-  };
 
   const updateUserRole = async (userId: string, role: string) => {
-    const result = await adminService.updateUserRole(userId, role);
+    let result;
+    switch(role) {
+      case 'USER':
+        result = await adminService.updateUserRole(userId, 0);
+        break;
+      case 'CONTENT_CREATOR':
+        result = await adminService.updateUserRole(userId, 1);
+        break;
+      case 'ADMIN':
+        result = await adminService.updateUserRole(userId, 2);
+        break;
+      default:
+        result = await adminService.updateUserRole(userId, 0);
+    }
+    
     
     if (result.success) {
       toast({
@@ -501,13 +490,13 @@ export default function AdminDashboard() {
                           <div className="flex items-center space-x-2 mb-1">
                             <h3 className="font-semibold text-lg text-foreground">{user.username}</h3>
                             <Badge variant={user.role === 'ADMIN' ? 'default' : 'secondary'} className="text-xs">
-                              {user.role}
+                              {roleNames[user.role] || user.role}
                             </Badge>
                           </div>
                           <p className="text-sm text-muted-foreground mb-2">{user.email}</p>
                           <div className="flex flex-wrap items-center gap-3 text-sm">
                             <Badge className={`${planColors[user.plan] || 'bg-muted text-muted-foreground'} font-medium text-xs`}>
-                              {user.plan && planNames[user.plan] ? planNames[user.plan] : `${user.plan || 'Unknown'}`}
+                              {planNames[user.plan] || user.plan}
                             </Badge>
                             <div className="flex items-center space-x-1">
                               <TrendingUp className="h-3 w-3 text-primary" />
@@ -545,7 +534,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="text-center">
                           <p className="text-sm font-medium text-foreground capitalize">
-                            {user.plan && planNames[user.plan] ? planNames[user.plan] : `${user.plan || 'Unknown'} Plan`}
+                            {planNames[user.plan.toString()] ?? "Unknown" }
                           </p>
                           <p className="text-xs text-muted-foreground">Subscription</p>
                         </div>
@@ -575,7 +564,6 @@ export default function AdminDashboard() {
                               setSelectedUser(user);
                               setNewPlan(user.plan);
                             }}
-                            disabled={!canChangePlan(user.plan, 'CONTENT_CREATOR') && user.plan !== 'CONTENT_CREATOR'}
                           >
                             Edit Plan
                           </Button>
@@ -597,21 +585,9 @@ export default function AdminDashboard() {
                                 <SelectValue placeholder="Select a plan" />
                               </SelectTrigger>
                               <SelectContent>
-                                {user.plan === 'CONTENT_CREATOR' ? (
-                                  <>
-                                    <SelectItem value="BASIC">Basic</SelectItem>
-                                    <SelectItem value="PRO">Pro</SelectItem>
-                                    <SelectItem value="ELITE">Elite</SelectItem>
-                                    <SelectItem value="CONTENT_CREATOR">Content Creator</SelectItem>
-                                  </>
-                                ) : (
-                                  <>
-                                    <SelectItem value={user.plan} disabled>
-                                      {planNames[user.plan]} (Current)
-                                    </SelectItem>
-                                    <SelectItem value="CONTENT_CREATOR">Content Creator</SelectItem>
-                                  </>
-                                )}
+                                <SelectItem value="BASIC">Basic</SelectItem>
+                                <SelectItem value="PRO">Pro</SelectItem>
+                                <SelectItem value="ELITE">Elite</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -655,6 +631,7 @@ export default function AdminDashboard() {
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="USER">User</SelectItem>
+                                <SelectItem value="CONTENT_CREATOR">Content Creator</SelectItem>
                                 <SelectItem value="ADMIN">Admin</SelectItem>
                               </SelectContent>
                             </Select>

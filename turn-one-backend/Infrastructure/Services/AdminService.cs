@@ -55,6 +55,16 @@ namespace Infrastructure.Services
             return true;
         }
 
+        public async Task<bool> UpdateUserTokensAsync(Guid userId, int tokens)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return false;
+
+            user.Tokens = tokens;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<bool> DeleteUserAsync(Guid userId)
         {
             var user = await _context.Users.FindAsync(userId);
