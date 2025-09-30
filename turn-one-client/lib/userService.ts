@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5271/api';
+const API_URL = process.env.BACKEND_URL || 'http://localhost:5271/api';
 
 export const fetchWithAuth = async (endpoint: string, token: string, options: RequestInit = {}) => {
   const response = await fetch(`${API_URL}/${endpoint}`, {

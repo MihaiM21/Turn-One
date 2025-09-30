@@ -2,6 +2,8 @@
 
 import * as pako from 'pako';
 
+const API_URL = process.env.BACKEND_URL || 'http://localhost:5271/api';
+
 // Browser-compatible F1 Live Data Service
 export interface F1LiveData {
   CarData?: any;
@@ -44,7 +46,7 @@ export type F1StatusCallback = (status: 'connected' | 'connecting' | 'disconnect
 export class F1LiveDataService {
   private readonly signalrUrl = "livetiming.formula1.com/signalr";
   private readonly signalrHub = "Streaming";
-  private readonly proxyUrl = "http://localhost:5271/api/f1livetiming"; // Use backend proxy
+  private readonly proxyUrl = `${process.env.BACKEND_URL}/f1livetiming`; // Use backend proxy
   private readonly retryFreq = 15000;
   private readonly maxRetries = 5;
   
