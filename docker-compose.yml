@@ -5,15 +5,15 @@ services:
       context: .
       dockerfile: docker/api/Dockerfile
     ports:
-      - "5000:8080"
+      - "5271:5271"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_URLS=http://+:5271
       - ConnectionStrings__DefaultConnection=Data Source=turnone.db
     volumes:
       - api_data:/app/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5271/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -29,7 +29,7 @@ services:
     environment:
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
-      - API_URL=http://api:8080
+      - API_URL=http://api:5271
     depends_on:
       - api
     healthcheck:

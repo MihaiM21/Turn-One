@@ -1,8 +1,7 @@
 # Multi-stage build for optimized production image
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
+EXPOSE 5271
 
 # Create non-root user for security
 RUN groupadd -r appgroup && useradd -r -g appgroup appuser
@@ -42,6 +41,6 @@ USER appuser
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8080/health || exit 1
+  CMD curl -f http://localhost:5271/health || exit 1
 
 ENTRYPOINT ["dotnet", "API.dll"]

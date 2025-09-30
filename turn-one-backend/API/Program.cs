@@ -133,11 +133,15 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-//Seed
+// Apply migrations and seed data before the app starts
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<TurnOneDbContext>();
 
+    // Apply any pending migrations
+    db.Database.Migrate();
+
+    // Seed admin user
     if (!db.Users.Any(u => u.Email == "mihai@t1f1.com"))
     {
         db.Users.Add(new User
@@ -145,7 +149,8 @@ using (var scope = app.Services.CreateScope())
             Id = Guid.NewGuid(),
             Email = "mihai@t1f1.com",
             Username = "Mihai",
-            Password = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? BCrypt.Net.BCrypt.HashPassword("default123"),
+            Password = Environment.GetEnvironmentVariable("ADMIN_PASSWORD")
+                       ?? BCrypt.Net.BCrypt.HashPassword("default123"),
             Role = Role.ADMIN,
             Plan = PlanType.ELITE,
             PlanStartDate = DateTime.UtcNow,
