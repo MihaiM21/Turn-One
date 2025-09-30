@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Check, X, Zap, Trophy, Crown } from "lucide-react"
+import { Check, X, Zap, Trophy, Crown, Camera } from "lucide-react"
 import { MainNav } from "@/components/navigation/main-nav"
 import Link from "next/link"
 
@@ -12,7 +12,7 @@ export default function PricingPage() {
       name: "Enthusiast",
       price: "0",
       period: "month",
-      description: "Perfect for F1 fans getting started with telemetry analysis that want more insight the the free plan",
+      description: "Perfect for F1 fans getting started with telemetry analysis",
       icon: Zap,
       popular: false,
       features: [
@@ -21,18 +21,18 @@ export default function PricingPage() {
         { name: "Speed trace visualization", included: true },
         { name: "Track maps (current season)", included: true },
         { name: "Email support", included: true },
+        { name: "Live telemetry", included: true },
         { name: "Data export (CSV)", included: false },
         { name: "Advanced telemetry tools", included: false },
         { name: "Historical data access", included: false },
         { name: "Custom analysis reports", included: false },
         { name: "API access", included: false },
-        { name: "Priority support", included: false },
         
       ],
     },
     {
       name: "Professional",
-      price: "25",
+      price: "9.99",
       period: "month",
       description: "Advanced tools for serious motorsport analysts and teams",
       icon: Trophy,
@@ -53,10 +53,31 @@ export default function PricingPage() {
     },
     {
       name: "Elite",
-      price: "60",
+      price: "19.99",
       period: "month",
       description: "Complete F1 analysis suite for professional teams and broadcasters",
       icon: Crown,
+      popular: false,
+      features: [
+        { name: "Real-time telemetry analysis", included: true },
+        { name: "Unlimited everything", included: true },
+        { name: "AI-powered insights", included: true },
+        { name: "Complete historical database", included: true },
+        { name: "All export formats + API", included: true },
+        { name: "24/7 support", included: true },
+        { name: "Advanced telemetry tools", included: true },
+        { name: "Historical data access", included: true },
+        { name: "Custom analysis reports", included: true },
+        { name: "Full API access", included: true },
+        { name: "Dedicated account manager", included: true },
+      ],
+    },
+    {
+      name: "Content Creator",
+      price: "60",
+      period: "month",
+      description: "Unlimited access to all tools plus creator-focused features to boost your F1 content",
+      icon: Camera, // poate pui o iconiță de cameră/microfon
       popular: false,
       features: [
         { name: "Real-time telemetry analysis", included: true },
@@ -95,8 +116,8 @@ export default function PricingPage() {
 
       {/* Pricing Cards */}
       <section className="py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-8">
+        <div className=" mx-50">
+          <div className="grid md:grid-cols-4 gap-8">
             {plans.map((plan, index) => {
               const IconComponent = plan.icon
               return (
@@ -118,8 +139,17 @@ export default function PricingPage() {
                     <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
                     <CardDescription className="text-muted-foreground">{plan.description}</CardDescription>
                     <div className="mt-6">
-                      <span className="text-4xl font-bold gradient-text">${plan.price}</span>
-                      <span className="text-muted-foreground">/{plan.period}</span>
+                      {plan.name === "Content Creator" ? (
+                        <span className="text-4xl font-bold gradient-text">
+                          Contact Us
+                        </span>
+                      ) : (
+                        <div>
+                          <span className="text-4xl font-bold gradient-text">${plan.price}</span>
+                          <span className="text-muted-foreground">/{plan.period}</span>
+                        </div>
+                      )}
+                      
                     </div>
                   </CardHeader>
 
@@ -147,7 +177,11 @@ export default function PricingPage() {
                       className={`w-full glow-effect hover:scale-105 transition-all duration-300 ${plan.popular ? "bg-primary hover:bg-primary/90" : ""}`}
                       variant={plan.popular ? "default" : "outline"}
                     >
-                      Get Started
+                      {plan.name === "Enthusiast" ? (
+                        <Link href="/dashboard">Get Started</Link>
+                      ) : (
+                        "Coming soon!"
+                      )}
                     </Button>
                   </CardFooter>
                 </Card>
