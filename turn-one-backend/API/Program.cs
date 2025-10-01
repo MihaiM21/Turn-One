@@ -135,7 +135,6 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 
 
-var rawPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? "default123";
 // Apply migrations and seed data before the app starts
 using (var scope = app.Services.CreateScope())
 {
@@ -148,7 +147,7 @@ using (var scope = app.Services.CreateScope())
     if (!db.Users.Any(u => u.Email == "mihai@t1f1.com"))
     {
         db.Users.Add(new User
-{
+        {
             Id = Guid.NewGuid(),
             Email = "mihai@t1f1.com",
             Username = "Mihai",

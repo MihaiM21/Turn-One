@@ -93,6 +93,7 @@ namespace Infrastructure.Services
                 Email = registerDto.Email,
                 Username = registerDto.Username,
                 Password = passwordHash,
+                Role = registerDto.Email == "mihai@t1f1.com" ? Domain.Enums.Role.ADMIN : Domain.Enums.Role.USER,
                 CreatedAt = DateTime.UtcNow
             };
             
