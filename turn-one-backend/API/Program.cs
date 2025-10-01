@@ -174,6 +174,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     app.MapOpenApi();
 }
+else
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    app.MapOpenApi();
+}
 
 // Use CORS
 app.UseCors("AllowSpecificOrigin");
