@@ -134,6 +134,8 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+
+var rawPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? "default123";
 // Apply migrations and seed data before the app starts
 using (var scope = app.Services.CreateScope())
 {
@@ -146,12 +148,11 @@ using (var scope = app.Services.CreateScope())
     if (!db.Users.Any(u => u.Email == "mihai@t1f1.com"))
     {
         db.Users.Add(new User
-        {
+{
             Id = Guid.NewGuid(),
             Email = "mihai@t1f1.com",
             Username = "Mihai",
-            Password = Environment.GetEnvironmentVariable("ADMIN_PASSWORD")
-                       ?? BCrypt.Net.BCrypt.HashPassword("default123"),
+            Password = BCrypt.Net.BCrypt.HashPassword(rawPassword),
             Role = Role.ADMIN,
             Plan = PlanType.ELITE,
             PlanStartDate = DateTime.UtcNow,
@@ -162,7 +163,6 @@ using (var scope = app.Services.CreateScope())
             Tokens = 30,
             LastTokenRefillDate = DateTime.UtcNow
         });
-        db.SaveChanges();
     }
 }
 
