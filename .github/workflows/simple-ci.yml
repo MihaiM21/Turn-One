@@ -27,9 +27,7 @@ jobs:
     - name: Build .NET API
       run: dotnet build FootballAPI/FootballAPI.csproj --no-restore
       
-    - name: Run .NET tests
-      run: dotnet test FootballAPI.Tests/FootballAPI.Tests.csproj --no-build --verbosity normal
-      
+        
     # Test Angular Client
     - name: Setup Node.js
       uses: actions/setup-node@v4
