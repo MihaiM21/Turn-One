@@ -174,19 +174,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     app.MapOpenApi();
 }
-else
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.MapOpenApi();
-}
 
-app.UseHttpsRedirection();
+app.UseRouting();
+// Use CORS
 app.UseCors("AllowSpecificOrigin");
 
 // Add authentication and authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseHttpsRedirection();
 
 app.MapControllers();
 
