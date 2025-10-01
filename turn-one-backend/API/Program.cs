@@ -59,7 +59,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000", "https://localhost:3000") // Add your client app URL
+            policy.WithOrigins("http://localhost:3000", "https://localhost:3000", "https://91.107.205.28:3000", "http://91.107.205.28:3000", 
+            "https://dev.t1f1.com")
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .WithExposedHeaders("Authorization", "X-F1-Cookies")
