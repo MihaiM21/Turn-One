@@ -1,8 +1,6 @@
-'use client';
-
 import { useState, useEffect } from 'react';
 
-const API_URL = 'http://localhost:5271/api';
+const API_URL = process.env.BACKEND_URL || 'https://backend.t1f1.com/api';
 
 export interface LoginData {
   email: string;

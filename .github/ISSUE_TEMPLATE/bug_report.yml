@@ -1,0 +1,108 @@
+name: 🐛 Bug Report
+description: Create a bug report to help us improve
+title: '[BUG] '
+labels: [bug, triage]
+assignees: [MihaiM21]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! Please be as detailed as possible.
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I have searched existing issues to ensure this is not a duplicate
+          required: true
+        - label: I have read the documentation
+          required: true
+        - label: I am using the latest version
+          required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which component is affected?
+      options:
+        - API (.NET Backend)
+        - Client (Next.js Frontend)
+        - Infrastructure/DevOps
+        - Documentation
+      default: 0
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: Describe the bug...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: A clear and concise description of what you expected to happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: A clear and concise description of what actually happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: |
+        Provide information about your environment:
+      value: |
+        - OS: [e.g. Windows 11, macOS, Ubuntu 20.04]
+        - Browser: [e.g. Chrome 91, Firefox 89]
+        - Node.js version: [e.g. 20.0.0]
+        - .NET version: [e.g. 9.0]
+        - Version: [e.g. 1.0.0]
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here (screenshots, logs, etc.)
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this bug?
+      options:
+        - Critical (System unusable)
+        - High (Major feature broken)
+        - Medium (Minor feature broken)
+        - Low (Cosmetic issue)
+      default: 2

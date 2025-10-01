@@ -11,6 +11,7 @@ interface F1RawData {
     Type?: string;
     StartDate?: string;
     EndDate?: string;
+    Path?: string;
   };
   SessionData?: {
     Series?: string;
@@ -100,10 +101,10 @@ interface F1RawData {
     }>;
   };
   TeamRadio?: Record<string, {
-    RacingNumber?: string;
-    Captures?: Record<string, {
+    Captures?: Array<{
       Utc?: string;
-      Recording?: string;
+      Path?: string;
+      RacingNumber?: string;
     }>;
   }>;
   LapCount?: {
@@ -125,6 +126,7 @@ export interface MappedF1Data {
     lapsRemaining?: number;
     currentLap?: number;
     totalLaps?: number;
+    path?: string;
   };
   weather?: {
     temperature: number;
@@ -178,10 +180,8 @@ export interface MappedF1Data {
   }>;
   teamRadio?: Array<{
     timestamp: string;
-    driverName: string;
     driverNumber: string;
-    message: string;
-    team: string;
+    path: string;
   }>;
   fastestLaps?: Array<{
     position: number;
@@ -230,12 +230,15 @@ export class F1DataMapper {
     return result;
   }
 
+  
+
   private static mapSessionInfo(rawData: F1RawData): MappedF1Data['sessionInfo'] {
     const sessionInfo = rawData.SessionInfo;
     const sessionData = rawData.SessionData;
     const extrapolatedClock = rawData.ExtrapolatedClock;
     const lapCount = rawData.LapCount;
 
+    console.log('Session Info:', sessionInfo);
     if (!sessionInfo && !sessionData) return undefined;
 
     return {
@@ -245,6 +248,7 @@ export class F1DataMapper {
       timeRemaining: extrapolatedClock?.Remaining || '00:00:00',
       currentLap: lapCount?.CurrentLap,
       totalLaps: lapCount?.TotalLaps,
+      path: sessionInfo?.Path,
       lapsRemaining: lapCount?.TotalLaps && lapCount?.CurrentLap ? 
         lapCount.TotalLaps - lapCount.CurrentLap : undefined
     };
@@ -384,33 +388,25 @@ export class F1DataMapper {
   }
 
   private static mapTeamRadio(rawData: F1RawData): MappedF1Data['teamRadio'] {
-    const teamRadio = rawData.TeamRadio;
-    if (!teamRadio) return [];
+  const teamRadio = rawData.TeamRadio;
+  if (!teamRadio || !Array.isArray(teamRadio.Captures)) return [];
 
-    const result: MappedF1Data['teamRadio'] = [];
+  const result: MappedF1Data['teamRadio'] = [];
 
-    Object.entries(teamRadio).forEach(([driverNumber, radio]) => {
-      const driver = this.driverCache.get(radio.RacingNumber || driverNumber);
-      
-      if (radio.Captures) {
-        Object.entries(radio.Captures).forEach(([id, capture]) => {
-          if (!capture.Utc) return;
+  teamRadio.Captures.forEach((capture) => {
+    if (capture.Utc && capture.Path && capture.RacingNumber) {
+      result.push({
+        driverNumber: capture.RacingNumber,
+        timestamp: capture.Utc,
+        path: capture.Path,
+      });
+    }
+  });
 
-          const timestamp = new Date(capture.Utc).toLocaleTimeString();
-          
-          result.push({
-            timestamp,
-            driverName: driver?.BroadcastName || driver?.FullName || `Driver ${driverNumber}`,
-            driverNumber: radio.RacingNumber || driverNumber,
-            message: 'Radio transmission recorded', // Actual message content not available in live timing
-            team: driver?.TeamName || 'Unknown Team'
-          });
-        });
-      }
-    });
-
-    return result.sort((a, b) => b.timestamp.localeCompare(a.timestamp)).slice(0, 10);
-  }
+  return result
+    .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+    .slice(0, 10);
+}
 
   private static mapFastestLaps(rawData: F1RawData): MappedF1Data['fastestLaps'] {
     const timingData = rawData.TimingData;

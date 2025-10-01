@@ -28,7 +28,7 @@ import {
   StopCircle,
   AlertCircle
 } from 'lucide-react';
-
+import { DashboardHeader } from "@/components/dashboard/live dashboard/dashboard-header"
 interface LiveSessionData {
   sessionInfo?: {
     type: string;
@@ -88,7 +88,7 @@ interface LiveSessionData {
     message: string;
     flag?: string;
     severity: 'info' | 'warning' | 'critical';
-  }>;
+  }>;//REMAKE
   teamRadio?: Array<{
     timestamp: string;
     driverName: string;
@@ -104,6 +104,8 @@ interface LiveSessionData {
   }>;
 }
 
+
+
 export default function LiveDashboard() {
   const [liveData, setLiveData] = useState<MappedF1Data | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error' | 'no-session'>('disconnected');
@@ -111,6 +113,7 @@ export default function LiveDashboard() {
   const [isManuallyConnected, setIsManuallyConnected] = useState(false);
 
   const f1Service = getF1LiveDataService();
+  const f1Url = "https://livetiming.formula1.com";
 
   // Data callback
   const handleF1Data: F1DataCallback = useCallback((rawData) => {
@@ -244,12 +247,9 @@ export default function LiveDashboard() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
+      <DashboardHeader />
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold gradient-text">Live F1 Dashboard</h1>
-          <p className="text-muted-foreground">Real-time Formula 1 telemetry and timing data</p>
-        </div>
-        
+        <div></div>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           {/* Connection Status */}
           <div className="flex items-center gap-3">
@@ -370,7 +370,7 @@ export default function LiveDashboard() {
       {liveData && (
         <div className="space-y-6">
           {/* Quick Stats Bar */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="card-hover glow-effect">
               <CardContent className="flex items-center justify-between p-4">
                 <div>
@@ -413,46 +413,51 @@ export default function LiveDashboard() {
                 <Thermometer className="w-8 h-8 text-primary/50" />
               </CardContent>
             </Card>
-          </div>
+          </div> */}
+
+          {/* Session Info */}
+          <Card className="card-hover glow-effect py-2">
+            {/* <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="w-5 h-5 text-primary" />
+                Session Details
+              </CardTitle>
+            </CardHeader> */}
+            <CardContent className="space-y-1 ">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div className="flex justify-between">
+                  <Badge variant="secondary">{liveData.sessionInfo?.type}</Badge>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-medium">{liveData.sessionInfo?.name}</span>
+                </div>
+
+                {liveData.sessionInfo?.currentLap && liveData.sessionInfo?.totalLaps && (
+                  <div className="flex justify-between">
+                    <Badge variant="default" className='mr-2'>{liveData.sessionInfo?.status}</Badge>
+                    <span className="font-medium">
+                      Lap {liveData.sessionInfo.currentLap}/{liveData.sessionInfo.totalLaps}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Main Dashboard Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             {/* Left Column - Session & Weather (1/4) */}
-            <div className="space-y-6">
-              {/* Session Info */}
-              <Card className="card-hover glow-effect">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-primary" />
-                    Session Details
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Type:</span>
-                      <Badge variant="secondary">{liveData.sessionInfo?.type}</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Session:</span>
-                      <span className="font-medium text-sm">{liveData.sessionInfo?.name}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Status:</span>
-                      <Badge variant="default">{liveData.sessionInfo?.status}</Badge>
-                    </div>
-                    {liveData.sessionInfo?.currentLap && liveData.sessionInfo?.totalLaps && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Progress:</span>
-                        <span className="font-medium">
-                          Lap {liveData.sessionInfo.currentLap}/{liveData.sessionInfo.totalLaps}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="space-y-6 xl:col-span-2">
 
+              {/* Live Timing Grid */}
+              {liveData.positions && (
+                <LiveTimingGrid positions={liveData.positions} />
+              )}
+
+            </div>
+
+            {/* Center Columns - Live Timing (2/4) */}
+            <div className="space-y-6 xl:col-span-1">
               {/* Weather Component */}
               {liveData.weather && (
                 <LiveWeather weather={liveData.weather} />
@@ -486,13 +491,6 @@ export default function LiveDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-              )}
-            </div>
-
-            {/* Center Columns - Live Timing (2/4) */}
-            <div className="xl:col-span-2">
-              {liveData.positions && (
-                <LiveTimingGrid positions={liveData.positions} />
               )}
             </div>
 
@@ -549,20 +547,41 @@ export default function LiveDashboard() {
                   <ScrollArea className="h-[350px]">
                     <div className="space-y-3">
                       {liveData.teamRadio?.map((radio, index) => (
-                        <div key={index} className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                        <div
+                          key={index}
+                          className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                        >
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
                               <Badge variant="outline" className="text-xs px-1 h-5">
                                 {radio.driverNumber}
                               </Badge>
-                              <p className="font-medium text-sm truncate">{radio.driverName}</p>
+                              {/* <p className="font-medium text-sm truncate">{radio.driverName}</p> */}
                             </div>
-                            <span className="text-xs font-mono text-muted-foreground">
+                            {/* <span className="text-xs font-mono text-muted-foreground">
                               {radio.timestamp}
-                            </span>
+                            </span> */}
                           </div>
-                          <p className="text-xs text-muted-foreground mb-1">{radio.team}</p>
-                          <p className="text-sm italic leading-relaxed">"{radio.message}"</p>
+
+                          
+
+                          {/* If you still want to keep a "transcribed message" placeholder */}
+                          {/* {radio.message && (
+                            <p className="text-sm italic leading-relaxed">
+                              &ldquo;{radio.message}&rdquo;
+                            </p>
+                          )} */}
+
+                          {/* Audio player */}
+                          {radio.path && (
+                            <audio
+                              controls
+                              className="mt-2 w-full"
+                              src={`${f1Url}/static/${liveData.sessionInfo?.path}${radio.path}`}
+                            >
+                              Your browser does not support the audio element.
+                            </audio>
+                          )}
                         </div>
                       ))}
                     </div>

@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(TurnOneDbContext))]
-    [Migration("20250911115537_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250930090327_InitV2")]
+    partial class InitV2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -26,6 +26,14 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("AutoRenew")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -36,13 +44,33 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime?>("LastLogin")
                         .HasColumnType("TEXT");
 
-                    b.Property<byte[]>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("BLOB");
+                    b.Property<DateTime>("LastTokenRefillDate")
+                        .HasColumnType("TEXT");
 
-                    b.Property<byte[]>("PasswordSalt")
+                    b.Property<string>("Password")
                         .IsRequired()
-                        .HasColumnType("BLOB");
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Plan")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("PlanEndDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PlanStartDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Role")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("Tokens")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(30);
 
                     b.Property<string>("Username")
                         .IsRequired()

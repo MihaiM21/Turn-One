@@ -3,7 +3,8 @@
 import { Console } from 'console';
 import { useState, useEffect } from 'react';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = process.env.API_URL || 'https://api.t1f1.com/api';
+const APIDEV_URL = process.env.APIDEV_URL || 'https://apidev.t1f1.com/api';
 
 export const fetchWithAuth = async (endpoint: string, token: string, options: RequestInit = {}) => {
   const response = await fetch(`${API_URL}/${endpoint}`, {

@@ -5,6 +5,9 @@ using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Domain.Entities;
+using Domain.Enums;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,7 +59,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000", "https://localhost:3000") // Add your client app URL
+            policy.WithOrigins("http://localhost:3000", "https://localhost:3000", "https://91.107.205.28:3000", "http://91.107.205.28:3000", 
+            "https://dev.t1f1.com", "https://dev.turnonehub.com", "https://t1f1.com", "https://turnonehub.com")
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .WithExposedHeaders("Authorization", "X-F1-Cookies")
@@ -130,6 +134,38 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+
+// Apply migrations and seed data before the app starts
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<TurnOneDbContext>();
+
+    // Apply any pending migrations
+    db.Database.Migrate();
+
+    // Seed admin user
+    if (!db.Users.Any(u => u.Email == "mihai@t1f1.com"))
+    {
+        db.Users.Add(new User
+        {
+            Id = Guid.NewGuid(),
+            Email = "mihai@t1f1.com",
+            Username = "Mihai",
+            Password = BCrypt.Net.BCrypt.HashPassword("default123"),
+            Role = Role.ADMIN,
+            Plan = PlanType.ELITE,
+            PlanStartDate = DateTime.UtcNow,
+            PlanEndDate = DateTime.UtcNow.AddYears(15),
+            AutoRenew = true,
+            CreatedAt = DateTime.UtcNow,
+            LastLogin = DateTime.UtcNow,
+            Tokens = 30,
+            LastTokenRefillDate = DateTime.UtcNow
+        });
+    }
+}
+
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -137,13 +173,21 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     app.MapOpenApi();
 }
+else
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    app.MapOpenApi();
+}
 
-app.UseHttpsRedirection();
+// Use CORS
 app.UseCors("AllowSpecificOrigin");
 
 // Add authentication and authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
+
+// app.UseHttpsRedirection();
 
 app.MapControllers();
 

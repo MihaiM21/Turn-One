@@ -1,4 +1,5 @@
-const API_URL = 'http://localhost:5271/api';
+const API_URL = process.env.BACKEND_URL || 'https://backend.t1f1.com/api';
+
 
 const getToken = () => {
     if (typeof window !== 'undefined') {
@@ -61,24 +62,21 @@ export const fetchUsers = async () => {
     }
 };
 
-export const updateUserPlan = async (userId: string, planType: string) => {
+export const updateUserPlan = async (userId: string, planTypeString: string) => {
     const token = getToken();
     if (!token) {
         return { success: false, error: 'No token found' };
     }
     try {
-        let planNumber = null;
-        if(planType === 'BASIC') {
-            planNumber = 0;
+        let planType = null;
+        if(planTypeString === 'BASIC') {
+            planType = 0;
         }
-        else if(planType === 'PRO') {
-            planNumber = 1;
+        else if(planTypeString === 'PRO') {
+            planType = 1;
         }
-        else if(planType === 'ELITE') {
-            planNumber = 2;
-        }
-        else if(planType === 'CONTENT_CREATOR') {
-            planNumber = 3;
+        else if(planTypeString === 'ELITE') {
+            planType = 2;
         }
         const response = await fetch(`${API_URL}/admin/users/${userId}/plan`, {
             method: 'PUT',
@@ -86,7 +84,7 @@ export const updateUserPlan = async (userId: string, planType: string) => {
                 'Content-Type': 'application/json',
                 'Authorization': token,
             },
-            body: JSON.stringify({ planNumber }),
+            body: JSON.stringify({ planType }),
         });
 
         if (response.ok) {
@@ -100,7 +98,7 @@ export const updateUserPlan = async (userId: string, planType: string) => {
     }
 };
 
-export const updateUserRole = async (userId: string, role: string) => {
+export const updateUserRole = async (userId: string, role: number) => {
     const token = getToken();
     if (!token) {
         return { success: false, error: 'No token found' };

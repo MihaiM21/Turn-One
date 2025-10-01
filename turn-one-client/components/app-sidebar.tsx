@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import {
   BookOpen,
   Bot,
@@ -193,7 +194,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="/">
+              <Link href="/">
                 <div className="bg-grey text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                   {/* <Command className="size-4" /> */}
                   <img src="/logo.png" alt="Turn One logo" className="size-10 object-contain" />
@@ -202,7 +203,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <span className="truncate font-medium">Turn One</span>
                   <span className="truncate text-xs">Dashboard</span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

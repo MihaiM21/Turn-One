@@ -42,14 +42,14 @@ export function DashboardHeader() {
           </div>
 
           <div className="flex items-center space-x-3">
-            <Button
+            {/* <Button
               variant="outline"
               size="sm"
               className="border-primary/30 text-foreground hover:bg-primary/10 hover:border-primary/50 bg-transparent hover:scale-105 transition-all duration-300"
             >
               <Upload className="h-4 w-4 mr-2" />
               Upload Data
-            </Button>
+            </Button> */}
 
             <div className="flex items-center space-x-1">
               <Button

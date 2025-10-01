@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitV2 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -18,8 +18,15 @@ namespace Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     Email = table.Column<string>(type: "TEXT", nullable: false),
                     Username = table.Column<string>(type: "TEXT", nullable: false),
-                    PasswordHash = table.Column<byte[]>(type: "BLOB", nullable: false),
-                    PasswordSalt = table.Column<byte[]>(type: "BLOB", nullable: false),
+                    Password = table.Column<string>(type: "TEXT", nullable: false),
+                    AvatarUrl = table.Column<string>(type: "TEXT", nullable: true),
+                    Role = table.Column<int>(type: "INTEGER", nullable: false, defaultValue: 0),
+                    Plan = table.Column<int>(type: "INTEGER", nullable: false, defaultValue: 0),
+                    PlanStartDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    PlanEndDate = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    AutoRenew = table.Column<bool>(type: "INTEGER", nullable: false, defaultValue: false),
+                    Tokens = table.Column<int>(type: "INTEGER", nullable: false, defaultValue: 30),
+                    LastTokenRefillDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     LastLogin = table.Column<DateTime>(type: "TEXT", nullable: true)
                 },

@@ -4,6 +4,5 @@ public enum PlanType
 {
     BASIC,
     PRO,
-    ELITE,
-    CONTENT_CREATOR
+    ELITE
 }

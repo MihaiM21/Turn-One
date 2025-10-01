@@ -341,7 +341,7 @@ export function TelemetryPlotGenerator() {
           <Alert className="border-yellow-500/50 bg-yellow-500/10">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              You don't have enough tokens to generate plots. Each plot costs 1 token.
+              You don&apos;t have enough tokens to generate plots. Each plot costs 1 token.
               <br />
               <span className="text-sm text-muted-foreground">
                 Tokens refill monthly or you can purchase more in your account settings.
