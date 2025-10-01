@@ -175,7 +175,6 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseRouting();
 // Use CORS
 app.UseCors("AllowSpecificOrigin");
 
