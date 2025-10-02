@@ -5,6 +5,15 @@ import { LapTimeData } from '@/types/plot-types';
 
 
 export function LapTimeAnalysisGraph({ lapTimeData }: { lapTimeData: LapTimeData[] }) {
+
+  // Don't render if no data
+    if (!lapTimeData || lapTimeData.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-[400px] text-muted-foreground">
+          No lap time data available
+        </div>
+      )
+    }
     // Tire compound color mapping
     const compoundColors = {
       'SOFT': '#FF0000',      // Red
