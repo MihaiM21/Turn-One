@@ -1,4 +1,4 @@
-const API_URL = process.env.BACKEND_URL || 'https://backend.t1f1.com/api';
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.t1f1.com/api';
 
 
 const getToken = () => {
@@ -122,6 +122,32 @@ export const updateUserRole = async (userId: string, role: number) => {
     } catch (error) {
         console.error('Error updating user role:', error);
         return { success: false, error: 'Failed to update user role' };
+    }
+};
+
+export const updateUserTokens = async (userId: string, tokens: number) => {
+    const token = getToken();
+    if (!token) {
+        return { success: false, error: 'No token found' };
+    }
+    try{
+        const response = await fetch(`${API_URL}/admin/users/${userId}/tokens`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token,
+            },
+            body: tokens.toString(),
+        });
+
+        if (response.ok) {
+            return { success: true };
+        } else {
+            return { success: false, error: 'Failed to update user tokens' };
+        }
+    } catch (error) {
+        console.error('Error updating user tokens:', error);
+        return { success: false, error: 'Failed to update user tokens' };
     }
 };
 

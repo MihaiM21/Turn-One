@@ -2,7 +2,7 @@
 
 import * as pako from 'pako';
 
-const API_URL = process.env.BACKEND_URL || 'https://backend.t1f1.com/api';
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.t1f1.com/api';
 
 // Browser-compatible F1 Live Data Service
 export interface F1LiveData {

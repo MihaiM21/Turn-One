@@ -1,4 +1,4 @@
-const API_URL = process.env.BACKEND_URL || 'https://backend.t1f1.com/api';
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.t1f1.com/api';
 
 export const fetchWithAuth = async (endpoint: string, token: string, options: RequestInit = {}) => {
   const response = await fetch(`${API_URL}/${endpoint}`, {
