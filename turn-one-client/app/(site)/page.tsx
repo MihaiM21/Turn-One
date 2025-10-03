@@ -5,63 +5,64 @@ import { BarChart3, Zap, Users, Trophy, TrendingUp, Clock } from "lucide-react"
 import { MainNav } from "@/components/navigation/main-nav"
 import Link from "next/link"
 import { ScrollAnimation } from "@/components/animation/scroll-animation"
+import { ScrollingF1Car } from "@/components/animation/scrolling-f1-car"
 
 export default function HomePage() {
   return (
-    <div className="min-h-100 bg-background">
+    <div className="min-h-100">
       <MainNav variant="homepage" />
       
       {/* Hero Section */}
-      <section className="min-h-220 overflow-hidden modern-gradient pt-16">
-        <div className="absolute inset-0 bg-[url('/turn-one-car/0009.png')] bg-cover bg-center opacity-60" />
-        {/* <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 animate-pulse" /> */}
-        {/* <div
-          className="absolute inset-0 bg-gradient-to-tr from-transparent via-primary/3 to-transparent animate-pulse"
-        /> */}
-        <div className="relative container mx-auto px-4 py-24 lg:py-32">
-          <div className="max-w-4xl mx-auto text-center">
-            {/* <Badge
-              variant="secondary"
-              className="mb-6 text-sm font-medium accent-glow"
-            >
-              Beyond the Race
-            </Badge> */}
-            <ScrollAnimation direction="up">
-              <h1 className="mt-15 text-4xl md:text-6xl lg:text-7xl font-bold text-balance mb-6">
-                TURN ONE
-                <span className="gradient-text block mt-2 pb-4">
-                  Formula One Intelligence
-                </span>
-              </h1>
-            </ScrollAnimation>
-            <ScrollAnimation direction="up" delay={0.2}>
-              <p className="text-xl md:text-2xl text-muted-foreground text-pretty mb-8 max-w-3xl mx-auto">
-                Advanced telemetry analysis, real-time insights, and professional motorsport intelligence for F1
-                enthusiasts.
-              </p>
-            </ScrollAnimation>
-            <ScrollAnimation direction="up" delay={0.3}>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button
-                  size="lg"
-                  className="text-lg px-8 py-6 glow-effect hover:scale-105 transition-all duration-300"
-                  asChild
-                >
-                  <Link href="/dashboard">
-                    <BarChart3 className="mr-2 h-5 w-5" />
-                    Start Analysis
-                  </Link>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="text-lg px-8 py-6 bg-transparent accent-glow hover:scale-105 transition-all duration-300"
-                  asChild
-                >
-                  <Link href="/">Visit store</Link>
-                </Button>
-              </div>
-            </ScrollAnimation>
+      <section className="relative">
+        <ScrollingF1Car opacity={0.8} />
+        <div className="fixed inset-0 bg-gradient-to-br from-background/30 via-background/20 to-background/30" style={{ zIndex: -1 }} />
+        <div className="fixed inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-accent/5 animate-pulse" style={{ zIndex: -1 }} />
+        <div className="relative pt-16 min-h-screen">
+          <div className="container mx-auto px-4 py-24 lg:py-32">
+            <div className="max-w-4xl mx-auto text-center">
+              {/* <Badge
+                variant="secondary"
+                className="mb-6 text-sm font-medium accent-glow"
+              >
+                Beyond the Race
+              </Badge> */}
+              <ScrollAnimation direction="up">
+                <h1 className="mt-15 text-4xl md:text-6xl lg:text-7xl font-bold text-balance mb-6">
+                  TURN ONE
+                  <span className="gradient-text block mt-2 pb-4">
+                    Formula One Intelligence
+                  </span>
+                </h1>
+              </ScrollAnimation>
+              <ScrollAnimation direction="up" delay={0.2}>
+                <p className="text-xl md:text-2xl text-muted-foreground text-pretty mb-8 max-w-3xl mx-auto">
+                  Advanced telemetry analysis, real-time insights, and professional motorsport intelligence for F1
+                  enthusiasts.
+                </p>
+              </ScrollAnimation>
+              <ScrollAnimation direction="up" delay={0.3}>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button
+                    size="lg"
+                    className="text-lg px-8 py-6 glow-effect hover:scale-105 transition-all duration-300"
+                    asChild
+                  >
+                    <Link href="/dashboard">
+                      <BarChart3 className="mr-2 h-5 w-5" />
+                      Start Analysis
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="text-lg px-8 py-6 bg-transparent accent-glow hover:scale-105 transition-all duration-300"
+                    asChild
+                  >
+                    <Link href="/">Visit store</Link>
+                  </Button>
+                </div>
+              </ScrollAnimation>
+            </div>
           </div>
         </div>
       </section>

@@ -8,6 +8,7 @@ import { Suspense } from "react"
 import { AuthProvider } from "@/components/auth/auth-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner";
+import { Loading } from "@/components/ui/loading";
 
 
 export const metadata: Metadata = {
@@ -23,7 +24,7 @@ export default function RootLayout({children,}: {
             <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
                 <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
                     <AuthProvider>
-                        <Suspense fallback={null}>
+                        <Suspense fallback={<Loading />}>
                             {children}
                         </Suspense>
                         <Toaster />
