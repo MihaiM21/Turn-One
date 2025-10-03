@@ -377,7 +377,7 @@ export function TelemetryPlotGenerator() {
                   <span className="text-xs font-medium">{type.name}</span>
                   {type.isPro && (
                     <Badge variant="secondary" className="absolute -top-1 -right-1 text-[8px] px-1 py-0 h-4 bg-primary/90 text-primary-foreground font-bold accent-glow border border-primary/50">
-                      PRO
+                      Coming Soon
                     </Badge>
                   )}
                 </TabsTrigger>
