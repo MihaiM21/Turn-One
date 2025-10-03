@@ -7,6 +7,7 @@ interface F1RawData {
       Name?: string;
       Location?: string;
     };
+    SessionStatus?: string;
     Name?: string;
     Type?: string;
     StartDate?: string;
@@ -25,18 +26,28 @@ interface F1RawData {
       Position?: string;
       TimeDiffToFastest?: string;
       TimeDiffToPositionAhead?: string;
+      InPit?: boolean;
+      Retired?: boolean;
+      NumberOfLaps?: number;
+      NumberOfPitStops?: number;
       LastLapTime?: {
         Value?: string;
-        Personal?: boolean;
-        Overall?: boolean;
+        Status?: number;
+        OverallFastest?: boolean;
+        PersonalFastest?: boolean;
       };
       BestLapTime?: {
         Value?: string;
+        Lap?: number;
       };
       Sectors?: Array<{
         Value?: string;
-        Personal?: boolean;
-        Overall?: boolean;
+        Status?: number;
+        OverallFastest?: boolean;
+        PersonalFastest?: boolean;
+        Segments?: Array<{
+          Status?: number;
+        }>;
       }>;
       Speeds?: {
         I1?: {
@@ -162,10 +173,28 @@ export interface MappedF1Data {
     sector1?: string;
     sector2?: string;
     sector3?: string;
+    sector1Best?: boolean;
+    sector2Best?: boolean;
+    sector3Best?: boolean;
+    sector1Segments?: Array<{
+      status: number;
+      // 2049 - Green - personal best,
+      // 2048 - Yellow- slower,
+      // 2051 - Purple - Overall best
+    }>;
+    sector2Segments?: Array<{
+      status: number;
+    }>;
+    sector3Segments?: Array<{
+      status: number;
+    }>;
     speed: number;
     drs: boolean;
     positionChange?: number;
     isOnTrack: boolean;
+    retired?: boolean;
+    numberOfLaps?: number;
+    numberOfPitStops?: number;
     tires: {
       compound: 'soft' | 'medium' | 'hard' | 'intermediate' | 'wet';
       age: number;
@@ -242,9 +271,9 @@ export class F1DataMapper {
     if (!sessionInfo && !sessionData) return undefined;
 
     return {
-      type: sessionInfo?.Type || 'Unknown',
-      name: sessionInfo?.Name || 'F1 Session',
-      status: sessionData?.Status || 'Unknown',
+      type: sessionInfo?.Name || 'Unknown',
+      name: sessionInfo?.Meeting?.Name || 'F1 Session',
+      status: sessionInfo?.SessionStatus || 'Unknown',
       timeRemaining: extrapolatedClock?.Remaining || '00:00:00',
       currentLap: lapCount?.CurrentLap,
       totalLaps: lapCount?.TotalLaps,
@@ -323,30 +352,72 @@ export class F1DataMapper {
 
       if (!timing.Position) return;
 
-      const position = parseInt(timing.Position) || 0;
+      // Process speed data
       const speed = carInfo?.Channels?.[2] || 0;
       const drs = (carInfo?.Channels?.[45] || 0) > 0;
-      const isOnTrack = posInfo?.Status !== 'OnTrack' ? false : true;
+      
+      // Process track status
+      const isOnTrack = !timing.InPit;
+      const retired = timing.Retired || false;
+      
+      // Process timing data
+      const lastLap = timing.LastLapTime?.Value || '';
+      const bestLap = timing.BestLapTime?.Value;
+      const gap = timing.TimeDiffToFastest || '';
+      const interval = timing.TimeDiffToPositionAhead || '';
+      
+      // Process sector times and segments
+      const sectors = timing.Sectors || [];
+      const sector1 = sectors[0]?.Value;
+      const sector2 = sectors[1]?.Value;
+      const sector3 = sectors[2]?.Value;
+      
+      // Process sector status for highlighting
+      const sector1Best = sectors[0]?.OverallFastest;
+      const sector2Best = sectors[1]?.OverallFastest;
+      const sector3Best = sectors[2]?.OverallFastest;
+      
+      // Process sector segments
+      const sector1Segments = sectors[0]?.Segments?.map(seg => ({ status: seg.Status || 2048 })) || [];
+      const sector2Segments = sectors[1]?.Segments?.map(seg => ({ status: seg.Status || 2048 })) || [];
+      const sector3Segments = sectors[2]?.Segments?.map(seg => ({ status: seg.Status || 2048 })) || [];
+      
+      // Get speeds for different points
+      const speeds = timing.Speeds || {};
+      const speedTrap = parseFloat(speeds.ST?.Value || '0');
+      const speedI1 = parseFloat(speeds.I1?.Value || '0');
+      const speedI2 = parseFloat(speeds.I2?.Value || '0');
+      const speedFL = parseFloat(speeds.FL?.Value || '0');
 
       positions.push({
-        position,
+        position: parseInt(timing.Position) || 0,
         driverNumber: timing.RacingNumber || driverNumber,
         driverName: driver?.BroadcastName || driver?.FullName || `Driver ${driverNumber}`,
         team: driver?.TeamName || 'Unknown Team',
-        gap: timing.TimeDiffToFastest || '',
-        interval: timing.TimeDiffToPositionAhead || '',
-        lastLapTime: timing.LastLapTime?.Value || '',
-        bestLapTime: timing.BestLapTime?.Value,
-        sector1: timing.Sectors?.[0]?.Value,
-        sector2: timing.Sectors?.[1]?.Value,
-        sector3: timing.Sectors?.[2]?.Value,
-        speed: Math.round(speed * 3.6), // Convert m/s to km/h
+        gap,
+        interval,
+        lastLapTime: lastLap,
+        bestLapTime: bestLap,
+        currentLapTime: '', // Will be updated in real-time
+        sector1,
+        sector2,
+        sector3,
+        sector1Best,
+        sector2Best,
+        sector3Best,
+        sector1Segments,
+        sector2Segments,
+        sector3Segments,
+        speed: Math.max(speedTrap, speedI1, speedI2, speedFL, Math.round(speed * 3.6)),
         drs,
         isOnTrack,
+        retired,
+        numberOfLaps: timing.NumberOfLaps || 0,
+        numberOfPitStops: timing.NumberOfPitStops || 0,
         // For now, we'll estimate tire data since it's not always available in live timing
         tires: {
           compound: 'medium' as const,
-          age: Math.floor(Math.random() * 20) + 1 // Placeholder
+          age: timing.NumberOfLaps ? Math.min(timing.NumberOfLaps, 20) : 1
         }
       });
     });

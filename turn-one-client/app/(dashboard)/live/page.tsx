@@ -424,7 +424,7 @@ export default function LiveDashboard() {
 
           {/* Session Info */}
           <Card className="overflow-hidden border-none shadow-lg shadow-primary/5 backdrop-blur-sm py-0">
-            <div className="bg-gradient-to-br from-primary/10 via-background/50 to-background pt-5">
+            <div className="bg-gradient-to-br from-primary/10 via-background/50 to-background">
               <CardHeader className="border-b border-border/5">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
@@ -640,5 +640,6 @@ export default function LiveDashboard() {
           </div>
         </div>
     </div>
-  )};
-</div>)}
+  )}
+  </div>
+  )}
