@@ -11,12 +11,11 @@ export default function HomePage() {
   return (
     <div className="min-h-100">
       <MainNav variant="homepage" />
-      
+      {/* <ScrollingF1Car opacity={0.8} /> */}
       {/* Hero Section */}
-      <section className="relative">
-        <ScrollingF1Car opacity={0.8} />
-        <div className="fixed inset-0 bg-gradient-to-br from-background/30 via-background/20 to-background/30" style={{ zIndex: -1 }} />
-        <div className="fixed inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-accent/5 animate-pulse" style={{ zIndex: -1 }} />
+      <section className="min-h-220 overflow-hidden modern-gradient pt-0">
+        <div className="absolute inset-0 bg-[url('/turn-one-car/0009.png')] bg-cover bg-center opacity-60" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 animate-pulse" />
         <div className="relative pt-16 min-h-screen">
           <div className="container mx-auto px-4 py-24 lg:py-32">
             <div className="max-w-4xl mx-auto text-center">
