@@ -246,9 +246,9 @@ export default function LiveDashboard() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-background via-background/98 to-background">
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-background via-background/98 to-background px-5">
       <DashboardHeader />
-      <div className="flex-1 container mx-auto px-4 py-6 lg:px-6 lg:py-8">
+      <div className=" container mx-auto px-4 py-6 lg:px-6 lg:py-8">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
             <Badge variant="outline" className="px-4 py-1.5 bg-primary/5 backdrop-blur-sm border-primary/20 hover:bg-primary/10 transition-colors">
@@ -423,62 +423,63 @@ export default function LiveDashboard() {
           </div> */}
 
           {/* Session Info */}
-          <Card className="overflow-hidden border-none shadow-lg shadow-primary/5 backdrop-blur-sm py-0">
-            <div className="bg-gradient-to-br from-primary/10 via-background/50 to-background">
-              <CardHeader className="border-b border-border/5">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <Badge variant="secondary" className="px-3 py-1.5 bg-primary/20 hover:bg-primary/30 transition-colors border-none text-primary">
-                      {liveData.sessionInfo?.type}
-                    </Badge>
-                    <span className="font-medium text-sm text-foreground/90">
-                      {liveData.sessionInfo?.name}
+          <Card className="overflow-hidden border-none shadow-md bg-background/50 backdrop-blur-[2px]">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-border/5">
+              <div className="flex items-center gap-2">
+                <div className={`w-1.5 h-1.5 rounded-full ${
+                  liveData.sessionInfo?.status === 'Started' 
+                    ? 'bg-green-400 animate-pulse' 
+                    : liveData.sessionInfo?.status === 'Finished'
+                    ? 'bg-red-400'
+                    : 'bg-primary/60'
+                }`} />
+                <span className="text-[11px] uppercase tracking-wide text-primary/80">{liveData.sessionInfo?.type}</span>
+                <span className="text-xs font-medium text-foreground/90">{liveData.sessionInfo?.name}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                {liveData.sessionInfo?.currentLap && liveData.sessionInfo?.totalLaps && (
+                  <div className="flex items-center gap-1.5">
+                    <Flag className="w-3 h-3 text-primary/70" />
+                    <span className="text-[11px] tabular-nums text-foreground/80">
+                      {liveData.sessionInfo.currentLap}/{liveData.sessionInfo.totalLaps}
                     </span>
                   </div>
-                  {liveData.sessionInfo?.currentLap && liveData.sessionInfo?.totalLaps && (
-                    <div className="flex items-center gap-1">
-                      <Badge variant="default" className="px-3 py-1.5 bg-primary/10 text-primary border-none">
-                        {liveData.sessionInfo?.status}
-                      </Badge>
-                      <span className="font-medium text-sm flex items-center gap-2 text-foreground/90">
-                        <Flag className="w-4 h-4 text-primary" />
-                        Lap {liveData.sessionInfo.currentLap}/{liveData.sessionInfo.totalLaps}
-                      </span>
-                    </div>
-                  )}
+                )}
+                <div className="flex items-center gap-1.5">
+                  <Clock className="w-3 h-3 text-primary/70" />
+                  <span className="text-[11px] font-mono tabular-nums text-foreground/80">
+                    {/* <LiveTimer initialTime={liveData.sessionInfo?.timeRemaining} isRunning={liveData.sessionInfo?.status === 'Started'} /> */}
+                  </span>
                 </div>
-              </CardHeader>
-              <CardContent className="py-6">
-                <div className="grid grid-cols-3 gap-6">
-                  <div className="flex flex-col gap-2">
-                    <span className="text-xs font-medium text-primary/80 uppercase tracking-wider">Details</span>
-                    <div className="flex items-center gap-2 group">
-                      <div className="p-1.5 rounded-md bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                        <Timer className="w-4 h-4 text-primary" />
-                      </div>
-                      <span className="font-medium text-foreground/90">{liveData.sessionInfo?.type}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <span className="text-xs font-medium text-primary/80 uppercase tracking-wider">Status</span>
-                    <div className="flex items-center gap-2 group">
-                      <div className="p-1.5 rounded-md bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                        <Activity className="w-4 h-4 text-primary" />
-                      </div>
-                      <span className="font-medium text-foreground/90">{liveData.sessionInfo?.status}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <span className="text-xs font-medium text-primary/80 uppercase tracking-wider">Remaining</span>
-                    <div className="flex items-center gap-2 group">
-                      <div className="p-1.5 rounded-md bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                        <Clock className="w-4 h-4 text-primary" />
-                      </div>
-                      <span className="font-medium font-mono text-foreground/90">{liveData.sessionInfo?.timeRemaining}</span>
-                    </div>
-                  </div>
+              </div>
+            </div>
+            <div className="flex divide-x divide-border/5">
+              <div className="flex-1 px-3 py-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-wider text-primary/60">Type</span>
+                  <span className="text-[11px] font-medium text-foreground/80">{liveData.sessionInfo?.type}</span>
                 </div>
-              </CardContent>
+              </div>
+              <div className="flex-1 px-3 py-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-wider text-primary/60">Status</span>
+                  <span className={`text-[11px] font-medium ${
+                    liveData.sessionInfo?.status === 'Started'
+                      ? 'text-green-400'
+                      : liveData.sessionInfo?.status === 'Finished'
+                      ? 'text-red-400'
+                      : 'text-foreground/80'
+                  }`}>
+                    {liveData.sessionInfo?.status}
+                  </span>
+                </div>
+              </div>
+              <div className="flex-1 px-3 py-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-wider text-primary/60">Track</span>
+                  <span className="text-[11px] font-medium text-foreground/80">Active</span>
+                </div>
+              </div>
             </div>
           </Card>
 
@@ -495,151 +496,127 @@ export default function LiveDashboard() {
 
             {/* Right Column - Info & Updates (5/12) */}
             <div className="col-span-12 xl:col-span-5 space-y-6">
-              {/* Weather Component */}
-              {liveData.weather && (
-                <LiveWeather weather={liveData.weather} />
-              )}
-
-              {/* Fastest Laps */}
-              {liveData.fastestLaps && liveData.fastestLaps.length > 0 && (
-                <Card className="card-hover bg-gradient-to-br from-background to-muted/30">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2">
-                      <Zap className="w-5 h-5 text-primary" />
-                      Fastest Laps
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {liveData.fastestLaps.slice(0, 3).map((fastestLap, index) => (
-                        <div key={index} className="flex items-center justify-between p-2 rounded-md bg-muted/10 border border-border/50">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="w-6 h-6 text-xs p-0 flex items-center justify-center">
-                              {fastestLap.position}
-                            </Badge>
-                            <span className="text-sm font-medium">{fastestLap.driverName}</span>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-mono text-green-400">{fastestLap.lapTime}</p>
-                            <p className="text-xs text-muted-foreground">Lap {fastestLap.lap}</p>
-                          </div>
+              {/* Weather, Race Control, and Team Radio Section */}
+              <div className="space-y-3">
+                {/* Weather Component */}
+                {liveData.weather && (
+                  <Card className="overflow-hidden border-none shadow-md py-0 bg-background/50 backdrop-blur-[2px]">
+                    <div className="flex items-center justify-between px-3 py-0 border-b border-border/5">
+                      <div className="flex items-center gap-2">
+                        <Thermometer className="w-3 h-3 text-primary/70" />
+                        <span className="text-[11px] uppercase tracking-wide text-primary/80">Track Conditions</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] tabular-nums text-foreground/80">
+                            {liveData.weather.temperature}°C Air
+                          </span>
                         </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Updates Column */}
-              <div className="space-y-6">
-              {/* Race Control Messages */}
-              <Card className="overflow-hidden border-none shadow-lg shadow-primary/5 py-0">
-                <div className="bg-gradient-to-br from-primary/10 via-background/50 to-background border-b border-primary/10">
-                  <CardHeader className="pb-3 pt-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-md bg-primary/10">
-                          <AlertTriangle className="w-5 h-5 text-primary" />
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] tabular-nums text-foreground/80">
+                            {liveData.weather.trackTemp}°C Track
+                          </span>
                         </div>
-                        Race Control
-                      </CardTitle>
-                      <Badge variant="outline" className="text-xs px-2.5 py-0.5 bg-primary/5 border-primary/20 text-primary">Messages</Badge>
+                      </div>
                     </div>
-                  </CardHeader>
-                </div>
-                <CardContent className="p-5">
-                  <ScrollArea className="h-[280px] pr-4">
-                    <div className="space-y-3">
+                    <div className="flex divide-x divide-border/5">
+                      <div className="flex-1 px-3 py-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] uppercase tracking-wider text-primary/60">Humidity</span>
+                          <span className="text-[11px] font-medium text-foreground/80">{liveData.weather.humidity}%</span>
+                        </div>
+                      </div>
+                      <div className="flex-1 px-3 py-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] uppercase tracking-wider text-primary/60">Wind</span>
+                          <span className="text-[11px] font-medium text-foreground/80">{liveData.weather.windSpeed} km/h</span>
+                        </div>
+                      </div>
+                      <div className="flex-1 px-3 py-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] uppercase tracking-wider text-primary/60">Conditions</span>
+                          <span className="text-[11px] font-medium text-foreground/80">{liveData.weather.conditions}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                )}
+
+                {/* Race Control Messages */}
+                <Card className="overflow-hidden border-none shadow-md bg-background/50 backdrop-blur-[2px]">
+                  <div className="flex items-center justify-between px-3 py-2 border-b border-border/5">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="w-3 h-3 text-primary/70" />
+                      <span className="text-[11px] uppercase tracking-wide text-primary/80">Race Control</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-pulse" />
+                      <span className="text-[10px] uppercase text-primary/60">Live Feed</span>
+                    </div>
+                  </div>
+                  <ScrollArea className="h-[180px]">
+                    <div className="divide-y divide-border/5">
                       {liveData.raceControlMessages?.map((message, index) => (
-                        <div 
-                          key={index} 
-                          className={`p-4 rounded-md border backdrop-blur-sm transition-colors ${getMessageSeverityColor(message.severity)}`}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <Badge 
-                              variant="outline" 
-                              className={`text-xs px-2.5 py-0.5 ${
-                                message.severity === 'critical' ? 'border-red-400 text-red-400 bg-red-500/5' :
-                                message.severity === 'warning' ? 'border-yellow-400 text-yellow-400 bg-yellow-500/5' :
-                                'border-blue-400 text-blue-400 bg-blue-500/5'
-                              }`}
-                            >
+                        <div key={index} className="px-3 py-2">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`text-[10px] uppercase font-medium ${
+                              message.severity === 'critical' ? 'text-red-400' :
+                              message.severity === 'warning' ? 'text-yellow-400' :
+                              'text-blue-400'
+                            }`}>
                               {message.category}
-                            </Badge>
-                            <span className="text-xs font-mono text-muted-foreground">
-                              {message.timestamp}
                             </span>
+                            <span className="text-[10px] text-muted-foreground">{message.timestamp}</span>
                           </div>
-                          <p className="text-sm leading-relaxed">{message.message}</p>
+                          <p className="text-[11px] leading-relaxed text-foreground/80">{message.message}</p>
                         </div>
                       ))}
                     </div>
                   </ScrollArea>
-                </CardContent>
-              </Card>
+                </Card>
 
-              {/* Team Radio */}
-              <Card className="overflow-hidden border-none shadow-lg shadow-primary/5 py-0">
-                <div className="bg-gradient-to-br from-primary/10 via-background/50 to-background border-b border-primary/10">
-                  <CardHeader className="pb-3 pt-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-md bg-primary/10">
-                          <Radio className="w-5 h-5 text-primary" />
-                        </div>
-                        Team Radio
-                      </CardTitle>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-primary rounded-full animate-pulse shadow-lg shadow-primary/30" />
-                        <Badge variant="outline" className="text-xs px-2.5 py-0.5 bg-primary/5 border-primary/20 text-primary">Live</Badge>
-                      </div>
+                {/* Team Radio */}
+                <Card className="overflow-hidden border-none shadow-md bg-background/50 backdrop-blur-[2px]">
+                  <div className="flex items-center justify-between px-3 py-2 border-b border-border/5">
+                    <div className="flex items-center gap-2">
+                      <Radio className="w-3 h-3 text-primary/70" />
+                      <span className="text-[11px] uppercase tracking-wide text-primary/80">Team Radio</span>
                     </div>
-                  </CardHeader>
-                </div>
-                <CardContent className="p-4">
-                  <ScrollArea className="h-[320px] pr-4">
-                    <div className="space-y-3">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-pulse" />
+                      <span className="text-[10px] uppercase text-primary/60">Live Feed</span>
+                    </div>
+                  </div>
+                  <ScrollArea className="h-[240px]">
+                    <div className="divide-y divide-border/5">
                       {liveData.teamRadio?.map((radio, index) => (
-                        <div
-                          key={index}
-                          className="group p-4 rounded-md bg-gradient-to-br from-muted/10 to-background/80 border border-border/50 hover:border-border hover:from-muted/20 transition-all"
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-3">
-                              <Badge variant="default" className="px-2.5 py-1 font-semibold tracking-wide bg-primary/20 text-primary border-none">
-                                {radio.driverNumber}
-                              </Badge>
-                              <span className="font-medium text-sm truncate max-w-[150px] text-foreground/90">
-                                {`Driver ${radio.driverNumber}`}
-                              </span>
-                            </div>
-                            <span className="text-xs font-mono text-muted-foreground">
-                              {radio.timestamp}
-                            </span>
-                          </div>
-                          {/* Minimalist audio player */}
-                          {radio.path && (
+                        <div key={index} className="px-3 py-2">
+                          <div className="flex items-center justify-between mb-1.5">
                             <div className="flex items-center gap-2">
-                              <audio
-                                controls
-                                className="w-full h-8 [&::-webkit-media-controls-panel]:bg-muted/80 [&::-webkit-media-controls-current-time-display]:text-foreground [&::-webkit-media-controls-time-remaining-display]:text-foreground [&::-webkit-media-controls-timeline]:accent-primary [&::-webkit-media-controls-play-button]:text-foreground [&::-webkit-media-controls-timeline]:hover:accent-primary/80 rounded-md focus:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 group-hover:[&::-webkit-media-controls-panel]:bg-muted transition-all"
-                                src={`${f1Url}/static/${liveData.sessionInfo?.path}${radio.path}`}
-                                style={{ minHeight: 32 }}
-                              >
-                                Your browser does not support the audio element.
-                              </audio>
+                              <span className="text-[10px] font-medium text-primary/80">#{radio.driverNumber}</span>
+                              <span className="text-[11px] font-medium text-foreground/80">{radio.driverNumber}</span>
                             </div>
+                            <span className="text-[10px] text-muted-foreground">{radio.timestamp}</span>
+                          </div>
+                          {radio.path && (
+                            <audio
+                              controls
+                              className="w-full h-[24px] [&::-webkit-media-controls-panel]:bg-primary/5 [&::-webkit-media-controls-current-time-display]:text-[11px] [&::-webkit-media-controls-time-remaining-display]:text-[11px] [&::-webkit-media-controls-timeline]:accent-primary [&::-webkit-media-controls-timeline]:h-[3px] rounded focus:outline-none"
+                              src={`${f1Url}/static/${liveData.sessionInfo?.path}${radio.path}`}
+                            >
+                              Your browser does not support the audio element.
+                            </audio>
                           )}
                         </div>
                       ))}
                     </div>
                   </ScrollArea>
-                </CardContent>
-              </Card>
+                </Card>
+              </div>
             </div>
           </div>
         </div>
-    </div>
+
   )}
   </div>
   )}

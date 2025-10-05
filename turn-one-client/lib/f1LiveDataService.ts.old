@@ -1,10 +1,9 @@
 'use client';
 
-import * as pako from 'pako';
+import { HubConnectionBuilder, HubConnection } from '@microsoft/signalr';
 
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.t1f1.com/api';
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://localhost:7216';
 
-// Browser-compatible F1 Live Data Service
 export interface F1LiveData {
   CarData?: any;
   Position?: any;
@@ -17,37 +16,138 @@ export interface F1LiveData {
   SessionData?: any;
   LapCount?: any;
   TeamRadio?: any;
-  Heartbeat?: any;
-  ExtrapolatedClock?: any;
-  TimingStats?: any;
-  TimingAppData?: any;
-  [key: string]: any; // Allow dynamic field access
-}
-
-interface SignalRMessage {
-  H?: string;
-  M?: string;
-  A?: any[];
-  I?: string;
-}
-
-interface SignalRResponse {
-  M?: SignalRMessage[];
-  R?: any;
-  I?: string;
-}
-
-interface NegotiationResponse {
-  ConnectionToken: string;
+  [key: string]: any;
 }
 
 export type F1DataCallback = (data: F1LiveData) => void;
 export type F1StatusCallback = (status: 'connected' | 'connecting' | 'disconnected' | 'error' | 'no-session') => void;
 
 export class F1LiveDataService {
-  private readonly signalrUrl = "livetiming.formula1.com/signalr";
-  private readonly signalrHub = "Streaming";
-  private readonly proxyUrl = `${API_URL}/f1livetiming`; // Use backend proxy
+  private connection: HubConnection | null = null;
+  private readonly apiUrl = API_URL;
+  private state: F1LiveData = {};
+  private dataCallbacks: F1DataCallback[] = [];
+  private statusCallbacks: F1StatusCallback[] = [];
+  private reconnectTimer: NodeJS.Timeout | null = null;
+  private isConnecting = false;
+  private messageCount = 0;
+
+  constructor() {
+    this.loadPersistedData();
+  }
+
+  private loadPersistedData(): void {
+    try {
+      const stored = localStorage.getItem('f1-last-data');
+      if (stored) {
+        this.currentState = JSON.parse(stored);
+        console.log('Loaded persisted F1 data from localStorage');
+      }
+    } catch (error) {
+      console.warn('Failed to load persisted F1 data:', error);
+    }
+  }
+
+  private persistData(): void {
+    try {
+      localStorage.setItem('f1-last-data', JSON.stringify(this.currentState));
+    } catch (error) {
+      console.warn('Failed to persist F1 data:', error);
+    }
+  }
+
+  public async connect(): Promise<void> {
+    if (this.isConnecting || this.connection?.state === 'Connected') {
+      return;
+    }
+
+    this.isConnecting = true;
+    this.notifyStatusCallbacks('connecting');
+
+    try {
+      // Create SignalR connection
+      this.connection = new HubConnectionBuilder()
+        .withUrl(`${this.apiUrl}/f1live`)
+        .withAutomaticReconnect()
+        .build();
+
+      // Set up connection handlers
+      this.connection.on('F1DataUpdate', (data: string) => {
+        this.handleF1Data(JSON.parse(data));
+      });
+
+      this.connection.on('Connected', (connectionId: string) => {
+        console.log('Connected to F1 live hub:', connectionId);
+        this.notifyStatusCallbacks('connected');
+      });
+
+      this.connection.onreconnecting(() => {
+        this.notifyStatusCallbacks('connecting');
+      });
+
+      this.connection.onreconnected(() => {
+        this.notifyStatusCallbacks('connected');
+      });
+
+      this.connection.onclose(() => {
+        this.notifyStatusCallbacks('disconnected');
+        this.scheduleReconnect();
+      });
+
+      // Start the connection
+      await this.connection.start();
+      this.isConnecting = false;
+
+      // Get initial state
+      const response = await fetch(`${this.apiUrl}/api/F1Live/state`);
+      if (response.ok) {
+        const initialState = await response.json();
+        this.handleF1Data(initialState);
+      }
+    } catch (error) {
+      console.error('Connection failed:', error);
+      this.isConnecting = false;
+      this.notifyStatusCallbacks('error');
+      this.scheduleReconnect();
+    }
+  }
+
+  private handleF1Data(data: F1LiveData): void {
+    this.messageCount++;
+    this.lastActivity = Date.now();
+    this.currentState = { ...this.currentState, ...data };
+    this.persistData();
+    this.notifyDataCallbacks();
+  }
+
+  private scheduleReconnect(): void {
+    if (!this.reconnectTimer) {
+      this.reconnectTimer = setTimeout(() => {
+        this.reconnectTimer = null;
+        this.connect();
+      }, 5000);
+    }
+  }
+
+  private notifyDataCallbacks(): void {
+    this.dataCallbacks.forEach(callback => {
+      try {
+        callback({ ...this.currentState });
+      } catch (error) {
+        console.error('Error in data callback:', error);
+      }
+    });
+  }
+
+  private notifyStatusCallbacks(status: 'connected' | 'connecting' | 'disconnected' | 'error' | 'no-session'): void {
+    this.statusCallbacks.forEach(callback => {
+      try {
+        callback(status);
+      } catch (error) {
+        console.error('Error in status callback:', error);
+      }
+    });
+  }
   private readonly retryFreq = 15000;
   private readonly maxRetries = 5;
   

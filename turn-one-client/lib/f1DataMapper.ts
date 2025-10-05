@@ -263,11 +263,10 @@ export class F1DataMapper {
 
   private static mapSessionInfo(rawData: F1RawData): MappedF1Data['sessionInfo'] {
     const sessionInfo = rawData.SessionInfo;
+
     const sessionData = rawData.SessionData;
     const extrapolatedClock = rawData.ExtrapolatedClock;
     const lapCount = rawData.LapCount;
-
-    console.log('Session Info:', sessionInfo);
     if (!sessionInfo && !sessionData) return undefined;
 
     return {
