@@ -5,49 +5,48 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Activity, Clock, Database, Wifi, WifiOff } from "lucide-react"
 import { useState, useEffect } from "react"
-import { getF1LiveDataService, F1LiveData } from "@/lib/f1LiveDataService"
+import { F1LiveData } from "@/lib/f1LiveDataService"
+import { getF1WebSocketClient } from "@/lib/f1WebSocketClient"
 
 export function F1ConnectionStatus() {
-  const [status, setStatus] = useState<'connected' | 'connecting' | 'disconnected' | 'error' | 'no-session'>('disconnected');
+  const [status, setStatus] = useState<'connected' | 'connecting' | 'disconnected' | 'error' | 'no-session' | 'max-retries'>('disconnected');
   const [data, setData] = useState<F1LiveData>({});
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
-  const [messageCount, setMessageCount] = useState(0);
   const [hasLiveConnection, setHasLiveConnection] = useState(false);
 
-  const f1Service = getF1LiveDataService();
+  const f1Client = getF1WebSocketClient();
 
   useEffect(() => {
     const statusCallback = (newStatus: typeof status) => {
       setStatus(newStatus);
+      setHasLiveConnection(f1Client.hasLiveConnection());
     };
 
     const dataCallback = (newData: F1LiveData) => {
       setData(newData);
-      setMessageCount(f1Service.getMessageCount());
-      setHasLiveConnection(f1Service.hasLiveConnection());
+      setHasLiveConnection(f1Client.hasLiveConnection());
       setLastUpdate(new Date().toLocaleString());
     };
 
-    f1Service.onStatus(statusCallback);
-    f1Service.onData(dataCallback);
+    f1Client.onStatus(statusCallback);
+    f1Client.onData(dataCallback);
 
     // Load initial data
-    const currentData = f1Service.getCurrentData();
+    const currentData = f1Client.getCurrentData();
     if (Object.keys(currentData).length > 0) {
       setData(currentData);
-      const timestamp = f1Service.getLastDataTimestamp();
+      const timestamp = f1Client.getLastDataTimestamp();
       if (timestamp) {
         setLastUpdate(new Date(timestamp).toLocaleString());
       }
     }
 
     // Update connection status
-    setHasLiveConnection(f1Service.hasLiveConnection());
-    setMessageCount(f1Service.getMessageCount());
+    setHasLiveConnection(f1Client.hasLiveConnection());
 
     return () => {
-      f1Service.removeStatusCallback(statusCallback);
-      f1Service.removeDataCallback(dataCallback);
+      f1Client.removeStatusCallback(statusCallback);
+      f1Client.removeDataCallback(dataCallback);
     };
   }, []);
 
@@ -69,15 +68,15 @@ export function F1ConnectionStatus() {
   };
 
   const connect = async () => {
-    await f1Service.connect();
+    await f1Client.connect();
   };
 
   const disconnect = () => {
-    f1Service.disconnect();
+    f1Client.disconnect();
   };
 
   const clearCache = () => {
-    f1Service.clearPersistedData();
+    f1Client.clearPersistedData();
     setData({});
     setLastUpdate(null);
   };
@@ -103,8 +102,8 @@ export function F1ConnectionStatus() {
           <div className="flex items-center gap-2">
             <Activity className="h-4 w-4 text-red-400" />
             <div>
-              <div className="text-white font-medium">{messageCount}</div>
-              <div className="text-red-200">Messages</div>
+              <div className="text-white font-medium">{Object.keys(data).length}</div>
+              <div className="text-red-200">Data Fields</div>
             </div>
           </div>
           <div className="flex items-center gap-2">

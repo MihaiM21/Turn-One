@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Domain.Entities;
 using Domain.Enums;
+using API.Services;
+using API.Middleware;
+using API.Hubs;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +18,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
+
+// Add SignalR
+builder.Services.AddSignalR();
 
 // Configure Swagger with JWT authentication
 builder.Services.AddSwaggerGen(options =>
@@ -68,6 +74,20 @@ builder.Services.AddCors(options =>
         });
 });
 
+// Add SignalR CORS policy  
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("SignalRCorsPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000", "https://localhost:3000", "https://91.107.205.28:3000", "http://91.107.205.28:3000", 
+               "https://dev.t1f1.com", "https://dev.turnonehub.com", "https://t1f1.com", "https://turnonehub.com")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials()
+              .WithExposedHeaders("Authorization", "X-F1-Cookies");
+    });
+});
+
 // Add DbContext configuration for SQLite
 builder.Services.AddDbContext<TurnOneDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -76,6 +96,10 @@ builder.Services.AddDbContext<TurnOneDbContext>(options =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
+
+// Add F1 services
+builder.Services.AddSingleton<F1LiveTimingService>();
+builder.Services.AddSingleton<F1WebSocketService>();
 
 // Add HttpClient for F1 API proxy
 builder.Services.AddHttpClient();
@@ -102,6 +126,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnMessageReceived = context =>
             {
+                // Check if the request is for SignalR hub
+                var path = context.HttpContext.Request.Path;
+                var accessToken = context.Request.Query["access_token"];
+
+                // If requesting SignalR hub and token is in query string
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                    return Task.CompletedTask;
+                }
+
                 string authorization = context.Request.Headers["Authorization"].ToString();
                 
                 // If Authorization header exists but doesn't start with "Bearer "
@@ -134,6 +169,9 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+// Start F1 live timing service
+var f1Service = app.Services.GetRequiredService<F1LiveTimingService>();
+await f1Service.StartAsync();
 
 // Apply migrations and seed data before the app starts
 using (var scope = app.Services.CreateScope())
@@ -189,7 +227,18 @@ app.UseAuthorization();
 
 // app.UseHttpsRedirection();
 
+// Configure WebSocket middleware
+var webSocketOptions = new WebSocketOptions
+{
+    KeepAliveInterval = TimeSpan.FromSeconds(120)
+};
+app.UseWebSockets(webSocketOptions);
+app.UseMiddleware<WebSocketMiddleware>();
+
 app.MapControllers();
+
+// Map SignalR hubs
+app.MapHub<F1LiveDataHub>("/hubs/f1livedata").RequireCors("SignalRCorsPolicy");
 
 // Ensure database is created and migrations are applied
 using (var scope = app.Services.CreateScope())
