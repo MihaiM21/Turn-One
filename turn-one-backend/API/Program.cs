@@ -96,6 +96,7 @@ builder.Services.AddDbContext<TurnOneDbContext>(options =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IVersionService, VersionService>();
 
 // Add F1 services
 builder.Services.AddSingleton<F1LiveTimingService>();
