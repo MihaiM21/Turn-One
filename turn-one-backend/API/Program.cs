@@ -76,6 +76,7 @@ builder.Services.AddDbContext<TurnOneDbContext>(options =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IVersionService, VersionService>();
 
 // Add HttpClient for F1 API proxy
 builder.Services.AddHttpClient();

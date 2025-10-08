@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { BarChart3, Mail, Phone, MapPin, Twitter, Linkedin, Github, Zap } from "lucide-react"
+import VersionDisplay from "@/components/ui/version-display"
 
 export function MainFooter() {
   const currentYear = new Date().getFullYear()
@@ -113,7 +114,11 @@ export function MainFooter() {
       <div className="border-t border-border bg-muted/30">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="text-sm text-muted-foreground">© {currentYear} Turn One. All rights reserved.</div>
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <span>© {currentYear} Turn One. All rights reserved.</span>
+              <span className="text-muted-foreground/50">|</span>
+              <VersionDisplay className="text-sm text-muted-foreground/70" />
+            </div>
             <div className="flex space-x-6 text-sm">
               <Link href="/privacy" className="text-muted-foreground hover:text-primary transition-colors">
                 Privacy Policy

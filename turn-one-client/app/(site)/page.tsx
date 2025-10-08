@@ -6,13 +6,15 @@ import { MainNav } from "@/components/navigation/main-nav"
 import Link from "next/link"
 import { ScrollAnimation } from "@/components/animation/scroll-animation"
 import { ScrollingF1Car } from "@/components/animation/scrolling-f1-car"
+import { HomePageDataLoader } from "./home-data-loader"
 
 export default function HomePage() {
   return (
-    <div className="min-h-100">
-      <MainNav variant="homepage" />
-      {/* <ScrollingF1Car opacity={0.8} /> */}
-      {/* Hero Section */}
+    <HomePageDataLoader>
+      <div className="min-h-100">
+        <MainNav variant="homepage" />
+        {/* <ScrollingF1Car opacity={0.8} /> */}
+        {/* Hero Section */}
       <section className="min-h-220 overflow-hidden modern-gradient pt-0">
         <div className="absolute inset-0 bg-[url('/turn-one-car/0009.png')] bg-cover bg-center opacity-60" />
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 animate-pulse" />
@@ -248,5 +250,6 @@ export default function HomePage() {
         </div>
       </section>
     </div>
+    </HomePageDataLoader>
   )
 }

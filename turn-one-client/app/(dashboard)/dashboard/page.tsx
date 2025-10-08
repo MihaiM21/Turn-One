@@ -13,17 +13,22 @@ import { DriverComparison } from "@/components/dashboard/live dashboard/driver-c
 import { SessionManager } from "@/components/dashboard/live dashboard/session-manager"
 import { PerformanceTrends } from "@/components/dashboard/live dashboard/performance-trends"
 import { F1ConnectionStatus } from "@/components/dashboard/live dashboard/f1-connection-status"
+import { useDashboardData } from "./use-dashboard-data"
+import { DashboardLoadingContainer } from "@/components/dashboard/dashboard-loading-container"
 
 
 export default function DashboardPage() {
+  const { dashboardData, isReady } = useDashboardData();
+  
   return (
-          <div className="min-h-screen bg-gradient-to-br from-black via-red-950/20 to-black">
-          
-            <DashboardHeader />
+    <DashboardLoadingContainer isReady={isReady} loadingMessage="Loading dashboard...">
+      <div className="min-h-screen bg-gradient-to-br from-black via-red-950/20 to-black">
+        
+        <DashboardHeader />
 
-            <main className="container mx-auto px-4 py-8 space-y-8">
-              
-            <SessionManager />
+        <main className="container mx-auto px-4 py-8 space-y-8">
+          
+        <SessionManager />
             
             {/* <F1ConnectionStatus /> */}
         
@@ -57,5 +62,6 @@ export default function DashboardPage() {
             </div> */}
           </main>
         </div>
+    </DashboardLoadingContainer>
   );
 }

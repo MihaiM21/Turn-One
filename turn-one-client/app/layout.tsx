@@ -9,6 +9,8 @@ import { AuthProvider } from "@/components/auth/auth-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner";
 import { Loading } from "@/components/ui/loading";
+import { PageLoadingProvider } from "@/components/providers/page-loading-provider";
+import { VersionProvider } from "@/components/providers/version-provider";
 
 
 export const metadata: Metadata = {
@@ -24,10 +26,14 @@ export default function RootLayout({children,}: {
             <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
                 <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
                     <AuthProvider>
-                        <Suspense fallback={<Loading />}>
-                            {children}
-                        </Suspense>
-                        <Toaster />
+                        <VersionProvider>
+                            <PageLoadingProvider>
+                                <Suspense fallback={<Loading />}>
+                                    {children}
+                                </Suspense>
+                                <Toaster />
+                            </PageLoadingProvider>
+                        </VersionProvider>
                     </AuthProvider>
                 </ThemeProvider>
             </body>
