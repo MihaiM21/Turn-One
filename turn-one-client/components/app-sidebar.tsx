@@ -16,6 +16,7 @@ import {
   Shield,
   SquareTerminal,
   Activity,
+  Gamepad2,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -70,6 +71,29 @@ const data = {
       //     url: "#",
       //   },
       // ],
+    },
+    {
+      title: "Game",
+      url: "/app",
+      icon: Gamepad2,
+      items: [
+        {
+          title: "Hub",
+          url: "/app/hub",
+        },
+        {
+          title: "Predictions",
+          url: "/app/predictions",
+        },
+        {
+          title: "Coin store",
+          url: "/app/coin-store",
+        },
+        {
+          title: "Changelog",
+          url: "#",
+        },
+      ],
     },
     {
       title: "Documentation",
