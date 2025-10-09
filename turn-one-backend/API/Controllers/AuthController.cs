@@ -75,6 +75,8 @@ public class AuthController : ControllerBase
             CreatedAt = user.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
             AvatarUrl = user.AvatarUrl,
             Tokens = user.Tokens,
+            Coins = user.Coins,
+            Role = user.Role.ToString(),
             PlanStartDate = user.PlanStartDate.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
             PlanEndDate = user.PlanEndDate?.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
             AutoRenew = user.AutoRenew,
