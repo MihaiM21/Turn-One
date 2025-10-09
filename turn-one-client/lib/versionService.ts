@@ -10,7 +10,7 @@ export interface Version {
 }
 
 export class VersionService {
-  private static baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  private static baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5271/api';
   private static version = null as Version | null;
 
   /**
@@ -40,14 +40,14 @@ export class VersionService {
     } catch (error) {
       console.error('Error fetching current version:', error);
       
-      // Default version from VERSION file as fallback
+      // Default version as fallback when API is unreachable
       return {
         version: '1.0.0',
         major: 1,
         minor: 0,
         patch: 0,
         releasedAt: new Date().toISOString(),
-        releaseNotes: '',
+        releaseNotes: 'API Unreachable - Using Default Version',
       };
     }
   }

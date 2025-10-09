@@ -14,44 +14,28 @@ Where:
 
 ## Version Management
 
-The current version of the application is stored in the `VERSION` file at the root of the project. This file should be committed to Git along with code changes.
-
-The version is also stored in the database and can be queried through the API.
+The current version of the application is stored in the database and can be queried through the API. This provides a single source of truth for versioning information across all environments.
 
 ## Updating the Version
 
-You can update the version using the provided scripts:
-
-### For Linux/macOS users:
-
-```bash
-# Increment patch version
-./scripts/update-version.sh patch
-
-# Increment minor version
-./scripts/update-version.sh minor
-
-# Increment major version
-./scripts/update-version.sh major
-
-# With pre-release and build metadata
-./scripts/update-version.sh patch beta.1 build.123 "Fixed dashboard bugs"
-```
-
-### For Windows users:
+You can update the version using the provided PowerShell script:
 
 ```powershell
+# Set API URL and token (if needed)
+$env:API_URL = "http://your-api-url/api"
+$env:API_TOKEN = "your-auth-token"  # Optional
+
 # Increment patch version
-.\scripts\update-version.ps1 patch
+.\scripts\update-version-db.ps1 patch
 
 # Increment minor version
-.\scripts\update-version.ps1 minor
+.\scripts\update-version-db.ps1 minor
 
 # Increment major version
-.\scripts\update-version.ps1 major
+.\scripts\update-version-db.ps1 major
 
 # With pre-release and build metadata
-.\scripts\update-version.ps1 patch beta.1 build.123 "Fixed dashboard bugs"
+.\scripts\update-version-db.ps1 patch beta.1 build.123 "Fixed dashboard bugs"
 ```
 
 ## Version Display
@@ -71,7 +55,6 @@ The application provides API endpoints for version management:
 When updating the version, it's recommended to tag the Git repository with the new version:
 
 ```bash
-git add VERSION
 git commit -m "Bump version to X.Y.Z"
 git tag vX.Y.Z
 git push && git push --tags
