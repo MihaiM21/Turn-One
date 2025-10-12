@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, Suspense } from 'react';
 import { Loading } from '@/components/ui/loading';
 import { usePathname, useSearchParams } from 'next/navigation';
 
@@ -13,11 +13,24 @@ interface PageLoadingContextType {
 
 const PageLoadingContext = createContext<PageLoadingContextType | undefined>(undefined);
 
+// SearchParams consumer component that uses the hook inside Suspense
+function SearchParamsWatcher({ onParamsChange }: { onParamsChange: (value: URLSearchParams) => void }) {
+  const searchParams = useSearchParams();
+  
+  useEffect(() => {
+    if (searchParams) {
+      onParamsChange(searchParams);
+    }
+  }, [searchParams, onParamsChange]);
+  
+  return null;
+}
+
 export function PageLoadingProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("Loading...");
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const [currentSearchParams, setCurrentSearchParams] = useState<URLSearchParams | null>(null);
   
   // Reset loading state on route change
   useEffect(() => {
@@ -29,7 +42,7 @@ export function PageLoadingProvider({ children }: { children: ReactNode }) {
     }, 1000);
     
     return () => clearTimeout(timeout);
-  }, [pathname, searchParams]);
+  }, [pathname, currentSearchParams]);
 
   const startLoading = (message = "Loading...") => {
     setLoadingMessage(message);
@@ -42,6 +55,9 @@ export function PageLoadingProvider({ children }: { children: ReactNode }) {
 
   return (
     <PageLoadingContext.Provider value={{ isLoading, setIsLoading, startLoading, stopLoading }}>
+      <Suspense fallback={null}>
+        <SearchParamsWatcher onParamsChange={(params) => setCurrentSearchParams(params)} />
+      </Suspense>
       {isLoading && <Loading message={loadingMessage} />}
       {children}
     </PageLoadingContext.Provider>
