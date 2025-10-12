@@ -58,6 +58,7 @@ export function NavUser({
       planStartDate: "",
       planEndDate: "",
       autoRenew: false,
+      coins: 0,
       tokens: 0,
       lastTokenRefillDate: "",
       createdAt: "",

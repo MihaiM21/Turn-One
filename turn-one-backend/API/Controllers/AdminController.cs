@@ -105,6 +105,24 @@ public class AdminController : ControllerBase
         }
     }
 
+    [HttpPut("users/{userId:guid}/coins")]
+    public async Task<ActionResult> UpdateUserCoins(Guid userId, [FromBody] int coins)
+    {
+        try
+        {
+            var success = await _adminService.UpdateUserCoinsAsync(userId, coins);
+            if (!success)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+            return Ok(new { message = "User coins updated successfully" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to update user tokens", error = ex.Message });
+        }
+    }
+
     [HttpDelete("users/{userId:guid}")]
     public async Task<ActionResult> DeleteUser(Guid userId)
     {

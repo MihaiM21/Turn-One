@@ -13,22 +13,35 @@ import { DriverComparison } from "@/components/dashboard/live dashboard/driver-c
 import { SessionManager } from "@/components/dashboard/live dashboard/session-manager"
 import { PerformanceTrends } from "@/components/dashboard/live dashboard/performance-trends"
 import { F1ConnectionStatus } from "@/components/dashboard/live dashboard/f1-connection-status"
+import { DailyGiftWidget } from "@/components/dashboard/daily-gift-widget"
+import { UserStatsWidget } from "@/components/dashboard/user-stats-widget"
 import { useDashboardData } from "./use-dashboard-data"
 import { DashboardLoadingContainer } from "@/components/dashboard/dashboard-loading-container"
 
 
 export default function DashboardPage() {
-  const { dashboardData, isReady } = useDashboardData();
+  const { dashboardData, isReady, hasToken } = useDashboardData();
   
   return (
-    <DashboardLoadingContainer isReady={isReady} loadingMessage="Loading dashboard...">
+    <DashboardLoadingContainer 
+      isReady={isReady} 
+      loadingMessage={hasToken === false ? "Authentication required..." : "Loading dashboard..."}
+    >
       <div className="min-h-screen bg-gradient-to-br from-black via-red-950/20 to-black">
         
         <DashboardHeader />
 
         <main className="container mx-auto px-4 py-8 space-y-8">
           
-        <SessionManager />
+          {/* User stats and daily gift widgets */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1">
+            <UserStatsWidget />
+            <DailyGiftWidget 
+              onGiftClaimed={() => window.location.reload()}
+            />
+          </div>
+          
+          <SessionManager />
             
             {/* <F1ConnectionStatus /> */}
         

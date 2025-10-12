@@ -17,9 +17,9 @@ export class F1WebSocketClient {
     private statusCallbacks: F1StatusCallback[] = [];
     private lastActivity = 0;
 
-    private readonly wsUrl = process.env.NODE_ENV === 'development'
-        ? 'ws://localhost:5000/ws'  // Your .NET backend port
-        : `wss://${process.env.NEXT_PUBLIC_BACKEND_URL?.replace('https://', '')}/ws`;
+    private readonly wsUrl = process.env.NEXT_PUBLIC_BACKEND_URL
+        ? `wss://${process.env.NEXT_PUBLIC_BACKEND_URL.replace('https://', '')}/ws`
+        : 'wss://api.t1f1.com/ws'; // Production fallback
 
     constructor() {
         // Load persisted data from localStorage if available

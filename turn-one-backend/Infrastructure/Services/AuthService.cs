@@ -15,11 +15,16 @@ namespace Infrastructure.Services
     {
         private readonly TurnOneDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IDailyGiftService _dailyGiftService;
 
-        public AuthService(TurnOneDbContext context, IConfiguration configuration)
+        public AuthService(
+            TurnOneDbContext context, 
+            IConfiguration configuration, 
+            IDailyGiftService dailyGiftService)
         {
             _context = context;
             _configuration = configuration;
+            _dailyGiftService = dailyGiftService;
         }
 
         public async Task<AuthResponseDto> Login(LoginDto loginDto)
@@ -48,16 +53,33 @@ namespace Infrastructure.Services
             user.LastLogin = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             
+            // Check and award daily gifts
+            var canClaimGift = await _dailyGiftService.CanClaimDailyGiftAsync(user.Id);
+            bool giftClaimed = false;
+            int coinsAwarded = 0;
+            int experienceAwarded = 0;
+            
+            if (canClaimGift)
+            {
+                var (awarded, coins, experience) = await _dailyGiftService.ClaimDailyGiftAsync(user.Id);
+                giftClaimed = awarded;
+                coinsAwarded = coins;
+                experienceAwarded = experience;
+            }
+            
             // Generate JWT token
             var token = GenerateJwtToken(user);
             
             return new AuthResponseDto
             {
                 Success = true,
-                Message = "Login successful",
+                Message = giftClaimed 
+                    ? $"Login successful! Daily gift claimed: {coinsAwarded} coins and {experienceAwarded} XP" 
+                    : "Login successful",
                 Token = token,
                 Username = user.Username,
-                Expiration = DateTime.UtcNow.AddDays(7) // Token expiration date
+                Expiration = DateTime.UtcNow.AddDays(7), // Token expiration date
+                DailyGiftClaimed = giftClaimed
             };
         }
 
@@ -126,7 +148,9 @@ namespace Infrastructure.Services
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.Role.ToString()),
                 new Claim("Plan", user.Plan.ToString()),
-                new Claim("CreatedAt", user.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))
+                new Claim("CreatedAt", user.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")),
+                new Claim("Level", user.Level.ToString()),
+                new Claim("Experience", user.Experience.ToString())
             };
             
             // Add avatar URL claim if it exists

@@ -11,6 +11,8 @@ public class User
     public string? AvatarUrl { get; set; }
     public Role Role { get; set; } = Role.USER;
     public int Coins { get; set; } = 0;
+    public int Level { get; set; } = 1;
+    public int Experience { get; set; } = 0;
     public PlanType Plan { get; set; } = PlanType.BASIC;
     public DateTime PlanStartDate { get; set; } = DateTime.UtcNow;
     public DateTime? PlanEndDate { get; set; }
@@ -18,6 +20,8 @@ public class User
     
     public int Tokens { get; set; } = 30;
     public DateTime LastTokenRefillDate { get; set; } = DateTime.UtcNow;
+    
+    public DateTime? LastDailyGiftDate { get; set; }
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastLogin { get; set; }

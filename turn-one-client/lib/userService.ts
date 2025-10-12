@@ -1,17 +1,34 @@
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.t1f1.com/api';
+// Use environment variable, or localhost for development, or the default production URL
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 
+  (process.env.NODE_ENV === 'development' ? 'http://localhost:5000/api' : 'https://backend.t1f1.com/api');
+
+console.log('Using API URL:', API_URL);
 
 export const fetchWithAuth = async (endpoint: string, token: string, options: RequestInit = {}) => {
-  const response = await fetch(`${API_URL}/${endpoint}`, {
-    ...options,
-    headers: {
-      ...options.headers,
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
+  console.log(`Making API request to: ${API_URL}/${endpoint}`);
+  
+  try {
+    const response = await fetch(`${API_URL}/${endpoint}`, {
+      ...options,
+      headers: {
+        ...options.headers,
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`API error (${response.status}): ${errorText}`);
+      throw new Error(`API error: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log(`API response from ${endpoint}:`, data);
+    return data;
+  } catch (error) {
+    console.error(`API request failed for ${endpoint}:`, error);
+    throw error;
   }
-  return response.json();
 };
 
 // User Account API functions

@@ -8,6 +8,7 @@ import {
   Command,
   ChartNoAxesCombined,
   Frame,
+  Gift,
   LifeBuoy,
   Map,
   PieChart,
@@ -87,7 +88,11 @@ const data = {
         },
         {
           title: "Coin store",
-          url: "/app/coin-store",
+          url: "/store",
+        },
+        {
+          title: "Rewards",
+          url: "/rewards",
         },
         {
           title: "Changelog",
@@ -118,29 +123,29 @@ const data = {
       //   },
       // ],
     },
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: Settings2,
-      // items: [
-      //   {
-      //     title: "General",
-      //     url: "#",
-      //   },
-      //   {
-      //     title: "Team",
-      //     url: "#",
-      //   },
-      //   {
-      //     title: "Billing",
-      //     url: "#",
-      //   },
-      //   {
-      //     title: "Limits",
-      //     url: "#",
-      //   },
-      // ],
-    },
+    // {
+    //   title: "Settings",
+    //   url: "/settings",
+    //   icon: Settings2,
+    //   // items: [
+    //   //   {
+    //   //     title: "General",
+    //   //     url: "#",
+    //   //   },
+    //   //   {
+    //   //     title: "Team",
+    //   //     url: "#",
+    //   //   },
+    //   //   {
+    //   //     title: "Billing",
+    //   //     url: "#",
+    //   //   },
+    //   //   {
+    //   //     title: "Limits",
+    //   //     url: "#",
+    //   //   },
+    //   // ],
+    // },
   ],
   navSecondary: [
     {

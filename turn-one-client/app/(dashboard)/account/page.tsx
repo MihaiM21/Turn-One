@@ -83,6 +83,7 @@ export default function AccountPage() {
     planEndDate: "",
     autoRenew: false,
     tokens: 0,
+    coins: 0,
     lastTokenRefillDate: "",
     createdAt: "",
     lastLogin: ""

@@ -14,11 +14,13 @@ public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
     private readonly TurnOneDbContext _context;
+    private readonly IDailyGiftService _dailyGiftService;
 
-    public AuthController(IAuthService authService, TurnOneDbContext context)
+    public AuthController(IAuthService authService, TurnOneDbContext context, IDailyGiftService dailyGiftService)
     {
         _authService = authService;
         _context = context;
+        _dailyGiftService = dailyGiftService;
     }
 
     [HttpPost("register")]
@@ -65,6 +67,9 @@ public class AuthController : ControllerBase
         {
             return NotFound("User not found");
         }
+
+        // Check if the user can claim a daily gift
+        bool canClaimDailyGift = await _dailyGiftService.CanClaimDailyGiftAsync(userGuid);
         
         return Ok(new
         {
@@ -76,12 +81,16 @@ public class AuthController : ControllerBase
             AvatarUrl = user.AvatarUrl,
             Tokens = user.Tokens,
             Coins = user.Coins,
+            Level = user.Level,
+            Experience = user.Experience,
             Role = user.Role.ToString(),
             PlanStartDate = user.PlanStartDate.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
             PlanEndDate = user.PlanEndDate?.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
             AutoRenew = user.AutoRenew,
             LastTokenRefillDate = user.LastTokenRefillDate.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
-            LastLogin = user.LastLogin?.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+            LastLogin = user.LastLogin?.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+            LastDailyGiftDate = user.LastDailyGiftDate?.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+            CanClaimDailyGift = canClaimDailyGift
         });
     }
     

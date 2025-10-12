@@ -13,8 +13,12 @@ export function DashboardLoadingContainer({
   children, 
   loadingMessage = "Loading dashboard..." 
 }: DashboardLoadingContainerProps) {
+  // Simple component with no development-specific features
+
   if (!isReady) {
-    return <Loading message={loadingMessage} />;
+    return (
+      <Loading message={loadingMessage} />
+    );
   }
 
   return <>{children}</>;
