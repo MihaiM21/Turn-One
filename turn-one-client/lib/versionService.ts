@@ -10,7 +10,7 @@ export interface Version {
 }
 
 export class VersionService {
-  private static baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5271/api';
+  private static baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://backend.t1f1.com/api';
   private static version = null as Version | null;
 
   /**

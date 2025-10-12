@@ -18,7 +18,7 @@ const fetchDashboardData = async () => {
   
   try {
     // Use consistent API URL format
-    const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5271/api';
+    const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.t1f1.com/api';
     console.log(`Fetching dashboard data from ${API_URL}/${DASHBOARD_API_URL}`);
     
     const response = await fetch(`${API_URL}/${DASHBOARD_API_URL}`, {

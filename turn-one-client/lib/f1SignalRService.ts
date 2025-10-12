@@ -3,14 +3,14 @@
 import * as signalR from '@microsoft/signalr';
 
 // Get the base URL without the '/api' suffix for SignalR connections
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5271';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.t1f1.com';
 // Remove the trailing '/api' if it exists
 const API_URL = BACKEND_URL.endsWith('/api') ? BACKEND_URL.slice(0, -4) : BACKEND_URL;
 // Fallback URLs in case the main one fails
 const FALLBACK_URLS = [
   API_URL,
   BACKEND_URL,
-  'http://localhost:5271',
+  'https://backend.t1f1.com',
   API_URL.replace('http://', 'https://'),
   API_URL.replace('https://', 'http://')
 ];

@@ -13,7 +13,7 @@ export function useUser() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://localhost:5271';
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://backend.t1f1.com';
   
   /**
    * Get the current user profile

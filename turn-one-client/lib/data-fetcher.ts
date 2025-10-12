@@ -3,7 +3,7 @@
 import { getAuthToken } from './auth-utils';
 
 // Base URL for the API - use consistent URL format
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5271/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.t1f1.com/api';
 
 // Generic fetch function with authentication
 export async function fetchWithAuth<T>(

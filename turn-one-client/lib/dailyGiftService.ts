@@ -3,7 +3,7 @@
 import { getAuthToken } from './auth-utils';
 
 // Use the same API URL as defined in .env.local
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5271/api';
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.t1f1.com/api';
 
 export interface DailyGiftStatus {
   canClaimDailyGift: boolean;

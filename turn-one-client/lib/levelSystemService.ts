@@ -3,7 +3,7 @@
 import { getAuthToken } from './auth-utils';
 
 // Make sure to use the correct API URL with proper formatting
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5271/api';
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.t1f1.com/api';
 
 export interface LevelProgress {
   currentLevel: number;
