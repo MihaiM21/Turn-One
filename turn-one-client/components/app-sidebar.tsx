@@ -179,7 +179,6 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-
   const { user } = useAuth();
   data.user.name = user?.username || 'User';
   data.user.email = user?.email || 'user@example.com';
