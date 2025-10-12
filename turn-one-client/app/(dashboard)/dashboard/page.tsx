@@ -15,12 +15,23 @@ import { PerformanceTrends } from "@/components/dashboard/live dashboard/perform
 import { F1ConnectionStatus } from "@/components/dashboard/live dashboard/f1-connection-status"
 import { DailyGiftWidget } from "@/components/dashboard/daily-gift-widget"
 import { UserStatsWidget } from "@/components/dashboard/user-stats-widget"
-import { useDashboardData } from "./use-dashboard-data"
 import { DashboardLoadingContainer } from "@/components/dashboard/dashboard-loading-container"
+import { useEffect, useState } from "react"
+import { getAuthToken } from "@/lib/auth-utils"
 
 
 export default function DashboardPage() {
-  const { dashboardData, isReady, hasToken } = useDashboardData();
+  const [isReady, setIsReady] = useState(false);
+  const [hasToken, setHasToken] = useState<boolean | null>(null);
+  
+  useEffect(() => {
+    // Check if user is authenticated
+    const token = getAuthToken();
+    setHasToken(!!token);
+    
+    // Set dashboard as ready
+    setIsReady(true);
+  }, []);
   
   return (
     <DashboardLoadingContainer 
