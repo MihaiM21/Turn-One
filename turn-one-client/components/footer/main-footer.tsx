@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { BarChart3, Mail, Phone, MapPin, Twitter, Linkedin, Github, Zap } from "lucide-react"
+import { BarChart3, Mail, Phone, MapPin, Twitter, Linkedin, Github, Zap, Youtube, Instagram } from "lucide-react"
 import VersionDisplay from "@/components/ui/version-display"
 
 export function MainFooter() {
@@ -30,13 +30,19 @@ export function MainFooter() {
             </p>
             <div className="flex space-x-3">
               <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors">
-                <Twitter className="h-4 w-4" />
+                <Link href="https://twitter.com/turnoneofficial" target="_blank" rel="noopener noreferrer">
+                  <Twitter className="h-4 w-4"  />
+                </Link>
               </Button>
               <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors">
-                <Linkedin className="h-4 w-4" />
+                <Link href="https://www.instagram.com/turnoneofficial/" target="_blank" rel="noopener noreferrer">
+                  <Instagram className="h-4 w-4"  />
+                </Link>
               </Button>
               <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors">
-                <Github className="h-4 w-4" />
+                <Link href="https://www.youtube.com/channel/UCg-DYx-XQUFeEol-IHmCi_Q/" target="_blank" rel="noopener noreferrer">
+                  <Youtube className="h-4 w-4" />
+                </Link>
               </Button>
             </div>
           </div>
@@ -69,7 +75,7 @@ export function MainFooter() {
               {[
                 { href: "/services", label: "Telemetry Analysis" },
                 { href: "/dashboard", label: "Live Dashboard" },
-                { href: "/team", label: "Expert Team" },
+                // { href: "/team", label: "Expert Team" },
                 { href: "/contact", label: "Contact Us" },
               ].map((link) => (
                 <Link
@@ -91,10 +97,10 @@ export function MainFooter() {
                 <Mail className="h-4 w-4 text-primary" />
                 <span className="text-muted-foreground">contact@t1f1.com</span>
               </div>
-              <div className="flex items-center space-x-3 text-sm">
+              {/* <div className="flex items-center space-x-3 text-sm">
                 <Phone className="h-4 w-4 text-primary" />
                 <span className="text-muted-foreground">+1 (555) 123-4567</span>
-              </div>
+              </div> */}
               <div className="flex items-center space-x-3 text-sm">
                 <MapPin className="h-4 w-4 text-primary" />
                 <span className="text-muted-foreground">At the racetrack</span>
