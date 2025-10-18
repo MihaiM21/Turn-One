@@ -1,5 +1,22 @@
 
 services:
+  db:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=turnone
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   api:
     build:
       context: .
@@ -9,9 +26,9 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5271
-      - ConnectionStrings__DefaultConnection=Data Source=turnone.db
-    volumes:
-      - api_data:/app/data
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=turnone;Username=postgres;Password=postgres
+    depends_on:
+      - db
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5271/health"]
       interval: 30s
@@ -42,6 +59,7 @@ services:
 
 volumes:
   api_data:
+  postgres_data:
 
 networks:
   default:

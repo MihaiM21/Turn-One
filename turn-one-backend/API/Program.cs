@@ -10,6 +10,7 @@ using Domain.Enums;
 using API.Services;
 using API.Middleware;
 using API.Hubs;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -88,9 +89,9 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Add DbContext configuration for SQLite
+// Add DbContext configuration for PostgreSQL
 builder.Services.AddDbContext<TurnOneDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Register services
 builder.Services.AddScoped<IAuthService, AuthService>();
