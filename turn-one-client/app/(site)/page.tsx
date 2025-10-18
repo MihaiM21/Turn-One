@@ -16,12 +16,12 @@ export default function HomePage() {
         <MainNav variant="homepage" />
         {/* <ScrollingF1Car opacity={0.8} /> */}
         {/* Hero Section */}
-      <section className="min-h-220 overflow-hidden modern-gradient pt-0">
+      <section className=" overflow-hidden modern-gradient pt-0">
         <Image src="/turn-one-car/0009.png" alt="Turn One F1 Car" width={1920} height={1080} className="absolute inset-0 w-full h-full object-cover opacity-90" />
         {/* <div className="absolute inset-0 bg-[url('/turn-one-car/0009.png')] bg-cover bg-center opacity-60" /> */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 animate-pulse" />
             <div className="relative pt-16 min-h-screen">
-              <div className="container mx-auto px-4 py-24 lg:py-32">
+              <div className="container mx-auto px-4 pt-24 lg:pt-30">
                 <div className="max-w-4xl mx-auto text-center">
                   {/* <Badge
                     variant="secondary"
