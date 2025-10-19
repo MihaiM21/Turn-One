@@ -12,7 +12,6 @@ type Card = {
   title: string;
   link: string;
   position: number; // Position for the background image
-  comingSoon?: boolean; // Optional flag to show a "Coming Soon" label
 };
 
 // Single shared image for all cards (a modern F1 car)
@@ -23,7 +22,7 @@ const cards: Card[] = [
   {
     id: "home",
     title: "HOME",
-    link: "/home",
+    link: "/",
     position: 5, // Left part of the image
   },
   {
@@ -31,7 +30,6 @@ const cards: Card[] = [
     title: "STORE",
     link: "/store",
     position: 35, // Left-middle part of the image
-    comingSoon: true,
   },
   {
     id: "dashboard",
@@ -44,7 +42,6 @@ const cards: Card[] = [
     title: "TELEMETRY",
     link: "/telemetry",
     position: 95, // Right part of the image
-    comingSoon: true,
   },
 ];
 
@@ -268,9 +265,7 @@ export default function HomePage() {
                 }}
                 style={{ 
                   backgroundImage: `url(${sharedBackgroundImage})`,
-                  filter: card.comingSoon 
-                    ? isActive ? 'brightness(0.9) contrast(1.1) grayscale(0.3)' : 'brightness(0.6) contrast(0.9) grayscale(0.5)'
-                    : isActive ? 'brightness(1.1) contrast(1.1)' : 'brightness(0.7) contrast(0.9)'
+                  filter: isActive ? 'brightness(1.1) contrast(1.1)' : 'brightness(0.7) contrast(0.9)'
                 }}
               />
               
@@ -311,17 +306,6 @@ export default function HomePage() {
                 >
                   {card.title}
                 </motion.span>
-                
-                {card.comingSoon && (
-                  <motion.span 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 0.7, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="text-[10px] mt-2 text-gray-300 font-medium"
-                  >
-                    COMING SOON
-                  </motion.span>
-                )}
               </motion.div>
               
               {/* View button - only visible on active card */}
@@ -331,37 +315,19 @@ export default function HomePage() {
                 animate={{ opacity: isActive ? 1 : 0 }}
                 transition={{ duration: 0.3 }}
               >
-                {card.comingSoon ? (
-                  <div className="group relative px-8 py-3 bg-gray-700 overflow-hidden rounded-sm text-white text-sm font-medium tracking-wider cursor-not-allowed">
-                    <span className="relative z-10">COMING SOON</span>
-                  </div>
-                ) : (
-                  <Link 
-                    href={card.link}
-                    className="group relative px-8 py-3 bg-red-600 overflow-hidden rounded-sm text-white text-sm font-medium tracking-wider transition-all duration-300"
-                  >
-                    <span className="relative z-10">VIEW</span>
-                    <motion.div 
-                      className="absolute inset-0 bg-red-800"
-                      initial={{ x: "-100%" }}
-                      whileHover={{ x: 0 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                    />
-                  </Link>
-                )}
-              </motion.div>
-              
-              {/* Coming Soon badge */}
-              {card.comingSoon && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="absolute top-4 right-4 bg-red-600 text-white text-[10px] font-semibold px-2 py-1 rounded-sm tracking-wider transform rotate-3 z-20"
+                <Link 
+                  href={card.link}
+                  className="group relative px-8 py-3 bg-red-600 overflow-hidden rounded-sm text-white text-sm font-medium tracking-wider transition-all duration-300"
                 >
-                  SOON
-                </motion.div>
-              )}
+                  <span className="relative z-10">VIEW</span>
+                  <motion.div 
+                    className="absolute inset-0 bg-red-800"
+                    initial={{ x: "-100%" }}
+                    whileHover={{ x: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  />
+                </Link>
+              </motion.div>
               
               {/* Active indicator dots at bottom */}
               {isActive && (
