@@ -38,8 +38,10 @@ ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 
 # Create non-root user for security
-RUN groupadd -g 1001 nodejs \
-    && useradd -r -u 1001 -g nodejs nextjs
+RUN mkdir -p /app/node_modules && \
+    chown -R node:node /app && \
+    addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 --ingroup nodejs nextjs
 
 # Copy built application
 COPY --from=builder /app/public ./public

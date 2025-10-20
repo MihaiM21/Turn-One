@@ -10,8 +10,6 @@ using Domain.Enums;
 using API.Services;
 using API.Middleware;
 using API.Hubs;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -89,9 +87,9 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Add DbContext configuration for PostgreSQL
+// Add DbContext configuration for SQLite
 builder.Services.AddDbContext<TurnOneDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Register services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -182,7 +180,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<TurnOneDbContext>();
 
-    // Apply any pending migrations
+    // Apply migrations
     db.Database.Migrate();
 
     // Seed admin user
@@ -204,6 +202,7 @@ using (var scope = app.Services.CreateScope())
             Tokens = 30,
             LastTokenRefillDate = DateTime.UtcNow
         });
+        db.SaveChanges();
     }
 }
 
