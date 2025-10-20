@@ -25,19 +25,21 @@ const cards: Card[] = [
     title: "HOME",
     link: "/home",
     position: 5, // Left part of the image
-  },
-  {
-    id: "store",
-    title: "STORE",
-    link: "/store",
-    position: 35, // Left-middle part of the image
-    comingSoon: true,
+    comingSoon: false,
   },
   {
     id: "dashboard",
     title: "DASHBOARD",
     link: "/dashboard",
+    position: 35, // Left-middle part of the image
+    comingSoon: false,
+  },
+  {
+    id: "store",
+    title: "STORE",
+    link: "/store",
     position: 65, // Right-middle part of the image
+    comingSoon: true,
   },
   {
     id: "telemetry",
