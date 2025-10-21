@@ -1,3 +1,5 @@
+'use client';
+
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -5,15 +7,50 @@ import { BarChart3, Zap, Users, Trophy, TrendingUp, Clock } from "lucide-react"
 import { MainNav } from "@/components/navigation/main-nav"
 import Link from "next/link"
 import { ScrollAnimation } from "@/components/animation/scroll-animation"
+import { useState, useEffect } from "react"
+import Image from "next/image"
+import { Loading } from "@/components/ui/loading"
 
 export default function HomePage() {
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const backgroundImage = "/turn-one-car/0009.png";
+  
+  // Handle image preloading
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const img = new window.Image();
+      img.src = backgroundImage;
+      img.onload = () => setIsImageLoaded(true);
+    }
+  }, [backgroundImage]);
+  
   return (
     <div className="min-h-100 bg-background">
+      {/* Show loading screen while images are loading */}
+      {!isImageLoaded && (
+        <Loading message="Loading assets..." />
+      )}
+      
+      {/* Preload with Next.js Image component (hidden) */}
+      <div className="hidden">
+        <Image 
+          src={backgroundImage}
+          width={1920}
+          height={1080}
+          priority
+          alt="Formula One car"
+          onLoad={() => setIsImageLoaded(true)}
+        />
+      </div>
+      
       <MainNav variant="homepage" />
       
       {/* Hero Section */}
       <section className="min-h-220 overflow-hidden modern-gradient pt-16">
-        <div className="absolute inset-0 bg-[url('/turn-one-car/0009.png')] bg-cover bg-center opacity-60" />
+        <div 
+          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-500 ${isImageLoaded ? 'opacity-60' : 'opacity-0'}`} 
+          style={{ backgroundImage: `url(${backgroundImage})` }}
+        />
         {/* <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 animate-pulse" /> */}
         {/* <div
           className="absolute inset-0 bg-gradient-to-tr from-transparent via-primary/3 to-transparent animate-pulse"

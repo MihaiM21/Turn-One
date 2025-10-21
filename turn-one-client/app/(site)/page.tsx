@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, ArrowRight, GaugeCircle } from "lucide-react";
+import { Loading } from "@/components/ui/loading";
 
 // Define the card data structure
 type Card = {
@@ -57,6 +58,16 @@ export default function HomePage() {
   const [mouseX, setMouseX] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
   const wheelTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  
+  // Preload the background image
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const img = new window.Image();
+      img.src = sharedBackgroundImage;
+      img.onload = () => setImageLoaded(true);
+    }
+  }, []);
   
   // Navigate to a specific card index
   const navigateToCard = (index: number) => {
@@ -175,8 +186,22 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-black via-red-950 to-black text-white overflow-hidden">
-      {/* Header with logo */}
+      {/* Show loading screen until the image is loaded */}
+      {!imageLoaded && <Loading message="Loading assets..." />}
       
+      {/* Preload the shared background image with priority */}
+      <div className="hidden">
+        <Image 
+          src={sharedBackgroundImage}
+          priority
+          alt="Preloaded F1 car"
+          width={1200}
+          height={800}
+          onLoad={() => setImageLoaded(true)}
+        />
+      </div>
+      
+      {/* Header with logo */}
       
       {/* Main content area */}
       <div className="flex items-center justify-center flex-1">
@@ -269,7 +294,7 @@ export default function HomePage() {
                   damping: 20
                 }}
                 style={{ 
-                  backgroundImage: `url(${sharedBackgroundImage})`,
+                  backgroundImage: imageLoaded ? `url(${sharedBackgroundImage})` : 'none',
                   filter: card.comingSoon 
                     ? isActive ? 'brightness(0.9) contrast(1.1) grayscale(0.3)' : 'brightness(0.6) contrast(0.9) grayscale(0.5)'
                     : isActive ? 'brightness(1.1) contrast(1.1)' : 'brightness(0.7) contrast(0.9)'
