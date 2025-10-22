@@ -20,7 +20,7 @@ function show_help {
 }
 
 function get_current_version {
-    cat VERSION
+    cat turn-one-backend/VERSION
 }
 
 function parse_version {
@@ -74,7 +74,7 @@ function update_version {
         new_version="$new_version+$3"
     fi
     
-    echo "$new_version" > VERSION
+    echo "$new_version" > turn-one-backend/VERSION
     echo "Version updated from $current_version to $new_version"
     
     # If the backend API is available, update it via API
@@ -88,7 +88,7 @@ function update_version {
     fi
     
     echo "Don't forget to commit and tag this version:"
-    echo "git add VERSION"
+    echo "git add turn-one-backend/VERSION"
     echo "git commit -m \"Bump version to $new_version\""
     echo "git tag v$new_version"
     echo "git push && git push --tags"

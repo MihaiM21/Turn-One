@@ -33,7 +33,7 @@ function Show-Help {
 }
 
 function Get-CurrentVersion {
-    Get-Content -Path (Join-Path $PSScriptRoot "..\VERSION")
+    Get-Content -Path (Join-Path $PSScriptRoot "..\turn-one-backend\VERSION")
 }
 
 function Parse-Version {
@@ -105,7 +105,7 @@ function Update-Version {
         $newVersion += "+$buildMetadata"
     }
     
-    $versionFilePath = Join-Path $PSScriptRoot "..\VERSION"
+    $versionFilePath = Join-Path $PSScriptRoot "..\turn-one-backend\VERSION"
     Set-Content -Path $versionFilePath -Value $newVersion
     
     Write-Host "Version updated from $currentVersion to $newVersion"
@@ -131,7 +131,7 @@ function Update-Version {
     }
     
     Write-Host "Don't forget to commit and tag this version:"
-    Write-Host "git add VERSION"
+    Write-Host "git add turn-one-backend/VERSION"
     Write-Host "git commit -m 'Bump version to $newVersion'"
     Write-Host "git tag v$newVersion"
     Write-Host "git push && git push --tags"

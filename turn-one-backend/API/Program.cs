@@ -95,7 +95,7 @@ builder.Services.AddDbContext<TurnOneDbContext>(options =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
-builder.Services.AddScoped<IVersionService, VersionService>();
+builder.Services.AddSingleton<IVersionService, VersionService>();
 builder.Services.AddScoped<ILevelSystemService, LevelSystemService>();
 builder.Services.AddScoped<IDailyGiftService, DailyGiftService>();
 

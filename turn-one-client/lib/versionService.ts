@@ -10,17 +10,17 @@ export interface Version {
 }
 
 export class VersionService {
-  private static baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://backend.t1f1.com/api';
+  private static baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.t1f1.com/api';
   private static version = null as Version | null;
 
   /**
    * Get the current version of the application
    */
   public static async getCurrentVersion(): Promise<Version> {
-    // Return cached version if available
-    if (this.version) {
-      return this.version;
-    }
+    // // Return cached version if available
+    // if (this.version) {
+    //   return this.version;
+    // }
 
     try {
       // Get token from localStorage if available
@@ -36,6 +36,7 @@ export class VersionService {
 
       const versionData = await response.json();
       this.version = versionData;
+      console.log('Fetched current version:', response.json);
       return versionData;
     } catch (error) {
       console.error('Error fetching current version:', error);
