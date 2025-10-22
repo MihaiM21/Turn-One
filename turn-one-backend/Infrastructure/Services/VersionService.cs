@@ -15,31 +15,35 @@ namespace Infrastructure.Services
 
         public VersionService()
         {
-            // Try several possible locations for the VERSION file
-            // 1. In the application directory (Docker container)
-            _versionFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "VERSION");
+            // Determine environment
+            bool isDockerContainer = File.Exists("/.dockerenv") || Directory.Exists("/app");
             
-            // 2. If running in development, try project root
-            if (!File.Exists(_versionFilePath))
+            if (isDockerContainer)
             {
-                _versionFilePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "VERSION"));
-            }
-            
-            // 3. Try one level up from current directory (Docker volume mount)
-            if (!File.Exists(_versionFilePath))
-            {
-                _versionFilePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "VERSION");
-                _versionFilePath = Path.GetFullPath(_versionFilePath);
-            }
-            
-            // 4. Try application root for Docker
-            if (!File.Exists(_versionFilePath))
-            {
+                // In Docker container, use the fixed path
                 _versionFilePath = "/app/VERSION";
+            }
+            else 
+            {
+                // Development environment - try to find the VERSION file
+                // 1. In the application directory
+                _versionFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "VERSION");
+                
+                // 2. If not found, try project root
+                if (!File.Exists(_versionFilePath))
+                {
+                    _versionFilePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "VERSION"));
+                }
+                
+                // 3. Try current directory
+                if (!File.Exists(_versionFilePath))
+                {
+                    _versionFilePath = Path.Combine(Directory.GetCurrentDirectory(), "VERSION");
+                }
             }
             
             // Log the path being used
-            Console.WriteLine($"Using VERSION file at: {_versionFilePath}");
+            Console.WriteLine($"Using VERSION file at: {_versionFilePath}. Docker container: {isDockerContainer}");
             
             // Initialize version history
             _versionHistory = new List<Domain.Entities.Version>();

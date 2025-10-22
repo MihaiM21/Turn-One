@@ -37,11 +37,12 @@ WORKDIR /app
 # Copy published application
 COPY --from=publish /app/publish .
 
-# Copy VERSION file for VersionService
-COPY turn-one-backend/VERSION /app/VERSION
+# Create VERSION file for VersionService with content from the source VERSION file
+COPY turn-one-backend/VERSION /tmp/VERSION
+RUN cat /tmp/VERSION > /app/VERSION
 
 # Create directory for SQLite database
-RUN mkdir -p /app/data && chown -R appuser:appgroup /app
+RUN mkdir -p /app/data && chown -R appuser:appgroup /app && chmod 644 /app/VERSION
 USER appuser
 
 # Install curl for health check
