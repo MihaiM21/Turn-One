@@ -15,14 +15,31 @@ namespace Infrastructure.Services
 
         public VersionService()
         {
-            // Get the path to the VERSION file in the turnonebackend root directory
+            // Try several possible locations for the VERSION file
+            // 1. In the application directory (Docker container)
             _versionFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "VERSION");
             
-            // If running in development, adjust path to find VERSION file in the project root
+            // 2. If running in development, try project root
             if (!File.Exists(_versionFilePath))
             {
                 _versionFilePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "VERSION"));
             }
+            
+            // 3. Try one level up from current directory (Docker volume mount)
+            if (!File.Exists(_versionFilePath))
+            {
+                _versionFilePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "VERSION");
+                _versionFilePath = Path.GetFullPath(_versionFilePath);
+            }
+            
+            // 4. Try application root for Docker
+            if (!File.Exists(_versionFilePath))
+            {
+                _versionFilePath = "/app/VERSION";
+            }
+            
+            // Log the path being used
+            Console.WriteLine($"Using VERSION file at: {_versionFilePath}");
             
             // Initialize version history
             _versionHistory = new List<Domain.Entities.Version>();
@@ -35,10 +52,19 @@ namespace Infrastructure.Services
             
             try
             {
+                if (!File.Exists(_versionFilePath))
+                {
+                    Console.WriteLine($"VERSION file not found at: {_versionFilePath}");
+                    throw new FileNotFoundException($"VERSION file not found at: {_versionFilePath}");
+                }
+                
                 versionString = await File.ReadAllTextAsync(_versionFilePath);
+                Console.WriteLine($"Successfully read version: {versionString.Trim()} from {_versionFilePath}");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine($"Error reading VERSION file: {ex.Message}");
+                
                 // If file doesn't exist or can't be read, create default version
                 var defaultVersion = new Domain.Entities.Version
                 {
@@ -46,10 +72,26 @@ namespace Infrastructure.Services
                     Minor = 0,
                     Patch = 0,
                     ReleasedAt = DateTime.UtcNow,
-                    ReleaseNotes = "Initial version"
+                    ReleaseNotes = "Initial version (VERSION file not found)"
                 };
                 
-                await File.WriteAllTextAsync(_versionFilePath, defaultVersion.VersionString);
+                try 
+                {
+                    // Try to create the default VERSION file
+                    string? directory = Path.GetDirectoryName(_versionFilePath);
+                    if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                    {
+                        Directory.CreateDirectory(directory);
+                    }
+                    
+                    await File.WriteAllTextAsync(_versionFilePath, defaultVersion.VersionString);
+                    Console.WriteLine($"Created default VERSION file at: {_versionFilePath}");
+                }
+                catch (Exception writeEx)
+                {
+                    Console.WriteLine($"Failed to create default VERSION file: {writeEx.Message}");
+                }
+                
                 return defaultVersion;
             }
             

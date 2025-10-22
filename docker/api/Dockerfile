@@ -37,6 +37,9 @@ WORKDIR /app
 # Copy published application
 COPY --from=publish /app/publish .
 
+# Copy VERSION file for VersionService
+COPY turn-one-backend/VERSION /app/VERSION
+
 # Create directory for SQLite database
 RUN mkdir -p /app/data && chown -R appuser:appgroup /app
 USER appuser

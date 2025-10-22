@@ -12,6 +12,7 @@ services:
       - ConnectionStrings__DefaultConnection=Data Source=/app/data/turnone.sqlite
     volumes:
       - sqlite_data:/app/data
+      - ./turn-one-backend/VERSION:/app/VERSION:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5271/health"]
       interval: 30s
