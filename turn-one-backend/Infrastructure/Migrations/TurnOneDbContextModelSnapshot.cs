@@ -96,38 +96,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Version", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("BuildMetadata")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Major")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Minor")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Patch")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("PreRelease")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ReleaseNotes")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("ReleasedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Versions");
-                });
+            // Version entity removed - table dropped in new migration
 #pragma warning restore 612, 618
         }
     }

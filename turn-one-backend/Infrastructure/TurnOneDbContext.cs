@@ -11,7 +11,6 @@ public class TurnOneDbContext : DbContext
     }
     
     public DbSet<User> Users { get; set; } = null!;
-    public DbSet<Domain.Entities.Version> Versions { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
