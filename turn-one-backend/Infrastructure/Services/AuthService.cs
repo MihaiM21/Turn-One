@@ -34,7 +34,7 @@ namespace Infrastructure.Services
             _dailyGiftService = dailyGiftService;
             _emailService = emailService;
             _logger = logger;
-            _appBaseUrl = configuration["AppSettings:BaseUrl"] ?? "https://t1f1.com";
+            _appBaseUrl = configuration["AppSettings:BaseUrl"] ?? "https://dev.turnonehub.com";
         }
 
         public async Task<AuthResponseDto> Login(LoginDto loginDto)
