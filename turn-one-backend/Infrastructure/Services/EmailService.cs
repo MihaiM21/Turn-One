@@ -73,16 +73,48 @@ namespace Infrastructure.Services
                 // Choose the SSL/TLS mode based on port conventions or try StartTls if not 465
                 SecureSocketOptions options = _smtpPort == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls;
 
-                // Connect with a 10s timeout
-                client.Timeout = 10000;
-                await client.ConnectAsync(_smtpHost, _smtpPort, options);
+                // Set timeout to 30 seconds for all operations
+                client.Timeout = 30000;
+                
+                int maxRetries = 3;
+                int currentTry = 0;
+                bool connected = false;
+
+                while (!connected && currentTry < maxRetries)
+                {
+                    try
+                    {
+                        currentTry++;
+                        _logger?.LogInformation($"Attempting to connect to SMTP server {_smtpHost}:{_smtpPort} (attempt {currentTry}/{maxRetries})");
+                        
+                        await client.ConnectAsync(_smtpHost, _smtpPort, options);
+                        connected = true;
+                        
+                        _logger?.LogInformation("Successfully connected to SMTP server");
+                    }
+                    catch (Exception ex) when (currentTry < maxRetries)
+                    {
+                        _logger?.LogWarning($"Failed to connect on attempt {currentTry}/{maxRetries}: {ex.Message}");
+                        await Task.Delay(2000 * currentTry); // Exponential backoff
+                    }
+                }
+
+                if (!connected)
+                {
+                    throw new TimeoutException($"Failed to connect to SMTP server after {maxRetries} attempts");
+                }
 
                 if (!string.IsNullOrEmpty(_smtpUser) && !string.IsNullOrEmpty(_smtpPass))
                 {
+                    _logger?.LogInformation("Authenticating with SMTP server...");
                     await client.AuthenticateAsync(_smtpUser, _smtpPass);
+                    _logger?.LogInformation("Successfully authenticated with SMTP server");
                 }
 
+                _logger?.LogInformation("Sending email message...");
                 await client.SendAsync(message);
+                _logger?.LogInformation("Email sent successfully");
+
                 await client.DisconnectAsync(true);
 
                 _logger?.LogInformation($"Email sent successfully to {toAddress}");
