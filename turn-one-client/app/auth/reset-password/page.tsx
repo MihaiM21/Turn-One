@@ -11,11 +11,9 @@ import { resetPassword } from "@/lib/emailService";
 import Link from "next/link";
 import { useToast } from "@/components/ui/use-toast";
 
-export default function ResetPasswordPage({
-  searchParams,
-}: {
-  searchParams: { token?: string };
-}) {
+export default function ResetPasswordPage(props: any) {
+  // Accept props as any because Next's generated PageProps may type searchParams as a Promise.
+  const searchParams = props?.searchParams;
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,7 +21,7 @@ export default function ResetPasswordPage({
   const [error, setError] = useState("");
   const { toast } = useToast();
   const router = useRouter();
-  const token = searchParams?.token || '';
+  const token = (searchParams as any)?.token || '';
 
   useEffect(() => {
     if (!token) {

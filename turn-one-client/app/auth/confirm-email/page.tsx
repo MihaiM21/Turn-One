@@ -7,14 +7,14 @@ import { Mail, AlertCircle, CheckCircle } from "lucide-react";
 import { confirmEmail } from "@/lib/emailService";
 import Link from "next/link";
 
-export default function ConfirmEmailPage({
-  searchParams,
-}: {
-  searchParams: { token?: string };
-}) {
+export default function ConfirmEmailPage(props: any) {
+  // Accept `props` as `any` because Next's generated PageProps expects
+  // `searchParams` to be a Promise in some build scenarios. Casting to any
+  // avoids the type-level mismatch while preserving runtime behavior.
+  const searchParams = props?.searchParams;
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState<string>('Verifying your email...');
-  const token = searchParams?.token || '';
+  const token = (searchParams as any)?.token || '';
 
   useEffect(() => {
     if (!token) {
