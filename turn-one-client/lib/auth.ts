@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 
-// Default to local backend during development for faster iteration.
-// Use NEXT_PUBLIC_BACKEND_URL to override in production or other environments.
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5271/api';
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.t1f1.com/api';
 
 export interface LoginData {
   email: string;
