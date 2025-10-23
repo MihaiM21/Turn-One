@@ -41,8 +41,11 @@ COPY --from=publish /app/publish .
 COPY turn-one-backend/VERSION /tmp/VERSION
 RUN cat /tmp/VERSION > /app/VERSION
 
-# Create directory for SQLite database
-RUN mkdir -p /app/data && chown -R appuser:appgroup /app && chmod 644 /app/VERSION
+# Create directory for SQLite database and ensure proper permissions
+RUN mkdir -p /app/data && \
+    chown -R appuser:appgroup /app && \
+    chmod 644 /app/VERSION && \
+    chmod 777 /app/data
 USER appuser
 
 # Install curl for health check
