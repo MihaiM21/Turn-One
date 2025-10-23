@@ -1,11 +1,13 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using Application.DTOs;
 using Domain.Entities;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Application.Interfaces;
 
@@ -13,18 +15,26 @@ namespace Infrastructure.Services
 {
     public class AuthService : IAuthService
     {
-        private readonly TurnOneDbContext _context;
-        private readonly IConfiguration _configuration;
-        private readonly IDailyGiftService _dailyGiftService;
+    private readonly TurnOneDbContext _context;
+    private readonly IConfiguration _configuration;
+    private readonly IDailyGiftService _dailyGiftService;
+    private readonly IEmailService _emailService;
+    private readonly ILogger<AuthService> _logger;
+    private readonly string _appBaseUrl;
 
         public AuthService(
             TurnOneDbContext context, 
             IConfiguration configuration, 
-            IDailyGiftService dailyGiftService)
+            IDailyGiftService dailyGiftService,
+            IEmailService emailService,
+            ILogger<AuthService> logger)
         {
             _context = context;
             _configuration = configuration;
             _dailyGiftService = dailyGiftService;
+            _emailService = emailService;
+            _logger = logger;
+            _appBaseUrl = configuration["AppSettings:BaseUrl"] ?? "https://t1f1.com";
         }
 
         public async Task<AuthResponseDto> Login(LoginDto loginDto)
@@ -46,6 +56,37 @@ namespace Infrastructure.Services
                 {
                     Success = false,
                     Message = "Invalid credentials."
+                };
+            }
+
+            // Check if email is confirmed (skip for admin users)
+            if (!user.IsEmailConfirmed && user.Role != Domain.Enums.Role.ADMIN)
+            {
+                // Generate a new confirmation token if needed
+                if (string.IsNullOrEmpty(user.EmailConfirmationToken) || 
+                    user.EmailConfirmationTokenExpires < DateTime.UtcNow)
+                {
+                    user.EmailConfirmationToken = GenerateRandomToken();
+                    user.EmailConfirmationTokenExpires = DateTime.UtcNow.AddDays(1);
+                    await _context.SaveChangesAsync();
+                    
+                    // Resend confirmation email
+                    try
+                    {
+                        var confirmationLink = $"{_appBaseUrl}/auth/confirm-email?token={user.EmailConfirmationToken}";
+                        await _emailService.SendEmailConfirmationAsync(user.Email, confirmationLink);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogError(ex, "Failed to resend confirmation email to {email}", user.Email);
+                    }
+                }
+
+                return new AuthResponseDto
+                {
+                    Success = false,
+                    Message = "Please confirm your email address to login. We've sent a new confirmation link to your email.",
+                    EmailConfirmed = false
                 };
             }
 
@@ -79,7 +120,8 @@ namespace Infrastructure.Services
                 Token = token,
                 Username = user.Username,
                 Expiration = DateTime.UtcNow.AddDays(7), // Token expiration date
-                DailyGiftClaimed = giftClaimed
+                DailyGiftClaimed = giftClaimed,
+                EmailConfirmed = user.IsEmailConfirmed
             };
         }
 
@@ -108,6 +150,9 @@ namespace Infrastructure.Services
             // Hash the password
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
             
+            // Generate email confirmation token
+            var emailConfirmationToken = GenerateRandomToken();
+            
             // Create new user
             var user = new User
             {
@@ -116,8 +161,19 @@ namespace Infrastructure.Services
                 Username = registerDto.Username,
                 Password = passwordHash,
                 Role = registerDto.Email == "mihai@t1f1.com" ? Domain.Enums.Role.ADMIN : Domain.Enums.Role.USER,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                IsEmailConfirmed = false,
+                EmailConfirmationToken = emailConfirmationToken,
+                EmailConfirmationTokenExpires = DateTime.UtcNow.AddDays(1) // Token valid for 1 day
             };
+            
+            // For admin user, auto-confirm email
+            if (user.Role == Domain.Enums.Role.ADMIN)
+            {
+                user.IsEmailConfirmed = true;
+                user.EmailConfirmationToken = null;
+                user.EmailConfirmationTokenExpires = null;
+            }
             
             // Save to database
             _context.Users.Add(user);
@@ -126,14 +182,116 @@ namespace Infrastructure.Services
             // Generate JWT token
             var token = GenerateJwtToken(user);
             
+            // Send confirmation email for non-admin users
+            if (user.Role != Domain.Enums.Role.ADMIN)
+            {
+                try
+                {
+                    var confirmationLink = $"{_appBaseUrl}/auth/confirm-email?token={emailConfirmationToken}";
+                    await _emailService.SendEmailConfirmationAsync(user.Email, confirmationLink);
+                }
+                catch (Exception)
+                {
+                    // Log email sending failure, but continue with registration
+                    // Consider adding a retry mechanism or notifying admins
+                }
+            }
+            
             return new AuthResponseDto
             {
                 Success = true,
-                Message = "Registration successful",
+                Message = user.Role == Domain.Enums.Role.ADMIN 
+                    ? "Registration successful" 
+                    : "Registration successful. Please check your email to confirm your account.",
                 Token = token,
                 Username = user.Username,
-                Expiration = DateTime.UtcNow.AddDays(7) // Token expiration date
+                Expiration = DateTime.UtcNow.AddDays(7), // Token expiration date
+                EmailConfirmed = user.IsEmailConfirmed
             };
+        }
+        
+        public async Task<bool> ConfirmEmailAsync(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+                return false;
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.EmailConfirmationToken == token && 
+                                        u.EmailConfirmationTokenExpires > DateTime.UtcNow);
+
+            if (user == null)
+                return false;
+
+            user.IsEmailConfirmed = true;
+            user.EmailConfirmationToken = null;
+            user.EmailConfirmationTokenExpires = null;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> RequestPasswordResetAsync(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+                return false;
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+
+            if (user == null)
+                return false;
+
+            // Generate password reset token
+            var resetToken = GenerateRandomToken();
+            user.PasswordResetToken = resetToken;
+            user.PasswordResetTokenExpires = DateTime.UtcNow.AddHours(1); // Token valid for 1 hour
+
+            await _context.SaveChangesAsync();
+
+            try
+            {
+                var resetLink = $"{_appBaseUrl}/auth/reset-password?token={resetToken}";
+                await _emailService.SendPasswordResetEmailAsync(user.Email, resetLink);
+                return true;
+            }
+            catch
+            {
+                // Log email sending failure
+                return false;
+            }
+        }
+
+        public async Task<bool> ResetPasswordAsync(string token, string newPassword)
+        {
+            if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(newPassword))
+                return false;
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.PasswordResetToken == token && 
+                                        u.PasswordResetTokenExpires > DateTime.UtcNow);
+
+            if (user == null)
+                return false;
+
+            // Hash the new password
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            user.Password = passwordHash;
+            user.PasswordResetToken = null;
+            user.PasswordResetTokenExpires = null;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        
+        private string GenerateRandomToken()
+        {
+            using var rng = RandomNumberGenerator.Create();
+            var bytes = new byte[32]; // 256 bits
+            rng.GetBytes(bytes);
+            return Convert.ToBase64String(bytes)
+                .Replace('+', '-')
+                .Replace('/', '_')
+                .Replace("=", "");
         }
         
         private string GenerateJwtToken(User user)
@@ -150,7 +308,8 @@ namespace Infrastructure.Services
                 new Claim("Plan", user.Plan.ToString()),
                 new Claim("CreatedAt", user.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")),
                 new Claim("Level", user.Level.ToString()),
-                new Claim("Experience", user.Experience.ToString())
+                new Claim("Experience", user.Experience.ToString()),
+                new Claim("EmailConfirmed", user.IsEmailConfirmed.ToString())
             };
             
             // Add avatar URL claim if it exists

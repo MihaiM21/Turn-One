@@ -36,6 +36,15 @@ public class TurnOneDbContext : DbContext
 
             entity.HasIndex(e => e.Email).IsUnique();
             entity.HasIndex(e => e.Username).IsUnique();
+            
+            // Email confirmation
+            entity.Property(e => e.IsEmailConfirmed).IsRequired().HasDefaultValue(false);
+            entity.Property(e => e.EmailConfirmationToken).IsRequired(false);
+            entity.Property(e => e.EmailConfirmationTokenExpires).IsRequired(false);
+            
+            // Password reset
+            entity.Property(e => e.PasswordResetToken).IsRequired(false);
+            entity.Property(e => e.PasswordResetTokenExpires).IsRequired(false);
         });
 
     }

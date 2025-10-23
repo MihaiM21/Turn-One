@@ -98,10 +98,28 @@ builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddSingleton<IVersionService, VersionService>();
 builder.Services.AddScoped<ILevelSystemService, LevelSystemService>();
 builder.Services.AddScoped<IDailyGiftService, DailyGiftService>();
+builder.Services.AddScoped<IEmailService, EmailService>(sp =>
+{
+    var config = builder.Configuration.GetSection("SmtpSettings");
+    var logger = sp.GetRequiredService<ILogger<EmailService>>();
+    var sendInDev = bool.TryParse(config["SendInDevelopment"], out var sif) ? sif : false;
+
+    return new EmailService(
+        config["Host"] ?? throw new InvalidOperationException("SMTP Host not configured"),
+        int.Parse(config["Port"] ?? "587"),
+        config["FromEmail"] ?? throw new InvalidOperationException("From Email not configured"),
+        config["FromName"] ?? "Turn One",
+        config["Username"] ?? string.Empty,
+        config["Password"] ?? string.Empty,
+        sendInDev,
+        logger
+    );
+});
 
 // Add F1 services
 builder.Services.AddSingleton<F1LiveTimingService>();
 builder.Services.AddSingleton<F1WebSocketService>();
+
 
 // Add HttpClient for F1 API proxy
 builder.Services.AddHttpClient();

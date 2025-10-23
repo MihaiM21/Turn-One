@@ -25,4 +25,13 @@ public class User
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastLogin { get; set; }
+    
+    // Email confirmation
+    public bool IsEmailConfirmed { get; set; } = false;
+    public string? EmailConfirmationToken { get; set; }
+    public DateTime? EmailConfirmationTokenExpires { get; set; }
+    
+    // Password reset
+    public string? PasswordResetToken { get; set; }
+    public DateTime? PasswordResetTokenExpires { get; set; }
 }
