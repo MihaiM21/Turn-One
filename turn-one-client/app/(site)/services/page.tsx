@@ -12,7 +12,7 @@ export default function ServicesPage() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden modern-gradient pt-24 pb-16">
-        <div className="absolute inset-0 bg-[url('/turn-one-car/0005.png')] bg-cover bg-center opacity-10" />
+        <div className="absolute inset-0 bg-[url('/turn-one-car/0005.webp')] bg-cover bg-center opacity-10" />
         <div className="relative container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <Badge variant="secondary" className="mb-6 text-sm font-medium accent-glow">

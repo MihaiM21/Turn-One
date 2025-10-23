@@ -13,7 +13,7 @@ import { Loading } from "@/components/ui/loading"
 
 export default function HomePage() {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
-  const backgroundImage = "/turn-one-car/0009.png";
+  const backgroundImage = "/turn-one-car/0009.webp";
   
   // Handle image preloading
   useEffect(() => {
