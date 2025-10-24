@@ -9,7 +9,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5271
-      - ConnectionStrings__DefaultConnection=Data Source=/app/data/turnone.sqlite
+    env_file:
+      - .env
     volumes:
       - sqlite_data:/app/data
     healthcheck:
