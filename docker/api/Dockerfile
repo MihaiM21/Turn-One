@@ -37,6 +37,10 @@ WORKDIR /app
 # Copy published application
 COPY --from=publish /app/publish .
 
+# Copy production configuration file
+COPY turn-one-backend/API/appsettings.Production.json /app/appsettings.json
+COPY turn-one-backend/API/appsettings.Production.json /app/appsettings.Production.json
+
 # Create VERSION file for VersionService with content from the source VERSION file
 COPY turn-one-backend/VERSION /tmp/VERSION
 RUN cat /tmp/VERSION > /app/VERSION
