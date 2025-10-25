@@ -13,6 +13,15 @@ using API.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add configuration from environment variables
+builder.Configuration.AddEnvironmentVariables();
+
+// Override AppSettings:BaseUrl from environment variable if present
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APP_BASE_URL")))
+{
+    builder.Configuration["AppSettings:BaseUrl"] = Environment.GetEnvironmentVariable("APP_BASE_URL");
+}
+
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
@@ -65,7 +74,7 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy.WithOrigins("http://localhost:3000", "https://localhost:3000", "http://localhost:3001", "https://localhost:3001",
-            "https://91.99.127.72:3000/", "http://91.99.127.72:3000/", "https://91.99.127.72:3001", "http://91.99.127.72:3001",
+            "https://91.99.127.72:3000/", "http://91.99.127.72:3000/", "https://91.99.127.72:3001/", "http://91.99.127.72:3001/",
              "https://dev.turnonehub.com", "https://t1f1.com", "https://turnonehub.com")
                   .AllowAnyHeader()
                   .AllowAnyMethod()
@@ -80,7 +89,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("SignalRCorsPolicy", policy =>
     {
         policy.WithOrigins("http://localhost:3000", "https://localhost:3000", "http://localhost:3001", "https://localhost:3001",
-            "https://91.99.127.72:3000/", "http://91.99.127.72:3000/", "https://91.99.127.72:3001", "http://91.99.127.72:3001",
+            "https://91.99.127.72:3000/", "http://91.99.127.72:3000/", "https://91.99.127.72:3001/", "http://91.99.127.72:3001/",
              "https://dev.turnonehub.com", "https://t1f1.com", "https://turnonehub.com")
               .AllowAnyHeader()
               .AllowAnyMethod()
