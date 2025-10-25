@@ -1,206 +1,364 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { DashboardHeader } from "@/components/dashboard/live dashboard/dashboard-header"
+'use client';
 
-export default function DocsPage() {
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { ArrowRight, Zap, Activity, Signal, Database, ChartLine, Cloud, 
+         BarChart, Timer, MapPin, Gauge, Wind, Radio, Bell, FileJson, 
+         KeyRound, Settings, RefreshCw, Mail, ExternalLink, Play,
+         type LucideIcon } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/use-toast";
+import { DashboardHeader } from "@/components/dashboard/live dashboard/dashboard-header";
+
+interface FeatureProps {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}
+
+interface DataElementProps {
+  icon: LucideIcon;
+  title: string;
+  items: string[];
+}
+
+interface AnalysisToolProps {
+  icon: LucideIcon;
+  title: string;
+  features: string[];
+}
+
+export default function DocumentationPage() {
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleContact = () => {
+    toast({
+      title: "Contact Request Sent",
+      description: "Our support team will contact you shortly.",
+    });
+    // In a real implementation, this would send a contact request
+  };
+
+  const handleApiDocs = () => {
+    router.push('/dashboard/api-docs');
+  };
+
+  const handleTutorials = () => {
+    router.push('/dashboard/tutorials');
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-red-950/20 to-black">
+    
+    <div className="container mx-auto py-8 space-y-12">
       <DashboardHeader />
-      <main className="container mx-auto px-4 py-8 space-y-8">
-        <h1 className="text-4xl font-bold text-foreground mb-2">Turn One Documentation</h1>
-        <p className="text-xl text-muted-foreground mb-8">Learn how to use the Turn One F1 Analytics Dashboard</p>
+      {/* Header */}
+      <div className="space-y-4 text-center">
+        <h1 className="text-4xl font-bold tracking-tight gradient-text">Turn One Documentation</h1>
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          Your comprehensive guide to mastering Turn One's F1 data analytics platform
+        </p>
+      </div>
 
-        {/* Quick Start */}
-        <section className="space-y-4">
-          <h2 className="text-3xl font-semibold text-foreground">Quick Start</h2>
-          <Card>
-            <CardHeader>
-              <CardTitle>Getting Started</CardTitle>
-              <CardDescription>Essential steps to begin using Turn One</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ol className="list-decimal list-inside space-y-2">
-                <li>Create an account or sign in</li>
-                <li>Get your API token from the settings page</li>
-                <li>Choose between Live Dashboard or Telemetry Analysis</li>
+      {/* Quick Actions */}
+      <div className="grid md:grid-cols-3 gap-4">
+        <Button 
+          variant="outline" 
+          className="w-full"
+          onClick={() => router.push('/dashboard/live')}
+        >
+          <Signal className="mr-2 h-4 w-4" />
+          Live Dashboard
+        </Button>
+        <Button 
+          variant="outline"
+          className="w-full"
+          onClick={handleApiDocs}
+        >
+          <FileJson className="mr-2 h-4 w-4" />
+          API Documentation
+        </Button>
+        <Button 
+          variant="outline"
+          className="w-full"
+          onClick={handleTutorials}
+        >
+          <Play className="mr-2 h-4 w-4" />
+          Video Tutorials
+        </Button>
+      </div>
+
+      {/* Getting Started */}
+      <section className="space-y-6">
+        <h2 className="text-3xl font-bold">Getting Started</h2>
+        <Card>
+          <CardHeader>
+            <CardTitle>Platform Overview</CardTitle>
+            <CardDescription>
+              Understanding Turn One's core functionality and features
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Key Features</h3>
+              <div className="space-y-4">
+                <Feature
+                  icon={Signal}
+                  title="Real-time Telemetry"
+                  description="Live F1 session data with sub-second latency"
+                />
+                <Feature
+                  icon={ChartLine}
+                  title="Advanced Analytics"
+                  description="Comprehensive performance analysis tools"
+                />
+                <Feature
+                  icon={Database}
+                  title="Historical Data"
+                  description="Access to complete F1 data archive"
+                />
+              </div>
+            </div>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Quick Setup</h3>
+              <ol className="space-y-3 text-sm text-muted-foreground list-decimal list-inside">
+                <li>Access the Live Dashboard</li>
+                <li>Connect to active F1 sessions</li>
+                <li>Configure your data preferences</li>
+                <li>Start analyzing real-time data</li>
               </ol>
-            </CardContent>
-          </Card>
-        </section>
+              <Button 
+                className="w-full mt-4"
+                onClick={() => router.push('/dashboard/live')}
+              >
+                Go to Live Dashboard
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
 
-        {/* Live F1 Dashboard */}
-        <section className="space-y-4">
-          <h2 className="text-3xl font-semibold text-foreground">Live Formula 1 Dashboard</h2>
+      <Separator />
+
+      {/* Live Dashboard */}
+      <section className="space-y-6">
+        <h2 className="text-3xl font-bold">Live Dashboard</h2>
+        <Card>
+          <CardHeader>
+            <CardTitle>Real-time Monitoring</CardTitle>
+            <CardDescription>
+              Access live F1 session data and real-time analytics
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-3 gap-6">
+              <DataElement
+                icon={Timer}
+                title="Timing Data"
+                items={[
+                  "Lap times and intervals",
+                  "Sector times",
+                  "Speed traps",
+                  "Gap analysis"
+                ]}
+              />
+              <DataElement
+                icon={Gauge}
+                title="Telemetry"
+                items={[
+                  "Speed and RPM",
+                  "Throttle/Brake",
+                  "DRS status",
+                  "Gear changes"
+                ]}
+              />
+              <DataElement
+                icon={Wind}
+                title="Conditions"
+                items={[
+                  "Track temperature",
+                  "Weather data",
+                  "Wind conditions",
+                  "Rain probability"
+                ]}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <Separator />
+
+      {/* Data Analysis */}
+      <section className="space-y-6">
+        <h2 className="text-3xl font-bold">Data Analysis</h2>
+        <div className="grid md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Real-Time Race Tracking</CardTitle>
-              <CardDescription>Monitor live race data and statistics</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <h3 className="text-xl font-semibold">Features</h3>
-              <ul className="list-disc list-inside space-y-2">
-                <li>Live timing data for all drivers</li>
-                <li>Real-time position tracking</li>
-                <li>Tire strategy visualization</li>
-                <li>Gap times and intervals</li>
-                <li>Sector times comparison</li>
-                <li>DRS detection and activation zones</li>
-              </ul>
-
-            
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Telemetry Plot Generator */}
-        <section className="space-y-4">
-          <h2 className="text-3xl font-semibold text-foreground">Telemetry Plot Generator</h2>
-          <Card>
-            <CardHeader>
-              <CardTitle>Advanced Telemetry Analysis</CardTitle>
-              <CardDescription>Generate and analyze detailed F1 telemetry data</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <h3 className="text-xl font-semibold mb-2">Available Plot Types</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <h4 className="font-semibold">Lap Time Analysis</h4>
-                    <p className="text-muted-foreground">Compare lap times and sector performance between drivers</p>
-                    <ul className="list-disc list-inside text-sm">
-                      <li>Overall lap time comparison</li>
-                      <li>Sector-by-sector analysis</li>
-                      <li>Performance trends over race distance</li>
-                    </ul>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h4 className="font-semibold">Speed Trace</h4>
-                    <p className="text-muted-foreground">Analyze speed, throttle, and brake data</p>
-                    <ul className="list-disc list-inside text-sm">
-                      <li>Corner entry and exit speeds</li>
-                      <li>Throttle application patterns</li>
-                      <li>Braking points and intensity</li>
-                    </ul>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h4 className="font-semibold">Tire Temperature</h4>
-                    <p className="text-muted-foreground">Monitor tire temperature evolution</p>
-                    <ul className="list-disc list-inside text-sm">
-                      <li>All four tires temperature tracking</li>
-                      <li>Temperature variation over stint length</li>
-                      <li>Optimal operating window analysis</li>
-                    </ul>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h4 className="font-semibold">G-Force Analysis</h4>
-                    <p className="text-muted-foreground">Examine lateral and longitudinal forces</p>
-                    <ul className="list-disc list-inside text-sm">
-                      <li>Cornering G-forces</li>
-                      <li>Acceleration and braking forces</li>
-                      <li>Driver style comparison</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-semibold mb-2">How to Generate Plots</h3>
-                <ol className="list-decimal list-inside space-y-2">
-                  <li>Select the year and Grand Prix from the dropdown menus</li>
-                  <li>Choose the session type (Practice, Qualifying, Race)</li>
-                  <li>Select one or two drivers to compare</li>
-                  <li>Input your API token for data access</li>
-                  <li>Choose the plot type from the available options</li>
-                  <li>Click &ldquo;Generate Plot&rdquo; to visualize the data</li>
-                  <li>Use the export feature to save or share your analysis</li>
-                </ol>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-semibold mb-2">Advanced Features</h3>
-                <ul className="list-disc list-inside space-y-2">
-                  <li>Custom lap range selection for focused analysis</li>
-                  <li>Multiple data overlay capabilities</li>
-                  <li>Interactive tooltips with detailed information</li>
-                  <li>Customizable plot styling and formatting</li>
-                  <li>Data export in various formats</li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-
-        {/* Best Practices */}
-        <section className="space-y-4">
-          <h2 className="text-3xl font-semibold text-foreground">Best Practices</h2>
-          <Card>
-            <CardHeader>
-              <CardTitle>Tips for Better Analysis</CardTitle>
-              <CardDescription>Get the most out of Turn One</CardDescription>
+              <CardTitle>Performance Analysis</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="list-disc list-inside space-y-2">
-                <li>Always compare similar session conditions for meaningful analysis</li>
-                <li>Consider track evolution when analyzing practice sessions</li>
-                <li>Use multiple plot types to get a comprehensive understanding</li>
-                <li>Export and save important analyses for future reference</li>
-                <li>Compare teammate performances for baseline reference</li>
-              </ul>
+              <AnalysisTool
+                icon={BarChart}
+                title="Lap Time Analysis"
+                features={[
+                  "Sector comparison",
+                  "Stint analysis",
+                  "Performance trends",
+                  "Historical data"
+                ]}
+              />
             </CardContent>
           </Card>
-        </section>
-
-        {/* API Access */}
-        <section className="space-y-4">
-          <h2 className="text-3xl font-semibold text-foreground">API Access</h2>
           <Card>
             <CardHeader>
-              <CardTitle>Using the Turn One API</CardTitle>
-              <CardDescription>Integrate Turn One data into your applications</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h3 className="text-xl font-semibold mb-2">Authentication</h3>
-                <p>Include your API token in the request header:</p>
-                <pre className="bg-muted p-4 rounded-lg mt-2">
-                  <code>{`Authorization: Bearer your_api_token`}</code>
-                </pre>
-              </div>
-              
-              <div>
-                <h3 className="text-xl font-semibold mb-2">Rate Limits</h3>
-                <ul className="list-disc list-inside space-y-2">
-                  <li>Free tier: 60 requests per minute</li>
-                  <li>Pro tier: 300 requests per minute</li>
-                  <li>Enterprise tier: Custom limits available</li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Support */}
-        <section className="space-y-4 mb-8">
-          <h2 className="text-3xl font-semibold text-foreground">Support</h2>
-          <Card>
-            <CardHeader>
-              <CardTitle>Need Help?</CardTitle>
-              <CardDescription>Ways to get support for Turn One</CardDescription>
+              <CardTitle>Track Intelligence</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="list-disc list-inside space-y-2">
-                <li>Visit our GitHub repository for technical documentation</li>
-                <li>Join our Discord community for real-time support</li>
-                <li>Contact support for enterprise solutions</li>
-                <li>Check our FAQ section for common issues</li>
-              </ul>
+              <AnalysisTool
+                icon={MapPin}
+                title="Track Mapping"
+                features={[
+                  "Racing line analysis",
+                  "Corner speed data",
+                  "Overtaking zones",
+                  "Position tracking"
+                ]}
+              />
             </CardContent>
           </Card>
-        </section>
-      </main>
-  </div>
-  )
+        </div>
+      </section>
+
+      <Separator />
+
+      {/* Advanced Features */}
+      <section className="space-y-6">
+        <h2 className="text-3xl font-bold">Advanced Features</h2>
+        <Card>
+          <CardHeader>
+            <CardTitle>API & Integration</CardTitle>
+            <CardDescription>
+              Build custom solutions with our developer tools
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div className="p-4 rounded-lg border bg-muted/50">
+                <h4 className="font-medium mb-2">API Authentication</h4>
+                <code className="text-sm text-muted-foreground block">
+                  Authorization: Bearer {'{your_api_key}'}
+                </code>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <Button 
+                  variant="outline" 
+                  onClick={handleApiDocs}
+                  className="w-full"
+                >
+                  <FileJson className="mr-2 h-4 w-4" />
+                  API Documentation
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => window.open('https://github.com/yourusername/turn-one-api', '_blank')}
+                  className="w-full"
+                >
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Code Examples
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Support Section */}
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>Need Help?</CardTitle>
+          <CardDescription>
+            Get support from our team of F1 data experts
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-4">
+            <Button 
+              variant="outline"
+              onClick={handleContact}
+              className="w-full"
+            >
+              <Mail className="mr-2 h-4 w-4" />
+              Contact Support
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={handleApiDocs}
+              className="w-full"
+            >
+              <FileJson className="mr-2 h-4 w-4" />
+              API Docs
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={handleTutorials}
+              className="w-full"
+            >
+              <Play className="mr-2 h-4 w-4" />
+              Tutorials
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function Feature({ icon: Icon, title, description }: FeatureProps) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="mt-1">
+        <Icon className="h-5 w-5 text-primary" />
+      </div>
+      <div>
+        <h4 className="font-medium">{title}</h4>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+function DataElement({ icon: Icon, title, items }: DataElementProps) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <Icon className="h-5 w-5 text-primary" />
+        <h4 className="font-medium">{title}</h4>
+      </div>
+      <ul className="space-y-1">
+        {items.map((item, index) => (
+          <li key={index} className="text-sm text-muted-foreground">• {item}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function AnalysisTool({ icon: Icon, title, features }: AnalysisToolProps) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <Icon className="h-5 w-5 text-primary" />
+        <h3 className="font-medium">{title}</h3>
+      </div>
+      <ul className="space-y-1">
+        {features.map((feature, index) => (
+          <li key={index} className="text-sm text-muted-foreground">• {feature}</li>
+        ))}
+      </ul>
+    </div>
+  );
 }
