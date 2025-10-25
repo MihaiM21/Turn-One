@@ -81,7 +81,7 @@ export function TelemetryPlotGenerator() {
     { id: "laptime", name: "Lap Time Analysis", icon: Clock, description: "Compare lap times and sector performance", isPro: false },
     { id: "track_comparison", name: "H2H Track Comparison", icon: Users, description: "Head-to-head track comparison visualization", isPro: false },
     { id: "throttle_brake", name: "H2H Throttle & Brake", icon: ChartSpline, description: "Compare throttle and brake inputs across drivers on their fastest laps", isPro: false },
-    { id: "session_results", name: "Session Results", icon: MonitorCog, description: "Visualize session results and lap time deltas", isPro: false },
+    { id: "session_results", name: "Optimal Qualifying Time", icon: MonitorCog, description: "Visualize session results and lap time deltas", isPro: false },
     //Premium features
     { id: "driver_analysis", name: "Driver Analysis", icon: UserRound, description: "Driver performance analysis", isPro: true },
     { id: "chevronsup", name: "Chevrons Up", icon: ChevronsUp, description: "Just a test icon", isPro: true },
