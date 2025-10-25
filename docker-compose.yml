@@ -1,11 +1,10 @@
-
 services:
   api:
     build:
       context: .
       dockerfile: docker/api/Dockerfile
     ports:
-      - "5271:5271"
+      - "${API_PORT:-5271}:5271"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5271
@@ -25,7 +24,7 @@ services:
       context: .
       dockerfile: docker/client/Dockerfile
     ports:
-      - "3000:3000"
+      - "${CLIENT_PORT:-3000}:3000"
     environment:
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
@@ -41,7 +40,6 @@ services:
     restart: unless-stopped
 
 volumes:
-  api_data:
   sqlite_data:
 
 networks:
