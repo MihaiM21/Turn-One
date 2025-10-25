@@ -64,8 +64,9 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000", "https://localhost:3000", "https://91.107.205.28:3000", "http://91.107.205.28:3000", 
-            "https://91.99.127.72:3000/", "http://91.99.127.72:3000/","https://dev.t1f1.com", "https://dev.turnonehub.com", "https://t1f1.com", "https://turnonehub.com")
+            policy.WithOrigins("http://localhost:3000", "https://localhost:3000", "http://localhost:3001", "https://localhost:3001",
+            "https://91.99.127.72:3000/", "http://91.99.127.72:3000/", "https://91.99.127.72:3001", "http://91.99.127.72:3001",
+             "https://dev.turnonehub.com", "https://t1f1.com", "https://turnonehub.com")
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .WithExposedHeaders("Authorization", "X-F1-Cookies")
@@ -78,8 +79,9 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("SignalRCorsPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "https://localhost:3000", "https://91.107.205.28:3000", "http://91.107.205.28:3000", 
-               "https://dev.t1f1.com", "https://dev.turnonehub.com", "https://t1f1.com", "https://turnonehub.com")
+        policy.WithOrigins("http://localhost:3000", "https://localhost:3000", "http://localhost:3001", "https://localhost:3001",
+            "https://91.99.127.72:3000/", "http://91.99.127.72:3000/", "https://91.99.127.72:3001", "http://91.99.127.72:3001",
+             "https://dev.turnonehub.com", "https://t1f1.com", "https://turnonehub.com")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials()

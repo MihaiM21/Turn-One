@@ -4,11 +4,10 @@ obj/
 *.user
 *.suo
 .db
-appsettings.json
 appsettings.Development.json
 appsettings.Production.json
 turn-one-backend/API/appsettings.Development.json
-turn-one-backend/API/appsettings.json
+
 
 # Node
 node_modules/
