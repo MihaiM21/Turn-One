@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const API_URL = process.env.BACKEND_URL || 'https://backend.t1f1.com/api';
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.t1f1.com/api';
 
 export interface LoginData {
   email: string;
@@ -20,6 +20,8 @@ export interface AuthResponse {
   token: string;
   username: string;
   expiration: string;
+  emailConfirmed?: boolean;
+  dailyGiftClaimed?: boolean;
 }
 
 export const login = async (data: LoginData): Promise<AuthResponse> => {
@@ -40,13 +42,19 @@ export const login = async (data: LoginData): Promise<AuthResponse> => {
 };
 
 export const register = async (data: RegisterData): Promise<AuthResponse> => {
-  const response = await fetch(`${API_URL}/Auth/register`, {
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}/Auth/register`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(data),
-  });
+    });
+  } catch (err) {
+    // Network or CORS error — surface a clearer message
+    throw new Error('Unable to reach backend. Is the API running? ' + (err instanceof Error ? err.message : String(err)));
+  }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Registration failed' }));

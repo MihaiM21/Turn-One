@@ -8,6 +8,7 @@ import {
   Command,
   ChartNoAxesCombined,
   Frame,
+  Gift,
   LifeBuoy,
   Map,
   PieChart,
@@ -16,6 +17,7 @@ import {
   Shield,
   SquareTerminal,
   Activity,
+  Gamepad2,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -72,6 +74,33 @@ const data = {
       // ],
     },
     {
+      title: "Game",
+      url: "/app",
+      icon: Gamepad2,
+      items: [
+        {
+          title: "Hub",
+          url: "/app/hub",
+        },
+        {
+          title: "Predictions",
+          url: "/app/predictions",
+        },
+        {
+          title: "Coin store",
+          url: "/store",
+        },
+        {
+          title: "Rewards",
+          url: "/rewards",
+        },
+        {
+          title: "Changelog",
+          url: "#",
+        },
+      ],
+    },
+    {
       title: "Documentation",
       url: "/docs",
       icon: BookOpen,
@@ -94,29 +123,29 @@ const data = {
       //   },
       // ],
     },
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: Settings2,
-      // items: [
-      //   {
-      //     title: "General",
-      //     url: "#",
-      //   },
-      //   {
-      //     title: "Team",
-      //     url: "#",
-      //   },
-      //   {
-      //     title: "Billing",
-      //     url: "#",
-      //   },
-      //   {
-      //     title: "Limits",
-      //     url: "#",
-      //   },
-      // ],
-    },
+    // {
+    //   title: "Settings",
+    //   url: "/settings",
+    //   icon: Settings2,
+    //   // items: [
+    //   //   {
+    //   //     title: "General",
+    //   //     url: "#",
+    //   //   },
+    //   //   {
+    //   //     title: "Team",
+    //   //     url: "#",
+    //   //   },
+    //   //   {
+    //   //     title: "Billing",
+    //   //     url: "#",
+    //   //   },
+    //   //   {
+    //   //     title: "Limits",
+    //   //     url: "#",
+    //   //   },
+    //   // ],
+    // },
   ],
   navSecondary: [
     {
@@ -150,7 +179,6 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-
   const { user } = useAuth();
   data.user.name = user?.username || 'User';
   data.user.email = user?.email || 'user@example.com';

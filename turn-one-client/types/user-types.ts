@@ -9,6 +9,7 @@ export interface UserProfile {
   planEndDate?: string;
   autoRenew: boolean;
   tokens: number;
+  coins: number;
   lastTokenRefillDate: string;
   createdAt: string;
   lastLogin?: string;

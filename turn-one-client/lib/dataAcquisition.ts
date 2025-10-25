@@ -2,6 +2,7 @@
 
 import { Console } from 'console';
 import { useState, useEffect } from 'react';
+import { loadEnvConfig } from '@next/env'
 
 const API_URL = process.env.API_URL || 'https://api.t1f1.com/api';
 const APIDEV_URL = process.env.APIDEV_URL || 'https://apidev.t1f1.com/api';

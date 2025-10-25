@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { ThemeProvider } from "@/components/theme-provider"
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import './globals.css'
 import type React from "react"
-import { Toaster } from "react-hot-toast"
 import { MainFooter } from "@/components/footer/main-footer"
 import { Suspense } from "react"
 import { AuthProvider } from "@/components/auth/auth-provider"
-import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/sonner";
+import { Loading } from "@/components/ui/loading";
+import { PageLoadingProvider } from "@/components/providers/page-loading-provider";
+import { VersionProvider } from "@/components/providers/version-provider";
 
 
 export const metadata: Metadata = {
@@ -25,9 +26,14 @@ export default function RootLayout({children,}: {
             <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
                 <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
                     <AuthProvider>
-                        <Suspense fallback={null}>
-                            {children}
-                        </Suspense>
+                        <VersionProvider>
+                            <PageLoadingProvider>
+                                <Suspense fallback={<Loading />}>
+                                    {children}
+                                </Suspense>
+                                <Toaster />
+                            </PageLoadingProvider>
+                        </VersionProvider>
                     </AuthProvider>
                 </ThemeProvider>
             </body>

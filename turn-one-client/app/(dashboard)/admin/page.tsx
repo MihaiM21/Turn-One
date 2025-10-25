@@ -37,6 +37,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import * as adminService from '@/lib/adminService';
 import * as userService from '@/lib/userService';
+import { set } from 'date-fns';
 
 interface User {
   id: string;
@@ -45,6 +46,7 @@ interface User {
   role: 'USER' | 'CONTENT_CREATOR' | 'ADMIN';
   plan: 'BASIC' | 'PRO' | 'ELITE';
   tokens: number;
+  coins: number;
   createdAt: string;
   lastLogin?: string;
 }
@@ -56,6 +58,7 @@ interface CurrentUser {
   role: 'USER' | 'CONTENT_CREATOR' | 'ADMIN';
   plan: 'BASIC' | 'PRO' | 'ELITE';
   tokens: number;
+  coins: number;
 }
 
 const planNames: Record<string, string> = {
@@ -95,6 +98,8 @@ export default function AdminDashboard() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [newPlan, setNewPlan] = useState<string>('');
   const [newRole, setNewRole] = useState<string>('');
+  const [newTokens, setNewTokens] = useState<number>(0);
+  const [newCoins, setNewCoins] = useState<number>(0);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [planFilter, setPlanFilter] = useState<string>('ALL');
@@ -174,6 +179,40 @@ export default function AdminDashboard() {
     }
   };
 
+  const updateUserTokens = async (userId: string, tokens: number) => {
+    const result = await adminService.updateUserTokens(userId, tokens);
+    if (result.success) {
+      toast({
+        title: "Success",
+        description: "User tokens updated successfully.",
+      });
+      fetchUsers();
+      setSelectedUser(null);
+    } else {
+      toast({
+        title: "Error",
+        description: result.error,
+        variant: "destructive",
+      });
+    }
+  };
+  const updateUserCoins = async (userId: string, coins: number) => {
+    const result = await adminService.updateUserCoins(userId, coins);
+    if (result.success) {
+      toast({
+        title: "Success",
+        description: "User coins updated successfully.",
+      });
+      fetchUsers();
+      setSelectedUser(null);
+    } else {
+      toast({
+        title: "Error",
+        description: result.error,
+        variant: "destructive",
+      });
+    }
+  };
 
   const updateUserRole = async (userId: string, role: string) => {
     let result;
@@ -501,6 +540,10 @@ export default function AdminDashboard() {
                               <span className="text-muted-foreground font-medium">{user.tokens.toLocaleString()} tokens</span>
                             </div>
                             <div className="flex items-center space-x-1">
+                              <TrendingUp className="h-3 w-3 text-primary" />
+                              <span className="text-muted-foreground font-medium">{user.coins.toLocaleString()} coins</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
                               <Calendar className="h-3 w-3 text-muted-foreground" />
                               <span className="text-muted-foreground">
                                 Joined: {new Date(user.createdAt).toLocaleDateString()}
@@ -551,7 +594,101 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     
+                    
+
                     <div className="flex flex-col sm:flex-row gap-2 mt-4 lg:mt-0">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="accent-glow hover:scale-105 transition-all duration-300"
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setNewPlan(user.plan);
+                            }}
+                          >
+                            Update Tokens
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle className="text-xl gradient-text">Update User Tokens</DialogTitle>
+                            <DialogDescription className="text-muted-foreground">
+                              Change the token count for <span className="font-semibold">{user.username}</span>
+                              <br />
+                              <span className="text-xs text-orange-500 mt-1 block">
+                                Note: Changing tokens may affect user access and features.
+                              </span>
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="py-6">
+                            <Input
+                              type="number"
+                              min={0}
+                              placeholder={user.tokens.toString()}
+                              onChange={(e) => {
+                                setNewTokens(parseInt(e.target.value, 10));
+                              }}
+                            />
+                          </div>
+                          <DialogFooter>
+                            <Button
+                              onClick={() => selectedUser && updateUserTokens(selectedUser.id, newTokens)}
+                              className="glow-effect hover:scale-105 transition-all duration-300"
+                            >
+                              Update Tokens
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="accent-glow hover:scale-105 transition-all duration-300"
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setNewPlan(user.plan);
+                            }}
+                          >
+                            Update Coins
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle className="text-xl gradient-text">Update User Coins</DialogTitle>
+                            <DialogDescription className="text-muted-foreground">
+                              Change the coin count for <span className="font-semibold">{user.username}</span>
+                              <br />
+                              <span className="text-xs text-orange-500 mt-1 block">
+                                Note: Changing coins may affect user access and features.
+                              </span>
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="py-6">
+                            <Input
+                              type="number"
+                              min={0}
+                              placeholder={user.coins.toString()}
+                              onChange={(e) => {
+                                setNewCoins(parseInt(e.target.value, 10));
+                              }}
+                            />
+                          </div>
+                          <DialogFooter>
+                            <Button
+                              onClick={() => selectedUser && updateUserCoins(selectedUser.id, newCoins)}
+                              className="glow-effect hover:scale-105 transition-all duration-300"
+                            >
+                              Update Coins
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button
@@ -600,6 +737,8 @@ export default function AdminDashboard() {
                           </DialogFooter>
                         </DialogContent>
                       </Dialog>
+                      
+                      
 
                       <Dialog>
                         <DialogTrigger asChild>

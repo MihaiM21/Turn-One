@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { BarChart3, Mail, Phone, MapPin, Twitter, Linkedin, Github, Zap } from "lucide-react"
+import { BarChart3, Mail, Phone, MapPin, Twitter, Linkedin, Github, Zap, Youtube, Instagram } from "lucide-react"
+import VersionDisplay from "@/components/ui/version-display"
 
 export function MainFooter() {
   const currentYear = new Date().getFullYear()
@@ -29,13 +30,19 @@ export function MainFooter() {
             </p>
             <div className="flex space-x-3">
               <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors">
-                <Twitter className="h-4 w-4" />
+                <Link href="https://twitter.com/turnoneofficial" target="_blank" rel="noopener noreferrer">
+                  <Twitter className="h-4 w-4"  />
+                </Link>
               </Button>
               <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors">
-                <Linkedin className="h-4 w-4" />
+                <Link href="https://www.instagram.com/turnoneofficial/" target="_blank" rel="noopener noreferrer">
+                  <Instagram className="h-4 w-4"  />
+                </Link>
               </Button>
               <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors">
-                <Github className="h-4 w-4" />
+                <Link href="https://www.youtube.com/channel/UCg-DYx-XQUFeEol-IHmCi_Q/" target="_blank" rel="noopener noreferrer">
+                  <Youtube className="h-4 w-4" />
+                </Link>
               </Button>
             </div>
           </div>
@@ -68,7 +75,7 @@ export function MainFooter() {
               {[
                 { href: "/services", label: "Telemetry Analysis" },
                 { href: "/dashboard", label: "Live Dashboard" },
-                { href: "/team", label: "Expert Team" },
+                // { href: "/team", label: "Expert Team" },
                 { href: "/contact", label: "Contact Us" },
               ].map((link) => (
                 <Link
@@ -90,10 +97,10 @@ export function MainFooter() {
                 <Mail className="h-4 w-4 text-primary" />
                 <span className="text-muted-foreground">contact@t1f1.com</span>
               </div>
-              <div className="flex items-center space-x-3 text-sm">
+              {/* <div className="flex items-center space-x-3 text-sm">
                 <Phone className="h-4 w-4 text-primary" />
                 <span className="text-muted-foreground">+1 (555) 123-4567</span>
-              </div>
+              </div> */}
               <div className="flex items-center space-x-3 text-sm">
                 <MapPin className="h-4 w-4 text-primary" />
                 <span className="text-muted-foreground">At the racetrack</span>
@@ -113,7 +120,11 @@ export function MainFooter() {
       <div className="border-t border-border bg-muted/30">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="text-sm text-muted-foreground">© {currentYear} Turn One. All rights reserved.</div>
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <span>© {currentYear} Turn One. All rights reserved.</span>
+              <span className="text-muted-foreground/50">|</span>
+              <VersionDisplay className="text-sm text-muted-foreground/70" />
+            </div>
             <div className="flex space-x-6 text-sm">
               <Link href="/privacy" className="text-muted-foreground hover:text-primary transition-colors">
                 Privacy Policy

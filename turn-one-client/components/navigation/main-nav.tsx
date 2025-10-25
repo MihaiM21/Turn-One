@@ -50,7 +50,7 @@ export function MainNav({ variant = "homepage" }: MainNavProps) {
                 </div>
               </div>
               <div className="flex flex-col">
-                <span className="text-foreground font-bold text-xl gradient-text group-hover:scale-105 transition-transform duration-300">
+                <span className="text-foreground font-bold text-xl gradient-text">
                   Turn One
                 </span>
                 <span className="text-xs text-muted-foreground font-medium tracking-wider">PERFORMANCE</span>

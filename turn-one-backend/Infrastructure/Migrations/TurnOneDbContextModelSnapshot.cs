@@ -31,11 +31,31 @@ namespace Infrastructure.Migrations
                     b.Property<string>("AvatarUrl")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Coins")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Email")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EmailConfirmationToken")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EmailConfirmationTokenExpires")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Experience")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsEmailConfirmed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("LastDailyGiftDate")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("LastLogin")
@@ -44,8 +64,17 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("LastTokenRefillDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Level")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Password")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PasswordResetToken")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PasswordResetTokenExpires")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Plan")

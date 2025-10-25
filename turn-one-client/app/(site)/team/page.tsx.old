@@ -1,0 +1,213 @@
+"use client"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { MainNav } from "@/components/navigation/main-nav"
+import { ArrowLeft, Github, Linkedin, Twitter } from "lucide-react"
+import Link from "next/link"
+import { ScrollAnimation } from "@/components/animation/scroll-animation"
+import Image from "next/image"
+import { useState } from "react"
+
+// Client component for handling image loading with fallback
+interface TeamMemberImageProps {
+    imageSrc: string;
+    name: string;
+}
+
+function TeamMemberImage({ imageSrc, name }: TeamMemberImageProps) {
+    const [imgSrc, setImgSrc] = useState(imageSrc);
+    
+    return (
+        <div className="w-full h-full">
+            <img 
+                src={imgSrc} 
+                alt={name} 
+                className="w-full h-full object-cover object-center"
+                onError={() => setImgSrc("https://placehold.co/400x500/171717/e2e2e2?text=Team+Member")}
+            />
+        </div>
+    );
+}
+
+const teamMembers = [
+  {
+    name: "Elena Rossi",
+    role: "Chief Technical Officer",
+    image: "/team/elena-rossi.webp",
+    expertise: "F1 Telemetry Analysis, Machine Learning",
+    bio: "Former data engineer for Ferrari F1, Elena brings over 15 years of experience in Formula 1 telemetry analysis. She leads our technical innovation with a focus on real-time data processing algorithms and AI-driven insights.",
+    social: {
+      linkedin: "https://linkedin.com/in/elena-rossi",
+      twitter: "https://twitter.com/elenarossi_f1",
+      github: "https://github.com/elenarossi"
+    }
+  },
+  {
+    name: "Marcus Chen",
+    role: "Lead Software Architect",
+    image: "/team/marcus-chen.webp",
+    expertise: "Distributed Systems, Real-time Data Processing",
+    bio: "Marcus previously built high-frequency trading systems before bringing his expertise in low-latency architectures to Turn One. He designed our core data processing pipeline that handles millions of telemetry points per second.",
+    social: {
+      linkedin: "https://linkedin.com/in/marcuschen",
+      twitter: "https://twitter.com/marcuschen_tech",
+      github: "https://github.com/marcuschen"
+    }
+  },
+  {
+    name: "Sophie Williams",
+    role: "Race Strategy Director",
+    image: "/team/sophie-williams.webp",
+    expertise: "Race Strategy, Predictive Modeling",
+    bio: "With experience as a race strategist for multiple F1 teams, Sophie provides the strategic perspective that shapes our analytics features. Her insights on tire degradation modeling and race simulation are unparalleled in the industry.",
+    social: {
+      linkedin: "https://linkedin.com/in/sophiewilliams",
+      twitter: "https://twitter.com/sophiew_f1strategy"
+    }
+  },
+  {
+    name: "Alejandro Vega",
+    role: "UX/UI Design Lead",
+    image: "/team/alejandro-vega.webp",
+    expertise: "UX Research, Data Visualization",
+    bio: "Alejandro specializes in turning complex telemetry data into intuitive, actionable visualizations. His background in both cognitive psychology and design brings a human-centered approach to our technical interfaces.",
+    social: {
+      linkedin: "https://linkedin.com/in/alejandrovega",
+      twitter: "https://twitter.com/a_vega_design",
+      github: "https://github.com/avega-design"
+    }
+  },
+  {
+    name: "Jordan Taylor",
+    role: "Performance Analysis Lead",
+    image: "/team/jordan-taylor.webp",
+    expertise: "Vehicle Dynamics, Driver Performance Analytics",
+    bio: "Former race engineer and performance analyst, Jordan translates raw telemetry into driver coaching insights. His experience working directly with F1 drivers informs our approach to performance feedback systems.",
+    social: {
+      linkedin: "https://linkedin.com/in/jordantaylor",
+      twitter: "https://twitter.com/jordant_racing"
+    }
+  },
+  {
+    name: "Leila Patel",
+    role: "Data Science Director",
+    image: "/team/leila-patel.webp",
+    expertise: "Machine Learning, Predictive Analytics",
+    bio: "PhD in computational physics, Leila leads our data science initiatives including our race prediction algorithms and automated insight generation. She bridges cutting-edge academic research with practical applications.",
+    social: {
+      linkedin: "https://linkedin.com/in/leilapatel",
+      twitter: "https://twitter.com/leilapatel_data",
+      github: "https://github.com/lpatel-datascience"
+    }
+  },
+  {
+    name: "Thomas Müller",
+    role: "Chief Product Officer",
+    image: "/team/thomas-muller.webp",
+    expertise: "Product Strategy, Motorsport Analytics",
+    bio: "Thomas brings experience from both technology startups and Formula 1 teams. He shapes our product roadmap with deep understanding of the technical needs of racing teams at all levels of competition.",
+    social: {
+      linkedin: "https://linkedin.com/in/thomasmuller",
+      twitter: "https://twitter.com/tmuller_product"
+    }
+  },
+  {
+    name: "Olivia Zhang",
+    role: "Backend Engineering Lead",
+    image: "/team/olivia-zhang.webp",
+    expertise: "Distributed Systems, Database Optimization",
+    bio: "Olivia architected our high-performance database systems that power historical telemetry analysis. Her innovations in time-series data storage enable our platform to provide millisecond-level query responses across seasons of data.",
+    social: {
+      linkedin: "https://linkedin.com/in/oliviazhang",
+      github: "https://github.com/olivia-zhang-dev"
+    }
+  }
+];
+
+export default function TeamPage() {
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-black via-red-950/20 to-black">
+            <MainNav />
+            
+            <main className="container mx-auto px-4 py-12 md:py-20">
+                <div className="flex flex-col space-y-12 max-w-6xl mx-auto">
+                    <ScrollAnimation direction="up">
+                        <Button variant="ghost" asChild className="text-red-200 hover:bg-red-950/20 w-fit">
+                            <Link href="/">
+                                <ArrowLeft className="h-4 w-4 mr-2" />
+                                Back to Home
+                            </Link>
+                        </Button>
+                        
+                        <div className="text-center mb-16">
+                            <h1 className="text-4xl md:text-5xl font-bold mt-6 mb-4 text-white">Our Team</h1>
+                            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+                                The experts behind Turn One combine decades of Formula 1 experience with 
+                                cutting-edge technical innovation to deliver unparalleled telemetry insights.
+                            </p>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                            {teamMembers.map((member, index) => (
+                                <ScrollAnimation key={member.name} direction="up" delay={index * 0.1}>
+                                    <Card className="border-red-800/20 bg-black/40 backdrop-blur-sm shadow-lg hover:shadow-red-900/20 transition-all duration-300 h-full flex flex-col">
+                                        <div className="relative aspect-[4/5] w-full overflow-hidden">
+                                            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/90 z-10" />
+                                            <TeamMemberImage 
+                                                imageSrc={member.image} 
+                                                name={member.name} 
+                                            />
+                                            <div className="absolute bottom-0 left-0 right-0 p-6 z-20">
+                                                <h3 className="text-2xl font-bold text-white mb-1">{member.name}</h3>
+                                                <p className="text-red-400 font-medium">{member.role}</p>
+                                            </div>
+                                        </div>
+                                        <CardContent className="flex-1 flex flex-col pt-6">
+                                            <div className="mb-4">
+                                                <p className="text-sm font-medium text-gray-400 mb-2">EXPERTISE</p>
+                                                <p className="text-white">{member.expertise}</p>
+                                            </div>
+                                            <p className="text-gray-300 text-sm flex-1 mb-6">{member.bio}</p>
+                                            <div className="flex space-x-4 mt-auto">
+                                                {member.social.linkedin && (
+                                                    <a href={member.social.linkedin} target="_blank" rel="noopener noreferrer" 
+                                                       className="text-gray-400 hover:text-white transition-colors">
+                                                        <Linkedin className="h-5 w-5" />
+                                                    </a>
+                                                )}
+                                                {member.social.twitter && (
+                                                    <a href={member.social.twitter} target="_blank" rel="noopener noreferrer"
+                                                       className="text-gray-400 hover:text-white transition-colors">
+                                                        <Twitter className="h-5 w-5" />
+                                                    </a>
+                                                )}
+                                                {member.social.github && (
+                                                    <a href={member.social.github} target="_blank" rel="noopener noreferrer"
+                                                       className="text-gray-400 hover:text-white transition-colors">
+                                                        <Github className="h-5 w-5" />
+                                                    </a>
+                                                )}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </ScrollAnimation>
+                            ))}
+                        </div>
+                        
+                        <div className="mt-16 text-center">
+                            <h2 className="text-3xl font-bold text-white mb-6">Join Our Team</h2>
+                            <p className="text-gray-300 max-w-2xl mx-auto mb-8">
+                                We're always looking for talented individuals passionate about motorsports, 
+                                data analysis, and cutting-edge technology to join our team.
+                            </p>
+                            <Button size="lg" variant="default" className="bg-red-700 hover:bg-red-600" asChild>
+                                <Link href="/careers">View Open Positions</Link>
+                            </Button>
+                        </div>
+                    </ScrollAnimation>
+                </div>
+            </main>
+        </div>
+    );
+}

@@ -7,4 +7,6 @@ public class AuthResponseDto
     public string Token { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
     public DateTime Expiration { get; set; }
+    public bool DailyGiftClaimed { get; set; }
+    public bool EmailConfirmed { get; set; } // Added for email confirmation status
 }

@@ -23,6 +23,15 @@ interface Position {
   lastLapTime: string;
   bestLapTime?: string;
   currentLapTime?: string;
+  sector1?: string;
+  sector2?: string;
+  sector3?: string;
+  sector1Best?: boolean;
+  sector2Best?: boolean;
+  sector3Best?: boolean;
+  sector1Segments?: Array<{ status: number }>;
+  sector2Segments?: Array<{ status: number }>;
+  sector3Segments?: Array<{ status: number }>;
   speed: number;
   drs: boolean;
   positionChange?: number; // +1 gained, -1 lost, 0 no change
@@ -40,9 +49,34 @@ interface LiveTimingGridProps {
 
 export function LiveTimingGrid({ positions, className }: LiveTimingGridProps) {
   const getPositionChangeIcon = (change?: number) => {
-    if (!change || change === 0) return <Minus className="w-3 h-3 text-muted-foreground" />;
+    if (!change || change === 0) return null;
     if (change > 0) return <TrendingUp className="w-3 h-3 text-green-500" />;
     return <TrendingDown className="w-3 h-3 text-red-500" />;
+  };
+
+  const getSegmentStatusColor = (status: number) => {
+    switch (status) {
+      case 2051: return 'bg-purple-500'; // Purple (overall best)
+      case 2048: return 'bg-yellow-500'; // Yellow (slower)
+      case 2049: return 'bg-green-500';  // Green (personal best)
+      default:   return 'bg-gray-500';   // Gray (no time/invalid)
+    }
+  };
+
+  const getTeamAccentColor = (team: string) => {
+    switch (team) {
+      case 'Mercedes': return 'border-[#00D2BE]';
+      case 'Red Bull': return 'border-[#0600EF]';
+      case 'Ferrari': return 'border-[#DC0000]';
+      case 'McLaren': return 'border-[#FF8700]';
+      case 'Alpine': return 'border-[#0090FF]';
+      case 'AlphaTauri': return 'border-[#2B4562]';
+      case 'Aston Martin': return 'border-[#006F62]';
+      case 'Williams': return 'border-[#005AFF]';
+      case 'Alfa Romeo': return 'border-[#900000]';
+      case 'Haas': return 'border-[#FFFFFF]';
+      default: return 'border-gray-500';
+    }
   };
 
   const getTireColor = (compound: string) => {
@@ -62,119 +96,163 @@ export function LiveTimingGrid({ positions, className }: LiveTimingGridProps) {
   };
 
   return (
-    <Card className={cn('card-hover', className)}>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-primary" />
-          Live Timing & Positions
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[700px]">
-          <div className="space-y-1">
-            {positions.map((driver, index) => (
-              <div 
-                key={driver.driverNumber} 
+    <Card className={cn('card-hover border-none shadow-lg py-0', className)} >
+      <CardContent className="p-0">
+        <ScrollArea className="py-0">
+          <div className="grid grid-cols-[auto_auto_1fr_auto_auto_auto_auto_auto] gap-x-4 text-sm bg-background/95">
+            {/* Header */}
+            <div className="contents text-xs uppercase tracking-wider font-medium text-muted-foreground">
+              <div className="sticky top-0 px-4 py-2.5 backdrop-blur-sm">Pos</div>
+              <div className="sticky top-0 px-2 py-2.5 backdrop-blur-sm">No.</div>
+              <div className="sticky top-0 px-2 py-2.5 backdrop-blur-sm">Driver</div>
+              <div className="sticky top-0 px-2 py-2.5 backdrop-blur-sm text-right">Gap</div>
+              <div className="sticky top-0 px-2 py-2.5 backdrop-blur-sm text-right">Last Lap</div>
+              <div className="sticky top-0 px-2 py-2.5 backdrop-blur-sm text-right">Best Lap</div>
+              <div className="sticky top-0 px-4 py-2.5 backdrop-blur-sm">Sectors</div>
+              <div className="sticky top-0 px-4 py-2.5 backdrop-blur-sm text-right">Speed</div>
+            </div>
+
+            {/* Rows */}
+            {positions.map((driver) => (
+              <div key={driver.driverNumber} 
                 className={cn(
-                  'p-3 rounded-lg transition-all duration-200',
-                  'bg-gradient-to-r from-muted/20 to-muted/10',
-                  'hover:from-muted/40 hover:to-muted/20',
-                  'border border-border/50',
-                  !driver.isOnTrack && 'opacity-60'
+                  "contents relative text-sm",
+                  !driver.isOnTrack && "opacity-60"
                 )}
               >
-                {/* Main Position Row */}
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    {/* Position Badge */}
-                    <div className="flex items-center gap-1">
-                      <Badge 
-                        variant={driver.position <= 3 ? "default" : "outline"} 
-                        className={cn(
-                          'w-7 h-7 flex items-center justify-center p-0 font-bold',
-                          driver.position === 1 && 'bg-yellow-500 text-black',
-                          driver.position === 2 && 'bg-gray-400 text-black',
-                          driver.position === 3 && 'bg-amber-600 text-white'
-                        )}
-                      >
-                        {driver.position}
-                      </Badge>
-                      {getPositionChangeIcon(driver.positionChange)}
-                    </div>
-
-                    {/* Driver Info */}
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-sm truncate">{driver.driverName}</p>
-                        <Badge variant="outline" className="text-xs px-1 h-5">
-                          {driver.driverNumber}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground truncate">{driver.team}</p>
-                    </div>
-                  </div>
-
-                  {/* Gap & Status */}
-                  <div className="text-right flex-shrink-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-mono text-sm font-medium">
-                        {formatGap(driver.gap)}
-                      </span>
-                      {driver.drs && (
-                        <Badge variant="secondary" className="text-xs px-1 h-5 bg-green-500/20 text-green-400">
-                          DRS
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>{driver.speed} km/h</span>
-                      <div className={cn('w-2 h-2 rounded-full', getTireColor(driver.tires.compound))} />
-                      <span>{driver.tires.age}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Timing Row */}
-                <div className="grid grid-cols-4 gap-2 text-xs">
-                  <div className="text-center">
-                    <div className="text-muted-foreground mb-1">Last</div>
-                    <div className="font-mono font-medium">{driver.lastLapTime}</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-muted-foreground mb-1">Best</div>
-                    <div className="font-mono text-green-400 font-medium">
-                      {driver.bestLapTime || '--:--.---'}
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-muted-foreground mb-1">Current</div>
-                    <div className="font-mono text-primary font-medium">
-                      {driver.currentLapTime || '--:--.---'}
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-muted-foreground mb-1">Int</div>
-                    <div className="font-mono text-muted-foreground">
-                      {driver.interval || '--:--.---'}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Status Indicators */}
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
+                {/* Position */}
+                <div className={cn(
+                  "group px-4 py-2 border-l-2",
+                  getTeamAccentColor(driver.team)
+                )}>
                   <div className="flex items-center gap-2">
-                    <div className={cn(
-                      'w-2 h-2 rounded-full',
-                      driver.isOnTrack ? 'bg-green-500' : 'bg-red-500'
-                    )} />
-                    <span className="text-xs text-muted-foreground">
-                      {driver.isOnTrack ? 'On Track' : 'In Pits'}
+                    <span className={cn(
+                      "font-mono font-medium",
+                      driver.position === 1 && "text-yellow-500",
+                      driver.position === 2 && "text-gray-400",
+                      driver.position === 3 && "text-amber-600"
+                    )}>
+                      {driver.position}
                     </span>
+                    {getPositionChangeIcon(driver.positionChange)}
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Timer className="w-3 h-3" />
-                    <span>Tire: {driver.tires.compound.toUpperCase()} ({driver.tires.age} laps)</span>
+                </div>
+
+                {/* Number */}
+                <div className="px-2 py-2">
+                  <Badge variant="outline" className="font-mono">
+                    {driver.driverNumber}
+                  </Badge>
+                </div>
+
+                {/* Driver & Team */}
+                <div className="px-2 py-2 flex items-center gap-3">
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-medium truncate">{driver.driverName}</span>
+                    <span className="text-xs text-muted-foreground truncate">{driver.team}</span>
                   </div>
+                  <div className="flex items-center gap-2 ml-auto">
+                    {driver.drs && (
+                      <Badge variant="secondary" className="text-xs px-1.5 py-0.5 bg-purple-500/20 text-purple-400">
+                        DRS
+                      </Badge>
+                    )}
+                    <div 
+                      className={cn("w-2.5 h-2.5 rounded-full", getTireColor(driver.tires.compound))} 
+                      title={`${driver.tires.compound.toUpperCase()} (${driver.tires.age} laps)`}
+                    />
+                  </div>
+                </div>
+
+                {/* Gap */}
+                <div className="px-2 py-2 font-mono text-right">
+                  {driver.gap || 'LEADER'}
+                </div>
+
+                {/* Last Lap */}
+                <div className="px-2 py-2 font-mono text-right">
+                  {driver.lastLapTime || '--:--.---'}
+                </div>
+
+                {/* Best Lap */}
+                <div className="px-2 py-2 font-mono text-right">
+                  <span className={cn(driver.bestLapTime && "text-purple-400")}>
+                    {driver.bestLapTime || '--:--.---'}
+                  </span>
+                </div>
+
+                {/* Sectors */}
+                <div className="px-4 py-2 flex items-center gap-3">
+                  {/* Sector 1 */}
+                  <div className="flex flex-col">
+                    <span className={cn(
+                      "font-mono text-xs mb-1",
+                      driver.sector1Best && "text-purple-400"
+                    )}>
+                      {driver.sector1 || '--.---'}
+                    </span>
+                    <div className="flex gap-0.5">
+                      {driver.sector1Segments?.map((segment, idx) => (
+                        <div
+                          key={`s1-${idx}`}
+                          className={cn(
+                            "h-1 w-1.5 rounded-sm opacity-75",
+                            getSegmentStatusColor(segment.status)
+                          )}
+                          title={`Sector 1 Segment ${idx + 1}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Sector 2 */}
+                  <div className="flex flex-col">
+                    <span className={cn(
+                      "font-mono text-xs mb-1",
+                      driver.sector2Best && "text-purple-400"
+                    )}>
+                      {driver.sector2 || '--.---'}
+                    </span>
+                    <div className="flex gap-0.5">
+                      {driver.sector2Segments?.map((segment, idx) => (
+                        <div
+                          key={`s2-${idx}`}
+                          className={cn(
+                            "h-1 w-1.5 rounded-sm opacity-75",
+                            getSegmentStatusColor(segment.status)
+                          )}
+                          title={`Sector 2 Segment ${idx + 1}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Sector 3 */}
+                  <div className="flex flex-col">
+                    <span className={cn(
+                      "font-mono text-xs mb-1",
+                      driver.sector3Best && "text-purple-400"
+                    )}>
+                      {driver.sector3 || '--.---'}
+                    </span>
+                    <div className="flex gap-0.5">
+                      {driver.sector3Segments?.map((segment, idx) => (
+                        <div
+                          key={`s3-${idx}`}
+                          className={cn(
+                            "h-1 w-1.5 rounded-sm opacity-75",
+                            getSegmentStatusColor(segment.status)
+                          )}
+                          title={`Sector 3 Segment ${idx + 1}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Speed */}
+                <div className="px-4 py-2 font-mono text-right">
+                  {driver.speed} km/h
                 </div>
               </div>
             ))}

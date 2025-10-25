@@ -2,7 +2,7 @@
 
 import * as pako from 'pako';
 
-const API_URL = process.env.BACKEND_URL || 'https://backend.t1f1.com/api';
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.t1f1.com/api';
 
 // Browser-compatible F1 Live Data Service
 export interface F1LiveData {
@@ -21,6 +21,7 @@ export interface F1LiveData {
   ExtrapolatedClock?: any;
   TimingStats?: any;
   TimingAppData?: any;
+  [key: string]: any; // Allow dynamic field access
 }
 
 interface SignalRMessage {
@@ -57,6 +58,7 @@ export class F1LiveDataService {
   private websocket: WebSocket | null = null;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private keepAliveTimer: NodeJS.Timeout | null = null;
+  private debounceTimer: NodeJS.Timeout | null = null;
   private retryCount = 0;
   private lastActivity = 0;
   private lastDataReceived = 0;
@@ -162,14 +164,9 @@ export class F1LiveDataService {
         this.lastDataReceived = Date.now();
       }
 
-      // Don't disconnect on empty messages - keep showing last data
-      if (this.emptyMessageCount > 20) {
-        console.log('No new data for a while, but keeping last received data available');
-        // Don't change status to no-session, just log it
-      }
-
       let hasNewData = false;
 
+      // Handle real-time feed updates
       if (Array.isArray(parsed.M)) {
         for (const message of parsed.M) {
           if (message.M === "feed") {
@@ -178,17 +175,29 @@ export class F1LiveDataService {
 
             let [field, value] = message.A || [];
 
+            // Handle compressed data formats
             if (field === "CarData.z" || field === "Position.z") {
               const [parsedField] = field.split(".");
               field = parsedField;
               value = this.parseCompressed(value);
             }
 
-            this.state = this.deepObjectMerge(this.state, { [field]: value });
-            this.lastReceivedData = this.deepObjectMerge(this.lastReceivedData, { [field]: value });
+            // Update state immediately for real-time data
+            if (field === "TimingData" || field === "CarData" || field === "Position") {
+              // These fields need immediate updates for live timing
+              this.state[field] = value;
+              this.lastReceivedData[field] = value;
+              // Trigger callback immediately for critical real-time data
+              this.notifyDataCallbacks();
+            } else {
+              // For other fields, merge them normally
+              this.state = this.deepObjectMerge(this.state, { [field]: value });
+              this.lastReceivedData = this.deepObjectMerge(this.lastReceivedData, { [field]: value });
+            }
           }
         }
       } else if (Object.keys(parsed.R ?? {}).length && parsed.I === "1") {
+        // Handle initial data load
         this.messageCount++;
         hasNewData = true;
 
@@ -206,9 +215,17 @@ export class F1LiveDataService {
         this.lastReceivedData = this.deepObjectMerge(this.lastReceivedData, parsed.R);
       }
 
+      // Persist and notify for non-realtime updates
       if (hasNewData) {
         this.persistData(); // Save to localStorage
-        this.notifyDataCallbacks();
+        
+        // For non-critical updates, debounce the notification
+        if (!this.debounceTimer) {
+          this.debounceTimer = setTimeout(() => {
+            this.notifyDataCallbacks();
+            this.debounceTimer = null;
+          }, 100); // Debounce updates by 100ms
+        }
       }
     } catch (error) {
       console.error(`Could not update data:`, error);

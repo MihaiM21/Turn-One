@@ -44,11 +44,16 @@ export default function SignUpPage() {
       const response = await register(registerData)
       
       if (response.success) {
-        // Save the token to local storage
-        localStorage.setItem('token', response.token)
-        
-        // Redirect to dashboard
-        router.push("/dashboard")
+        // For admin users, proceed directly to dashboard
+        if (response.emailConfirmed) {
+          // Save the token to local storage
+          localStorage.setItem('token', response.token)
+          // Redirect to dashboard
+          router.push("/dashboard")
+        } else {
+          // Redirect to check-email page for regular users
+          router.push("/auth/check-email")
+        }
       } else {
         throw new Error(response.message || "Registration failed")
       }

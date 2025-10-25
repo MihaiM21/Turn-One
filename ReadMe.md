@@ -151,6 +151,7 @@ Deployed after successful staging validation with manual approval.
 - [API Documentation](http://localhost:5000/swagger) - Interactive OpenAPI docs
 - [Architecture Decision Records](./docs/adr/) - Design decisions
 - [Deployment Guide](./docs/deployment.md) - Production deployment
+- [Versioning Guide](./docs/VERSIONING.md) - Semantic versioning process
 - [Contributing Guide](./CONTRIBUTING.md) - How to contribute
 
 ## 🤝 Contributing
@@ -165,6 +166,25 @@ We welcome contributions! Please read our [Contributing Guide](./CONTRIBUTING.md
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+
+## 📋 Versioning
+
+This project follows [Semantic Versioning](https://semver.org/) principles. The current version is stored in the `VERSION` file and displayed in the application footer.
+
+For version updates and management:
+
+```bash
+# Update patch version (for bug fixes)
+./scripts/update-version.sh patch
+
+# Update minor version (for new features)
+./scripts/update-version.sh minor
+
+# Update major version (for breaking changes)
+./scripts/update-version.sh major
+```
+
+See the [Versioning Guide](./docs/VERSIONING.md) for more details.
 
 ## 🏆 Acknowledgments
 

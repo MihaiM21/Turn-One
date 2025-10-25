@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -14,7 +13,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { 
   User, 
-  Mail, 
   Settings, 
   Shield, 
   CreditCard, 
@@ -85,6 +83,7 @@ export default function AccountPage() {
     planEndDate: "",
     autoRenew: false,
     tokens: 0,
+    coins: 0,
     lastTokenRefillDate: "",
     createdAt: "",
     lastLogin: ""
@@ -254,7 +253,8 @@ export default function AccountPage() {
       </div>
 
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-muted">
+        {/* Go to cols4 when more tabs */}
+        <TabsList className="grid w-full grid-cols-2 bg-muted"> 
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User className="h-4 w-4" />
             Profile
@@ -263,14 +263,14 @@ export default function AccountPage() {
             <CreditCard className="h-4 w-4" />
             Subscription
           </TabsTrigger>
-          <TabsTrigger value="preferences" className="flex items-center gap-2">
+          {/* <TabsTrigger value="preferences" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Preferences
           </TabsTrigger>
           <TabsTrigger value="security" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             Security
-          </TabsTrigger>
+          </TabsTrigger> */}
         </TabsList>
 
         {/* Profile Tab */}
@@ -546,10 +546,10 @@ export default function AccountPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="es">Español</SelectItem>
-                    <SelectItem value="fr">Français</SelectItem>
-                    <SelectItem value="de">Deutsch</SelectItem>
-                    <SelectItem value="it">Italiano</SelectItem>
+                    {/* <SelectItem value="es">Español</SelectItem> */}
+                    {/* <SelectItem value="fr">Français</SelectItem> */}
+                    {/* <SelectItem value="de">Deutsch</SelectItem>
+                    <SelectItem value="it">Italiano</SelectItem> */}
                   </SelectContent>
                 </Select>
               </div>
@@ -630,9 +630,9 @@ export default function AccountPage() {
                 </Button>
               </div>
 
-              <Separator />
+              {/* <Separator /> */}
 
-              <div>
+              {/* <div>
                 <h4 className="text-sm font-medium mb-4">Two-Factor Authentication</h4>
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center gap-3">
@@ -644,11 +644,11 @@ export default function AccountPage() {
                   </div>
                   <Button variant="outline">Enable 2FA</Button>
                 </div>
-              </div>
+              </div> */}
 
-              <Separator />
+              {/* <Separator /> */}
 
-              <div>
+              {/* <div>
                 <h4 className="text-sm font-medium mb-4">Active Sessions</h4>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between p-3 border rounded-lg">
@@ -659,7 +659,7 @@ export default function AccountPage() {
                     <Badge variant="secondary">Active</Badge>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </CardContent>
           </Card>
         </TabsContent>

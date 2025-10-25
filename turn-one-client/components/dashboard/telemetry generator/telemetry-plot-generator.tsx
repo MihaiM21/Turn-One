@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Download, Play, Settings, TrendingUp, Zap, Clock, Gauge, CircleGauge, ChevronsUp, MonitorCog, Users, UserRound, ChartSpline, AlertTriangle, Coins } from "lucide-react"
+import { Download, Play, Settings, TrendingUp, Zap, Clock, Gauge, CircleGauge, ChevronsUp, MonitorCog, Users, UserRound, ChartSpline, AlertTriangle, Coins, ChartScatter} from "lucide-react"
 import { fetchTopSpeeds, fetchThrottleAverages, fetchTrackComparison, fetchSessionResults, fetchThrottleBrakeComparison ,fetchLaptimeData } from "@/lib/dataAcquisition"
 import { TopSpeedData, ThrottleAverageData, TrackComparisonData, ThrottleBrakeComparisonData, LapTimeData } from "@/types/plot-types"
 import { grandPrixCalendar } from "@/lib/constants/grand-prix"
@@ -81,14 +81,15 @@ export function TelemetryPlotGenerator() {
     { id: "laptime", name: "Lap Time Analysis", icon: Clock, description: "Compare lap times and sector performance", isPro: false },
     { id: "track_comparison", name: "H2H Track Comparison", icon: Users, description: "Head-to-head track comparison visualization", isPro: false },
     { id: "throttle_brake", name: "H2H Throttle & Brake", icon: ChartSpline, description: "Compare throttle and brake inputs across drivers on their fastest laps", isPro: false },
-    { id: "session_results", name: "Session Results", icon: MonitorCog, description: "Visualize session results and lap time deltas", isPro: false },
+    { id: "session_results", name: "Optimal Qualifying Time", icon: MonitorCog, description: "Visualize session results and lap time deltas", isPro: false },
     //Premium features
     { id: "driver_analysis", name: "Driver Analysis", icon: UserRound, description: "Driver performance analysis", isPro: true },
     { id: "chevronsup", name: "Chevrons Up", icon: ChevronsUp, description: "Just a test icon", isPro: true },
     { id: "speed", name: "Speed Trace", icon: Gauge, description: "Speed, throttle, and brake analysis", isPro: true },
     { id: "tire", name: "Tire Temperature", icon: TrendingUp, description: "Tire temperature evolution", isPro: true },
     { id: "gforce", name: "G-Force Analysis", icon: Zap, description: "Lateral and longitudinal forces", isPro: true },
-    
+    { id: "drag_downforce", name: "Drag & Downforce", icon: ChartScatter, description: "Drag and downforce analysis", isPro: true },
+
   ]
 
   const sessions = ["FP1", "FP2", "FP3", "Q", "R", "S", "SQ"]
@@ -338,7 +339,7 @@ export function TelemetryPlotGenerator() {
         
         {/* Token warning */}
         {isAuthenticated && !hasTokens() && (
-          <Alert className="border-yellow-500/50 bg-yellow-500/10">
+          <Alert className="border-yellow-500/50 bg-yellow-500/10 mt-4">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
               You don&apos;t have enough tokens to generate plots. Each plot costs 1 token.
@@ -376,7 +377,7 @@ export function TelemetryPlotGenerator() {
                   <span className="text-xs font-medium">{type.name}</span>
                   {type.isPro && (
                     <Badge variant="secondary" className="absolute -top-1 -right-1 text-[8px] px-1 py-0 h-4 bg-primary/90 text-primary-foreground font-bold accent-glow border border-primary/50">
-                      PRO
+                      Coming Soon
                     </Badge>
                   )}
                 </TabsTrigger>
@@ -688,7 +689,7 @@ export function TelemetryPlotGenerator() {
                     </>
                   ) : (
                     <>
-                      <div className="bg-muted/20 rounded-lg p-3 text-center">
+                      {/* <div className="bg-muted/20 rounded-lg p-3 text-center">
                         <div className="text-lg font-bold text-primary">1:28.456</div>
                         <div className="text-muted-foreground">Best Lap</div>
                       </div>
@@ -703,7 +704,7 @@ export function TelemetryPlotGenerator() {
                       <div className="bg-muted/20 rounded-lg p-3 text-center">
                         <div className="text-lg font-bold text-primary">125°C</div>
                         <div className="text-muted-foreground">Peak Tire Temp</div>
-                      </div>
+                      </div> */}
                     </>
                   )}
                 </div>

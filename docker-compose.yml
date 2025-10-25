@@ -1,17 +1,16 @@
-
 services:
   api:
     build:
       context: .
       dockerfile: docker/api/Dockerfile
     ports:
-      - "5271:5271"
+      - "${API_PORT:-5271}:5271"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5271
-      - ConnectionStrings__DefaultConnection=Data Source=turnone.db
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/turnone.sqlite
     volumes:
-      - api_data:/app/data
+      - sqlite_data:/app/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5271/health"]
       interval: 30s
@@ -25,7 +24,7 @@ services:
       context: .
       dockerfile: docker/client/Dockerfile
     ports:
-      - "3000:3000"
+      - "${CLIENT_PORT:-3000}:3000"
     environment:
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
@@ -41,7 +40,7 @@ services:
     restart: unless-stopped
 
 volumes:
-  api_data:
+  sqlite_data:
 
 networks:
   default:

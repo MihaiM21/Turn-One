@@ -4,9 +4,24 @@ obj/
 *.user
 *.suo
 .db
+appsettings.json
+appsettings.Development.json
+appsettings.Production.json
+turn-one-backend/API/appsettings.Development.json
+turn-one-backend/API/appsettings.json
 
 # Node
 node_modules/
 .next/
 .idea/
 dist/
+.env
+.env.local
+.env.*
+
+turnone.sqlite
+.env.development
+vcs.xml
+turn-one-client/.idea/vcs.xml
+
+turn-one-client/.idea/vcs.xml
