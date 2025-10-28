@@ -19,8 +19,8 @@ export function TelemetryOverview() {
       const token = localStorage.getItem("token");
 
       try {
-        const daily = await fetchAPIDailyStats('dummy-token');
-        const total = await fetchAPITotalStats('dummy-token');
+        const daily = await fetchAPIDailyStats();
+        const total = await fetchAPITotalStats();
 
         setDailyStats(daily);
         setTotalStats(total);
