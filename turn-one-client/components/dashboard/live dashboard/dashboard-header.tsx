@@ -34,9 +34,9 @@ export function DashboardHeader() {
               <div className="h-8 w-px bg-border"></div>
               <div className="flex items-center space-x-2">
                 <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-                <Badge variant="secondary" className="accent-glow animate-pulse">
+                {/* <Badge variant="secondary" className="accent-glow animate-pulse">
                   Live
-                </Badge>
+                </Badge> */}
               </div>
             </div>
           </div>
