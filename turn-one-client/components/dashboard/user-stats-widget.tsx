@@ -16,7 +16,6 @@ export function UserStatsWidget() {
   useEffect(() => {
     // Get token from auth utils
     const token = getAuthToken();
-    console.log("UserStatsWidget - Auth token available:", !!token);
     setAuthToken(token);
     
     if (!token) {
@@ -29,9 +28,7 @@ export function UserStatsWidget() {
     const fetchProfile = async () => {
       setLoading(true);
       try {
-        console.log("Fetching user profile");
         const profile = await fetchUserProfile(token);
-        console.log("User profile received:", profile);
         setUserProfile(profile);
         setError(false);
       } catch (error) {

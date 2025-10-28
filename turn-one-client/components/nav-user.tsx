@@ -86,13 +86,11 @@ export function NavUser({
       
       // Load profile data from auth/me endpoint
       const profileResponse = await fetchUserProfile(token)
-      console.log('Profile response:', profileResponse)
       setProfileData(profileResponse)
 
       // Load token status from subscription/token-status
       try {
         const tokenResponse = await fetchTokenStatus(token)
-        console.log('Token status response:', tokenResponse)
         setTokenStatus(tokenResponse)
       } catch (error) {
         console.log('No token status data available')

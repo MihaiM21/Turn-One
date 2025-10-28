@@ -4,8 +4,9 @@ import { getAuthToken } from './auth-utils';
 
 // Base URL for the API - use consistent URL format
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.t1f1.com/api';
+const API_URL = process.env.API_URL || 'https://api.t1f1.com/api';
 
-// Generic fetch function with authentication
+// Generic fetch function with authentication from backend
 export async function fetchWithAuth<T>(
   endpoint: string,
   options: RequestInit = {}
@@ -24,12 +25,13 @@ export async function fetchWithAuth<T>(
   };
 
   try {
-    console.log(`🔄 Fetching ${endpoint}...`);
-    
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers
     });
+
+    
 
     if (!response.ok) {
       // Try to parse error message from response
@@ -49,10 +51,22 @@ export async function fetchWithAuth<T>(
     const data = await response.json();
     return data as T;
   } catch (error) {
-    console.error(`❌ Error fetching ${endpoint}:`, error);
+    //console.error(`❌ Error fetching ${endpoint}:`, error);
     throw error;
   }
 }
 
-// Data fetcher with no fallbacks - always uses real API endpoints
-// Fallback functionality has been removed for production
+// Fetch from external API without auth
+export const fetchFromExternalAPI = async (endpoint: string, options: RequestInit = {}) => {
+  const response = await fetch(`${API_URL}/${endpoint}`, {
+    ...options,
+    headers: {
+      ...options.headers,
+      // Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+  return response.json();
+};
