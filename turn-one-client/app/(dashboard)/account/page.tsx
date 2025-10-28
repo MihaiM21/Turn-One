@@ -121,20 +121,17 @@ export default function AccountPage() {
       
       // Load profile data from auth/me endpoint
       const profileResponse = await fetchUserProfile(token)
-      console.log('Profile response:', profileResponse)
       setProfileData(profileResponse)
 
       // Load token status from subscription/token-status
       try {
         const tokenResponse = await fetchTokenStatus(token)
-        console.log('Token status response:', tokenResponse)
         setTokenStatus(tokenResponse)
       } catch (error) {
         console.log('No token status data available')
       }
 
     } catch (error) {
-      console.error('Error loading user data:', error)
       toast.error('Failed to load user data')
     } finally {
       setIsLoading(false)

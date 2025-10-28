@@ -1,28 +1,8 @@
 import { useState, useEffect } from 'react';
+import { LoginData, RegisterData, AuthResponse } from '../types/auth-types';
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.t1f1.com/api';
 
-export interface LoginData {
-  email: string;
-  password: string;
-}
-
-export interface RegisterData {
-  email: string;
-  username: string;
-  password: string;
-  confirmPassword: string;
-}
-
-export interface AuthResponse {
-  success: boolean;
-  message: string;
-  token: string;
-  username: string;
-  expiration: string;
-  emailConfirmed?: boolean;
-  dailyGiftClaimed?: boolean;
-}
 
 export const login = async (data: LoginData): Promise<AuthResponse> => {
   const response = await fetch(`${API_URL}/Auth/login`, {

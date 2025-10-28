@@ -10,7 +10,8 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { ArrowLeft } from "lucide-react"
-import { RegisterData, register } from "@/lib/auth"
+import { register } from "@/lib/auth"
+import { RegisterData } from "@/types/auth-types"
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("")

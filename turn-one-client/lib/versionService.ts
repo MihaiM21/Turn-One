@@ -36,7 +36,6 @@ export class VersionService {
 
       const versionData = await response.json();
       this.version = versionData;
-      console.log('Fetched current version:', response.json);
       return versionData;
     } catch (error) {
       console.error('Error fetching current version:', error);

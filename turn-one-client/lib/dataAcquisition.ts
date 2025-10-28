@@ -3,67 +3,50 @@
 import { Console } from 'console';
 import { useState, useEffect } from 'react';
 import { loadEnvConfig } from '@next/env'
+import { fetchWithAuth, fetchFromExternalAPI } from './data-fetcher';
 
-const API_URL = process.env.API_URL || 'https://api.t1f1.com/api';
-const APIDEV_URL = process.env.APIDEV_URL || 'https://apidev.t1f1.com/api';
 
-export const fetchWithAuth = async (endpoint: string, token: string, options: RequestInit = {}) => {
-  const response = await fetch(`${API_URL}/${endpoint}`, {
-    ...options,
-    headers: {
-      ...options.headers,
-      // Authorization: `Bearer ${token}`,
-    },
-  });
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
-  }
-  return response.json();
-};
 
-export const fetchTopSpeeds = async (token: string, year: number, gp: number, session: string) => { //
-  return fetchWithAuth(`top-speed-data?year=${year}&gp=${gp}&session=${session}`, token);
+export const fetchTopSpeeds = async (token:string, year: number, gp: number, session: string) => { //
+  console.log(year)
+  return fetchFromExternalAPI(`top-speed-data?year=${year}&gp=${gp}&session=${session}`);
 }
-export const fetchThrottleAverages = async (token: string, year: number, gp: number, session: string) => { //
-  return fetchWithAuth(`throttle-comparison-data?year=${year}&gp=${gp}&session=${session}`, token);
+export const fetchThrottleAverages = async (token:string, year: number, gp: number, session: string) => { //
+  return fetchFromExternalAPI(`throttle-comparison-data?year=${year}&gp=${gp}&session=${session}`);
 }
-
 export const fetchTrackComparison = async (
-  token: string, 
+  token:string, 
   year: number, 
   gp: number, 
   session: string, 
   driver1: string, 
   driver2: string
 ) => {
-  return fetchWithAuth(`track-comparison-2drivers-data?year=${year}&gp=${gp}&session=${session}&driver1=${driver1}&driver2=${driver2}`, token);
+  return fetchFromExternalAPI(`track-comparison-2drivers-data?year=${year}&gp=${gp}&session=${session}&driver1=${driver1}&driver2=${driver2}`);
 }
 
-export const fetchSessionResults = async (token: string, year: number, gp: number, session: string) => {
-  return fetchWithAuth(`qualifying-results-data?year=${year}&gp=${gp}&session=${session}`, token);
+export const fetchSessionResults = async (token:string, year: number, gp: number, session: string) => {
+  return fetchFromExternalAPI(`qualifying-results-data?year=${year}&gp=${gp}&session=${session}`);
 }
 
 export const fetchThrottleBrakeComparison = async (
-  token: string, 
+  token:string, 
   year: number, 
   gp: number, 
   session: string, 
   driver1: string, 
   driver2: string
 ) => {
-  return fetchWithAuth(`throttleBrake-comparison-2drivers-data?year=${year}&gp=${gp}&session=${session}&driver1=${driver1}&driver2=${driver2}`, token);
+  return fetchFromExternalAPI(`throttleBrake-comparison-2drivers-data?year=${year}&gp=${gp}&session=${session}&driver1=${driver1}&driver2=${driver2}`);
 }
 
-export const fetchLaptimeData = async (token: string, year: number, gp: number, session: string, driver: string) => {
-  return fetchWithAuth(`laptimes?year=${year}&gp=${gp}&session=${session}&driver=${driver}`, token);
+export const fetchLaptimeData = async (token:string, year: number, gp: number, session: string, driver: string) => {
+  return fetchFromExternalAPI(`laptimes?year=${year}&gp=${gp}&session=${session}&driver=${driver}`);
 }
 
-export const fetchAPIDailyStats = async (token: string) => {
-  return fetchWithAuth('analytics/daily', token);
+export const fetchAPIDailyStats = async () => {
+  return fetchFromExternalAPI('analytics/daily');
 }
-// export const fetchAPIMonthlyStats = async (token: string) => {
-//   return fetchWithAuth('analytics/monthly', token);
-// }
-export const fetchAPITotalStats = async (token: string) => {
-  return fetchWithAuth('analytics/total', token);
+export const fetchAPITotalStats = async () => {
+  return fetchFromExternalAPI('analytics/total');
 }

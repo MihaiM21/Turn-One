@@ -10,7 +10,8 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { ArrowLeft } from "lucide-react"
-import { login, LoginData } from "@/lib/auth"
+import { login } from "@/lib/auth"
+import type { LoginData } from "@/types/auth-types"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")

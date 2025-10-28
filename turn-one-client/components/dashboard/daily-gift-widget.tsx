@@ -25,13 +25,10 @@ export function DailyGiftWidget({ onGiftClaimed }: DailyGiftWidgetProps) {
   const checkGiftStatus = async (token: string) => {
     setIsChecking(true);
     try {
-      console.log("Checking daily gift status for specific user token");
       const status = await checkDailyGiftStatus(token);
-      console.log("Daily gift status received:", status);
       setCanClaim(status.canClaimDailyGift);
       setHasError(false);
     } catch (error) {
-      console.error('Failed to check daily gift status:', error);
       setHasError(true);
       setCanClaim(false);
     } finally {
@@ -42,7 +39,6 @@ export function DailyGiftWidget({ onGiftClaimed }: DailyGiftWidgetProps) {
   useEffect(() => {
     // Get token from auth utils
     const token = getAuthToken();
-    console.log("DailyGiftWidget - Auth token available:", !!token);
     setAuthToken(token);
     
     if (!token) {
