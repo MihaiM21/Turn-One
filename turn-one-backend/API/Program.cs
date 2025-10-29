@@ -245,9 +245,8 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.MapOpenApi();
+    // In production environments, you might want to enforce HTTPS and other security measures
+    app.UseHsts();
 }
 
 // Use CORS
