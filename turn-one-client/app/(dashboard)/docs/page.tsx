@@ -39,7 +39,7 @@ export default function DocumentationPage() {
       title: "Contact Request Sent",
       description: "Our support team will contact you shortly.",
     });
-    // In a real implementation, this would send a contact request
+    router.push('/contact');
   };
 
   const handleApiDocs = () => {
@@ -264,7 +264,7 @@ export default function DocumentationPage() {
                 </Button>
                 <Button 
                   variant="outline"
-                  onClick={() => window.open('https://github.com/yourusername/turn-one-api', '_blank')}
+                  onClick={() => window.open('#', '_blank')}
                   className="w-full"
                 >
                   <ExternalLink className="mr-2 h-4 w-4" />
