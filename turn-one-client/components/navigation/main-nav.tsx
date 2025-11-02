@@ -27,7 +27,6 @@ export function MainNav({ variant = "homepage" }: MainNavProps) {
     { href: "/features", label: "Features" },
     { href: "/services", label: "Services" },
     { href: "/pricing", label: "Pricing" },
-    // { href: "/team", label: "Team" },
     { href: "/contact", label: "Contact" },
   ]
 
@@ -45,7 +44,6 @@ export function MainNav({ variant = "homepage" }: MainNavProps) {
             <Link href="/" className="flex items-center space-x-3 group">
               <div className="relative">
                 <div className="mt-1 w-10 h-10 flex items-center justify-center group-hover:scale-110 transition-all duration-300">
-                  {/* <Zap className="h-5 w-5 text-primary-foreground" /> */}
                   <img src="logo.png" alt="Logo Turn One"/>
                 </div>
               </div>
