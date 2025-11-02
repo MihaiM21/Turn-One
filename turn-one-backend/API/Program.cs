@@ -104,6 +104,7 @@ builder.Services.AddDbContext<TurnOneDbContext>(options =>
 
 // Register services
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddSingleton<IVersionService, VersionService>();
@@ -245,9 +246,8 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.MapOpenApi();
+    // In production environments, you might want to enforce HTTPS and other security measures
+    app.UseHsts();
 }
 
 // Use CORS

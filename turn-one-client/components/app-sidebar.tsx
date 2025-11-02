@@ -75,16 +75,16 @@ const data = {
     },
     {
       title: "Game",
-      url: "/app",
+      url: "/hub",
       icon: Gamepad2,
       items: [
         {
           title: "Hub",
-          url: "/app/hub",
+          url: "/hub",
         },
         {
           title: "Predictions",
-          url: "/app/predictions",
+          url: "/predictions",
         },
         {
           title: "Coin store",
@@ -93,10 +93,6 @@ const data = {
         {
           title: "Rewards",
           url: "/rewards",
-        },
-        {
-          title: "Changelog",
-          url: "#",
         },
       ],
     },

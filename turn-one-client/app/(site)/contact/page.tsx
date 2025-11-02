@@ -219,7 +219,7 @@ export default function ContactPage() {
                         Start Free Trial
                       </Link>
                     </Button>
-                    <Button
+                    {/* <Button
                       variant="outline"
                       size="lg"
                       className="w-full justify-start glow-effect bg-transparent"
@@ -229,7 +229,7 @@ export default function ContactPage() {
                         <MapPin className="mr-3 h-5 w-5" />
                         View Demo Dashboard
                       </Link>
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
               </div>

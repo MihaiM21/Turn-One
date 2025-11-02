@@ -121,9 +121,9 @@ export default function FeaturesPage() {
             <Button size="lg" className="glow-effect">
               <Link href="/dashboard">Start Free Trial</Link>
             </Button>
-            <Button size="lg" variant="outline">
+            {/* <Button size="lg" variant="outline">
               <Link href="/demo">View Demo</Link>
-            </Button>
+            </Button> */}
           </div>
         </div>
       </section>
