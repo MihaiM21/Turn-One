@@ -15,6 +15,12 @@ export interface UserProfile {
   lastLogin?: string;
 }
 
+export interface UserProfileUpdate {
+  email?: string;
+  username?: string;
+  avatarUrl?: string;
+}
+
 // Based on backend TokenStatusResponse
 export interface TokenStatus {
   tokensRemaining: number;

@@ -1,3 +1,5 @@
+import { UserProfileUpdate } from "@/types/user-types";
+
 // Use environment variable, or localhost for development, or the default production URL
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 
   (process.env.NODE_ENV === 'development' ? 'http://localhost:5000/api' : 'https://backend.t1f1.com/api');
@@ -15,12 +17,35 @@ export const fetchWithAuth = async (endpoint: string, token: string, options: Re
     });
     
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API error: ${response.status} ${response.statusText}`);
+      // Try to get a JSON error body, otherwise text
+      let errorBody: any = null;
+      try {
+        errorBody = await response.json();
+      } catch {
+        try {
+          errorBody = await response.text();
+        } catch {
+          errorBody = null;
+        }
+      }
+      const message = errorBody && errorBody.message ? errorBody.message : `${response.status} ${response.statusText}`;
+      throw new Error(`API error: ${message}`);
     }
-    
-    const data = await response.json();
-    return data;
+
+    // No Content
+    if (response.status === 204) {
+      return null;
+    }
+
+    // Try parse JSON, but guard in case of empty body
+    const text = await response.text();
+    if (!text) return null;
+    try {
+      return JSON.parse(text);
+    } catch (err) {
+      // Fallback to returning raw text
+      return text;
+    }
   } catch (error) {
     console.error(`API request failed for ${endpoint}:`, error);
     throw error;
@@ -31,17 +56,22 @@ export const fetchWithAuth = async (endpoint: string, token: string, options: Re
 export const fetchUserProfile = async (token: string) => {
   return fetchWithAuth('auth/me', token);
 }
-
-export const updateUserProfile = async (token: string, profileData: any) => {
-  // Note: Update user profile endpoint doesn't exist in backend yet
-  // This would need to be implemented in AuthController
-  return fetchWithAuth('user/profile', token, {
+export const updateUserProfile = async (token: string, profileData: UserProfileUpdate) => {
+  const result = await fetchWithAuth('user/update-profile', token, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(profileData),
   });
+
+  // Backend returns 204 No Content on success — normalize to ApiResponse shape
+  if (result === null) {
+    return { success: true, data: profileData } as any;
+  }
+
+  // Otherwise assume backend returned an ApiResponse-like object
+  return result;
 }
 
 export const fetchTokenStatus = async (token: string) => {

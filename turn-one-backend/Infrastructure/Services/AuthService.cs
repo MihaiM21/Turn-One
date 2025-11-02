@@ -4,7 +4,6 @@ using System.Security.Cryptography;
 using System.Text;
 using Application.DTOs;
 using Domain.Entities;
-using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -15,12 +14,12 @@ namespace Infrastructure.Services
 {
     public class AuthService : IAuthService
     {
-    private readonly TurnOneDbContext _context;
-    private readonly IConfiguration _configuration;
-    private readonly IDailyGiftService _dailyGiftService;
-    private readonly IEmailService _emailService;
-    private readonly ILogger<AuthService> _logger;
-    private readonly string _appBaseUrl;
+        private readonly TurnOneDbContext _context;
+        private readonly IConfiguration _configuration;
+        private readonly IDailyGiftService _dailyGiftService;
+        private readonly IEmailService _emailService;
+        private readonly ILogger<AuthService> _logger;
+        private readonly string _appBaseUrl;
 
         public AuthService(
             TurnOneDbContext context, 
