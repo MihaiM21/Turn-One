@@ -339,16 +339,7 @@ export default function HomePage() {
                   {card.title}
                 </motion.span>
                 
-                {card.comingSoon && (
-                  <motion.span 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 0.7, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="text-[10px] mt-2 text-gray-300 font-medium"
-                  >
-                    COMING SOON
-                  </motion.span>
-                )}
+                
               </motion.div>
               
               {/* View button - only visible on active card */}
