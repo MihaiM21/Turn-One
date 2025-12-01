@@ -1,6 +1,6 @@
 // Use environment variable, or localhost for development, or the default production URL
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 
-  (process.env.NODE_ENV === 'development' ? 'http://localhost:5000/api' : 'https://backend.t1f1.com/api');
+  (process.env.NODE_ENV === 'development' ? 'http://localhost:5271/api' : 'https://backend.t1f1.com/api');
 
 /**
  * Request a password reset for the given email address

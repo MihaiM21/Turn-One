@@ -8,9 +8,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5271
-      - ConnectionStrings__DefaultConnection=Data Source=/app/data/turnone.sqlite
-    volumes:
-      - sqlite_data:/app/data
+      - DATABASE_URL=${DATABASE_URL}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5271/health"]
       interval: 30s
@@ -38,9 +36,6 @@ services:
       retries: 3
       start_period: 40s
     restart: unless-stopped
-
-volumes:
-  sqlite_data:
 
 networks:
   default:
