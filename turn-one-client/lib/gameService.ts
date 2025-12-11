@@ -10,7 +10,7 @@ import {
   CoinTransaction
 } from '@/types/game-types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5271/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5271/api';
 
 // Prediction Service
 export const predictionService = {
