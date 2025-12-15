@@ -14,33 +14,104 @@ Where:
 
 ## Version Management
 
-The current version of the application is stored in the database and can be queried through the API. This provides a single source of truth for versioning information across all environments.
+The current version is stored in multiple locations:
+- `turn-one-backend/VERSION` - Source of truth for backend version
+- `turn-one-client/package.json` - Frontend package version
+- `CHANGELOG.md` - Historical record of all changes
 
-## Updating the Version
+## Conventional Commits & Automated Versioning
 
-You can update the version using the provided PowerShell script:
+Turn One uses **conventional commits** to automate version bumping and changelog generation. By following commit message conventions, the version update tool automatically determines the appropriate version bump.
+
+### Quick Start
 
 ```powershell
-# Set API URL and token (if needed)
-$env:API_URL = "http://your-api-url/api"
-$env:API_TOKEN = "your-auth-token"  # Optional
+# Automatic version bump based on commit history
+.\scripts\update-version-auto.ps1
 
+# Preview what would change (dry run)
+.\scripts\update-version-auto.ps1 -DryRun
+
+# Analyze specific commit range
+.\scripts\update-version-auto.ps1 -FromCommit HEAD~10
+
+# Add pre-release label
+.\scripts\update-version-auto.ps1 -PreRelease "beta.1"
+```
+
+### Commit Message Format
+
+Use these prefixes in your commit messages:
+
+- `[feat]:` or `feat:` - New feature → **MINOR** bump (1.0.0 → 1.1.0)
+- `[fix]:` or `fix:` - Bug fix → **PATCH** bump (1.0.0 → 1.0.1)
+- `[perf]:` or `perf:` - Performance improvement → **PATCH** bump
+- `[major]:` or `BREAKING CHANGE:` - Breaking change → **MAJOR** bump (1.0.0 → 2.0.0)
+
+Other types (`docs`, `chore`, `style`, `refactor`, `test`, `build`, `ci`) are tracked but don't trigger version bumps.
+
+**See [COMMIT_CONVENTIONS.md](./COMMIT_CONVENTIONS.md) for detailed guidelines.**
+
+### Manual Version Updates
+
+For manual control, use the traditional script:
+
+```powershell
 # Increment patch version
-.\scripts\update-version-db.ps1 patch
+.\scripts\update-version.ps1 patch
 
 # Increment minor version
-.\scripts\update-version-db.ps1 minor
+.\scripts\update-version.ps1 minor
 
 # Increment major version
-.\scripts\update-version-db.ps1 major
+.\scripts\update-version.ps1 major
 
 # With pre-release and build metadata
-.\scripts\update-version-db.ps1 patch beta.1 build.123 "Fixed dashboard bugs"
+.\scripts\update-version.ps1 patch beta.1 build.123 "Fixed dashboard bugs"
 ```
 
 ## Version Display
 
-The current version is displayed in the footer of the application. 
+The current version is displayed in the footer of the application and can be queried through the version API. 
+
+## Changelog
+
+All version changes are automatically documented in `CHANGELOG.md`. The automated version tool generates changelog entries with:
+
+- 💥 **Breaking Changes** - Major version increments
+- ✨ **Features** - New functionality
+- 🐛 **Bug Fixes** - Issue resolutions
+- 🔧 **Other Changes** - Documentation, refactoring, etc.
+
+Each entry includes commit hashes for traceability.
+
+## Workflow Example
+
+1. **Make changes and commit with conventional format:**
+   ```bash
+   git commit -m "[feat]: Add live race commentary feature"
+   git commit -m "[fix]: Resolve timing data sync issue"
+   ```
+
+2. **Run automated version update:**
+   ```powershell
+   .\scripts\update-version-auto.ps1
+   ```
+   
+   This will:
+   - Analyze commits since last version tag
+   - Determine version bump (MINOR in this case due to `[feat]`)
+   - Update VERSION file and package.json
+   - Generate CHANGELOG.md entry
+   - Display git commands to complete the release
+
+3. **Commit and tag the version:**
+   ```bash
+   git add turn-one-backend/VERSION turn-one-client/package.json CHANGELOG.md
+   git commit -m "chore: bump version to 1.1.0"
+   git tag v1.1.0
+   git push && git push --tags
+   ``` 
 
 ## Version API
 
@@ -50,15 +121,46 @@ The application provides API endpoints for version management:
 - `GET /api/version/history`: Get the version history
 - `POST /api/version/update`: Update the version (requires admin privileges)
 
-## Git Workflow
+## Git Workflow & Best Practices
 
-When updating the version, it's recommended to tag the Git repository with the new version:
+### Recommended Workflow
+
+1. **Feature branches:** Create branches for new features or fixes
+   ```bash
+   git checkout -b feature/live-commentary
+   ```
+
+2. **Conventional commits:** Use proper commit message format
+   ```bash
+   git commit -m "[feat]: Add live race commentary"
+   ```
+
+3. **Merge to main:** Merge feature branch when ready
+   ```bash
+   git checkout main
+   git merge feature/live-commentary
+   ```
+
+4. **Automated versioning:** Run version update tool
+   ```powershell
+   .\scripts\update-version-auto.ps1
+   ```
+
+5. **Tag and push:** Complete the release
+   ```bash
+   git push && git push --tags
+   ```
+
+### Git Tags
+
+Always tag versions in git:
 
 ```bash
-git commit -m "Bump version to X.Y.Z"
-git tag vX.Y.Z
-git push && git push --tags
+git tag v1.2.3
+git push --tags
 ```
+
+Tags should match the version in VERSION file (with `v` prefix).
 
 ## Semantic Versioning Guidelines
 
