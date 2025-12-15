@@ -1,0 +1,79 @@
+name: Validate Commit Messages
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  validate-commits:
+    name: 🔍 Validate Conventional Commits
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Validate commit messages
+        run: |
+          echo "🔍 Validating commit messages..."
+          
+          # Get all commits in the PR
+          commits=$(git log --format=%H origin/${{ github.base_ref }}..HEAD)
+          
+          # Pattern for conventional commits
+          pattern='^\[(feat|fix|perf|docs|style|refactor|test|chore|build|ci|major)\]:|^(feat|fix|perf|docs|style|refactor|test|chore|build|ci)(\(.+\))?:'
+          
+          invalid_commits=()
+          commit_count=0
+          
+          for commit in $commits; do
+            msg=$(git log --format=%s -n 1 $commit)
+            commit_count=$((commit_count + 1))
+            
+            # Skip merge commits
+            if [[ $msg =~ ^Merge ]]; then
+              echo "  ⏭️  Skipping merge commit: $msg"
+              continue
+            fi
+            
+            # Skip version bump commits
+            if [[ $msg =~ ^(chore|release):[[:space:]]*(bump|release)[[:space:]]*version ]]; then
+              echo "  ⏭️  Skipping version commit: $msg"
+              continue
+            fi
+            
+            # Validate
+            if ! echo "$msg" | grep -qE "$pattern"; then
+              invalid_commits+=("❌ $commit: $msg")
+            else
+              echo "  ✅ Valid: $msg"
+            fi
+          done
+          
+          echo ""
+          echo "📊 Summary: Validated $commit_count commit(s)"
+          echo ""
+          
+          if [ ${#invalid_commits[@]} -gt 0 ]; then
+            echo "❌ Invalid commit messages found:"
+            echo ""
+            printf '%s\n' "${invalid_commits[@]}"
+            echo ""
+            echo "📝 Commit messages must follow conventional commit format:"
+            echo "   Format: [type]: description"
+            echo "   or:     type(scope): description"
+            echo ""
+            echo "Valid types: feat, fix, perf, docs, style, refactor, test, chore, build, ci, major"
+            echo ""
+            echo "Examples:"
+            echo "  ✅ [feat]: Add live race commentary"
+            echo "  ✅ fix(auth): resolve token expiration"
+            echo "  ✅ [fix]: Correct lap time calculation"
+            echo ""
+            echo "See docs/COMMIT_CONVENTIONS.md for details."
+            exit 1
+          fi
+          
+          echo "✅ All commit messages are valid!"

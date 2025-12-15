@@ -11,7 +11,7 @@ type F1Race = {
   sessions: F1Session[];
 };
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { f1_2025_races } from "../../../lib/constants/f1_2025_races"
+import { f1_2025_races, f1_2026_races } from "../../../lib/constants/f1_2025_races"
 import React, { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Clock, MapPin } from "lucide-react"
@@ -33,8 +33,8 @@ export function SessionManager() {
   let lastRaceIdx = -1
   let nextRaceIdx = -1
 
-  for (let i = 0; i < f1_2025_races.length; i++) {
-    const race = f1_2025_races[i]
+  for (let i = 0; i < f1_2026_races.length; i++) {
+    const race = f1_2026_races[i]
     const liveIdx = race.sessions.findIndex((s: F1Session) => getSessionStatus(s) === "live")
     if (liveIdx !== -1) {
       selectedRaceIdx = i
@@ -44,8 +44,8 @@ export function SessionManager() {
   }
   if (selectedRaceIdx === -1) {
     // No live session, find next upcoming session
-    for (let i = 0; i < f1_2025_races.length; i++) {
-      const race = f1_2025_races[i]
+    for (let i = 0; i < f1_2026_races.length; i++) {
+      const race = f1_2026_races[i]
       const upcomingIdx = race.sessions.findIndex((s: F1Session) => getSessionStatus(s) === "upcoming")
       if (upcomingIdx !== -1) {
         selectedRaceIdx = i
@@ -56,17 +56,17 @@ export function SessionManager() {
   }
 
   // Find last and next grand prix
-  for (let i = 0; i < f1_2025_races.length; i++) {
-    const race = f1_2025_races[i]
+  for (let i = 0; i < f1_2026_races.length; i++) {
+    const race = f1_2026_races[i]
     const allPassed = race.sessions.every((s: F1Session) => getSessionStatus(s) === "passed")
     if (allPassed) lastRaceIdx = i
     if (i > selectedRaceIdx && nextRaceIdx === -1) nextRaceIdx = i
   }
 
-  const selectedRace = selectedRaceIdx !== -1 ? f1_2025_races[selectedRaceIdx] : null
+  const selectedRace = selectedRaceIdx !== -1 ? f1_2026_races[selectedRaceIdx] : null
   const selectedSession = selectedRace && selectedSessionIdx !== -1 ? selectedRace.sessions[selectedSessionIdx] : null
-  const lastRace = lastRaceIdx !== -1 ? f1_2025_races[lastRaceIdx] : null
-  const nextRace = nextRaceIdx !== -1 ? f1_2025_races[nextRaceIdx] : null
+  const lastRace = lastRaceIdx !== -1 ? f1_2026_races[lastRaceIdx] : null
+  const nextRace = nextRaceIdx !== -1 ? f1_2026_races[nextRaceIdx] : null
 
   return (
     <div className="flex flex-col gap-6">

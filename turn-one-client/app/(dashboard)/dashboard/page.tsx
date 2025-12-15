@@ -5,6 +5,7 @@ import { TelemetryOverview } from "@/components/dashboard/live dashboard/telemet
 import { SessionManager } from "@/components/dashboard/live dashboard/session-manager"
 import { DailyGiftWidget } from "@/components/dashboard/daily-gift-widget"
 import { UserStatsWidget } from "@/components/dashboard/user-stats-widget"
+import { LatestSessionWidget } from "@/components/dashboard/latest-session-widget"
 import { DashboardLoadingContainer } from "@/components/dashboard/dashboard-loading-container"
 import { useEffect, useState } from "react"
 import { getAuthToken } from "@/lib/auth-utils"
@@ -35,11 +36,12 @@ export default function DashboardPage() {
         <main className="container mx-auto px-4 py-8 space-y-8">
           
           {/* User stats and daily gift widgets */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-1">
             <UserStatsWidget />
             <DailyGiftWidget 
               onGiftClaimed={() => window.location.reload()}
             />
+            <LatestSessionWidget />
           </div>
           
           <SessionManager />

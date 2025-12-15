@@ -11,6 +11,11 @@ public class TurnOneDbContext : DbContext
     }
     
     public DbSet<User> Users { get; set; } = null!;
+    public DbSet<Prediction> Predictions { get; set; } = null!;
+    public DbSet<Trivia> Trivias { get; set; } = null!;
+    public DbSet<TriviaAttempt> TriviaAttempts { get; set; } = null!;
+    public DbSet<Leaderboard> Leaderboards { get; set; } = null!;
+    public DbSet<CoinTransaction> CoinTransactions { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -47,5 +52,47 @@ public class TurnOneDbContext : DbContext
             entity.Property(e => e.PasswordResetTokenExpires).IsRequired(false);
         });
 
+        modelBuilder.Entity<Prediction>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId);
+            entity.Property(e => e.Status).IsRequired();
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.Status);
+        });
+
+        modelBuilder.Entity<Trivia>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Question).IsRequired();
+            entity.Property(e => e.CorrectAnswer).IsRequired();
+        });
+
+        modelBuilder.Entity<TriviaAttempt>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId);
+            entity.HasOne(e => e.Trivia).WithMany(t => t.Attempts).HasForeignKey(e => e.TriviaId);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.TriviaId);
+        });
+
+        modelBuilder.Entity<Leaderboard>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.Season);
+            entity.HasIndex(e => e.GlobalRank);
+        });
+
+        modelBuilder.Entity<CoinTransaction>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId);
+            entity.Property(e => e.Type).IsRequired();
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.CreatedAt);
+        });
     }
 }

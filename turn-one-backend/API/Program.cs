@@ -22,8 +22,18 @@ if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APP_BASE_URL")))
     builder.Configuration["AppSettings:BaseUrl"] = Environment.GetEnvironmentVariable("APP_BASE_URL");
 }
 
+// Override database connection string from environment variable if present
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DATABASE_URL")))
+{
+    builder.Configuration["ConnectionStrings:DefaultConnection"] = Environment.GetEnvironmentVariable("DATABASE_URL");
+}
+
 // Add services to the container
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 
@@ -98,9 +108,9 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Add DbContext configuration for SQLite
+// Add DbContext configuration for PostgreSQL
 builder.Services.AddDbContext<TurnOneDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Register services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -110,6 +120,12 @@ builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddSingleton<IVersionService, VersionService>();
 builder.Services.AddScoped<ILevelSystemService, LevelSystemService>();
 builder.Services.AddScoped<IDailyGiftService, DailyGiftService>();
+
+// Register game hub services
+builder.Services.AddScoped<ICoinService, CoinService>();
+builder.Services.AddScoped<IPredictionService, PredictionService>();
+builder.Services.AddScoped<ITriviaService, TriviaService>();
+builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
 builder.Services.AddScoped<IEmailService, EmailService>(sp =>
 {
     var config = builder.Configuration.GetSection("SmtpSettings");
@@ -234,6 +250,9 @@ using (var scope = app.Services.CreateScope())
         });
         db.SaveChanges();
     }
+
+    // Seed trivia questions
+    await TriviaSeeder.SeedTriviaQuestions(db);
 }
 
 

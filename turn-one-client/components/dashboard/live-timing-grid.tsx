@@ -96,12 +96,12 @@ export function LiveTimingGrid({ positions, className }: LiveTimingGridProps) {
   };
 
   return (
-    <Card className={cn('card-hover border-none shadow-lg py-0', className)} >
-      <CardContent className="p-0">
-        <ScrollArea className="py-0">
+    <Card className={cn('card-hover shadow-lg py-0', className)} >
+      <CardContent className="p-0 ">
+        <ScrollArea className="py-0 rounded-xl">
           <div className="grid grid-cols-[auto_auto_1fr_auto_auto_auto_auto_auto] gap-x-4 text-sm bg-background/95">
             {/* Header */}
-            <div className="contents text-xs uppercase tracking-wider font-medium text-muted-foreground">
+            <div className="contents text-xs uppercase tracking-wider font-medium text-muted-foreground ">
               <div className="sticky top-0 px-4 py-2.5 backdrop-blur-sm">Pos</div>
               <div className="sticky top-0 px-2 py-2.5 backdrop-blur-sm">No.</div>
               <div className="sticky top-0 px-2 py-2.5 backdrop-blur-sm">Driver</div>
