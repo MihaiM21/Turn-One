@@ -209,5 +209,89 @@ jobs:
             turn-one-client/next.config.ts
           retention-days: 7
 
+  # ============================================
+  # AUTO VERSION UPDATE
+  # ============================================
+  auto-version:
+    name: 🔖 Auto Version Update
+    runs-on: ubuntu-latest
+    needs: [build-backend, build-frontend]
+    if: |
+      github.event_name == 'push' && 
+      (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') &&
+      !startsWith(github.event.head_commit.message, 'chore: bump version')
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Check for version bump needed
+        id: check
+        run: |
+          # Make script executable
+          chmod +x scripts/update-version-auto.sh
+          
+          # Check if we need a version bump
+          if ./scripts/update-version-auto.sh --dry-run | grep -q "No version bump needed"; then
+            echo "needs_bump=false" >> $GITHUB_OUTPUT
+            echo "No conventional commits found, skipping version update"
+          else
+            echo "needs_bump=true" >> $GITHUB_OUTPUT
+            echo "Conventional commits detected, version bump needed"
+          fi
+      
+      - name: Run version update
+        if: steps.check.outputs.needs_bump == 'true'
+        id: version
+        run: |
+          # Run the version update script
+          ./scripts/update-version-auto.sh
+          
+          # Get the new version
+          NEW_VERSION=$(cat turn-one-backend/VERSION)
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Updated to version: $NEW_VERSION"
+      
+      - name: Commit and push version changes
+        if: steps.check.outputs.needs_bump == 'true'
+        run: |
+          git add turn-one-backend/VERSION turn-one-client/package.json CHANGELOG.md
+          git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }}"
+          git push
+      
+      - name: Create and push tag
+        if: steps.check.outputs.needs_bump == 'true'
+        run: |
+          git tag "v${{ steps.version.outputs.new_version }}"
+          git push origin "v${{ steps.version.outputs.new_version }}"
+      
+      - name: Create GitHub Release
+        if: steps.check.outputs.needs_bump == 'true'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.version.outputs.new_version }}
+          release_name: Release ${{ steps.version.outputs.new_version }}
+          body: |
+            Auto-generated release from conventional commits.
+            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details.
+          draft: false
+          prerelease: false
 
   
