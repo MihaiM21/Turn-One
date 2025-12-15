@@ -41,9 +41,12 @@ A modern, enterprise-grade Formula 1 telemetry and data analysis platform built 
 ### DevOps & CI/CD
 - **Pipeline**: GitHub Actions with enterprise security
 - **Containerization**: Docker with multi-stage builds
-- **Security**: Trivy scanning, Dependabot, SonarCloud
+- **Security**: Trivy scanning, Dependabot, SARIF reports
 - **Quality**: Automated testing, code coverage, linting
 - **Deployment**: Blue-green deployments with health checks
+- **Monitoring**: Performance testing with k6
+- **Registry**: GitHub Container Registry (ghcr.io)
+- **Automation**: Conventional commits → Auto versioning → Release
 
 ## 🚦 Getting Started
 
@@ -122,17 +125,50 @@ Security is a top priority:
 - **Authentication**: JWT-based secure authentication
 - **HTTPS**: TLS encryption in production
 
-## 📈 CI/CD Pipeline
+## 📈 Enterprise CI/CD Pipeline
 
-Our enterprise-grade pipeline includes:
+[![Enterprise Pipeline](https://github.com/USERNAME/REPO/actions/workflows/enterprise-pipeline.yml/badge.svg)](https://github.com/USERNAME/REPO/actions/workflows/enterprise-pipeline.yml)
 
-1. **Security Scan** - Trivy vulnerability scanning
-2. **Code Quality** - ESLint and .NET analyzers
-3. **Build & Test** - Multi-platform builds with comprehensive backend testing
-4. **Integration Tests** - API health checks and integration testing
-5. **Container Build** - Multi-arch Docker images
-6. **Deployment** - Automated staging and production deployments
-7. **Monitoring** - Health checks and rollback capabilities
+Our production-ready pipeline includes:
+
+### 🔒 **Stage 1: Security & Quality** (Parallel)
+- **Trivy Scanning** - Filesystem and container vulnerability detection
+- **SARIF Reports** - Integrated with GitHub Security
+- **npm Audit** - Frontend dependency security
+- **ESLint & TypeScript** - Code quality and type safety
+- **.NET Analyzers** - Backend code analysis
+
+### 🏗️ **Stage 2: Build & Test** (Parallel)
+- **Backend Build** - .NET 9 with unit tests and code coverage
+- **Frontend Build** - Next.js 15 production build
+- **Test Reports** - TRX format with artifact upload
+- **Build Artifacts** - Optimized for deployment
+
+### 🐳 **Stage 3: Docker Build** (Matrix Strategy)
+- **Multi-stage Builds** - Optimized image sizes
+- **Security Scanning** - Trivy container scans
+- **Registry Push** - GitHub Container Registry
+- **Smart Tagging** - Version, branch, SHA, and latest tags
+- **Layer Caching** - Fast builds with GHA cache
+
+### 🧪 **Stage 4: Integration Tests**
+- **Docker Compose** - Full-stack integration
+- **Health Checks** - API and Client validation
+- **Smoke Tests** - Critical endpoint verification
+- **Auto Cleanup** - Resource management
+
+### ⚡ **Stage 5: Performance Tests** (Main branch)
+- **k6 Load Testing** - Scalability validation
+- **Thresholds** - Performance SLA enforcement
+- **Metrics Collection** - Response times and error rates
+
+### 🚀 **Stage 6: Deployment**
+- **Staging** - Automatic deployment on dev branch
+- **Production** - Manual approval on master/main
+- **Health Checks** - Post-deployment validation
+- **Deployment Records** - GitHub environment tracking
+
+**Full Documentation:** [Pipeline Documentation](./docs/PIPELINE_DOCUMENTATION.md)
 
 ## 🚀 Deployment
 
@@ -148,11 +184,14 @@ Deployed after successful staging validation with manual approval.
 
 ## 📚 Documentation
 
-- [API Documentation](http://localhost:5000/swagger) - Interactive OpenAPI docs
-- [Architecture Decision Records](./docs/adr/) - Design decisions
-- [Deployment Guide](./docs/deployment.md) - Production deployment
-- [Versioning Guide](./docs/VERSIONING.md) - Semantic versioning process
-- [Contributing Guide](./CONTRIBUTING.md) - How to contribute
+- **Pipeline Documentation** - [docs/PIPELINE_DOCUMENTATION.md](./docs/PIPELINE_DOCUMENTATION.md)
+- **Deployment Scenarios** - [docs/DEPLOYMENT_SCENARIOS.md](./docs/DEPLOYMENT_SCENARIOS.md)
+- **API Documentation** - [Swagger UI](http://localhost:5000/swagger)
+- **Commit Conventions** - [docs/COMMIT_CONVENTIONS.md](./docs/COMMIT_CONVENTIONS.md)
+- **Versioning Guide** - [docs/VERSIONING.md](./docs/VERSIONING.md)
+- **GitHub Actions Integration** - [docs/GITHUB_ACTIONS_INTEGRATION.md](./docs/GITHUB_ACTIONS_INTEGRATION.md)
+- **Architecture Decisions** - [docs/adr/](./docs/adr/)
+- **Contributing Guide** - [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ## 🤝 Contributing
 
@@ -167,24 +206,37 @@ We welcome contributions! Please read our [Contributing Guide](./CONTRIBUTING.md
 
 This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
 
-## 📋 Versioning
+## 📋 Versioning & Commits
 
-This project follows [Semantic Versioning](https://semver.org/) principles. The current version is stored in the `VERSION` file and displayed in the application footer.
+This project uses [Semantic Versioning](https://semver.org/) with **conventional commits** for automated version management.
 
-For version updates and management:
+### Quick Start
 
-```bash
-# Update patch version (for bug fixes)
-./scripts/update-version.sh patch
+```powershell
+# Commit with conventional format
+git commit -m "[feat]: Add new feature"
+git commit -m "[fix]: Bug fix description"
 
-# Update minor version (for new features)
-./scripts/update-version.sh minor
+# Automatically update version based on commits
+.\scripts\update-version-auto.ps1
 
-# Update major version (for breaking changes)
-./scripts/update-version.sh major
+# Preview changes without modifying files
+.\scripts\update-version-auto.ps1 -DryRun
 ```
 
-See the [Versioning Guide](./docs/VERSIONING.md) for more details.
+### Commit Types
+
+- `[feat]:` → Minor version bump (new features)
+- `[fix]:` → Patch version bump (bug fixes)
+- `[major]:` or `BREAKING CHANGE:` → Major version bump
+- `[docs]`, `[chore]`, `[style]`, etc. → No version bump
+
+### Documentation
+
+- **Quick Reference**: [docs/QUICK_REFERENCE_VERSIONING.md](./docs/QUICK_REFERENCE_VERSIONING.md)
+- **Full Convention Guide**: [docs/COMMIT_CONVENTIONS.md](./docs/COMMIT_CONVENTIONS.md)
+- **Versioning Details**: [docs/VERSIONING.md](./docs/VERSIONING.md)
+- **Changelog**: [CHANGELOG.md](./CHANGELOG.md)
 
 ## 🏆 Acknowledgments
 
