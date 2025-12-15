@@ -1,0 +1,123 @@
+name: Release Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Version bump type (leave empty for auto-detection)'
+        required: false
+        type: choice
+        options:
+          - auto
+          - major
+          - minor
+          - patch
+      pre_release:
+        description: 'Pre-release label (e.g., beta.1, rc.1)'
+        required: false
+        type: string
+
+jobs:
+  release:
+    name: 🚀 Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Install Node.js (for package.json updates)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Get current version
+        id: current_version
+        run: |
+          VERSION=$(cat turn-one-backend/VERSION)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION"
+      
+      - name: Run automated version update
+        id: version_update
+        run: |
+          # Make scripts executable
+          chmod +x scripts/update-version-auto.sh
+          
+          # Prepare arguments
+          ARGS=""
+          
+          if [ "${{ inputs.pre_release }}" != "" ]; then
+            ARGS="$ARGS --pre-release ${{ inputs.pre_release }}"
+          fi
+          
+          # Run version update based on bump type
+          if [ "${{ inputs.bump_type }}" = "auto" ] || [ "${{ inputs.bump_type }}" = "" ]; then
+            echo "🔍 Running automatic version detection..."
+            ./scripts/update-version-auto.sh $ARGS
+          else
+            echo "📝 Manual bump type: ${{ inputs.bump_type }}"
+            # For manual bump, use the old script
+            chmod +x scripts/update-version.sh
+            ./scripts/update-version.sh ${{ inputs.bump_type }} "" "" "Manual release"
+          fi
+          
+          # Get new version
+          NEW_VERSION=$(cat turn-one-backend/VERSION)
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+      
+      - name: Commit version changes
+        run: |
+          git add turn-one-backend/VERSION turn-one-client/package.json CHANGELOG.md
+          git commit -m "chore: bump version to ${{ steps.version_update.outputs.new_version }}"
+          git push
+      
+      - name: Create Git tag
+        run: |
+          git tag v${{ steps.version_update.outputs.new_version }}
+          git push origin v${{ steps.version_update.outputs.new_version }}
+      
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          # Extract the latest changelog entry
+          NEW_VERSION="${{ steps.version_update.outputs.new_version }}"
+          
+          # Get content between this version and the next heading
+          CHANGELOG_CONTENT=$(awk "/## \[$NEW_VERSION\]/,/## \[/" CHANGELOG.md | sed '1!{/## \[/d;}')
+          
+          # Save to file for GitHub release
+          echo "$CHANGELOG_CONTENT" > /tmp/release-notes.md
+          
+          echo "Changelog extracted for version $NEW_VERSION"
+      
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.version_update.outputs.new_version }}
+          release_name: Release ${{ steps.version_update.outputs.new_version }}
+          body_path: /tmp/release-notes.md
+          draft: false
+          prerelease: ${{ inputs.pre_release != '' }}
+      
+      - name: Summary
+        run: |
+          echo "### 🎉 Release Created Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.current_version.outputs.version }} → ${{ steps.version_update.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag:** v${{ steps.version_update.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "See the [release page](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version_update.outputs.new_version }}) for details." >> $GITHUB_STEP_SUMMARY
