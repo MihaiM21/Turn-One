@@ -222,6 +222,7 @@ jobs:
       !startsWith(github.event.head_commit.message, 'chore: bump version')
     permissions:
       contents: write
+      pull-requests: write
     
     steps:
       - name: Checkout code
@@ -240,6 +241,19 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       
+      - name: Install GitHub CLI
+        run: |
+          type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+          && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+          && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+          && sudo apt update \
+          && sudo apt install gh -y
+      
+      - name: Authenticate GitHub CLI
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+      
       - name: Check for version bump needed
         id: check
         run: |
@@ -255,43 +269,12 @@ jobs:
             echo "Conventional commits detected, version bump needed"
           fi
       
-      - name: Run version update
-        if: steps.check.outputs.needs_bump == 'true'
-        id: version
-        run: |
-          # Run the version update script
-          ./scripts/update-version-auto.sh
-          
-          # Get the new version
-          NEW_VERSION=$(cat turn-one-backend/VERSION)
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "Updated to version: $NEW_VERSION"
-      
-      - name: Commit and push version changes
+      - name: Create version bump PR
         if: steps.check.outputs.needs_bump == 'true'
         run: |
-          git add turn-one-backend/VERSION turn-one-client/package.json CHANGELOG.md
-          git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }}"
-          git push
-      
-      - name: Create and push tag
-        if: steps.check.outputs.needs_bump == 'true'
-        run: |
-          git tag "v${{ steps.version.outputs.new_version }}"
-          git push origin "v${{ steps.version.outputs.new_version }}"
-      
-      - name: Create GitHub Release
-        if: steps.check.outputs.needs_bump == 'true'
-        uses: actions/create-release@v1
+          # Run the version update script with auto-PR flag
+          ./scripts/update-version-auto.sh --auto-pr --pr-base ${{ github.ref_name }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ steps.version.outputs.new_version }}
-          release_name: Release ${{ steps.version.outputs.new_version }}
-          body: |
-            Auto-generated release from conventional commits.
-            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details.
-          draft: false
-          prerelease: false
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   
