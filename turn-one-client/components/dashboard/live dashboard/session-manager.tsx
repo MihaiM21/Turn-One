@@ -11,7 +11,7 @@ type F1Race = {
   sessions: F1Session[];
 };
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { f1_2025_races, f1_2026_races } from "../../../lib/constants/f1_2025_races"
+import { f1_2025_races, f1_2026_races } from "../../../lib/constants/f1_races"
 import React, { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Clock, MapPin } from "lucide-react"

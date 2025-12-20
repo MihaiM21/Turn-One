@@ -28,7 +28,7 @@ import Link from 'next/link';
 import { DashboardHeader } from "@/components/dashboard/live dashboard/dashboard-header";
 import { leaderboardService, coinService, predictionService } from '@/lib/gameService';
 import { UserStats, Prediction } from '@/types/game-types';
-import { f1_2025_races } from '@/lib/constants/f1_2025_races';
+import { f1_2025_races } from '@/lib/constants/f1_races';
 
 export default function GameHubPage() {
   const [userStats, setUserStats] = useState<UserStats | null>(null);

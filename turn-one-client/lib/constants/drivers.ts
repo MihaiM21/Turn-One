@@ -1,4 +1,4 @@
-export const drivers = [
+export const drivers_2025 = [
     "VER", "TSU",
     "HAM", "LEC",
     "NOR", "PIA",
