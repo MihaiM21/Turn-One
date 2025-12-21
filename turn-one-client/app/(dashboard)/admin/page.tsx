@@ -405,7 +405,7 @@ export default function AdminDashboard() {
   ).length;
 
   // Filter users based on search and filters
-  let filteredUsers = users.filter(user => {
+  const filteredUsers = users.filter(user => {
     const matchesSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'ALL' || user.role === roleFilter;
