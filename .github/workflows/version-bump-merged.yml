@@ -1,0 +1,105 @@
+name: Version Bump Merged
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+      - master
+
+jobs:
+  create-release:
+    name: 🚀 Create Release
+    runs-on: ubuntu-latest
+    if: |
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'version-bump-') &&
+      startsWith(github.event.pull_request.title, 'chore: bump version')
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.base.ref }}
+      
+      - name: Setup Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Get version from VERSION file
+        id: get_version
+        run: |
+          VERSION=$(cat turn-one-backend/VERSION)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version from file: $VERSION"
+      
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          if git rev-parse "v${{ steps.get_version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Tag v${{ steps.get_version.outputs.version }} already exists"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Tag v${{ steps.get_version.outputs.version }} does not exist"
+          fi
+      
+      - name: Create and push tag
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          git tag "v${{ steps.get_version.outputs.version }}"
+          git push origin "v${{ steps.get_version.outputs.version }}"
+      
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          
+          # Extract the section for this version from CHANGELOG.md
+          if [ -f "CHANGELOG.md" ]; then
+            # Get content between this version and the next version marker
+            CHANGELOG_CONTENT=$(sed -n "/## \[$VERSION\]/,/## \[/p" CHANGELOG.md | sed '$d')
+            
+            # If nothing found, try without the brackets
+            if [ -z "$CHANGELOG_CONTENT" ]; then
+              CHANGELOG_CONTENT=$(sed -n "/## $VERSION/,/## /p" CHANGELOG.md | sed '$d')
+            fi
+            
+            # If still nothing, use a default message
+            if [ -z "$CHANGELOG_CONTENT" ]; then
+              CHANGELOG_CONTENT="See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details."
+            fi
+            
+            # Save to file for use in next step
+            echo "$CHANGELOG_CONTENT" > /tmp/changelog.txt
+          else
+            echo "See commits for details." > /tmp/changelog.txt
+          fi
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        if: steps.check_tag.outputs.exists == 'false'
+        with:
+          tag_name: v${{ steps.get_version.outputs.version }}
+          name: Release v${{ steps.get_version.outputs.version }}
+          body_path: /tmp/changelog.txt
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Add comment to PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🎉 Version **v${{ steps.get_version.outputs.version }}** has been released!\n\n✅ Tag created: \`v${{ steps.get_version.outputs.version }}\`\n📦 [View Release](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.get_version.outputs.version }})`
+            })

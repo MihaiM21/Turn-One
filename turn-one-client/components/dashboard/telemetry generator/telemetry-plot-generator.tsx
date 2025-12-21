@@ -21,7 +21,7 @@ import { TrackComparisonGraph } from "./plots/track-comparison"
 import { SessionResultsGraph } from "./plots/session-results"
 import { ThrottleBrakeComparisonGraph } from "./plots/throttle-brake-comparison"
 import { SessionResultsData } from "@/types/plot-types"
-import { drivers } from "@/lib/constants/drivers"
+import { drivers_2025, drivers_2026} from "@/lib/constants/drivers"
 import { LoadingPlot } from "./loading_plot"
 import { useTokens } from "@/hooks/use-tokens"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -59,6 +59,20 @@ const gForceData = [
   { time: 4, lateral: -2.1, longitudinal: 1.5 },
   { time: 5, lateral: 1.9, longitudinal: -1.2 },
 ]
+
+let drivers: any[];
+const currentYear = new Date().getFullYear();
+switch(currentYear) {
+  case 2025:
+    drivers = drivers_2025;
+    break;
+  case 2026:
+    drivers = drivers_2026;
+    break;
+  default:
+    drivers = drivers_2025;
+}
+  
 
 export function TelemetryPlotGenerator() {
   const [selectedPlotType, setSelectedPlotType] = useState("topspeeds")

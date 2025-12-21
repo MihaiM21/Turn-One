@@ -19,7 +19,13 @@ param(
     [string]$PreRelease = "",
     
     [Parameter()]
-    [string]$BuildMetadata = ""
+    [string]$BuildMetadata = "",
+    
+    [Parameter()]
+    [switch]$AutoPR = $false,
+    
+    [Parameter()]
+    [string]$PRBaseBranch = "main"
 )
 
 # Functions
@@ -41,6 +47,8 @@ function Show-Help {
     Write-Host "  -DryRun: Show what would be done without making changes"
     Write-Host "  -PreRelease: Add pre-release label (e.g., alpha, beta, rc.1)"
     Write-Host "  -BuildMetadata: Add build metadata"
+    Write-Host "  -AutoPR: Automatically create a pull request (requires gh CLI)"
+    Write-Host "  -PRBaseBranch: Base branch for PR (default: main)"
     exit 1
 }
 
@@ -456,10 +464,167 @@ Update-VersionFile -newVersion $newVersion -versionFilePath $versionFilePath
 Update-PackageJson -newVersion $newVersion -packageJsonPath $packageJsonPath
 Update-Changelog -version $newVersion -analysis $analysis -changelogPath $changelogPath
 
-Write-Host "`n✅ Version update complete!`n" -ForegroundColor Green
-Write-Host "Next steps:" -ForegroundColor Cyan
-Write-Host "  git add turn-one-backend/VERSION turn-one-client/package.json CHANGELOG.md"
-Write-Host "  git commit -m 'chore: bump version to $newVersion'"
-Write-Host "  git tag v$newVersion"
+# Handle auto PR creation
+if ($AutoPR) {
+    Write-Host "Creating pull request automatically...`n" -ForegroundColor Cyan
+    
+    # Check if gh CLI is installed
+    $ghInstalled = Get-Command gh -ErrorAction SilentlyContinue
+    if (-not $ghInstalled) {
+        Write-Host "Error: GitHub CLI (gh) is not installed." -ForegroundColor Red
+        Write-Host "Install it from: https://cli.github.com/"
+        Write-Host "Falling back to manual PR instructions."
+        $AutoPR = $false
+    }
+    else {
+        $prBranch = "version-bump-$newVersion"
+        
+        # Create and checkout new branch
+        Write-Host "Creating branch: $prBranch" -ForegroundColor Gray
+        try {
+            git checkout -b $prBranch 2>$null
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "Branch already exists, switching to it" -ForegroundColor Yellow
+                git checkout $prBranch
+            }
+        }
+        catch {
+            Write-Host "Failed to create/checkout branch" -ForegroundColor Red
+            $AutoPR = $false
+        }
+        
+        if ($AutoPR) {
+            # Stage and commit changes
+            Write-Host "Committing changes..." -ForegroundColor Gray
+            git add turn-one-backend/VERSION turn-one-client/package.json CHANGELOG.md
+            
+            $commitMessage = @"
+chore: bump version to $newVersion
+
+This PR bumps the version from $currentVersion to $newVersion based on conventional commits.
+
+### Changes Summary:
+- Updated VERSION file to $newVersion
+- Updated package.json to $newVersion
+- Updated CHANGELOG.md with new entries
+
+### Commits Analyzed:
+"@
+            
+            if ($analysis.Breaking.Count -gt 0) {
+                $commitMessage += "- 💥 Breaking Changes: $($analysis.Breaking.Count)`n"
+            }
+            if ($analysis.Features.Count -gt 0) {
+                $commitMessage += "- ✨ Features: $($analysis.Features.Count)`n"
+            }
+            if ($analysis.Fixes.Count -gt 0) {
+                $commitMessage += "- 🐛 Fixes: $($analysis.Fixes.Count)`n"
+            }
+            if ($analysis.Other.Count -gt 0) {
+                $commitMessage += "- 🔧 Other: $($analysis.Other.Count)`n"
+            }
+            
+            $commitMessage += "`nBump type: $bumpType"
+            
+            git commit -m $commitMessage
+            
+            # Push branch
+            Write-Host "Pushing branch to remote..." -ForegroundColor Gray
+            git push -u origin $prBranch
+            
+            # Create PR body
+            $prBody = @"
+## Version Bump: $currentVersion → $newVersion
+
+This automated PR bumps the version based on conventional commits since the last release.
+
+### 📊 Changes Summary
+
+"@
+            
+            if ($analysis.Breaking.Count -gt 0) {
+                $prBody += "#### 💥 BREAKING CHANGES ($($analysis.Breaking.Count))`n"
+                foreach ($item in $analysis.Breaking) {
+                    $cleanMessage = $item.Message -replace "^\[?(major|breaking)\]?:?\s*", ""
+                    $prBody += "- $cleanMessage (``$($item.Hash)``)`n"
+                }
+                $prBody += "`n"
+            }
+            
+            if ($analysis.Features.Count -gt 0) {
+                $prBody += "#### ✨ Features ($($analysis.Features.Count))`n"
+                foreach ($item in $analysis.Features) {
+                    $cleanMessage = $item.Message -replace "^\[?feat(ure)?\]?:?\s*", ""
+                    $prBody += "- $cleanMessage (``$($item.Hash)``)`n"
+                }
+                $prBody += "`n"
+            }
+            
+            if ($analysis.Fixes.Count -gt 0) {
+                $prBody += "#### 🐛 Bug Fixes ($($analysis.Fixes.Count))`n"
+                foreach ($item in $analysis.Fixes) {
+                    $cleanMessage = $item.Message -replace "^\[?fix\]?:?\s*", ""
+                    $prBody += "- $cleanMessage (``$($item.Hash)``)`n"
+                }
+                $prBody += "`n"
+            }
+            
+            $prBody += @"
+### 📝 Files Updated
+- ``turn-one-backend/VERSION``
+- ``turn-one-client/package.json``
+- ``CHANGELOG.md``
+
+### ✅ Review Checklist
+- [ ] Version number is correct
+- [ ] CHANGELOG.md entries are accurate
+- [ ] All version files are updated consistently
+
+**Bump Type:** $bumpType  
+**Previous Version:** $currentVersion  
+**New Version:** $newVersion
+
+---
+*This PR was automatically generated by the version bump automation.*
+"@
+            
+            # Create PR
+            Write-Host "Creating pull request..." -ForegroundColor Gray
+            try {
+                gh pr create `
+                    --base $PRBaseBranch `
+                    --head $prBranch `
+                    --title "chore: bump version to $newVersion" `
+                    --body $prBody `
+                    --label "version-bump,automated" 2>$null
+                
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Host "`n✅ Pull request created successfully!`n" -ForegroundColor Green
+                    Write-Host "View PR:" -ForegroundColor Cyan
+                    gh pr view --web
+                }
+                else {
+                    Write-Host "Failed to create PR via GitHub CLI" -ForegroundColor Yellow
+                    $AutoPR = $false
+                }
+            }
+            catch {
+                Write-Host "Failed to create PR: $_" -ForegroundColor Yellow
+                $AutoPR = $false
+            }
+        }
+    }
+}
+
+if (-not $AutoPR) {
+    Write-Host "Next steps (Manual PR Mode):" -ForegroundColor Cyan
+    Write-Host "  1. Create branch: git checkout -b version-bump-$newVersion"
+    Write-Host "  2. Commit changes: git add turn-one-backend/VERSION turn-one-client/package.json CHANGELOG.md"
+    Write-Host "  3. Commit: git commit -m 'chore: bump version to $newVersion'"
+    Write-Host "  4. Push: git push -u origin version-bump-$newVersion"
+    Write-Host "  5. Create PR via GitHub CLI: gh pr create --base $PRBaseBranch --title 'chore: bump version to $newVersion'"
+    Write-Host ""
+}
+ git tag v$newVersion"
 Write-Host "  git push && git push --tags"
 Write-Host ""

@@ -11,6 +11,8 @@ FORCE=false
 DRY_RUN=false
 PRE_RELEASE=""
 BUILD_METADATA=""
+AUTO_PR=false
+PR_BASE_BRANCH="main"
 
 # Colors
 RED='\033[0;31m'
@@ -47,6 +49,14 @@ while [[ $# -gt 0 ]]; do
             BUILD_METADATA="$2"
             shift 2
             ;;
+        --auto-pr)
+            AUTO_PR=true
+            shift
+            ;;
+        --pr-base)
+            PR_BASE_BRANCH="$2"
+            shift 2
+            ;;
         -h|--help)
             echo "Usage: ./update-version-auto.sh [-f commit] [-t commit] [--force] [--dry-run]"
             echo "Example: ./update-version-auto.sh -f HEAD~5 -t HEAD"
@@ -57,6 +67,8 @@ while [[ $# -gt 0 ]]; do
             echo "  [perf] - Increments patch version"
             echo "  BREAKING CHANGE - Increments major version"
             echo "  [major] - Increments major version"
+            echo "  --auto-pr: Automatically create a pull request (requires gh CLI)"
+            echo "  --pr-base: Base branch for PR (default: main)"
             echo ""
             echo "Options:"
             echo "  -f, --from: Starting commit (optional, defaults to last version tag)"
@@ -417,9 +429,143 @@ update_package_json "$new_version" "$package_json"
 update_changelog "$new_version" "$changelog_file"
 
 echo -e "\n${GREEN}✅ Version update complete!${NC}\n"
-echo -e "${CYAN}Next steps:${NC}"
-echo "  git add turn-one-backend/VERSION turn-one-client/package.json CHANGELOG.md"
-echo "  git commit -m 'chore: bump version to $new_version'"
-echo "  git tag v$new_version"
-echo "  git push && git push --tags"
-echo ""
+
+# Handle auto PR creation
+if [ "$AUTO_PR" = true ]; then
+    echo -e "${CYAN}Creating pull request automatically...${NC}\n"
+    
+    # Check if gh CLI is installed
+    if ! command -v gh &> /dev/null; then
+        echo -e "${RED}Error: GitHub CLI (gh) is not installed.${NC}"
+        echo "Install it from: https://cli.github.com/"
+        echo "Falling back to manual PR instructions."
+        AUTO_PR=false
+    else
+        # Get current branch
+        current_branch=$(git rev-parse --abbrev-ref HEAD)
+        pr_branch="version-bump-$new_version"
+        
+        # Create and checkout new branch
+        echo -e "${GRAY}Creating branch: $pr_branch${NC}"
+        git checkout -b "$pr_branch" 2>/dev/null || {
+            echo -e "${YELLOW}Branch already exists, switching to it${NC}"
+            git checkout "$pr_branch"
+        }
+        
+        # Stage and commit changes
+        echo -e "${GRAY}Committing changes...${NC}"
+        git add turn-one-backend/VERSION turn-one-client/package.json CHANGELOG.md
+        git commit -m "chore: bump version to $new_version
+
+This PR bumps the version from $current_version to $new_version based on conventional commits.
+
+### Changes Summary:
+- Updated VERSION file to $new_version
+- Updated package.json to $new_version
+- Updated CHANGELOG.md with new entries
+
+### Commits Analyzed:
+$([ ${#BREAKING_COMMITS[@]} -gt 0 ] && echo "- 💥 Breaking Changes: ${#BREAKING_COMMITS[@]}")
+$([ ${#FEATURE_COMMITS[@]} -gt 0 ] && echo "- ✨ Features: ${#FEATURE_COMMITS[@]}")
+$([ ${#FIX_COMMITS[@]} -gt 0 ] && echo "- 🐛 Fixes: ${#FIX_COMMITS[@]}")
+$([ ${#OTHER_COMMITS[@]} -gt 0 ] && echo "- 🔧 Other: ${#OTHER_COMMITS[@]}")
+
+Bump type: $bump_type"
+        
+        # Push branch
+        echo -e "${GRAY}Pushing branch to remote...${NC}"
+        git push -u origin "$pr_branch"
+        
+        # Create PR
+        echo -e "${GRAY}Creating pull request...${NC}"
+        pr_body="## Version Bump: $current_version → $new_version
+
+This automated PR bumps the version based on conventional commits since the last release.
+
+### 📊 Changes Summary
+
+"
+        if [ ${#BREAKING_COMMITS[@]} -gt 0 ]; then
+            pr_body+="#### 💥 BREAKING CHANGES (${#BREAKING_COMMITS[@]})
+"
+            for commit in "${BREAKING_COMMITS[@]}"; do
+                IFS='|' read -r hash message <<< "$commit"
+                clean_msg=$(clean_commit_message "$message")
+                pr_body+="- $clean_msg (\`$hash\`)
+"
+            done
+            pr_body+="
+"
+        fi
+        
+        if [ ${#FEATURE_COMMITS[@]} -gt 0 ]; then
+            pr_body+="#### ✨ Features (${#FEATURE_COMMITS[@]})
+"
+            for commit in "${FEATURE_COMMITS[@]}"; do
+                IFS='|' read -r hash message <<< "$commit"
+                clean_msg=$(clean_commit_message "$message")
+                pr_body+="- $clean_msg (\`$hash\`)
+"
+            done
+            pr_body+="
+"
+        fi
+        
+        if [ ${#FIX_COMMITS[@]} -gt 0 ]; then
+            pr_body+="#### 🐛 Bug Fixes (${#FIX_COMMITS[@]})
+"
+            for commit in "${FIX_COMMITS[@]}"; do
+                IFS='|' read -r hash message <<< "$commit"
+                clean_msg=$(clean_commit_message "$message")
+                pr_body+="- $clean_msg (\`$hash\`)
+"
+            done
+            pr_body+="
+"
+        fi
+        
+        pr_body+="### 📝 Files Updated
+- \`turn-one-backend/VERSION\`
+- \`turn-one-client/package.json\`
+- \`CHANGELOG.md\`
+
+### ✅ Review Checklist
+- [ ] Version number is correct
+- [ ] CHANGELOG.md entries are accurate
+- [ ] All version files are updated consistently
+
+**Bump Type:** $bump_type  
+**Previous Version:** $current_version  
+**New Version:** $new_version
+
+---
+*This PR was automatically generated by the version bump automation.*"
+        
+        gh pr create \
+            --base "$PR_BASE_BRANCH" \
+            --head "$pr_branch" \
+            --title "chore: bump version to $new_version" \
+            --body "$pr_body" \
+            --label "version-bump,automated" 2>/dev/null || {
+            echo -e "${YELLOW}Failed to create PR via GitHub CLI${NC}"
+            AUTO_PR=false
+        }
+        
+        if [ "$AUTO_PR" = true ]; then
+            echo -e "\n${GREEN}✅ Pull request created successfully!${NC}\n"
+            echo -e "${CYAN}View PR:${NC}"
+            gh pr view --web
+        fi
+    fi
+fi
+
+if [ "$AUTO_PR" = false ]; then
+    echo -e "${CYAN}Next steps (Manual PR Mode):${NC}"
+    echo "  1. Create branch: git checkout -b version-bump-$new_version"
+    echo "  2. Commit changes: git add turn-one-backend/VERSION turn-one-client/package.json CHANGELOG.md"
+    echo "  3. Commit: git commit -m 'chore: bump version to $new_version'"
+    echo "  4. Push: git push -u origin version-bump-$new_version"
+    echo "  5. Create PR via GitHub CLI: gh pr create --base $PR_BASE_BRANCH --title 'chore: bump version to $new_version'"
+    echo ""
+fi
+

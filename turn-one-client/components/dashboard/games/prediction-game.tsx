@@ -14,7 +14,7 @@ import { predictionService, coinService } from '@/lib/gameService';
 import { CreatePrediction } from '@/types/game-types';
 import { toast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';
-import { f1_2025_races } from '@/lib/constants/f1_2025_races';
+import { f1_2025_races } from '@/lib/constants/f1_races';
 
 interface PredictionGameProps {
   onPredictionCreated?: () => void;
