@@ -21,7 +21,7 @@ import { TrackComparisonGraph } from "./plots/track-comparison"
 import { SessionResultsGraph } from "./plots/session-results"
 import { ThrottleBrakeComparisonGraph } from "./plots/throttle-brake-comparison"
 import { SessionResultsData } from "@/types/plot-types"
-import { drivers_2025 } from "@/lib/constants/drivers"
+import { drivers_2025, drivers_2026} from "@/lib/constants/drivers"
 import { LoadingPlot } from "./loading_plot"
 import { useTokens } from "@/hooks/use-tokens"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -67,7 +67,7 @@ switch(currentYear) {
     drivers = drivers_2025;
     break;
   case 2026:
-    drivers = drivers_2025; // Placeholder for 2026 drivers
+    drivers = drivers_2026;
     break;
   default:
     drivers = drivers_2025;
