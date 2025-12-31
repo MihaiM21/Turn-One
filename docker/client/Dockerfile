@@ -20,6 +20,11 @@ RUN npm ci
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
+
+# Accept build arguments
+ARG NEXT_PUBLIC_BACKEND_URL
+ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY turn-one-client/ ./
 

@@ -56,6 +56,7 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error in SubmitAttempt: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "An error occurred" });
             }
         }
@@ -71,6 +72,7 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error in GetAllTrivia: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "An error occurred" });
             }
         }
@@ -86,6 +88,7 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error in CreateTrivia: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "An error occurred" });
             }
         }
@@ -105,6 +108,7 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error in DeleteTrivia: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "An error occurred" });
             }
         }

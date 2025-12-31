@@ -17,7 +17,7 @@ type Card = {
 };
 
 // Single shared image for all cards (a modern F1 car)
-const sharedBackgroundImage = "/turn-one-car/0001.webp";
+const sharedBackgroundImage = "/turn-one-car/2026-turn-one-car/0001.webp";
 
 // Sample card data - each with a different position to crop the image
 const cards: Card[] = [

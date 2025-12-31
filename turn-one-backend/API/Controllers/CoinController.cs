@@ -29,6 +29,7 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error in GetBalance: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "An error occurred" });
             }
         }
@@ -44,6 +45,7 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error in GetTransactions: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "An error occurred" });
             }
         }
