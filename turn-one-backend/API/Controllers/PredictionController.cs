@@ -81,6 +81,7 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error in GetPredictionById: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "An error occurred" });
             }
         }

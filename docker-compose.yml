@@ -9,6 +9,11 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5271
       - DATABASE_URL=${DATABASE_URL}
+      - JWT__Key=${JWT__Key}
+      - SmtpSettings__Username=${SmtpSettings__Username}
+      - SmtpSettings__Password=${SmtpSettings__Password}
+      - APP_BASE_URL=${APP_BASE_URL}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5271/health"]
       interval: 30s
@@ -21,12 +26,14 @@ services:
     build:
       context: .
       dockerfile: docker/client/Dockerfile
+      args:
+        - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
     ports:
       - "${CLIENT_PORT:-3000}:3000"
     environment:
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
-      - API_URL=http://api:5271
+      - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
     depends_on:
       - api
     healthcheck:

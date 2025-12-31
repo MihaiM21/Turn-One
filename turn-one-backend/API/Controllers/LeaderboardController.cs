@@ -28,6 +28,7 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error in GetGlobalLeaderboard: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "An error occurred" });
             }
         }
@@ -42,6 +43,7 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error in GetSeasonLeaderboard: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "An error occurred" });
             }
         }
@@ -57,6 +59,7 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error in GetUserStats: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "An error occurred" });
             }
         }

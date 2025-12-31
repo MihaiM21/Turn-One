@@ -10,8 +10,34 @@ using Domain.Enums;
 using API.Services;
 using API.Middleware;
 using API.Hubs;
+using Serilog;
+using Serilog.Events;
+
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+    .MinimumLevel.Override("System", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .Enrich.WithThreadId()
+    .Enrich.WithProperty("Application", "TurnOne-API")
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}")
+    .WriteTo.File(
+        path: "logs/turnone-.log",
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 30,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}")
+    .CreateLogger();
+
+try
+{
+    Log.Information("Starting Turn One API application...");
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Use Serilog for logging
+builder.Host.UseSerilog();
 
 // Add configuration from environment variables
 builder.Configuration.AddEnvironmentVariables();
@@ -26,6 +52,22 @@ if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APP_BASE_URL")))
 if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DATABASE_URL")))
 {
     builder.Configuration["ConnectionStrings:DefaultConnection"] = Environment.GetEnvironmentVariable("DATABASE_URL");
+}
+
+// Override JWT settings from environment variables if present
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("JWT__Key")))
+{
+    builder.Configuration["JWT:Key"] = Environment.GetEnvironmentVariable("JWT__Key");
+}
+
+// Override SMTP settings from environment variables if present
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SmtpSettings__Password")))
+{
+    builder.Configuration["SmtpSettings:Password"] = Environment.GetEnvironmentVariable("SmtpSettings__Password");
+}
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SmtpSettings__Username")))
+{
+    builder.Configuration["SmtpSettings:Username"] = Environment.GetEnvironmentVariable("SmtpSettings__Username");
 }
 
 // Add services to the container
@@ -77,15 +119,28 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// Get allowed origins from environment variable or use defaults
+var allowedOrigins = Environment.GetEnvironmentVariable("CORS_ALLOWED_ORIGINS")?.Split(',')
+    ?? new[] 
+    {
+        "http://localhost:3000", 
+        "https://localhost:3000", 
+        "http://localhost:3001", 
+        "https://localhost:3001",
+        "https://dev.turnonehub.com", 
+        "https://t1f1.com", 
+        "https://turnonehub.com",
+        "https://www.t1f1.com",
+        "https://www.turnonehub.com"
+    };
+
 // Add CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000", "https://localhost:3000", "http://localhost:3001", "https://localhost:3001",
-            "https://91.99.127.72:3000/", "http://91.99.127.72:3000/", "https://91.99.127.72:3001/", "http://91.99.127.72:3001/",
-             "https://dev.turnonehub.com", "https://t1f1.com", "https://turnonehub.com")
+            policy.WithOrigins(allowedOrigins)
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .WithExposedHeaders("Authorization", "X-F1-Cookies")
@@ -98,9 +153,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("SignalRCorsPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "https://localhost:3000", "http://localhost:3001", "https://localhost:3001",
-            "https://91.99.127.72:3000/", "http://91.99.127.72:3000/", "https://91.99.127.72:3001/", "http://91.99.127.72:3001/",
-             "https://dev.turnonehub.com", "https://t1f1.com", "https://turnonehub.com")
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials()
@@ -111,6 +164,13 @@ builder.Services.AddCors(options =>
 // Add DbContext configuration for PostgreSQL
 builder.Services.AddDbContext<TurnOneDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Add health checks
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<TurnOneDbContext>(
+        name: "database",
+        failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy,
+        tags: new[] { "db", "postgresql" });
 
 // Register services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -265,12 +325,18 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    // In production environments, you might want to enforce HTTPS and other security measures
+    // In production environments, enforce security measures
     app.UseHsts();
+    
+    // Add security headers middleware
+    app.UseMiddleware<SecurityHeadersMiddleware>();
 }
 
 // Use CORS
 app.UseCors("AllowSpecificOrigin");
+
+// Add request logging middleware
+app.UseMiddleware<RequestLoggingMiddleware>();
 
 // Add authentication and authorization middleware
 app.UseAuthentication();
@@ -298,4 +364,16 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
+Log.Information("Turn One API started successfully");
 app.Run();
+
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application failed to start");
+    throw;
+}
+finally
+{
+    Log.CloseAndFlush();
+}

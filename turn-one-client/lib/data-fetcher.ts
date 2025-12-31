@@ -4,7 +4,8 @@ import { getAuthToken } from './auth-utils';
 
 // Base URL for the API - use consistent URL format
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.t1f1.com/api';
-const API_URL = process.env.API_URL || 'https://api.t1f1.com/api';
+// External API Base URL - routes through secure proxy (never exposes API key to browser)
+const EXTERNAL_API_BASE_URL = process.env.NEXT_PUBLIC_F1_API_BASE || '/api';
 
 // Generic fetch function with authentication from backend
 export async function fetchWithAuth<T>(
@@ -56,17 +57,30 @@ export async function fetchWithAuth<T>(
   }
 }
 
-// Fetch from external API without auth
+// Fetch from external API through secure proxy
+// The API key is added server-side and never exposed to the browser
 export const fetchFromExternalAPI = async (endpoint: string, options: RequestInit = {}) => {
-  const response = await fetch(`${API_URL}/${endpoint}`, {
-    ...options,
-    headers: {
-      ...options.headers,
-      // Authorization: `Bearer ${token}`,
-    },
-  });
-  if (!response.ok) {
-    throw new Error('Network response was not ok');
+  try {
+    const response = await fetch(`${EXTERNAL_API_BASE_URL}/${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.error || 
+        errorData.message || 
+        `External API request failed with status ${response.status}`
+      );
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error(`❌ Error fetching from external API [${endpoint}]:`, error);
+    throw error;
   }
-  return response.json();
 };
