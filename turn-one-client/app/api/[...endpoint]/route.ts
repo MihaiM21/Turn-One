@@ -15,9 +15,12 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { endpoint: string[] } }
+  { params }: { params: Promise<{ endpoint: string[] }> }
 ) {
   try {
+    // Await params in Next.js 15+
+    const resolvedParams = await params;
+    
     // Get the API configuration from environment variables
     const EXTERNAL_API_URL = process.env.F1_API_URL;
     const EXTERNAL_API_KEY = process.env.F1_API_KEY;
@@ -32,7 +35,7 @@ export async function GET(
     }
 
     // Reconstruct the endpoint path
-    const endpoint = params.endpoint.join('/');
+    const endpoint = resolvedParams.endpoint.join('/');
     
     // Get query parameters from the request URL
     const { searchParams } = new URL(request.url);
@@ -98,9 +101,12 @@ export async function GET(
 // Optional: Support POST requests if needed
 export async function POST(
   request: NextRequest,
-  { params }: { params: { endpoint: string[] } }
+  { params }: { params: Promise<{ endpoint: string[] }> }
 ) {
   try {
+    // Await params in Next.js 15+
+    const resolvedParams = await params;
+    
     const EXTERNAL_API_URL = process.env.F1_API_URL;
     const EXTERNAL_API_KEY = process.env.F1_API_KEY;
 
@@ -111,7 +117,7 @@ export async function POST(
       );
     }
 
-    const endpoint = params.endpoint.join('/');
+    const endpoint = resolvedParams.endpoint.join('/');
     const body = await request.json();
     
     const apiUrl = `${EXTERNAL_API_URL}/${endpoint}`;
