@@ -39,7 +39,7 @@ export function PageLoadingProvider({ children }: { children: ReactNode }) {
     // Set a timeout to ensure data is loaded
     const timeout = setTimeout(() => {
       setIsLoading(false);
-    }, 1000);
+    }, 200);
     
     return () => clearTimeout(timeout);
   }, [pathname, currentSearchParams]);

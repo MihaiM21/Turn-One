@@ -16,6 +16,7 @@ public class TurnOneDbContext : DbContext
     public DbSet<TriviaAttempt> TriviaAttempts { get; set; } = null!;
     public DbSet<Leaderboard> Leaderboards { get; set; } = null!;
     public DbSet<CoinTransaction> CoinTransactions { get; set; } = null!;
+    public DbSet<ApiWishlist> ApiWishlists { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -93,6 +94,17 @@ public class TurnOneDbContext : DbContext
             entity.Property(e => e.Type).IsRequired();
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.CreatedAt);
+        });
+
+        modelBuilder.Entity<ApiWishlist>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Email).IsRequired();
+            entity.Property(e => e.SubscribedAt).IsRequired();
+            entity.Property(e => e.IsNotified).IsRequired().HasDefaultValue(false);
+            entity.Property(e => e.IpAddress).IsRequired(false);
+            entity.HasIndex(e => e.Email).IsUnique();
+            entity.HasIndex(e => e.SubscribedAt);
         });
     }
 }
