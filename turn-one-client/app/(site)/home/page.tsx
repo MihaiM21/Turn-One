@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { BarChart3, Zap, Users, Trophy, TrendingUp, Clock } from "lucide-react"
+import { BarChart3, Zap, Users, Trophy, TrendingUp, Clock, Rocket, ArrowRight, Code2 } from "lucide-react"
 import { MainNav } from "@/components/navigation/main-nav"
 import Link from "next/link"
 import { ScrollAnimation } from "@/components/animation/scroll-animation"
@@ -95,11 +95,93 @@ export default function HomePage() {
                   className="text-lg px-8 py-6 bg-transparent accent-glow hover:scale-105 transition-all duration-300"
                   asChild
                 >
-                  <Link href="/">Visit store</Link>
+                  <Link href="/features">Explore Features</Link>
                 </Button>
               </div>
             </ScrollAnimation>
           </div>
+        </div>
+      </section>
+
+      {/* API Launch Announcement - Prominent Section */}
+      <section className="py-16 bg-gradient-to-br from-red-950/20 via-background to-red-950/10 border-y border-red-500/20">
+        <div className="container mx-auto px-4">
+          <ScrollAnimation direction="up">
+            <div className="max-w-5xl mx-auto">
+              <div className="grid lg:grid-cols-2 gap-8 items-center">
+                <div>
+                  <Badge className="mb-4 bg-red-500/10 text-red-500 border-red-500/30 hover:bg-red-500/20">
+                    <Rocket className="w-3 h-3 mr-1" />
+                    Coming Q2 2026
+                  </Badge>
+                  <h2 className="text-3xl md:text-5xl font-bold mb-4">
+                    T1 API
+                    <span className="block gradient-text mt-2">Public Launch</span>
+                  </h2>
+                  <p className="text-lg text-muted-foreground mb-6">
+                    Access the power of Turn One through our comprehensive API. Real-time F1 data, 
+                    historical statistics, live timing, and more - all at your fingertips.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Button 
+                      size="lg" 
+                      className="bg-red-500 hover:bg-red-600 text-white glow-effect hover:scale-105 transition-all duration-300"
+                      asChild
+                    >
+                      <Link href="/api-launch">
+                        Join Wishlist
+                        <ArrowRight className="ml-2 h-5 w-5" />
+                      </Link>
+                    </Button>
+                    <Button 
+                      size="lg" 
+                      variant="outline"
+                      className="border-red-500/30 hover:bg-red-500/10"
+                      asChild
+                    >
+                      <Link href="/api-launch">
+                        <Code2 className="mr-2 h-5 w-5" />
+                        Learn More
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+                <div className="relative">
+                  <div className="bg-gradient-to-br from-red-500/10 to-background border border-red-500/20 rounded-xl p-8 backdrop-blur-sm">
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                          <Zap className="w-4 h-4 text-red-500" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold mb-1">Real-Time Data</h4>
+                          <p className="text-sm text-muted-foreground">Live timing and telemetry during race weekends</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                          <Clock className="w-4 h-4 text-red-500" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold mb-1">Historical Archives</h4>
+                          <p className="text-sm text-muted-foreground">Complete F1 data spanning decades</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                          <Code2 className="w-4 h-4 text-red-500" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold mb-1">Developer Friendly</h4>
+                          <p className="text-sm text-muted-foreground">RESTful API with WebSocket support</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ScrollAnimation>
         </div>
       </section>
 
