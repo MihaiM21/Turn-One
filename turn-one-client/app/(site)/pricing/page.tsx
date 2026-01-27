@@ -115,7 +115,7 @@ export default function PricingPage() {
         <div className="max-w-5xl mx-auto text-center">
           <div className="mb-6 animate-in fade-in-0 slide-in-from-top-4 duration-1000">
             <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 text-white border-none shadow-lg px-6 py-2.5 text-base font-semibold">
-              ✨ 100% Free Forever - No Credit Card Required
+              100% Free Forever - No Credit Card Required
             </Badge>
           </div>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 animate-in fade-in-0 slide-in-from-top-6 duration-1000 delay-100">
@@ -131,7 +131,7 @@ export default function PricingPage() {
           <div className="flex flex-wrap justify-center items-center gap-8 mt-12 mb-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-1000 delay-300">
             <div className="flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" />
-              <span className="text-sm text-muted-foreground"><span className="font-bold text-foreground">10,000+</span> Users</span>
+              <span className="text-sm text-muted-foreground"><span className="font-bold text-foreground">1,000+</span> Users</span>
             </div>
             <div className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary" />
