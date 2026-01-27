@@ -11,6 +11,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { 
   User, 
   Settings, 
@@ -24,7 +32,15 @@ import {
   Crown,
   Zap,
   AlertTriangle,
-  Loader2
+  Loader2,
+  Trophy,
+  TrendingUp,
+  CheckCircle2,
+  Clock,
+  Sparkles,
+  ArrowUpRight,
+  X,
+  AlertCircle
 } from "lucide-react"
 import { useAuth } from "@/lib/auth"
 import { 
@@ -106,6 +122,12 @@ export default function AccountPage() {
     newPassword: "",
     confirmPassword: ""
   })
+
+  // Dialog states
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false)
+  const [showDowngradeDialog, setShowDowngradeDialog] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState<string>("")
+  const [isChangingPlan, setIsChangingPlan] = useState(false)
 
   // Load user data on component mount
   useEffect(() => {
@@ -211,6 +233,99 @@ export default function AccountPage() {
     }
   }
 
+  const handleUpgradePlan = (plan: string) => {
+    setSelectedPlan(plan)
+    setShowUpgradeDialog(true)
+  }
+
+  const handleDowngradePlan = (plan: string) => {
+    setSelectedPlan(plan)
+    setShowDowngradeDialog(true)
+  }
+
+  const confirmUpgrade = async () => {
+    try {
+      setIsChangingPlan(true)
+      const token = localStorage.getItem('token') || ''
+      
+      // Map plan names to enum values (0=BASIC, 1=PRO, 2=ELITE)
+      const planEnumMap: { [key: string]: number } = {
+        'BASIC': 0,
+        'PRO': 1,
+        'ELITE': 2
+      }
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5271/api'}/subscription/upgrade`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(planEnumMap[selectedPlan]),
+      })
+
+      if (!response.ok) {
+        const error = await response.text()
+        throw new Error(error || 'Failed to upgrade plan')
+      }
+
+      await loadUserData()
+      toast.success(`Successfully upgraded to ${selectedPlan} plan!`)
+      setShowUpgradeDialog(false)
+    } catch (error: any) {
+      console.error('Error upgrading plan:', error)
+      toast.error(error.message || 'Failed to upgrade plan')
+    } finally {
+      setIsChangingPlan(false)
+    }
+  }
+
+  const confirmDowngrade = async () => {
+    try {
+      setIsChangingPlan(true)
+      const token = localStorage.getItem('token') || ''
+      
+      // Map plan names to enum values (0=BASIC, 1=PRO, 2=ELITE)
+      const planEnumMap: { [key: string]: number } = {
+        'BASIC': 0,
+        'PRO': 1,
+        'ELITE': 2
+      }
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5271/api'}/subscription/downgrade`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(planEnumMap[selectedPlan]),
+      })
+
+      if (!response.ok) {
+        const error = await response.text()
+        throw new Error(error || 'Failed to downgrade plan')
+      }
+
+      await loadUserData()
+      toast.success(`Plan downgrade scheduled! You'll switch to ${selectedPlan} after your current period ends.`)
+      setShowDowngradeDialog(false)
+    } catch (error: any) {
+      console.error('Error downgrading plan:', error)
+      toast.error(error.message || 'Failed to downgrade plan')
+    } finally {
+      setIsChangingPlan(false)
+    }
+  }
+
+  const getPlanPrice = (plan: string) => {
+    switch(plan) {
+      case 'BASIC': return '$0'
+      case 'PRO': return '$9.99'
+      case 'ELITE': return '$19.99'
+      default: return 'N/A'
+    }
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="container mx-auto p-6 flex items-center justify-center min-h-[400px]">
@@ -234,29 +349,47 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
+    <div className="container mx-auto p-6 space-y-8 animate-in fade-in-0 duration-700">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Account Settings</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-2">
+            Account <span className="gradient-text">Settings</span>
+          </h1>
+          <p className="text-lg text-muted-foreground">
             Manage your profile, subscription, and preferences
           </p>
         </div>
-        <Badge variant="secondary" className="flex items-center gap-2">
-          <Crown className="h-4 w-4 text-yellow-500" />
-          {profileData.plan} Member
-        </Badge>
+        <div className="flex gap-3">
+          <Badge 
+            variant="secondary" 
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold ${
+              profileData.plan === 'ELITE' ? 'bg-gradient-to-r from-primary to-red-600 text-white' :
+              profileData.plan === 'PRO' ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white' :
+              'bg-muted text-muted-foreground'
+            }`}
+          >
+            {profileData.plan === 'ELITE' ? <Crown className="h-4 w-4" /> :
+             profileData.plan === 'PRO' ? <Trophy className="h-4 w-4" /> :
+             <Zap className="h-4 w-4" />}
+            {profileData.plan} Plan
+          </Badge>
+        </div>
       </div>
 
       <Tabs defaultValue="profile" className="w-full">
-        {/* Go to cols4 when more tabs */}
-        <TabsList className="grid w-full grid-cols-2 bg-muted"> 
-          <TabsTrigger value="profile" className="flex items-center gap-2">
+        <TabsList className="grid w-full md:w-fit grid-cols-2 bg-muted/50 p-1 backdrop-blur-sm border border-border/50 mb-8"> 
+          <TabsTrigger 
+            value="profile" 
+            className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-200"
+          >
             <User className="h-4 w-4" />
             Profile
           </TabsTrigger>
-          <TabsTrigger value="subscription" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="subscription" 
+            className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-200"
+          >
             <CreditCard className="h-4 w-4" />
             Subscription
           </TabsTrigger>
@@ -271,80 +404,108 @@ export default function AccountPage() {
         </TabsList>
 
         {/* Profile Tab */}
-        <TabsContent value="profile" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Profile Information
-              </CardTitle>
-              <CardDescription>
-                Update your personal information and profile details
-              </CardDescription>
+        <TabsContent value="profile" className="space-y-6 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+          <Card className="border-border/50 shadow-lg transition-all duration-300 hover:shadow-xl">
+            <CardHeader className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <User className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl">Profile Information</CardTitle>
+                  <CardDescription className="text-base">
+                    Update your personal information and profile details
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Avatar Section */}
-              <div className="flex items-center gap-6">
-                <div className="relative">
-                  <Avatar className="h-24 w-24">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6 rounded-xl bg-gradient-to-br from-primary/5 to-transparent border border-primary/10">
+                <div className="relative group">
+                  <Avatar className="h-28 w-28 ring-4 ring-primary/20 transition-all duration-300 group-hover:ring-primary/40">
                     <AvatarImage src={profileData.avatarUrl || "/placeholder-user.jpg"} alt="Profile picture" />
-                    <AvatarFallback className="text-lg font-semibold">
+                    <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-primary/30 to-primary/10">
                       {profileData.username ? profileData.username[0].toUpperCase() : 'U'}
                     </AvatarFallback>
                   </Avatar>
-                  <Button size="sm" className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0">
+                  <Button 
+                    size="sm" 
+                    className="absolute -bottom-2 -right-2 h-10 w-10 rounded-full p-0 shadow-lg glow-effect transition-transform duration-300 hover:scale-110"
+                  >
                     <Camera className="h-4 w-4" />
                   </Button>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold">
+                <div className="flex-1 text-center sm:text-left">
+                  <h3 className="text-2xl font-bold mb-1">
                     {profileData.username}
                   </h3>
-                  <p className="text-muted-foreground">{profileData.email}</p>
-                  <Badge variant="outline" className="mt-1">
-                    Member since {profileData.createdAt ? new Date(profileData.createdAt).toLocaleDateString() : 'N/A'}
-                  </Badge>
+                  <p className="text-muted-foreground mb-3">{profileData.email}</p>
+                  <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                    <Badge variant="outline" className="flex items-center gap-1.5">
+                      <Calendar className="h-3 w-3" />
+                      Member since {profileData.createdAt ? new Date(profileData.createdAt).toLocaleDateString() : 'N/A'}
+                    </Badge>
+                    <Badge variant="outline" className="flex items-center gap-1.5 text-green-600 border-green-600/30">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Verified
+                    </Badge>
+                  </div>
                 </div>
               </div>
 
-              <Separator />
+              <Separator className="my-6" />
 
               {/* Profile Form */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
+                  <Label htmlFor="username" className="text-sm font-semibold">Username</Label>
                   <Input
                     id="username"
                     value={profileData.username}
                     onChange={(e) => setProfileData(prev => ({ ...prev, username: e.target.value }))}
+                    className="h-11 transition-all duration-200 focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="email" className="text-sm font-semibold">Email Address</Label>
                   <Input
                     id="email"
                     type="email"
                     value={profileData.email}
                     onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
+                    className="h-11 transition-all duration-200 focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Current Plan</Label>
-                  <Input
-                    value={profileData.plan}
-                    disabled
-                  />
+                  <Label className="text-sm font-semibold">Current Plan</Label>
+                  <div className="relative">
+                    <Input
+                      value={profileData.plan}
+                      disabled
+                      className="h-11 bg-muted/50"
+                    />
+                    <Crown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Tokens Remaining</Label>
-                  <Input
-                    value={`${profileData.tokens} tokens`}
-                    disabled
-                  />
+                  <Label className="text-sm font-semibold">Tokens Remaining</Label>
+                  <div className="relative">
+                    <Input
+                      value={`${profileData.tokens} tokens`}
+                      disabled
+                      className="h-11 bg-muted/50"
+                    />
+                    <Zap className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+                  </div>
                 </div>
               </div>
 
-              <Button onClick={handleSaveProfile} disabled={isSaving} className="w-full md:w-auto">
+              <Button 
+                onClick={handleSaveProfile} 
+                disabled={isSaving} 
+                className="w-full md:w-auto glow-effect hover:scale-105 transition-all duration-300 px-8"
+              >
                 {isSaving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -362,52 +523,63 @@ export default function AccountPage() {
         </TabsContent>
 
         {/* Subscription Tab */}
-        <TabsContent value="subscription" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Crown className="h-5 w-5 text-yellow-500" />
-                Current Subscription
-              </CardTitle>
-              <CardDescription>
-                Manage your Turn One Pro subscription
-              </CardDescription>
+        <TabsContent value="subscription" className="space-y-6 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+          <Card className="border-border/50 shadow-lg transition-all duration-300 hover:shadow-xl overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-red-600"></div>
+            <CardHeader className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5">
+                  <Crown className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl">Current Subscription</CardTitle>
+                  <CardDescription className="text-base">
+                    Manage your Turn One subscription and benefits
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 rounded-lg border">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-primary/10 rounded-full">
-                    <Zap className="h-6 w-6 text-primary" />
+              <div className="relative flex flex-col sm:flex-row items-center sm:items-start justify-between p-6 bg-gradient-to-br from-primary/10 to-transparent rounded-xl border border-primary/20 overflow-hidden group transition-all duration-300 hover:border-primary/40">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                <div className="flex items-center gap-4 relative z-10 mb-4 sm:mb-0">
+                  <div className="p-4 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    {profileData.plan === 'ELITE' ? <Crown className="h-8 w-8 text-primary" /> :
+                     profileData.plan === 'PRO' ? <Trophy className="h-8 w-8 text-primary" /> :
+                     <Zap className="h-8 w-8 text-primary" />}
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold">{profileData.plan || 'BASIC'}</h3>
-                    <p className="text-sm text-muted-foreground">
+                    <h3 className="text-2xl font-bold mb-1">{profileData.plan || 'ENTHUSIAST'}</h3>
+                    <p className="text-sm text-muted-foreground max-w-md">
                       {profileData.plan === 'PRO' 
-                        ? 'Access to all telemetry data and advanced analytics' 
+                        ? 'Support the platform + more tokens, faster responses, and historical data' 
                         : profileData.plan === 'ELITE'
-                        ? 'Premium access with exclusive features'
-                        : 'Basic access to telemetry data'
+                        ? 'Premium support + unlimited tokens, API access, and priority processing'
+                        : 'Full access to the platform, completely free'
                       }
                     </p>
                   </div>
                 </div>
                 <Badge 
-                  variant={profileData.plan !== 'BASIC' ? 'secondary' : 'outline'} 
-                  className={profileData.plan !== 'BASIC' 
-                    ? "text-green-700 bg-green-100 dark:text-green-400 dark:bg-green-900/20" 
-                    : "text-gray-700 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/20"
-                  }
+                  className={`relative z-10 px-4 py-1.5 text-sm font-semibold ${
+                    profileData.plan === 'ELITE' ? 'bg-gradient-to-r from-primary to-red-600 text-white' :
+                    profileData.plan === 'PRO' ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white' :
+                    'bg-gradient-to-r from-blue-500 to-cyan-600 text-white'
+                  }`}
                 >
-                  {profileData.plan !== 'BASIC' ? 'Active' : 'Basic'}
+                  <CheckCircle2 className="h-3 w-3 mr-1 inline" />
+                  {profileData.plan !== 'BASIC' ? 'Active' : 'Free Forever'}
                 </Badge>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <Calendar className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Next Token Refill</p>
-                    <p className="font-semibold">
+                <Card className="border-border/50 transition-all duration-300 hover:shadow-lg hover:scale-105 hover:border-primary/40 group">
+                  <CardContent className="p-6 text-center">
+                    <div className="mx-auto mb-3 p-3 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-500/5 w-fit group-hover:scale-110 transition-transform duration-300">
+                      <Clock className="h-6 w-6 text-blue-500" />
+                    </div>
+                    <p className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wider">Next Refill</p>
+                    <p className="text-2xl font-bold">
                       {tokenStatus?.daysUntilRefill !== undefined 
                         ? `${tokenStatus.daysUntilRefill} days`
                         : 'N/A'
@@ -415,46 +587,77 @@ export default function AccountPage() {
                     </p>
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <CreditCard className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Tokens Remaining</p>
-                    <p className="font-semibold">
-                      {tokenStatus?.tokensRemaining ?? profileData.tokens} tokens
+                <Card className="border-border/50 transition-all duration-300 hover:shadow-lg hover:scale-105 hover:border-primary/40 group">
+                  <CardContent className="p-6 text-center">
+                    <div className="mx-auto mb-3 p-3 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 w-fit group-hover:scale-110 transition-transform duration-300">
+                      <Zap className="h-6 w-6 text-primary" />
+                    </div>
+                    <p className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wider">Tokens</p>
+                    <p className="text-2xl font-bold">
+                      {tokenStatus?.tokensRemaining ?? profileData.tokens}
                     </p>
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <Shield className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Plan Status</p>
-                    <p className={`font-semibold ${profileData.plan !== 'BASIC' ? 'text-green-600' : 'text-gray-600'}`}>
-                      {profileData.plan}
+                <Card className="border-border/50 transition-all duration-300 hover:shadow-lg hover:scale-105 hover:border-primary/40 group">
+                  <CardContent className="p-6 text-center">
+                    <div className="mx-auto mb-3 p-3 rounded-full bg-gradient-to-br from-green-500/20 to-green-500/5 w-fit group-hover:scale-110 transition-transform duration-300">
+                      <TrendingUp className="h-6 w-6 text-green-500" />
+                    </div>
+                    <p className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wider">Status</p>
+                    <p className={`text-2xl font-bold ${profileData.plan !== 'BASIC' ? 'text-green-600' : 'text-primary'}`}>
+                      {profileData.plan !== 'BASIC' ? 'Premium' : 'Active'}
                     </p>
                   </CardContent>
                 </Card>
               </div>
 
-              <Separator />
+              <Separator className="my-6" />
 
               <div className="space-y-4">
-                <h4 className="text-sm font-medium">Plan Features</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  <h4 className="text-lg font-semibold">Plan Features</h4>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {getFeaturesByPlan(profileData.plan).map((feature, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <div className={`h-2 w-2 rounded-full ${profileData.plan !== 'BASIC' ? 'bg-green-500' : 'bg-gray-400'}`} />
-                      <span className="text-sm">{feature}</span>
+                    <div 
+                      key={index} 
+                      className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors duration-200"
+                    >
+                      <div className={`h-5 w-5 rounded-full flex items-center justify-center ${
+                        profileData.plan !== 'BASIC' ? 'bg-green-500/20' : 'bg-primary/20'
+                      }`}>
+                        <CheckCircle2 className={`h-3 w-3 ${
+                          profileData.plan !== 'BASIC' ? 'text-green-500' : 'text-primary'
+                        }`} />
+                      </div>
+                      <span className="text-sm font-medium">{feature}</span>
                     </div>
                   ))}
                 </div>
               </div>
-
-              <div className="flex gap-4">
-                <Button variant="outline">Change Plan</Button>
-                <Button variant="outline" className="text-red-600 hover:text-red-700">
-                  Cancel Subscription
-                </Button>
-              </div>
+              {/* Uncomment them when the payment method is implemented */}
+              {/* <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                {profileData.plan !== 'ELITE' && (
+                  <Button 
+                    variant="default" 
+                    className="flex-1 glow-effect hover:scale-105 transition-all duration-300"
+                    onClick={() => handleUpgradePlan(profileData.plan === 'BASIC' ? 'PRO' : 'ELITE')}
+                  >
+                    Upgrade to {profileData.plan === 'BASIC' ? 'PRO' : 'ELITE'}
+                    <ArrowUpRight className="ml-2 h-4 w-4" />
+                  </Button>
+                )}
+                {profileData.plan !== 'BASIC' && (
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 hover:border-orange-500 hover:text-orange-500 transition-colors duration-300"
+                    onClick={() => handleDowngradePlan(profileData.plan === 'ELITE' ? 'PRO' : 'BASIC')}
+                  >
+                    Downgrade to {profileData.plan === 'ELITE' ? 'PRO' : 'BASIC'}
+                  </Button>
+                )}
+              </div> */}
             </CardContent>
           </Card>
         </TabsContent>
@@ -661,6 +864,163 @@ export default function AccountPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Upgrade Plan Dialog */}
+      <Dialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-2xl">
+              <Crown className="h-6 w-6 text-primary" />
+              Upgrade Your Plan
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              Unlock more features and support the platform
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="p-4 rounded-lg bg-gradient-to-br from-primary/10 to-transparent border border-primary/20">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-lg font-bold">{selectedPlan} Plan</h4>
+                <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
+                  {getPlanPrice(selectedPlan)}/month
+                </Badge>
+              </div>
+              <ul className="space-y-2">
+                {selectedPlan === 'PRO' && (
+                  <>
+                    <li className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      5,000 tokens per month
+                    </li>
+                    <li className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      Historical data access (2020-2025)
+                    </li>
+                    <li className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      Priority processing & support
+                    </li>
+                  </>
+                )}
+                {selectedPlan === 'ELITE' && (
+                  <>
+                    <li className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      Unlimited tokens
+                    </li>
+                    <li className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      Full API access
+                    </li>
+                    <li className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      24/7 priority support
+                    </li>
+                    <li className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      Dedicated account manager
+                    </li>
+                  </>
+                )}
+              </ul>
+            </div>
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+              <AlertCircle className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-muted-foreground">
+                Your upgrade will be activated immediately and you'll be charged on a monthly basis.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowUpgradeDialog(false)} disabled={isChangingPlan}>
+              Cancel
+            </Button>
+            <Button onClick={confirmUpgrade} disabled={isChangingPlan} className="glow-effect">
+              {isChangingPlan ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</>
+              ) : (
+                <>Confirm Upgrade</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Downgrade Plan Dialog */}
+      <Dialog open={showDowngradeDialog} onOpenChange={setShowDowngradeDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-2xl">
+              <AlertTriangle className="h-6 w-6 text-orange-500" />
+              Downgrade Your Plan
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              Your current plan will remain active until it expires
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="p-4 rounded-lg bg-gradient-to-br from-orange-500/10 to-transparent border border-orange-500/20">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-lg font-bold">{selectedPlan} Plan</h4>
+                <Badge variant="outline">
+                  {getPlanPrice(selectedPlan)}/month
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                You'll keep your current {profileData.plan} benefits until {profileData.planEndDate ? new Date(profileData.planEndDate).toLocaleDateString() : 'the end of your billing period'}.
+              </p>
+              <ul className="space-y-2">
+                {selectedPlan === 'BASIC' && (
+                  <>
+                    <li className="flex items-center gap-2 text-sm">
+                      <X className="h-4 w-4 text-red-500" />
+                      <span className="line-through">Historical data access</span>
+                    </li>
+                    <li className="flex items-center gap-2 text-sm">
+                      <X className="h-4 w-4 text-red-500" />
+                      <span className="line-through">Priority support</span>
+                    </li>
+                  </>
+                )}
+                {selectedPlan === 'PRO' && (
+                  <>
+                    <li className="flex items-center gap-2 text-sm">
+                      <X className="h-4 w-4 text-red-500" />
+                      <span className="line-through">Unlimited tokens (5,000/month instead)</span>
+                    </li>
+                    <li className="flex items-center gap-2 text-sm">
+                      <X className="h-4 w-4 text-red-500" />
+                      <span className="line-through">API access</span>
+                    </li>
+                  </>
+                )}
+              </ul>
+            </div>
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+              <AlertCircle className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-muted-foreground">
+                After your current plan expires, you'll be switched to the {selectedPlan} plan. You can cancel this downgrade anytime before it takes effect.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDowngradeDialog(false)} disabled={isChangingPlan}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={confirmDowngrade} 
+              disabled={isChangingPlan}
+            >
+              {isChangingPlan ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</>
+              ) : (
+                <>Confirm Downgrade</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
 
 
