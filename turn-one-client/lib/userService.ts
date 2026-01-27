@@ -119,4 +119,24 @@ export const consumeTokens = async (token: string, amount: number) => {
   });
 }
 
+// Plan Management API functions
+export const upgradePlan = async (token: string, newPlan: string) => {
+  return fetchWithAuth('subscription/upgrade', token, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(newPlan),
+  });
+}
+
+export const downgradePlan = async (token: string, newPlan: string) => {
+  return fetchWithAuth('subscription/downgrade', token, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(newPlan),
+  });
+}
 

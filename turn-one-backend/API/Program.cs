@@ -208,6 +208,8 @@ builder.Services.AddScoped<IEmailService, EmailService>(sp =>
 builder.Services.AddSingleton<F1LiveTimingService>();
 builder.Services.AddSingleton<F1WebSocketService>();
 
+// Add background services
+builder.Services.AddHostedService<TokenRefillBackgroundService>();
 
 // Add HttpClient for F1 API proxy
 builder.Services.AddHttpClient();
