@@ -57,8 +57,10 @@ public class SubscriptionService : ISubscriptionService
         var user = await GetUserOrThrowAsync(userId);
 
         var daysSinceLastRefill = (DateTime.UtcNow - user.LastTokenRefillDate).Days;
-        if (daysSinceLastRefill < GetRefillPeriod(user.Plan))
-            throw new InvalidOperationException("Too soon for token refill");
+        var refillPeriod = GetRefillPeriod(user.Plan);
+        
+        if (daysSinceLastRefill < refillPeriod)
+            throw new InvalidOperationException($"Too soon for token refill. Last refill was {daysSinceLastRefill} days ago, next refill in {refillPeriod - daysSinceLastRefill} days");
 
         user.Tokens += GetMonthlyTokens(user.Plan);
         user.LastTokenRefillDate = DateTime.UtcNow;

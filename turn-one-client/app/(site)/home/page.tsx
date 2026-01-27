@@ -7,6 +7,7 @@ import { BarChart3, Zap, Users, Trophy, TrendingUp, Clock, Rocket, ArrowRight, C
 import { MainNav } from "@/components/navigation/main-nav"
 import Link from "next/link"
 import { ScrollAnimation } from "@/components/animation/scroll-animation"
+import { NumberOneOutline } from "@/components/animation/hero-particles"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Loading } from "@/components/ui/loading"
@@ -46,15 +47,14 @@ export default function HomePage() {
       <MainNav variant="homepage" />
       
       {/* Hero Section */}
-      <section className="min-h-220 overflow-hidden modern-gradient pt-16">
+      <section className="min-h-220 overflow-hidden bg-black pt-16 relative">
         <div 
-          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-500 ${isImageLoaded ? 'opacity-60' : 'opacity-0'}`} 
+          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-500 ${isImageLoaded ? 'opacity-80' : 'opacity-0'}`} 
           style={{ backgroundImage: `url(${backgroundImage})` }}
+          
         />
-        {/* <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 animate-pulse" /> */}
-        {/* <div
-          className="absolute inset-0 bg-gradient-to-tr from-transparent via-primary/3 to-transparent animate-pulse"
-        /> */}
+        {/* <NumberOneOutline /> */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
         <div className="relative container mx-auto px-4 py-24 lg:py-32">
           <div className="max-w-4xl mx-auto text-center">
             {/* <Badge
@@ -81,21 +81,24 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
                   size="lg"
-                  className="text-lg px-8 py-6 glow-effect hover:scale-105 transition-all duration-300"
+                  className="text-lg px-8 py-6 glow-effect group relative overflow-hidden"
                   asChild
                 >
                   <Link href="/dashboard">
-                    <BarChart3 className="mr-2 h-5 w-5" />
+                    <BarChart3 className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
                     Start Analysis
                   </Link>
                 </Button>
                 <Button
                   variant="outline"
                   size="lg"
-                  className="text-lg px-8 py-6 bg-transparent accent-glow hover:scale-105 transition-all duration-300"
+                  className="text-lg px-8 py-6 accent-glow group relative overflow-hidden"
                   asChild
                 >
-                  <Link href="/features">Explore Features</Link>
+                  <Link href="/features">
+                    Explore Features
+                    <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">→</span>
+                  </Link>
                 </Button>
               </div>
             </ScrollAnimation>
@@ -104,13 +107,13 @@ export default function HomePage() {
       </section>
 
       {/* API Launch Announcement - Prominent Section */}
-      <section className="py-16 bg-gradient-to-br from-red-950/20 via-background to-red-950/10 border-y border-red-500/20">
+      <section className="py-16 bg-background border-y border-border">
         <div className="container mx-auto px-4">
           <ScrollAnimation direction="up">
             <div className="max-w-5xl mx-auto">
               <div className="grid lg:grid-cols-2 gap-8 items-center">
                 <div>
-                  <Badge className="mb-4 bg-red-500/10 text-red-500 border-red-500/30 hover:bg-red-500/20">
+                  <Badge className="mb-4 bg-primary/10 text-primary border-primary/30">
                     <Rocket className="w-3 h-3 mr-1" />
                     Coming Q2 2026
                   </Badge>
@@ -125,33 +128,33 @@ export default function HomePage() {
                   <div className="flex flex-col sm:flex-row gap-4">
                     <Button 
                       size="lg" 
-                      className="bg-red-500 hover:bg-red-600 text-white glow-effect hover:scale-105 transition-all duration-300"
+                      className="glow-effect group relative overflow-hidden"
                       asChild
                     >
                       <Link href="/api-launch">
                         Join Wishlist
-                        <ArrowRight className="ml-2 h-5 w-5" />
+                        <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                       </Link>
                     </Button>
                     <Button 
                       size="lg" 
                       variant="outline"
-                      className="border-red-500/30 hover:bg-red-500/10"
+                      className="accent-glow group"
                       asChild
                     >
-                      <Link href="/api-launch">
-                        <Code2 className="mr-2 h-5 w-5" />
+                      <Link href="https://docs.t1f1.com" target="_blank" rel="noopener noreferrer">
+                        <Code2 className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
                         Learn More
                       </Link>
                     </Button>
                   </div>
                 </div>
                 <div className="relative">
-                  <div className="bg-gradient-to-br from-red-500/10 to-background border border-red-500/20 rounded-xl p-8 backdrop-blur-sm">
+                  <div className="bg-card border border-border rounded-xl p-8">
                     <div className="space-y-4">
                       <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                          <Zap className="w-4 h-4 text-red-500" />
+                        <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
+                          <Zap className="w-4 h-4 text-primary" />
                         </div>
                         <div>
                           <h4 className="font-semibold mb-1">Real-Time Data</h4>
@@ -159,8 +162,8 @@ export default function HomePage() {
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                          <Clock className="w-4 h-4 text-red-500" />
+                        <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
+                          <Clock className="w-4 h-4 text-primary" />
                         </div>
                         <div>
                           <h4 className="font-semibold mb-1">Historical Archives</h4>
@@ -168,8 +171,8 @@ export default function HomePage() {
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                          <Code2 className="w-4 h-4 text-red-500" />
+                        <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
+                          <Code2 className="w-4 h-4 text-primary" />
                         </div>
                         <div>
                           <h4 className="font-semibold mb-1">Developer Friendly</h4>
@@ -203,9 +206,9 @@ export default function HomePage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <ScrollAnimation direction="up" delay={0.1}>
-              <Card className="card-hover hover:scale-105 transition-all">
+              <Card className="card-hover bg-card border-border">
                 <CardHeader>
-                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 glow-effect group-hover:scale-110 transition-all">
+                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                     <BarChart3 className="h-6 w-6 text-primary" />
                   </div>
                   <CardTitle>Telemetry Analysis</CardTitle>
@@ -217,10 +220,10 @@ export default function HomePage() {
             </ScrollAnimation>
 
             <ScrollAnimation direction="up" delay={0.2}>
-              <Card className="card-hover hover:scale-105 transition-all">
+              <Card className="card-hover bg-card border-border">
                 <CardHeader>
-                  <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4 accent-glow group-hover:scale-110 transition-all">
-                    <Zap className="h-6 w-6 text-accent" />
+                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                    <Zap className="h-6 w-6 text-primary" />
                   </div>
                   <CardTitle>Real-Time Insights</CardTitle>
                   <CardDescription>
@@ -231,9 +234,9 @@ export default function HomePage() {
             </ScrollAnimation>
 
             <ScrollAnimation direction="up" delay={0.3}>
-              <Card className="card-hover hover:scale-105 transition-all">
+              <Card className="card-hover bg-card border-border">
                 <CardHeader>
-                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 glow-effect group-hover:scale-110 transition-all">
+                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                     <TrendingUp className="h-6 w-6 text-primary" />
                   </div>
                   <CardTitle>Performance Trends</CardTitle>
@@ -245,10 +248,10 @@ export default function HomePage() {
             </ScrollAnimation>
 
             <ScrollAnimation direction="up" delay={0.4}>
-              <Card className="card-hover hover:scale-105 transition-all">
+              <Card className="card-hover bg-card border-border">
                 <CardHeader>
-                  <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4 accent-glow group-hover:scale-110 transition-all">
-                    <Trophy className="h-6 w-6 text-accent" />
+                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                    <Trophy className="h-6 w-6 text-primary" />
                   </div>
                   <CardTitle>Championship Analytics</CardTitle>
                   <CardDescription>
@@ -259,9 +262,9 @@ export default function HomePage() {
             </ScrollAnimation>
 
             <ScrollAnimation direction="up" delay={0.5}>
-              <Card className="card-hover hover:scale-105 transition-all">
+              <Card className="card-hover bg-card border-border">
                 <CardHeader>
-                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 glow-effect group-hover:scale-110 transition-all">
+                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                     <Clock className="h-6 w-6 text-primary" />
                   </div>
                   <CardTitle>Historical Data</CardTitle>
@@ -273,10 +276,10 @@ export default function HomePage() {
             </ScrollAnimation>
 
             <ScrollAnimation direction="up" delay={0.6}>
-              <Card className="card-hover hover:scale-105 transition-all">
+              <Card className="card-hover bg-card border-border">
                 <CardHeader>
-                  <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4 accent-glow group-hover:scale-110 transition-all">
-                    <Users className="h-6 w-6 text-accent" />
+                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                    <Users className="h-6 w-6 text-primary" />
                   </div>
                   <CardTitle>Team Collaboration</CardTitle>
                   <CardDescription>
@@ -295,10 +298,10 @@ export default function HomePage() {
           <div className="max-w-4xl mx-auto">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <ScrollAnimation direction="left">
-                <Badge variant="outline" className="mb-4 accent-glow">
+                <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
                   About Turn One
                 </Badge>
-                <h2 className="text-3xl md:text-4xl font-bold mb-6 gradient-text">
+                <h2 className="text-3xl md:text-4xl font-bold mb-6">
                   Motorsport Intelligence Specialists
                 </h2>
                 <p className="text-lg text-muted-foreground mb-6 text-pretty">
@@ -312,14 +315,17 @@ export default function HomePage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="glow-effect bg-transparent hover:scale-105 transition-all duration-300"
+                  className="accent-glow group"
                   asChild
                 >
-                  <Link href="/about">Discover Our Story</Link>
+                  <Link href="/about">
+                    Discover Our Story
+                    <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">→</span>
+                  </Link>
                 </Button>
               </ScrollAnimation>
               <ScrollAnimation direction="right" delay={0.2}>
-                <div className="aspect-square modern-gradient rounded-2xl flex items-center justify-center p-4 glow-effect hover:scale-105 transition-all duration-500">
+                <div className="aspect-square bg-card border border-border rounded-2xl flex items-center justify-center p-4">
                   <div className="relative w-full h-full">
                     <img
                       src="/sample-image.png"
@@ -335,7 +341,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-ring text-primary-foreground glow-effect">
+      <section className="py-24 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 text-center">
           <ScrollAnimation direction="up">
             <div className="max-w-3xl mx-auto">
@@ -348,18 +354,24 @@ export default function HomePage() {
                 <Button
                   size="lg"
                   variant="secondary"
-                  className="text-lg px-8 py-6 accent-glow hover:scale-105 transition-all duration-300"
+                  className="text-lg h-14 px-8 bg-white text-primary hover:bg-white/90 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl group"
                   asChild
                 >
-                  <Link href="/dashboard">Start Analysis</Link>
+                  <Link href="/dashboard">
+                    <BarChart3 className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+                    Start Analysis
+                  </Link>
                 </Button>
                 <Button
                   size="lg"
-                  variant="outline"
-                  className="text-lg px-8 py-6 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary bg-transparent hover:scale-105 transition-all duration-300"
+                  variant="secondary"
+                  className="text-lg h-14 px-8 bg-white text-primary hover:bg-white hover:text-primary transition-all duration-300 hover:scale-105 group"
                   asChild
                 >
-                  <Link href="/features">View Features</Link>
+                  <Link href="/features">
+                    View Features
+                    <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">→</span>
+                  </Link>
                 </Button>
               </div>
             </div>

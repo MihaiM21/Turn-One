@@ -7,7 +7,7 @@ export function MainFooter() {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="bg-background border-t border-border">
+    <footer className="bg-card border-t border-border">
       {/* Main Footer Content */}
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -15,12 +15,12 @@ export function MainFooter() {
           <div className="space-y-4">
             <Link href="/" className="flex items-center space-x-3 group">
               <div className="relative">
-                <div className="w-10 h-10 flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+                <div className="w-10 h-10 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
                   <img src="logo.png" alt="Logo Turn One" />
                 </div>
               </div>
               <div className="flex flex-col">
-                <span className="text-foreground font-bold text-xl gradient-text">Turn One</span>
+                <span className="text-foreground font-bold text-xl text-primary">Turn One</span>
                 <span className="text-xs text-muted-foreground font-medium tracking-wider">F1 TELEMETRY</span>
               </div>
             </Link>
@@ -29,17 +29,17 @@ export function MainFooter() {
               professionals.
             </p>
             <div className="flex space-x-3">
-              <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors">
+              <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors duration-200">
                 <Link href="https://twitter.com/turnoneofficial" target="_blank" rel="noopener noreferrer">
                   <Twitter className="h-4 w-4"  />
                 </Link>
               </Button>
-              <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors">
+              <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors duration-200">
                 <Link href="https://www.instagram.com/turnoneofficial/" target="_blank" rel="noopener noreferrer">
                   <Instagram className="h-4 w-4"  />
                 </Link>
               </Button>
-              <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors">
+              <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors duration-200">
                 <Link href="https://www.youtube.com/channel/UCg-DYx-XQUFeEol-IHmCi_Q/" target="_blank" rel="noopener noreferrer">
                   <Youtube className="h-4 w-4" />
                 </Link>
@@ -60,7 +60,7 @@ export function MainFooter() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="block text-muted-foreground hover:text-primary transition-colors text-sm py-1"
+                  className="block text-muted-foreground hover:text-primary transition-colors duration-200 text-sm py-1"
                 >
                   {link.label}
                 </Link>
@@ -81,7 +81,7 @@ export function MainFooter() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="block text-muted-foreground hover:text-primary transition-colors text-sm py-1"
+                  className="block text-muted-foreground hover:text-primary transition-colors duration-200 text-sm py-1"
                 >
                   {link.label}
                 </Link>
@@ -106,7 +106,7 @@ export function MainFooter() {
                 <span className="text-muted-foreground">At the racetrack</span>
               </div>
             </div>
-            <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground glow-effect">
+            <Button asChild className="w-full bg-primary hover:bg-primary/90 text-white">
               <Link href="/dashboard">
                 <BarChart3 className="h-4 w-4 mr-2" />
                 Start Analysis
@@ -117,7 +117,7 @@ export function MainFooter() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-border bg-muted/30">
+      <div className="border-t border-border bg-black/50">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
@@ -126,13 +126,13 @@ export function MainFooter() {
               <VersionDisplay className="text-sm text-muted-foreground/70" />
             </div>
             <div className="flex space-x-6 text-sm">
-              <Link href="/privacy" className="text-muted-foreground hover:text-primary transition-colors">
+              <Link href="/privacy" className="text-muted-foreground hover:text-primary transition-colors duration-200">
                 Privacy Policy
               </Link>
-              <Link href="/terms" className="text-muted-foreground hover:text-primary transition-colors">
+              <Link href="/terms" className="text-muted-foreground hover:text-primary transition-colors duration-200">
                 Terms of Service
               </Link>
-              <Link href="/cookies" className="text-muted-foreground hover:text-primary transition-colors">
+              <Link href="/cookies" className="text-muted-foreground hover:text-primary transition-colors duration-200">
                 Cookie Policy
               </Link>
             </div>

@@ -127,76 +127,76 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated to dark theme as default with modern F1 colors */
-  --background: oklch(0.145 0 0); /* Dark background #1f1f1f */
-  --foreground: oklch(0.985 0 0); /* White text */
-  --card: oklch(0.205 0 0); /* Slightly lighter dark for cards */
-  --card-foreground: oklch(0.985 0 0); /* White text on cards */
-  --popover: oklch(0.145 0 0); /* Dark popover background */
-  --popover-foreground: oklch(0.985 0 0); /* White popover text */
-  --primary: oklch(0.577 0.245 27.325); /* F1 Red #dc2626 */
-  --primary-foreground: oklch(0.985 0 0); /* White text on primary */
-  --secondary: oklch(0.269 0 0); /* Dark secondary */
-  --secondary-foreground: oklch(0.985 0 0); /* White text on secondary */
-  --muted: oklch(0.205 0 0); /* Muted dark background */
-  --muted-foreground: oklch(0.708 0 0); /* Muted text */
-  --accent: oklch(0.625 0.257 27.325); /* Bright Red #FC3029 for accents */
-  --accent-foreground: oklch(0.985 0 0); /* White text on accent */
-  --destructive: oklch(0.577 0.245 27.325); /* Red for destructive actions */
-  --destructive-foreground: oklch(0.985 0 0); /* White text on destructive */
-  --border: oklch(0.269 0 0); /* Dark borders */
-  --input: oklch(0.205 0 0); /* Dark input backgrounds */
-  --ring: oklch(0.577 0.245 27.325 / 0.5); /* Red focus ring with glow */
-  --chart-1: oklch(0.577 0.245 27.325); /* F1 Red for charts */
-  --chart-2: oklch(0.625 0.257 27.325); /* Bright Red #FC3029 for charts */
-  --chart-3: oklch(0.708 0 0); /* Grey for charts */
-  --chart-4: oklch(0.985 0 0); /* White for charts */
-  --chart-5: oklch(0.269 0 0); /* Dark grey for charts */
-  --radius: 0.75rem; /* Slightly more rounded for modern look */
-  --sidebar: oklch(0.145 0 0); /* Dark sidebar */
-  --sidebar-foreground: oklch(0.985 0 0); /* White sidebar text */
-  --sidebar-primary: oklch(0.577 0.245 27.325); /* Red primary in sidebar */
-  --sidebar-primary-foreground: oklch(0.985 0 0); /* White text on sidebar primary */
-  --sidebar-accent: oklch(0.625 0.257 27.325); /* Bright red accent in sidebar */
-  --sidebar-accent-foreground: oklch(0.985 0 0); /* White text on sidebar accent */
-  --sidebar-border: oklch(0.269 0 0); /* Dark sidebar borders */
-  --sidebar-ring: oklch(0.577 0.245 27.325 / 0.5); /* Red focus ring in sidebar */
+  /* Modern minimalist theme - Black, White, Grey with Red accent */
+  --background: oklch(0.08 0 0); /* Pure black background #0a0a0a */
+  --foreground: oklch(0.98 0 0); /* Pure white text #fafafa */
+  --card: oklch(0.12 0 0); /* Very dark grey for cards #1a1a1a */
+  --card-foreground: oklch(0.98 0 0); /* White text on cards */
+  --popover: oklch(0.12 0 0); /* Dark grey popover */
+  --popover-foreground: oklch(0.98 0 0); /* White popover text */
+  --primary: oklch(0.55 0.22 25); /* Pure red accent #e11d48 */
+  --primary-foreground: oklch(1 0 0); /* Pure white on red */
+  --secondary: oklch(0.15 0 0); /* Dark grey secondary #212121 */
+  --secondary-foreground: oklch(0.98 0 0); /* White text on secondary */
+  --muted: oklch(0.18 0 0); /* Muted dark grey #262626 */
+  --muted-foreground: oklch(0.62 0 0); /* Light grey text #9ca3af */
+  --accent: oklch(0.55 0.22 25); /* Red accent #e11d48 */
+  --accent-foreground: oklch(1 0 0); /* White on accent */
+  --destructive: oklch(0.55 0.22 25); /* Red for destructive */
+  --destructive-foreground: oklch(1 0 0); /* White on destructive */
+  --border: oklch(0.22 0 0); /* Subtle grey border #333333 */
+  --input: oklch(0.15 0 0); /* Dark input background #212121 */
+  --ring: oklch(0.55 0.22 25 / 0.5); /* Red focus ring */
+  --chart-1: oklch(0.55 0.22 25); /* Red */
+  --chart-2: oklch(0.70 0 0); /* Light grey */
+  --chart-3: oklch(0.50 0 0); /* Medium grey */
+  --chart-4: oklch(0.98 0 0); /* White */
+  --chart-5: oklch(0.30 0 0); /* Dark grey */
+  --radius: 0.5rem; /* Subtle rounded corners for modern look */
+  --sidebar: oklch(0.08 0 0); /* Black sidebar */
+  --sidebar-foreground: oklch(0.98 0 0); /* White sidebar text */
+  --sidebar-primary: oklch(0.55 0.22 25); /* Red in sidebar */
+  --sidebar-primary-foreground: oklch(1 0 0); /* White on red */
+  --sidebar-accent: oklch(0.55 0.22 25); /* Red accent in sidebar */
+  --sidebar-accent-foreground: oklch(1 0 0); /* White on red */
+  --sidebar-border: oklch(0.22 0 0); /* Grey sidebar border */
+  --sidebar-ring: oklch(0.55 0.22 25 / 0.5); /* Red focus ring */
 }
 
 .dark {
   /* Keep same values for explicit dark mode */
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.577 0.245 27.325);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.205 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.625 0.257 27.325);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.205 0 0);
-  --ring: oklch(0.577 0.245 27.325 / 0.5);
-  --chart-1: oklch(0.577 0.245 27.325);
-  --chart-2: oklch(0.625 0.257 27.325);
-  --chart-3: oklch(0.708 0 0);
-  --chart-4: oklch(0.985 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.145 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.577 0.245 27.325);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.625 0.257 27.325);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.577 0.245 27.325 / 0.5);
+  --background: oklch(0.08 0 0);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.12 0 0);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.12 0 0);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.55 0.22 25);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.15 0 0);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.18 0 0);
+  --muted-foreground: oklch(0.62 0 0);
+  --accent: oklch(0.55 0.22 25);
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.22 0 0);
+  --input: oklch(0.15 0 0);
+  --ring: oklch(0.55 0.22 25 / 0.5);
+  --chart-1: oklch(0.55 0.22 25);
+  --chart-2: oklch(0.70 0 0);
+  --chart-3: oklch(0.50 0 0);
+  --chart-4: oklch(0.98 0 0);
+  --chart-5: oklch(0.30 0 0);
+  --sidebar: oklch(0.08 0 0);
+  --sidebar-foreground: oklch(0.98 0 0);
+  --sidebar-primary: oklch(0.55 0.22 25);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.55 0.22 25);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(0.22 0 0);
+  --sidebar-ring: oklch(0.55 0.22 25 / 0.5);
 }
 
 @theme inline {
@@ -248,48 +248,96 @@
     @apply bg-background text-foreground;
   }
 
-  /* Refined glowing effects to be more subtle */
-  .glow-effect {
-    box-shadow: 0 0 15px rgba(220, 38, 38, 0.2);
-    transition: box-shadow 0.3s ease;
+  /* Subtle, modern glowing effects - scoped to site pages */
+  .site-pages .glow-effect {
+    position: relative;
+    background: linear-gradient(135deg, #e11d48 0%, #dc2626 100%);
+    box-shadow: 0 4px 15px rgba(225, 29, 72, 0.25), 0 2px 6px rgba(0, 0, 0, 0.3);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
   }
 
-  .glow-effect:hover {
-    box-shadow: 0 0 25px rgba(220, 38, 38, 0.4);
+  .site-pages .glow-effect::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s;
   }
 
-  .accent-glow {
-    box-shadow: 0 0 15px rgba(252, 48, 41, 0.2);
-    transition: box-shadow 0.3s ease;
+  .site-pages .glow-effect:hover::before {
+    left: 100%;
   }
 
-  .accent-glow:hover {
-    box-shadow: 0 0 25px rgba(252, 48, 41, 0.4);
+  .site-pages .glow-effect:hover {
+    box-shadow: 0 8px 30px rgba(225, 29, 72, 0.4), 0 4px 12px rgba(0, 0, 0, 0.4);
+    transform: translateY(-2px);
   }
 
-  /* Made gradient text more subtle and selective */
+  .site-pages .glow-effect:active {
+    transform: translateY(0px);
+    box-shadow: 0 2px 10px rgba(225, 29, 72, 0.3), 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .site-pages .accent-glow {
+    position: relative;
+    border: 2px solid rgba(225, 29, 72, 0.5);
+    background: rgba(225, 29, 72, 0.05);
+    backdrop-filter: blur(10px);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+  }
+
+  .site-pages .accent-glow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(225, 29, 72, 0.1) 0%, transparent 50%, rgba(225, 29, 72, 0.1) 100%);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+
+  .site-pages .accent-glow:hover::before {
+    opacity: 1;
+  }
+
+  .site-pages .accent-glow:hover {
+    border-color: rgba(225, 29, 72, 0.8);
+    background: rgba(225, 29, 72, 0.1);
+    box-shadow: 0 4px 20px rgba(225, 29, 72, 0.2), 0 0 40px rgba(225, 29, 72, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .site-pages .accent-glow:active {
+    transform: translateY(0px);
+  }
+
+  /* Minimalist gradient text */
   .gradient-text {
-    background: linear-gradient(135deg, #dc2626, #fc3029);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-weight: 600;
+    color: oklch(0.55 0.22 25);
+    font-weight: 700;
   }
 
-  /* Reduced gradient background opacity for subtlety */
+  /* Very subtle background gradient */
   .modern-gradient {
-    background: linear-gradient(135deg, rgba(220, 38, 38, 0.05), rgba(252, 48, 41, 0.05));
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(225, 29, 72, 0.02) 50%, rgba(0, 0, 0, 0.95));
   }
 
-  .card-hover {
-    transition: all 0.3s ease;
-    border: 1px solid rgba(220, 38, 38, 0.1);
+  .site-pages .card-hover {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(51, 51, 51, 0.5);
+    background: linear-gradient(145deg, rgba(18, 18, 18, 0.9), rgba(10, 10, 10, 0.95));
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   }
 
-  .card-hover:hover {
+  .site-pages .card-hover:hover {
     transform: translateY(-4px);
-    border-color: rgba(220, 38, 38, 0.3);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    border-color: rgba(225, 29, 72, 0.4);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(225, 29, 72, 0.1);
+    background: linear-gradient(145deg, rgba(20, 20, 20, 0.95), rgba(12, 12, 12, 1));
   }
   
   /* Hide scrollbar for Chrome, Safari and Opera */

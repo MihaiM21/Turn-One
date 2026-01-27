@@ -12,18 +12,19 @@ export default function AboutPage() {
       <MainNav />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden modern-gradient pt-24 pb-16">
-        <div className="absolute inset-0 bg-[url('/turn-one-car/2026-turn-one-car/0002.webp')] bg-cover bg-center opacity-40" />
+      <section className="relative overflow-hidden bg-black pt-24 pb-16">
+        <div className="absolute inset-0 bg-[url('/turn-one-car/2026-turn-one-car/0002.webp')] bg-cover bg-center opacity-20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
         <div className="relative container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <ScrollAnimation direction="up">
-              <Badge variant="secondary" className="mb-6 text-sm font-medium accent-glow">
+              <Badge variant="outline" className="mb-6 text-sm font-medium border-primary/50 text-primary">
                 About Turn One
               </Badge>
             </ScrollAnimation>
             <ScrollAnimation direction="up" delay={0.2}>
               <h1 className="text-4xl md:text-6xl font-bold text-balance mb-6">
-                <span className="gradient-text">Motorsport Intelligence</span>
+                <span className="text-primary">Motorsport Intelligence</span>
                 <span className="block mt-2">Specialists</span>
               </h1>
             </ScrollAnimation>
@@ -45,7 +46,7 @@ export default function AboutPage() {
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div>
                 <ScrollAnimation direction="right" delay={0.2}>
-                  <h2 className="text-3xl md:text-4xl font-bold mb-6 gradient-text">Our Mission</h2>
+                  <h2 className="text-3xl md:text-4xl font-bold mb-6 text-primary">Our Mission</h2>
                 </ScrollAnimation>
                 <ScrollAnimation direction="right" delay={0.3}>
                   <p className="text-lg text-muted-foreground mb-6 text-pretty">
@@ -61,31 +62,31 @@ export default function AboutPage() {
                   </p>
                 </ScrollAnimation>
                 <div className="flex flex-wrap gap-4">
-                  <Badge variant="outline" className="accent-glow">
+                  <Badge variant="outline" className="border-primary/50 text-primary">
                     Data-Driven
                   </Badge>
-                  <Badge variant="outline" className="glow-effect">
+                  <Badge variant="outline" className="border-primary/50 text-primary">
                     Professional Grade
                   </Badge>
-                  <Badge variant="outline" className="accent-glow">
+                  <Badge variant="outline" className="border-primary/50 text-primary">
                     Innovation First
                   </Badge>
                 </div>
               </div>
               <ScrollAnimation direction="left" delay={0.6}>
                 <div className="relative">
-                  <div className="aspect-square modern-gradient rounded-2xl p-8 glow-effect">
+                  <div className="aspect-square bg-card border border-border rounded-2xl p-8">
                     <div className="grid grid-cols-2 gap-4 h-full">
-                      <div className="bg-primary/10 rounded-xl flex items-center justify-center card-hover">
+                      <div className="bg-primary/20 rounded-xl flex items-center justify-center card-hover">
                         <BarChart3 className="h-12 w-12 text-primary" />
                       </div>
-                      <div className="bg-accent/10 rounded-xl flex items-center justify-center card-hover">
-                        <Zap className="h-12 w-12 text-accent" />
+                      <div className="bg-primary/20 rounded-xl flex items-center justify-center card-hover">
+                        <Zap className="h-12 w-12 text-primary" />
                       </div>
-                      <div className="bg-accent/10 rounded-xl flex items-center justify-center card-hover">
-                        <Trophy className="h-12 w-12 text-accent" />
+                      <div className="bg-primary/20 rounded-xl flex items-center justify-center card-hover">
+                        <Trophy className="h-12 w-12 text-primary" />
                       </div>
-                      <div className="bg-primary/10 rounded-xl flex items-center justify-center card-hover">
+                      <div className="bg-primary/20 rounded-xl flex items-center justify-center card-hover">
                         <Target className="h-12 w-12 text-primary" />
                       </div>
                     </div>
@@ -98,11 +99,11 @@ export default function AboutPage() {
       </section>
 
       {/* Timeline Section */}
-      <section className="py-24 modern-gradient">
+      <section className="py-24 bg-card">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center mb-16">
             <ScrollAnimation direction="up">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4 gradient-text">Our Journey</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-primary">Our Journey</h2>
             </ScrollAnimation>
             <ScrollAnimation direction="up" delay={0.2}>
               <p className="text-xl text-muted-foreground text-pretty">
@@ -114,9 +115,9 @@ export default function AboutPage() {
           <div className="max-w-4xl mx-auto">
             <div className="space-y-8">
               <ScrollAnimation direction="right" >
-                <Card className="card-hover">
+                <Card className="card-hover bg-background border-border">
                   <CardHeader className="flex flex-row items-center gap-4">
-                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center glow-effect">
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl flex items-center justify-center transition-transform hover:scale-110">
                       <span className="text-primary font-bold text-lg">2023</span>
                     </div>
                     
@@ -133,10 +134,10 @@ export default function AboutPage() {
               </ScrollAnimation>
 
               <ScrollAnimation direction="right" >
-                <Card className="card-hover">
+                <Card className="card-hover bg-background border-border">
                   <CardHeader className="flex flex-row items-center gap-4">
-                    <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center accent-glow">
-                      <span className="text-accent font-bold text-lg">2024</span>
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl flex items-center justify-center transition-transform hover:scale-110">
+                      <span className="text-primary font-bold text-lg">2024</span>
                     </div>
                     <div className="flex-1">
                       <CardTitle className="text-xl mb-2">First Platform Launch</CardTitle>
@@ -150,9 +151,9 @@ export default function AboutPage() {
               </ScrollAnimation>
 
               <ScrollAnimation direction="right" >
-                <Card className="card-hover">
+                <Card className="card-hover bg-background border-border">
                   <CardHeader className="flex flex-row items-center gap-4">
-                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center glow-effect">
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl flex items-center justify-center transition-transform hover:scale-110">
                       <span className="text-primary font-bold text-lg">2025</span>
                     </div>
                     <div className="flex-1">
@@ -169,13 +170,13 @@ export default function AboutPage() {
               </ScrollAnimation>
 
               <ScrollAnimation direction="right">
-                <Card className="card-hover border-primary/40">
+                <Card className="card-hover bg-background border-primary/50 shadow-[0_0_20px_rgba(225,29,72,0.2)]">
                   <CardHeader className="flex flex-row items-center gap-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center glow-effect">
-                      <span className="gradient-text font-bold text-lg">2026</span>
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary/30 to-primary/10 rounded-2xl flex items-center justify-center transition-transform hover:scale-110">
+                      <span className="text-primary font-bold text-lg">2026</span>
                     </div>
                     <div className="flex-1">
-                      <CardTitle className="text-xl mb-2 gradient-text">Next Generation Platform</CardTitle>
+                      <CardTitle className="text-xl mb-2 text-primary">Next Generation Platform</CardTitle>
                       <CardDescription className="text-base">
                         Launching our most advanced platform yet, featuring real-time telemetry streaming, advanced AI
                         insights, and collaborative team tools.
@@ -195,7 +196,7 @@ export default function AboutPage() {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
               <ScrollAnimation direction="up">
-                <h2 className="text-3xl md:text-4xl font-bold mb-4 gradient-text">Our Values</h2>
+                <h2 className="text-3xl md:text-4xl font-bold mb-4 text-primary">Our Values</h2>
               </ScrollAnimation>
               <ScrollAnimation direction="up" delay={0.2}>
                 <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
@@ -207,12 +208,12 @@ export default function AboutPage() {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               <ScrollAnimation direction="up">
-                <Card className="card-hover">
+                <Card className="card-hover bg-card border-border group">
                   <CardHeader className="text-center">
-                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 glow-effect">
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl flex items-center justify-center mx-auto mb-4 transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(225,29,72,0.2)]">
                       <Target className="h-8 w-8 text-primary" />
                     </div>
-                    <CardTitle>Precision</CardTitle>
+                    <CardTitle className="group-hover:text-primary transition-colors">Precision</CardTitle>
                     <CardDescription>
                       Every millisecond matters in F1. We deliver analysis with the precision that champions demand.
                     </CardDescription>
@@ -221,12 +222,12 @@ export default function AboutPage() {
               </ScrollAnimation>
               
               <ScrollAnimation direction="up" delay={0.2}>
-                <Card className="card-hover">
+                <Card className="card-hover bg-card border-border group">
                   <CardHeader className="text-center">
-                    <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4 accent-glow">
-                      <Zap className="h-8 w-8 text-accent" />
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl flex items-center justify-center mx-auto mb-4 transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(225,29,72,0.2)]">
+                      <Zap className="h-8 w-8 text-primary" />
                     </div>
-                    <CardTitle>Innovation</CardTitle>
+                    <CardTitle className="group-hover:text-primary transition-colors">Innovation</CardTitle>
                     <CardDescription>
                       Constantly pushing the boundaries of what&apos;s possible in motorsport data analysis and visualization.
                     </CardDescription>
@@ -235,9 +236,9 @@ export default function AboutPage() {
               </ScrollAnimation>
               
               <ScrollAnimation direction="up" delay={0.4}>
-                <Card className="card-hover">
+                <Card className="card-hover bg-card border-border group">
                   <CardHeader className="text-center">
-                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 glow-effect">
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl flex items-center justify-center mx-auto mb-4 transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(225,29,72,0.2)]">
                       <Users className="h-8 w-8 text-primary" />
                     </div>
                     <CardTitle>Community</CardTitle>
@@ -254,7 +255,7 @@ export default function AboutPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-ring text-primary-foreground glow-effect">
+      <section className="py-24 bg-primary text-white">
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-3xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-balance">Join Our Journey</h2>
@@ -262,17 +263,28 @@ export default function AboutPage() {
               Be part of the next chapter in Formula One intelligence. Experience the future of motorsport analysis.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" variant="secondary" className="text-lg px-8 py-6 accent-glow" asChild>
-                <Link href="/dashboard">Start Your Analysis</Link>
-              </Button>
               <Button
-                size="lg"
-                variant="outline"
-                className="text-lg px-8 py-6 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary bg-transparent"
-                asChild
-              >
-                <Link href="/services">Explore Platform</Link>
-              </Button>
+                  size="lg"
+                  variant="secondary"
+                  className="text-lg h-14 px-8 bg-white text-primary hover:bg-white/90 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl group"
+                  asChild
+                >
+                  <Link href="/dashboard">
+                    <BarChart3 className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+                    Start Analysis
+                  </Link>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="text-lg h-14 px-8 bg-white text-primary hover:bg-white hover:text-primary transition-all duration-300 hover:scale-105 group"
+                  asChild
+                >
+                  <Link href="/features">
+                    View Features
+                    <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">→</span>
+                  </Link>
+                </Button>
             </div>
           </div>
         </div>
