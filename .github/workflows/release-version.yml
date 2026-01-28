@@ -19,7 +19,7 @@ on:
 
 jobs:
   release:
-    name: 🚀 Create Release
+    name: Create Release
     runs-on: ubuntu-latest
     permissions:
       contents: write
