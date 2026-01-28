@@ -63,10 +63,10 @@ jobs:
           
           # Run version update based on bump type
           if [ "${{ inputs.bump_type }}" = "auto" ] || [ "${{ inputs.bump_type }}" = "" ]; then
-            echo "🔍 Running automatic version detection..."
+            echo "Running automatic version detection..."
             ./scripts/update-version-auto.sh $ARGS
           else
-            echo "📝 Manual bump type: ${{ inputs.bump_type }}"
+            echo "Manual bump type: ${{ inputs.bump_type }}"
             # For manual bump, use the old script
             chmod +x scripts/update-version.sh
             ./scripts/update-version.sh ${{ inputs.bump_type }} "" "" "Manual release"
@@ -115,7 +115,7 @@ jobs:
       
       - name: Summary
         run: |
-          echo "### 🎉 Release Created Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "### Release Created Successfully!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** ${{ steps.current_version.outputs.version }} → ${{ steps.version_update.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
           echo "**Tag:** v${{ steps.version_update.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
