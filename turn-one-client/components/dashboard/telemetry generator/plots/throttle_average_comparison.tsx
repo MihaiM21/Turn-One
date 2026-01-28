@@ -1,15 +1,26 @@
 'use client';
 
-import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts'
-import { ThrottleAverageData } from '@/types/plot-types'
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList, Legend } from 'recharts'
+import { ThrottleAverageData, AdvancedPlotSettings } from '@/types/plot-types'
 
 interface ThrottleAverageGraphProps {
   data: ThrottleAverageData[]
   throttleDomain?: [number, number]
   height?: number
+  advancedSettings?: AdvancedPlotSettings
 }
 
-export function ThrottleAverageGraph({ data, throttleDomain, height = 700 }: ThrottleAverageGraphProps) {
+export function ThrottleAverageGraph({ data, throttleDomain, height = 700, advancedSettings }: ThrottleAverageGraphProps) {
+  // Use advanced settings or defaults
+  const settings = advancedSettings || {
+    showGrid: true,
+    showLegend: true,
+    animateChart: true,
+    chartHeight: 700,
+    lineThickness: 2,
+    showDataLabels: true
+  }
+
   // Don't render if no data
   if (!data || data.length === 0) {
     return (
@@ -20,10 +31,10 @@ export function ThrottleAverageGraph({ data, throttleDomain, height = 700 }: Thr
   }
 
   return (
-    <div style={{ height: `${height}px` }}>
+    <div style={{ height: `${settings.chartHeight}px` }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} layout="vertical" margin={{ right: 60 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
+          {settings.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />}
           <XAxis type="number" domain={throttleDomain} stroke="#9CA3AF" />
           <YAxis 
             dataKey="driver" 
@@ -49,20 +60,23 @@ export function ThrottleAverageGraph({ data, throttleDomain, height = 700 }: Thr
               return <span style={{ color: entry?.color || "#F9FAFB" }}>{label}</span>
             }}
           />
-          <Bar dataKey="throttle" radius={[0, 4, 4, 0]}>
+          {settings.showLegend && <Legend />}
+          <Bar dataKey="throttle" radius={[0, 4, 4, 0]} isAnimationActive={settings.animateChart}>
             {data.map((entry, index) => (
               <Cell key={index} fill={entry.color} />
             ))}
-            <LabelList 
-              dataKey="throttle" 
-              position="right"
-              style={{ 
-                fill: "#F9FAFB", 
-                fontSize: "12px", 
-                fontWeight: "600" 
-              }}
-              formatter={(value: any) => `${Number(value).toFixed(1)}%`}
-            />
+            {settings.showDataLabels && (
+              <LabelList 
+                dataKey="throttle" 
+                position="right"
+                style={{ 
+                  fill: "#F9FAFB", 
+                  fontSize: "12px", 
+                  fontWeight: "600" 
+                }}
+                formatter={(value: any) => `${Number(value).toFixed(1)}%`}
+              />
+            )}
           </Bar>
         </BarChart>
       </ResponsiveContainer>      

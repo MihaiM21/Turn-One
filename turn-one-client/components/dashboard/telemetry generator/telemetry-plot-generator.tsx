@@ -7,9 +7,12 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Switch } from "@/components/ui/switch"
+import { Input } from "@/components/ui/input"
 import { Download, Play, Settings, TrendingUp, Zap, Clock, Gauge, CircleGauge, ChevronsUp, MonitorCog, Users, UserRound, ChartSpline, AlertTriangle, Coins, ChartScatter} from "lucide-react"
 import { fetchTopSpeeds, fetchThrottleAverages, fetchTrackComparison, fetchSessionResults, fetchThrottleBrakeComparison ,fetchLaptimeData } from "@/lib/dataAcquisition"
-import { TopSpeedData, ThrottleAverageData, TrackComparisonData, ThrottleBrakeComparisonData, LapTimeData } from "@/types/plot-types"
+import { TopSpeedData, ThrottleAverageData, TrackComparisonData, ThrottleBrakeComparisonData, LapTimeData, AdvancedPlotSettings } from "@/types/plot-types"
 import { grandPrixCalendar } from "@/lib/constants/grand-prix"
 import { TopSpeedGraph } from "./plots/top-speed"
 import { GForceGraph } from "./plots/gforce"
@@ -83,6 +86,15 @@ export function TelemetryPlotGenerator() {
   const [selectedYear, setSelectedYear] = useState("2025")
   const [selectedGp, setSelectedGp] = useState("1")
   const [isGenerating, setIsGenerating] = useState(false)
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+  
+  // Advanced settings state
+  const [showGrid, setShowGrid] = useState(true)
+  const [showLegend, setShowLegend] = useState(true)
+  const [animateChart, setAnimateChart] = useState(true)
+  const [chartHeight, setChartHeight] = useState("700")
+  const [lineThickness, setLineThickness] = useState("2")
+  const [showDataLabels, setShowDataLabels] = useState(false)
 
   // Token management
   const { isAuthenticated } = useAuth()
@@ -264,34 +276,43 @@ export function TelemetryPlotGenerator() {
   }
 
   const renderPlot = () => {
+    const advancedSettings: AdvancedPlotSettings = {
+      showGrid,
+      showLegend,
+      animateChart,
+      chartHeight: parseInt(chartHeight),
+      lineThickness: parseInt(lineThickness),
+      showDataLabels
+    }
+
     switch (selectedPlotType) {
       case "laptime":
         return (
-          <LapTimeAnalysisGraph lapTimeData={lapTimeData} />
+          <LapTimeAnalysisGraph lapTimeData={lapTimeData} advancedSettings={advancedSettings} />
         )
       case "speed":
         return (
-          <SpeedTraceGraph speedData={speedData} />
+          <SpeedTraceGraph speedData={speedData} advancedSettings={advancedSettings} />
         )
       case "tire":
         return (
-          <TireTempGraph tireTempData={tireData} />
+          <TireTempGraph tireTempData={tireData} advancedSettings={advancedSettings} />
         )
       case "gforce":
         return (
-          <GForceGraph gForceData={gForceData} />
+          <GForceGraph gForceData={gForceData} advancedSettings={advancedSettings} />
         )
       case "topspeeds":
         return (
-          <TopSpeedGraph data={topSpeedsData} speedDomain={speedDomain} />
+          <TopSpeedGraph data={topSpeedsData} speedDomain={speedDomain} advancedSettings={advancedSettings} />
         )
       case "throttle_average":
         return (
-          <ThrottleAverageGraph data={throttleAverageData} throttleDomain={throttleDomain} />
+          <ThrottleAverageGraph data={throttleAverageData} throttleDomain={throttleDomain} advancedSettings={advancedSettings} />
         )
       case "track_comparison":
         return trackComparisonData ? (
-          <TrackComparisonGraph data={trackComparisonData} />
+          <TrackComparisonGraph data={trackComparisonData} advancedSettings={advancedSettings} />
         ) : (
           <div className="flex flex-col items-center justify-center h-[700px] text-muted-foreground space-y-4">
             {isGenerating ? (
@@ -306,11 +327,12 @@ export function TelemetryPlotGenerator() {
           <SessionResultsGraph 
             data={sessionResultsData} 
             deltaDomain={sessionResultsDomain} 
+            advancedSettings={advancedSettings}
           />
         )
       case "throttle_brake":
         return throttleBrakeData ? (
-          <ThrottleBrakeComparisonGraph data={throttleBrakeData} />
+          <ThrottleBrakeComparisonGraph data={throttleBrakeData} advancedSettings={advancedSettings} />
         ) : (
           <div className="flex flex-col items-center justify-center h-[700px] text-muted-foreground space-y-4">
             {isGenerating ? (
@@ -385,7 +407,7 @@ export function TelemetryPlotGenerator() {
                 <TabsTrigger
                   key={type.id}
                   value={type.id}
-                  className="flex flex-col items-center space-y-1 p-3 data-[state=active]:bg-primary data-[state=active]:text-muted transition-all duration-200 hover:bg-primary/30 relative"
+                  className="flex flex-col items-center space-y-1 p-3 m-1 data-[state=active]:bg-primary data-[state=active]:text-muted transition-all duration-200 hover:bg-primary/30 relative"
                 >
                   <IconComponent className="h-4 w-4" />
                   <span className="text-xs font-medium">{type.name}</span>
@@ -549,10 +571,186 @@ export function TelemetryPlotGenerator() {
                 )}
               </Button>
 
-              <Button variant="outline" className="bg-transparent hover:bg-muted/20 transition-all duration-300" onClick={() => alert('Advanced settings coming soon!')}>
-                <Settings className="h-4 w-4 mr-2" />
-                Advanced
-              </Button>
+              <Dialog open={advancedOpen} onOpenChange={setAdvancedOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="bg-transparent hover:bg-muted/20 transition-all duration-300">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Advanced
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle className="gradient-text">Advanced Plot Settings</DialogTitle>
+                    <DialogDescription>
+                      Customize your telemetry plot visualization options
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-6 py-4">
+                    {/* Chart Display Options */}
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-semibold text-foreground">Display Options</h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="show-grid">Show Grid Lines</Label>
+                            <p className="text-xs text-muted-foreground">Display grid lines on the chart</p>
+                          </div>
+                          <Switch
+                            id="show-grid"
+                            checked={showGrid}
+                            onCheckedChange={setShowGrid}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="show-legend">Show Legend</Label>
+                            <p className="text-xs text-muted-foreground">Display chart legend</p>
+                          </div>
+                          <Switch
+                            id="show-legend"
+                            checked={showLegend}
+                            onCheckedChange={setShowLegend}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="show-labels">Show Data Labels</Label>
+                            <p className="text-xs text-muted-foreground">Display values on data points</p>
+                          </div>
+                          <Switch
+                            id="show-labels"
+                            checked={showDataLabels}
+                            onCheckedChange={setShowDataLabels}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="animate">Animate Chart</Label>
+                            <p className="text-xs text-muted-foreground">Enable chart animations</p>
+                          </div>
+                          <Switch
+                            id="animate"
+                            checked={animateChart}
+                            onCheckedChange={setAnimateChart}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Chart Appearance */}
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-semibold text-foreground">Appearance</h4>
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="chart-height">Chart Height (px)</Label>
+                          <Input
+                            id="chart-height"
+                            type="number"
+                            min="400"
+                            max="1000"
+                            value={chartHeight}
+                            onChange={(e) => setChartHeight(e.target.value)}
+                            className="bg-background/50 border-border/50"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="line-thickness">Line Thickness</Label>
+                          <Input
+                            id="line-thickness"
+                            type="number"
+                            min="1"
+                            max="5"
+                            value={lineThickness}
+                            onChange={(e) => setLineThickness(e.target.value)}
+                            className="bg-background/50 border-border/50"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quick Presets */}
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-semibold text-foreground">Quick Presets</h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setShowGrid(true)
+                            setShowLegend(true)
+                            setAnimateChart(true)
+                            setChartHeight("700")
+                            setLineThickness("2")
+                            setShowDataLabels(true)
+                          }}
+                          className="bg-background/50"
+                        >
+                          Default
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setShowGrid(false)
+                            setShowLegend(true)
+                            setAnimateChart(false)
+                            setChartHeight("700")
+                            setLineThickness("3")
+                            setShowDataLabels(false)
+                          }}
+                          className="bg-background/50"
+                        >
+                          Minimal
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setShowGrid(true)
+                            setShowLegend(true)
+                            setAnimateChart(true)
+                            setChartHeight("900")
+                            setLineThickness("2")
+                            setShowDataLabels(true)
+                          }}
+                          className="bg-background/50"
+                        >
+                          Detailed
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setShowGrid(false)
+                            setShowLegend(false)
+                            setAnimateChart(false)
+                            setChartHeight("600")
+                            setLineThickness("2")
+                            setShowDataLabels(false)
+                          }}
+                          className="bg-background/50"
+                        >
+                          Clean
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setAdvancedOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => setAdvancedOpen(false)}
+                      className="bg-primary hover:bg-primary/90"
+                    >
+                      Apply Settings
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
 
               <Button variant="outline" className="bg-transparent hover:bg-muted/20 transition-all duration-300" onClick={() => alert('Coming soon!')}>
                 <Download className="h-4 w-4 mr-2" />
@@ -569,9 +767,9 @@ export function TelemetryPlotGenerator() {
                     <h3 className="text-lg font-semibold text-foreground">{type.name}</h3>
                     <p className="text-sm text-muted-foreground">{type.description}</p>
                   </div>
-                  <Badge variant="outline" className="accent-glow">
+                  {/* <Badge variant="outline" className="accent-glow">
                     {selectedDriver} • {selectedSession}
-                  </Badge>
+                  </Badge> */}
                 </div>
 
                 <div className="bg-background/30 rounded-lg p-4 border border-border/50">{renderPlot()}</div>

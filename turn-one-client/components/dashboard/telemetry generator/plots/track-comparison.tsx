@@ -1,15 +1,29 @@
 'use client';
 
 import React from 'react';
-import { TrackComparisonData } from '@/types/plot-types';
+import { TrackComparisonData, AdvancedPlotSettings } from '@/types/plot-types';
 
 interface TrackComparisonGraphProps {
   data: TrackComparisonData;
   height?: number;
   width?: number;
+  advancedSettings?: AdvancedPlotSettings;
 }
 
-export function TrackComparisonGraph({ data, height = 700, width = 700 }: TrackComparisonGraphProps) {
+export function TrackComparisonGraph({ data, height = 700, width = 700, advancedSettings }: TrackComparisonGraphProps) {
+  // Use advanced settings or defaults
+  const settings = advancedSettings || {
+    showGrid: true,
+    showLegend: true,
+    animateChart: true,
+    chartHeight: 700,
+    lineThickness: 2,
+    showDataLabels: false
+  }
+
+  // Override height from settings
+  height = settings.chartHeight
+  
   // Don't render if no data
   if (!data || !data.telemetry || data.telemetry.length === 0) {
     return (
@@ -60,8 +74,9 @@ export function TrackComparisonGraph({ data, height = 700, width = 700 }: TrackC
   const offsetX = (width - scaledTrackWidth) / 2;
   const offsetY = (height - scaledTrackHeight) / 2;
   
-  // Calculate stroke width based on scale (thicker lines for smaller tracks)
-  const strokeWidth = Math.max(2, Math.min(8, scale * 0.01));
+  // Calculate stroke width based on scale and settings (thicker lines for smaller tracks)
+  const baseStrokeWidth = Math.max(2, Math.min(8, scale * 0.01));
+  const strokeWidth = baseStrokeWidth * settings.lineThickness;
   
   // Create line segments with colors
   const segments = [];

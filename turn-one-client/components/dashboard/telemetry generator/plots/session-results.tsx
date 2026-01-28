@@ -1,15 +1,26 @@
 'use client';
 
-import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts'
-import { SessionResultsData } from '@/types/plot-types'
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList, Legend } from 'recharts'
+import { SessionResultsData, AdvancedPlotSettings } from '@/types/plot-types'
 
 interface SessionResultsGraphProps {
   data: SessionResultsData[]
   deltaDomain?: [number, number]
   height?: number
+  advancedSettings?: AdvancedPlotSettings
 }
 
-export function SessionResultsGraph({ data, deltaDomain, height = 700 }: SessionResultsGraphProps) {
+export function SessionResultsGraph({ data, deltaDomain, height = 700, advancedSettings }: SessionResultsGraphProps) {
+  // Use advanced settings or defaults
+  const settings = advancedSettings || {
+    showGrid: true,
+    showLegend: true,
+    animateChart: true,
+    chartHeight: 700,
+    lineThickness: 2,
+    showDataLabels: true
+  }
+
   // Don't render if no data
   if (!data || data.length === 0) {
     return (
@@ -23,10 +34,10 @@ export function SessionResultsGraph({ data, deltaDomain, height = 700 }: Session
   const sortedData = [...data].sort((a, b) => a.LapTimeDelta - b.LapTimeDelta)
 
   return (
-    <div style={{ height: `${height}px` }}>
+    <div style={{ height: `${settings.chartHeight}px` }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={sortedData} layout="vertical" margin={{ right: 140, left: 20 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
+          {settings.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />}
           <XAxis 
             type="number" 
             domain={deltaDomain || [0, 'dataMax']}
@@ -70,32 +81,37 @@ export function SessionResultsGraph({ data, deltaDomain, height = 700 }: Session
               )
             }}
           />
-          <Bar dataKey="LapTimeDelta" radius={[0, 4, 4, 0]}>
+          {settings.showLegend && <Legend />}
+          <Bar dataKey="LapTimeDelta" radius={[0, 4, 4, 0]} isAnimationActive={settings.animateChart}>
             {sortedData.map((entry, index) => (
               <Cell key={index} fill={entry.Color} />
             ))}
-            <LabelList 
-              dataKey="LapTime" 
-              position="right"
-              offset={10}
-              style={{ 
-                fill: "#F9FAFB", 
-                fontSize: "11px", 
-                fontWeight: "500" 
-              }}
-              formatter={(value: any) => value}
-            />
-            <LabelList 
-              dataKey="LapTimeDelta" 
-              position="right"
-              offset={80}
-              style={{ 
-                fill: "#9CA3AF", 
-                fontSize: "10px", 
-                fontWeight: "400"
-              }}
-              formatter={(value: any) => value === 0 ? "POLE" : `+${Number(value).toFixed(3)}s`}
-            />
+            {settings.showDataLabels && (
+              <>
+                <LabelList 
+                  dataKey="LapTime" 
+                  position="right"
+                  offset={10}
+                  style={{ 
+                    fill: "#F9FAFB", 
+                    fontSize: "11px", 
+                    fontWeight: "500" 
+                  }}
+                  formatter={(value: any) => value}
+                />
+                <LabelList 
+                  dataKey="LapTimeDelta" 
+                  position="right"
+                  offset={80}
+                  style={{ 
+                    fill: "#9CA3AF", 
+                    fontSize: "10px", 
+                    fontWeight: "400"
+                  }}
+                  formatter={(value: any) => value === 0 ? "POLE" : `+${Number(value).toFixed(3)}s`}
+                />
+              </>
+            )}
           </Bar>
         </BarChart>
       </ResponsiveContainer>      

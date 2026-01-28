@@ -1,6 +1,7 @@
 'use client'
 
-import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ScatterChart, Scatter } from 'recharts'
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ScatterChart, Scatter, Legend } from 'recharts'
+import { AdvancedPlotSettings } from '@/types/plot-types'
 
 interface GForceData {
   time: number;
@@ -8,11 +9,20 @@ interface GForceData {
   longitudinal: number;
 }
 
-export function GForceGraph({ gForceData }: { gForceData: GForceData[] }) {
+export function GForceGraph({ gForceData, advancedSettings }: { gForceData: GForceData[], advancedSettings?: AdvancedPlotSettings }) {
+  const settings = advancedSettings || {
+    showGrid: true,
+    showLegend: true,
+    animateChart: true,
+    chartHeight: 700,
+    lineThickness: 2,
+    showDataLabels: false
+  }
+
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={settings.chartHeight}>
         <ScatterChart data={gForceData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+            {settings.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#374151" />}
             <XAxis dataKey="lateral" stroke="#9CA3AF" />
             <YAxis dataKey="longitudinal" stroke="#9CA3AF" />
             <Tooltip
@@ -23,7 +33,8 @@ export function GForceGraph({ gForceData }: { gForceData: GForceData[] }) {
                 color: "#F9FAFB",
             }}
             />
-            <Scatter dataKey="longitudinal" fill="#DC2626" />
+            {settings.showLegend && <Legend />}
+            <Scatter dataKey="longitudinal" fill="#DC2626" isAnimationActive={settings.animateChart} />
         </ScatterChart>
     </ResponsiveContainer>
   )

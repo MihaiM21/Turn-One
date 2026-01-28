@@ -1,6 +1,7 @@
 'use client';
 
-import {Line, LineChart, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import {Line, LineChart, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import { AdvancedPlotSettings } from '@/types/plot-types'
 
 export interface tireData{
     lap: number;
@@ -10,11 +11,20 @@ export interface tireData{
     rearRight: number;
 }
 
-export function TireTempGraph({ tireTempData }: { tireTempData: tireData[] }) {
+export function TireTempGraph({ tireTempData, advancedSettings }: { tireTempData: tireData[], advancedSettings?: AdvancedPlotSettings }) {
+    const settings = advancedSettings || {
+      showGrid: true,
+      showLegend: true,
+      animateChart: true,
+      chartHeight: 700,
+      lineThickness: 2,
+      showDataLabels: false
+    }
+
     return(
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={settings.chartHeight}>
             <LineChart data={tireTempData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                {settings.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#374151" />}
                 <XAxis dataKey="lap" stroke="#9CA3AF" />
                 <YAxis stroke="#9CA3AF" />
                 <Tooltip
@@ -25,10 +35,11 @@ export function TireTempGraph({ tireTempData }: { tireTempData: tireData[] }) {
                     color: "#F9FAFB",
                 }}
                 />
-                <Line type="monotone" dataKey="frontLeft" stroke="#DC2626" strokeWidth={2} />
-                <Line type="monotone" dataKey="frontRight" stroke="#FC3029" strokeWidth={2} />
-                <Line type="monotone" dataKey="rearLeft" stroke="#EF4444" strokeWidth={2} />
-                <Line type="monotone" dataKey="rearRight" stroke="#F87171" strokeWidth={2} />
+                {settings.showLegend && <Legend />}
+                <Line type="monotone" dataKey="frontLeft" stroke="#DC2626" strokeWidth={settings.lineThickness} isAnimationActive={settings.animateChart} />
+                <Line type="monotone" dataKey="frontRight" stroke="#FC3029" strokeWidth={settings.lineThickness} isAnimationActive={settings.animateChart} />
+                <Line type="monotone" dataKey="rearLeft" stroke="#EF4444" strokeWidth={settings.lineThickness} isAnimationActive={settings.animateChart} />
+                <Line type="monotone" dataKey="rearRight" stroke="#F87171" strokeWidth={settings.lineThickness} isAnimationActive={settings.animateChart} />
             </LineChart>
         </ResponsiveContainer>
     )

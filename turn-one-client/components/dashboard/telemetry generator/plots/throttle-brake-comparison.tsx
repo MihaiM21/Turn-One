@@ -1,14 +1,25 @@
 'use client';
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import { ThrottleBrakeComparisonData } from '@/types/plot-types'
+import { ThrottleBrakeComparisonData, AdvancedPlotSettings } from '@/types/plot-types'
 
 interface ThrottleBrakeComparisonGraphProps {
   data: ThrottleBrakeComparisonData
   height?: number
+  advancedSettings?: AdvancedPlotSettings
 }
 
-export function ThrottleBrakeComparisonGraph({ data, height = 700 }: ThrottleBrakeComparisonGraphProps) {
+export function ThrottleBrakeComparisonGraph({ data, height = 700, advancedSettings }: ThrottleBrakeComparisonGraphProps) {
+  // Use advanced settings or defaults
+  const settings = advancedSettings || {
+    showGrid: true,
+    showLegend: true,
+    animateChart: true,
+    chartHeight: 700,
+    lineThickness: 2,
+    showDataLabels: false
+  }
+
   if (!data || !data.telemetry || data.telemetry.length === 0) {
     return (
       <div className="flex items-center justify-center h-[400px] text-muted-foreground">
@@ -207,10 +218,10 @@ export function ThrottleBrakeComparisonGraph({ data, height = 700 }: ThrottleBra
           </div>
         </div>
         <div className="bg-background/50 p-3 rounded-lg border">
-          <div className="h-70 w-full">
+          <div style={{ height: `${settings.chartHeight / 2}px`, width: '100%' }}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={sortedData} margin={{ top: 20, right: 40, left: 40, bottom: 10 }}>
-                <CartesianGrid strokeDasharray="2 2" stroke="#374151" opacity={0.3} />
+                {settings.showGrid && <CartesianGrid strokeDasharray="2 2" stroke="#374151" opacity={0.3} />}
                 <XAxis 
                   dataKey="distance" 
                   stroke="#6B7280"
@@ -232,30 +243,34 @@ export function ThrottleBrakeComparisonGraph({ data, height = 700 }: ThrottleBra
                   type="monotone"
                   dataKey={`${data.driver1}_throttle`}
                   stroke={data.driver1_color}
-                  strokeWidth={3}
+                  strokeWidth={settings.lineThickness}
                   dot={false}
                   connectNulls={true}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   name={`${data.driver1}`}
+                  isAnimationActive={settings.animateChart}
                 />
                 
                 <Line
                   type="monotone"
                   dataKey={`${data.driver2}_throttle`}
                   stroke={data.driver2_color}
-                  strokeWidth={3}
+                  strokeWidth={settings.lineThickness}
                   dot={false}
                   connectNulls={true}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   name={`${data.driver2}`}
+                  isAnimationActive={settings.animateChart}
                 />
                 
-                <Legend 
-                  wrapperStyle={{ paddingTop: '15px', fontSize: '13px' }}
-                  iconType="line"
-                />
+                {settings.showLegend && (
+                  <Legend 
+                    wrapperStyle={{ paddingTop: '15px', fontSize: '13px' }}
+                    iconType="line"
+                  />
+                )}
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -272,10 +287,10 @@ export function ThrottleBrakeComparisonGraph({ data, height = 700 }: ThrottleBra
           </div>
         </div>
         <div className="bg-background/50 p-3 rounded-lg border">
-          <div className="h-70 w-full">
+          <div style={{ height: `${settings.chartHeight / 2}px`, width: '100%' }}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={sortedData} margin={{ top: 20, right: 40, left: 40, bottom: 10 }}>
-                <CartesianGrid strokeDasharray="2 2" stroke="#374151" opacity={0.3} />
+                {settings.showGrid && <CartesianGrid strokeDasharray="2 2" stroke="#374151" opacity={0.3} />}
                 <XAxis 
                   dataKey="distance" 
                   stroke="#6B7280"
@@ -298,32 +313,36 @@ export function ThrottleBrakeComparisonGraph({ data, height = 700 }: ThrottleBra
                   type="stepAfter"
                   dataKey={`${data.driver1}_brake`}
                   stroke={data.driver1_color}
-                  strokeWidth={3}
+                  strokeWidth={settings.lineThickness}
                   strokeDasharray="10,5"
                   dot={false}
                   connectNulls={true}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   name={`${data.driver1}`}
+                  isAnimationActive={settings.animateChart}
                 />
                 
                 <Line
                   type="stepAfter"
                   dataKey={`${data.driver2}_brake`}
                   stroke={data.driver2_color}
-                  strokeWidth={3}
+                  strokeWidth={settings.lineThickness}
                   strokeDasharray="10,5"
                   dot={false}
                   connectNulls={true}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   name={`${data.driver2}`}
+                  isAnimationActive={settings.animateChart}
                 />
                 
-                <Legend 
-                  wrapperStyle={{ paddingTop: '15px', fontSize: '13px' }}
-                  iconType="line"
-                />
+                {settings.showLegend && (
+                  <Legend 
+                    wrapperStyle={{ paddingTop: '15px', fontSize: '13px' }}
+                    iconType="line"
+                  />
+                )}
               </LineChart>
             </ResponsiveContainer>
           </div>

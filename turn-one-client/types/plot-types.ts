@@ -4,6 +4,15 @@
     color: string;
   }
 
+  export interface AdvancedPlotSettings {
+    showGrid: boolean;
+    showLegend: boolean;
+    animateChart: boolean;
+    chartHeight: number;
+    lineThickness: number;
+    showDataLabels: boolean;
+  }
+
   export interface ThrottleAverageData {
     driver: string;
     throttle: number;

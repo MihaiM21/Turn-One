@@ -1,10 +1,19 @@
 'use client';
 
-import {Line, LineChart, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
-import { LapTimeData } from '@/types/plot-types';
+import {Line, LineChart, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts'
+import { LapTimeData, AdvancedPlotSettings } from '@/types/plot-types';
 
 
-export function LapTimeAnalysisGraph({ lapTimeData }: { lapTimeData: LapTimeData[] }) {
+export function LapTimeAnalysisGraph({ lapTimeData, advancedSettings }: { lapTimeData: LapTimeData[], advancedSettings?: AdvancedPlotSettings }) {
+  // Use advanced settings or defaults
+  const settings = advancedSettings || {
+    showGrid: true,
+    showLegend: true,
+    animateChart: true,
+    chartHeight: 700,
+    lineThickness: 2,
+    showDataLabels: false
+  }
 
   // Don't render if no data
     if (!lapTimeData || lapTimeData.length === 0) {
@@ -132,50 +141,54 @@ export function LapTimeAnalysisGraph({ lapTimeData }: { lapTimeData: LapTimeData
             }
           `}</style>
           
-          <ResponsiveContainer width="100%" height={400}>
+          <ResponsiveContainer width="100%" height={settings.chartHeight}>
             <LineChart 
               data={filteredData} 
               margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-              className="animate-in fade-in-0 zoom-in-95 duration-1000"
+              className={settings.animateChart ? "animate-in fade-in-0 zoom-in-95 duration-1000" : ""}
             >
-              <CartesianGrid 
-                strokeDasharray="3 3" 
-                stroke="#374151" 
-                className="animate-in fade-in-0 duration-1500"
-              />
+              {settings.showGrid && (
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="#374151" 
+                  className={settings.animateChart ? "animate-in fade-in-0 duration-1500" : ""}
+                />
+              )}
               <XAxis 
                 dataKey="lap_numbers" 
                 stroke="#9CA3AF"
                 label={{ value: 'Lap Number', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: '#9CA3AF' } }}
-                className="animate-in slide-in-from-bottom-2 duration-1000 delay-300"
+                className={settings.animateChart ? "animate-in slide-in-from-bottom-2 duration-1000 delay-300" : ""}
               />
               <YAxis 
                 stroke="#9CA3AF" 
                 domain={['dataMin - 0.5', 'dataMax + 0.5']}
                 label={{ value: 'Lap Time (seconds)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#9CA3AF' } }}
-                className="animate-in slide-in-from-left-2 duration-1000 delay-300"
+                className={settings.animateChart ? "animate-in slide-in-from-left-2 duration-1000 delay-300" : ""}
               />
               <Tooltip content={<CustomTooltip />} />
+              {settings.showLegend && <Legend />}
               
               <Line
                 type="monotone"
                 dataKey="lap_times_seconds"
                 stroke="#6B7280"
-                strokeWidth={2}
+                strokeWidth={settings.lineThickness}
                 strokeOpacity={1}
                 dot={(props: any) => <AnimatedDot {...props} index={props.index} />}
                 activeDot={{ r: 8, stroke: '#FFFFFF', strokeWidth: 3, className: 'animate-bounce' }}
                 connectNulls={false}
-                className="animate-in duration-2000 delay-700"
-                style={{
+                isAnimationActive={settings.animateChart}
+                className={settings.animateChart ? "animate-in duration-2000 delay-700" : ""}
+                style={settings.animateChart ? {
                   animation: 'drawLine 2s ease-in-out 0.7s'
-                }}
+                } : {}}
               />
             </LineChart>
           </ResponsiveContainer>
           
           {/* Legend for tire compounds with animation */}
-          <div className="flex flex-wrap justify-center gap-4 mt-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-1000 delay-1000">
+          <div className={`flex flex-wrap justify-center gap-4 mt-4 ${settings.animateChart ? "animate-in fade-in-0 slide-in-from-bottom-2 duration-1000 delay-1000" : ""}`}>
             {Object.entries(compoundColors).map(([compound, color], index) => {
               const hasCompound = filteredData.some(lap => lap.compound === compound);
               if (!hasCompound) return null;
@@ -184,7 +197,7 @@ export function LapTimeAnalysisGraph({ lapTimeData }: { lapTimeData: LapTimeData
                 <div 
                   key={compound} 
                   className="flex items-center hover:scale-110 transition-transform duration-200"
-                  style={{ animationDelay: `${1.2 + index * 0.1}s` }}
+                  style={settings.animateChart ? { animationDelay: `${1.2 + index * 0.1}s` } : {}}
                 >
                   <div 
                     className="w-3 h-3 rounded-full mr-2 border border-gray-600 animate-pulse" 
