@@ -12,8 +12,8 @@ export default function AboutPage() {
       <MainNav />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-black pt-24 pb-16">
-        <div className="absolute inset-0 bg-[url('/turn-one-car/2026-turn-one-car/0002.webp')] bg-cover bg-center opacity-20" />
+      <section className="relative overflow-hidden bg-black pt-30 pb-16">
+        <div className="absolute inset-0 bg-[url('/turn-one-car/2026-turn-one-car/0002.webp')] bg-cover bg-center opacity-80" />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
         <div className="relative container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
@@ -34,7 +34,7 @@ export default function AboutPage() {
                 expertise.
               </p>
             </ScrollAnimation>
-            
+
           </div>
         </div>
       </section>
@@ -120,15 +120,15 @@ export default function AboutPage() {
                     <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl flex items-center justify-center transition-transform hover:scale-110">
                       <span className="text-primary font-bold text-lg">2023</span>
                     </div>
-                    
-                      <div className="flex-1">
-                        <CardTitle className="text-xl mb-2">The Beginning</CardTitle>
-                        <CardDescription className="text-base">
-                          Founded by a team of F1 data analysts and software engineers who saw the need for better telemetry
-                          analysis tools in the motorsport community.
-                        </CardDescription>
-                      </div>
-                    
+
+                    <div className="flex-1">
+                      <CardTitle className="text-xl mb-2">The Beginning</CardTitle>
+                      <CardDescription className="text-base">
+                        Founded by a team of F1 data analysts and software engineers who saw the need for better telemetry
+                        analysis tools in the motorsport community.
+                      </CardDescription>
+                    </div>
+
                   </CardHeader>
                 </Card>
               </ScrollAnimation>
@@ -203,7 +203,7 @@ export default function AboutPage() {
                   The principles that drive everything we do at Turn One.
                 </p>
               </ScrollAnimation>
-              
+
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -220,7 +220,7 @@ export default function AboutPage() {
                   </CardHeader>
                 </Card>
               </ScrollAnimation>
-              
+
               <ScrollAnimation direction="up" delay={0.2}>
                 <Card className="card-hover bg-card border-border group">
                   <CardHeader className="text-center">
@@ -234,7 +234,7 @@ export default function AboutPage() {
                   </CardHeader>
                 </Card>
               </ScrollAnimation>
-              
+
               <ScrollAnimation direction="up" delay={0.4}>
                 <Card className="card-hover bg-card border-border group">
                   <CardHeader className="text-center">
@@ -248,7 +248,7 @@ export default function AboutPage() {
                   </CardHeader>
                 </Card>
               </ScrollAnimation>
-              
+
             </div>
           </div>
         </div>
@@ -264,27 +264,27 @@ export default function AboutPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
-                  size="lg"
-                  variant="secondary"
-                  className="text-lg h-14 px-8 bg-white text-primary hover:bg-white/90 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl group"
-                  asChild
-                >
-                  <Link href="/dashboard">
-                    <BarChart3 className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
-                    Start Analysis
-                  </Link>
-                </Button>
-                <Button
-                  size="lg"
-                  variant="secondary"
-                  className="text-lg h-14 px-8 bg-white text-primary hover:bg-white hover:text-primary transition-all duration-300 hover:scale-105 group"
-                  asChild
-                >
-                  <Link href="/features">
-                    View Features
-                    <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">→</span>
-                  </Link>
-                </Button>
+                size="lg"
+                variant="secondary"
+                className="text-lg h-14 px-8 bg-white text-primary hover:bg-white/90 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl group"
+                asChild
+              >
+                <Link href="/dashboard">
+                  <BarChart3 className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+                  Start Analysis
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="secondary"
+                className="text-lg h-14 px-8 bg-white text-primary hover:bg-white hover:text-primary transition-all duration-300 hover:scale-105 group"
+                asChild
+              >
+                <Link href="/features">
+                  View Features
+                  <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">→</span>
+                </Link>
+              </Button>
             </div>
           </div>
         </div>

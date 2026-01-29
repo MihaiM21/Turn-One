@@ -31,12 +31,12 @@ export function MainFooter() {
             <div className="flex space-x-3">
               <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors duration-200">
                 <Link href="https://twitter.com/turnoneofficial" target="_blank" rel="noopener noreferrer">
-                  <Twitter className="h-4 w-4"  />
+                  <Twitter className="h-4 w-4" />
                 </Link>
               </Button>
               <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors duration-200">
                 <Link href="https://www.instagram.com/turnoneofficial/" target="_blank" rel="noopener noreferrer">
-                  <Instagram className="h-4 w-4"  />
+                  <Instagram className="h-4 w-4" />
                 </Link>
               </Button>
               <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors duration-200">
@@ -73,7 +73,7 @@ export function MainFooter() {
             <h3 className="text-foreground font-semibold text-lg">Services</h3>
             <div className="space-y-2">
               {[
-                { href: "/services", label: "Telemetry Analysis" },
+                { href: "/features", label: "Telemetry Features" },
                 { href: "/dashboard", label: "Live Dashboard" },
                 // { href: "/team", label: "Expert Team" },
                 { href: "/contact", label: "Contact Us" },
