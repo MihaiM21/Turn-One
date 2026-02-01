@@ -29,17 +29,17 @@ export function MainFooter() {
               professionals.
             </p>
             <div className="flex space-x-3">
-              <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors duration-200">
+              <Button name="twitter" variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors duration-200">
                 <Link href="https://twitter.com/turnoneofficial" target="_blank" rel="noopener noreferrer">
                   <Twitter className="h-4 w-4" />
                 </Link>
               </Button>
-              <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors duration-200">
+              <Button name="instagram" variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors duration-200">
                 <Link href="https://www.instagram.com/turnoneofficial/" target="_blank" rel="noopener noreferrer">
                   <Instagram className="h-4 w-4" />
                 </Link>
               </Button>
-              <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors duration-200">
+              <Button name="youtube" variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors duration-200">
                 <Link href="https://www.youtube.com/channel/UCg-DYx-XQUFeEol-IHmCi_Q/" target="_blank" rel="noopener noreferrer">
                   <Youtube className="h-4 w-4" />
                 </Link>

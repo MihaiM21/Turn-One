@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { BarChart3, Zap, Users, Trophy, TrendingUp, Clock, Rocket, ArrowRight, Code2 } from "lucide-react"
+import { BarChart3, Zap, Users, Trophy, TrendingUp, Clock, Rocket, ArrowRight, Code2, Calendar, BookOpen } from "lucide-react"
 import { MainNav } from "@/components/navigation/main-nav"
 import Link from "next/link"
 import { ScrollAnimation } from "@/components/animation/scroll-animation"
@@ -11,9 +11,20 @@ import { NumberOneOutline } from "@/components/animation/hero-particles"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Loading } from "@/components/ui/loading"
+import { getArticles, type Article } from '@/lib/articleService'
+
+interface FeaturedArticle {
+  slug: string
+  title: string
+  excerpt: string
+  category: string
+  publishDate: string
+  featured?: boolean
+}
 
 export default function HomePage() {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [featuredArticle, setFeaturedArticle] = useState<FeaturedArticle | null>(null);
   const backgroundImage = "/turn-one-car/2026-turn-one-car/0001.webp";
 
   // Handle image preloading
@@ -24,6 +35,30 @@ export default function HomePage() {
       img.onload = () => setIsImageLoaded(true);
     }
   }, [backgroundImage]);
+
+  // Load featured article
+  useEffect(() => {
+    const loadFeaturedArticle = async () => {
+      // Try to get featured article from API
+      const articles = await getArticles({ featured: true, limit: 1 })
+      
+      if (articles.length > 0) {
+        setFeaturedArticle(articles[0])
+      } else {
+        // Fallback to default if no featured articles
+        const defaultArticle: FeaturedArticle = {
+          slug: 'f1-2026-season-preview',
+          title: 'F1 2026 Season Preview: Complete Guide to Formula 1 Championship',
+          excerpt: 'Everything you need to know about the F1 2026 season: new regulations, driver lineups, team changes, race calendar, and championship predictions.',
+          category: 'Season Preview',
+          publishDate: '2026-01-31',
+          featured: true,
+        }
+        setFeaturedArticle(defaultArticle)
+      }
+    }
+    loadFeaturedArticle()
+  }, []);
 
   return (
     <div className="min-h-100 bg-background">
@@ -105,6 +140,62 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Featured Article Section */}
+      {featuredArticle && (
+        <section className="py-16 bg-background border-b border-border">
+          <div className="container mx-auto px-4">
+            <ScrollAnimation direction="up">
+              <div className="max-w-5xl mx-auto">
+                <div className="flex items-center gap-2 mb-8">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                  <h2 className="text-2xl font-bold">Latest from the Blog</h2>
+                </div>
+                <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border-primary/20">
+                  <div className="grid md:grid-cols-2 gap-0">
+                    <div className="relative aspect-video md:aspect-auto min-h-[300px]">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20" />
+                      <Image
+                        src="/turn-one-car/2026-turn-one-car/0001.webp"
+                        alt={featuredArticle.title}
+                        fill
+                        className="object-cover"
+                      />
+                      <Badge className="absolute top-4 left-4 bg-red-600 text-white">
+                        {featuredArticle.category}
+                      </Badge>
+                    </div>
+                    <div className="p-8 flex flex-col justify-center">
+                      <h3 className="text-2xl md:text-3xl font-bold mb-4">
+                        {featuredArticle.title}
+                      </h3>
+                      <p className="text-muted-foreground mb-6 text-lg">
+                        {featuredArticle.excerpt}
+                      </p>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          {new Date(featuredArticle.publishDate).toLocaleDateString('en-US', {
+                            month: 'long',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
+                        </div>
+                      </div>
+                      <Button asChild className="w-fit glow-effect">
+                        <Link href={`/blog/${featuredArticle.slug}`}>
+                          Read Full Article
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </ScrollAnimation>
+          </div>
+        </section>
+      )}
 
       {/* API Launch Announcement - Prominent Section */}
       <section className="py-16 bg-background border-y border-border">
