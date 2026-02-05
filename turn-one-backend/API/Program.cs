@@ -337,6 +337,9 @@ else
 // Use CORS
 app.UseCors("AllowSpecificOrigin");
 
+// Serve static files from wwwroot
+app.UseStaticFiles();
+
 // Add request logging middleware
 app.UseMiddleware<RequestLoggingMiddleware>();
 

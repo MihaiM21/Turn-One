@@ -382,3 +382,120 @@
   }
 }
 
+/* Prose styles for article content */
+@layer components {
+  .prose {
+    & ul {
+      list-style-type: disc;
+      padding-left: 1.5rem;
+      margin: 1rem 0;
+    }
+    
+    & ol {
+      list-style-type: decimal;
+      padding-left: 1.5rem;
+      margin: 1rem 0;
+    }
+    
+    & li {
+      margin: 0.5rem 0;
+      line-height: 1.75;
+    }
+    
+    & li > ul,
+    & li > ol {
+      margin: 0.5rem 0;
+    }
+    
+    & p {
+      margin: 1rem 0;
+      line-height: 1.75;
+    }
+    
+    & h1, & h2, & h3, & h4, & h5, & h6 {
+      font-weight: 600;
+      line-height: 1.25;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+    }
+    
+    & h1 { font-size: 2.25rem; }
+    & h2 { font-size: 1.875rem; }
+    & h3 { font-size: 1.5rem; }
+    
+    & a {
+      color: var(--primary);
+      text-decoration: underline;
+    }
+    
+    & blockquote {
+      border-left: 4px solid var(--primary);
+      padding-left: 1rem;
+      font-style: italic;
+      margin: 1.5rem 0;
+    }
+    
+    & img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 0.5rem;
+      margin: 1.5rem 0;
+      display: block;
+    }
+    
+    /* Center-aligned images - ResizableImage extension uses containerstyle attribute */
+    & img[containerstyle*="margin: 0px auto"] {
+      margin-left: auto !important;
+      margin-right: auto !important;
+    }
+    
+    /* Right-aligned images - margin: 0px 0px 0px auto means left margin auto */
+    & img[containerstyle*="0px 0px 0px auto"],
+    & img[containerstyle*="0px auto 0px 0px"] {
+      margin-left: auto !important;
+      margin-right: 0 !important;
+    }
+    
+    /* Left-aligned images - margin: 0px auto 0px 0px means right margin auto */
+    & img[containerstyle*="0px 0px 0px 0px"],
+    & img[containerstyle*="margin: 0px"] {
+      /* margin-left: 0 !important; */
+      margin-right: auto !important;
+    }
+    }
+    
+    & [data-text-align="left"] img {
+      margin-left: 0;
+      margin-right: auto;
+    }
+    
+    & code {
+      background: var(--muted);
+      padding: 0.125rem 0.25rem;
+      border-radius: 0.25rem;
+      font-size: 0.875em;
+    }
+    
+    & pre {
+      background: var(--muted);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+  }
+  
+  .prose-lg {
+    & ul, & ol {
+      padding-left: 1.75rem;
+    }
+    
+    & li {
+      font-size: 1.125rem;
+    }
+    
+    & p {
+      font-size: 1.125rem;
+    }
+  }
+

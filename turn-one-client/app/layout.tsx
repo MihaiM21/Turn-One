@@ -11,18 +11,43 @@ import { Toaster } from "@/components/ui/sonner";
 import { Loading } from "@/components/ui/loading";
 import { PageLoadingProvider } from "@/components/providers/page-loading-provider";
 import { VersionProvider } from "@/components/providers/version-provider";
+import { generateSEO, generateOrganizationSchema, generateWebsiteSchema } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
 
+// Enhanced SEO metadata for the entire application
+export const metadata: Metadata = generateSEO({
+    title: undefined, // Use default full name from config
+    description: 'Experience Formula 1 like never before with Turn One - your ultimate F1 gaming hub featuring live race tracking, predictions, trivia games, real-time telemetry, and comprehensive F1 statistics. Join the fastest-growing F1 community online.',
+    keywords: [
+        'F1 2026 season',
+        'Formula 1 real-time data',
+        'F1 multiplayer games',
+        'F1 fantasy league',
+        'Formula 1 championship',
+    ],
+});
 
-export const metadata: Metadata = {
-  title: "Turn One",
-  description: "Turn One",
-};
-
-export default function RootLayout({children,}: {
+export default function RootLayout({ children, }: {
     children: React.ReactNode
 }) {
+    // Generate structured data for the organization and website
+    const organizationSchema = generateOrganizationSchema();
+    const websiteSchema = generateWebsiteSchema();
+
     return (
-        <html className="dark" style={{colorScheme:"dark"}}>
+        <html lang="en" className="dark" style={{ colorScheme: "dark" }}>
+            <head>
+                {/* Structured Data for SEO */}
+                <JsonLd data={[organizationSchema, websiteSchema]} />
+                
+                {/* Preconnect to external domains for performance */}
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+                
+                {/* DNS Prefetch for faster external resource loading */}
+                <link rel="dns-prefetch" href="https://www.formula1.com" />
+                <link rel="dns-prefetch" href="https://media.api-sports.io" />
+            </head>
             <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
                 <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
                     <AuthProvider>

@@ -11,6 +11,15 @@ const nextConfig: NextConfig = {
   // Environment variables
   env: {
     NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.t1f1.com/api',
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://turnonehub.com',
+  },
+  
+  // SEO optimizations
+  generateEtags: true,
+  
+  // Experimental features for better performance
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
   
   // Security headers
@@ -42,6 +51,10 @@ const nextConfig: NextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin'
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()'
           }
         ],
       },
@@ -51,6 +64,9 @@ const nextConfig: NextConfig = {
   // Image optimization
   images: {
     formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60,
     remotePatterns: [
       {
         protocol: 'https',
