@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://turnone.racing'
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://turnonehub.com'
   const currentDate = new Date()
 
   // Static pages with their priorities and change frequencies
