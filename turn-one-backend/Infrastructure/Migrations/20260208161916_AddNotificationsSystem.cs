@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -11,9 +11,9 @@ namespace Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Check if Notifications table exists, if not create it
+            // Create Notifications table if it doesn't exist
             migrationBuilder.Sql(@"
-                DO $$ 
+                DO $$
                 BEGIN
                     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'Notifications') THEN
                         CREATE TABLE ""Notifications"" (
@@ -22,10 +22,10 @@ namespace Infrastructure.Migrations
                             ""Message"" text NOT NULL,
                             ""Type"" text NOT NULL,
                             ""TargetAudience"" text NOT NULL,
-                            ""TargetRoles"" text NULL,
                             ""TargetPlans"" text NULL,
-                            ""CreatedById"" uuid NOT NULL,
+                            ""TargetRoles"" text NULL,
                             ""CreatedAt"" timestamp with time zone NOT NULL,
+                            ""CreatedById"" uuid NOT NULL,
                             ""IsActive"" boolean NOT NULL,
                             CONSTRAINT ""PK_Notifications"" PRIMARY KEY (""Id""),
                             CONSTRAINT ""FK_Notifications_Users_CreatedById"" FOREIGN KEY (""CreatedById"") REFERENCES ""Users"" (""Id"") ON DELETE CASCADE
@@ -36,9 +36,9 @@ namespace Infrastructure.Migrations
                 END $$;
             ");
 
-            // Check if UserNotifications table exists, if not create it
+            // Create UserNotifications table if it doesn't exist
             migrationBuilder.Sql(@"
-                DO $$ 
+                DO $$
                 BEGIN
                     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'UserNotifications') THEN
                         CREATE TABLE ""UserNotifications"" (
@@ -58,19 +58,18 @@ namespace Infrastructure.Migrations
                     END IF;
                 END $$;
             ");
-            
-            // Fix column name if it's wrong (from old migration)
+
+            // If Notifications exists but has old CreatedByUserId column, drop it
             migrationBuilder.Sql(@"
-                DO $$ 
+                DO $$
                 BEGIN
                     IF EXISTS (
-                        SELECT 1 
-                        FROM information_schema.columns 
+                        SELECT FROM information_schema.columns 
                         WHERE table_schema = 'public' 
-                        AND table_name = 'UserNotifications' 
-                        AND column_name = 'CreatedAt'
+                        AND table_name = 'Notifications' 
+                        AND column_name = 'CreatedByUserId'
                     ) THEN
-                        ALTER TABLE ""UserNotifications"" RENAME COLUMN ""CreatedAt"" TO ""ReceivedAt"";
+                        ALTER TABLE ""Notifications"" DROP COLUMN ""CreatedByUserId"";
                     END IF;
                 END $$;
             ");
