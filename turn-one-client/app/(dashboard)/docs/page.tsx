@@ -43,11 +43,11 @@ export default function DocumentationPage() {
   };
 
   const handleApiDocs = () => {
-    router.push('/dashboard/api-docs');
+    window.open('https://docs.t1f1.com/', '_blank');
   };
 
   const handleTutorials = () => {
-    router.push('/dashboard/tutorials');
+    window.open('https://www.youtube.com/channel/UCg-DYx-XQUFeEol-IHmCi_Q', '_blank');
   };
 
   return (
@@ -67,7 +67,7 @@ export default function DocumentationPage() {
         <Button 
           variant="outline" 
           className="w-full"
-          onClick={() => router.push('/dashboard/live')}
+          onClick={() => router.push('/live')}
         >
           <Signal className="mr-2 h-4 w-4" />
           Live Dashboard
@@ -131,7 +131,7 @@ export default function DocumentationPage() {
               </ol>
               <Button 
                 className="w-full mt-4"
-                onClick={() => router.push('/dashboard/live')}
+                onClick={() => router.push('/live')}
               >
                 Go to Live Dashboard
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -264,7 +264,7 @@ export default function DocumentationPage() {
                 </Button>
                 <Button 
                   variant="outline"
-                  onClick={() => window.open('#', '_blank')}
+                  onClick={handleApiDocs}
                   className="w-full"
                 >
                   <ExternalLink className="mr-2 h-4 w-4" />
