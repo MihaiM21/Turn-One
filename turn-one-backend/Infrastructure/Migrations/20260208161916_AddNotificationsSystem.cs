@@ -48,7 +48,7 @@ namespace Infrastructure.Migrations
                     NotificationId = table.Column<Guid>(type: "uuid", nullable: false),
                     IsRead = table.Column<bool>(type: "boolean", nullable: false),
                     ReadAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    ReceivedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {

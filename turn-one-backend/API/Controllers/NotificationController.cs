@@ -12,10 +12,12 @@ namespace API.Controllers
     public class NotificationController : ControllerBase
     {
         private readonly INotificationService _notificationService;
+        private readonly ILogger<NotificationController> _logger;
 
-        public NotificationController(INotificationService notificationService)
+        public NotificationController(INotificationService notificationService, ILogger<NotificationController> logger)
         {
             _notificationService = notificationService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -29,8 +31,8 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in GetUserNotifications: {ex.Message}");
-                return StatusCode(500, new { success = false, message = "An error occurred" });
+                _logger.LogError(ex, "Error in GetUserNotifications for user {UserId}", User.FindFirstValue(ClaimTypes.NameIdentifier));
+                return StatusCode(500, new { success = false, message = "An error occurred", error = ex.Message });
             }
         }
 
@@ -45,8 +47,8 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in GetNotificationStats: {ex.Message}");
-                return StatusCode(500, new { success = false, message = "An error occurred" });
+                _logger.LogError(ex, "Error in GetNotificationStats for user {UserId}", User.FindFirstValue(ClaimTypes.NameIdentifier));
+                return StatusCode(500, new { success = false, message = "An error occurred", error = ex.Message });
             }
         }
 
@@ -65,8 +67,8 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in MarkAsRead: {ex.Message}");
-                return StatusCode(500, new { success = false, message = "An error occurred" });
+                _logger.LogError(ex, "Error in MarkAsRead for notification {NotificationId}", notificationId);
+                return StatusCode(500, new { success = false, message = "An error occurred", error = ex.Message });
             }
         }
 
@@ -81,8 +83,8 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in MarkAllAsRead: {ex.Message}");
-                return StatusCode(500, new { success = false, message = "An error occurred" });
+                _logger.LogError(ex, "Error in MarkAllAsRead for user {UserId}", User.FindFirstValue(ClaimTypes.NameIdentifier));
+                return StatusCode(500, new { success = false, message = "An error occurred", error = ex.Message });
             }
         }
 
@@ -98,8 +100,8 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in GetAllNotifications: {ex.Message}");
-                return StatusCode(500, new { success = false, message = "An error occurred" });
+                _logger.LogError(ex, "Error in GetAllNotifications");
+                return StatusCode(500, new { success = false, message = "An error occurred", error = ex.Message });
             }
         }
 
@@ -115,8 +117,8 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in CreateNotification: {ex.Message}");
-                return StatusCode(500, new { success = false, message = "An error occurred" });
+                _logger.LogError(ex, "Error in CreateNotification. DTO: {@NotificationDto}", notificationDto);
+                return StatusCode(500, new { success = false, message = "An error occurred", error = ex.Message });
             }
         }
 
@@ -134,8 +136,8 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in DeleteNotification: {ex.Message}");
-                return StatusCode(500, new { success = false, message = "An error occurred" });
+                _logger.LogError(ex, "Error in DeleteNotification for id {NotificationId}", id);
+                return StatusCode(500, new { success = false, message = "An error occurred", error = ex.Message });
             }
         }
     }
