@@ -135,7 +135,7 @@ export default function DailyRewards() {
                     <li>Premium features (varies)</li>
                   </ul>
                   <div className="mt-4">
-                    <a href="/store" className="text-primary hover:underline">
+                    <a href="/store" className="text-primary hover:underline font-medium">
                       Visit Coin Store →
                     </a>
                   </div>

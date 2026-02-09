@@ -7,6 +7,8 @@ import {
   CreditCard,
   LogOut,
   Sparkles,
+  Coins,
+  Zap,
 } from "lucide-react"
 
 import {
@@ -37,6 +39,8 @@ import { TokenStatus, UserProfile } from "@/types/user-types"
 import { toast } from "./ui/use-toast"
 import { useEffect } from "react"
 import Link from "next/link"
+import { useNotificationStats } from "@/hooks/use-notification-stats"
+import { Badge as BadgeUI } from "@/components/ui/badge"
 
 
 export function NavUser({
@@ -66,6 +70,7 @@ export function NavUser({
     })
   const [tokenStatus, setTokenStatus] = useState<TokenStatus | null>(null)
   const { isAuthenticated } = useAuth()
+  const { stats } = useNotificationStats()
 
   const { logout } = useAuth();
   const router = useRouter();
@@ -116,6 +121,16 @@ export function NavUser({
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{profileData.username}</span>
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Coins className="h-3 w-3" />
+                    {profileData.coins.toLocaleString()}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Zap className="h-3 w-3" />
+                    {profileData.tokens}
+                  </span>
+                </div>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -135,6 +150,16 @@ export function NavUser({
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{profileData.username}</span>
                   <span className="truncate text-xs">{profileData.email}</span>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+                    <span className="flex items-center gap-1">
+                      <Coins className="h-3 w-3" />
+                      {profileData.coins.toLocaleString()}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Zap className="h-3 w-3" />
+                      {profileData.tokens}
+                    </span>
+                  </div>
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -158,10 +183,19 @@ export function NavUser({
                 <CreditCard />
                 Billing
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
-              </DropdownMenuItem>
+              <Link href="/notifications">
+                <DropdownMenuItem className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Bell />
+                    Notifications
+                  </div>
+                  {stats.unreadCount > 0 && (
+                    <BadgeUI variant="destructive" className="ml-auto">
+                      {stats.unreadCount}
+                    </BadgeUI>
+                  )}
+                </DropdownMenuItem>
+              </Link>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>

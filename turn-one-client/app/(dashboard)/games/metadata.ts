@@ -19,11 +19,3 @@ export const metadata = generateSEO({
   ],
   url: "/games",
 })
-
-export const triviaGameSchema = generateGameSchema({
-  name: "Turn One F1 Trivia Challenge",
-  description: "Test your Formula 1 knowledge with challenging trivia questions about drivers, teams, circuits, and F1 history",
-  url: "/games/trivia",
-  imageUrl: "/og-images/turn-one-games.jpg",
-  genre: "Trivia & Quiz Game",
-})

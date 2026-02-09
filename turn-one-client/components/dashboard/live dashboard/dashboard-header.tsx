@@ -7,8 +7,11 @@ import Link from "next/link"
 import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { useNotificationStats } from "@/hooks/use-notification-stats"
 
 export function DashboardHeader() {
+  const { stats } = useNotificationStats()
+  
   return (
     <header className="border-none border-primary/20 bg-gradient-to-br backdrop-blur-md sticky top-0 z-40 animate-in slide-in-from-top-4 duration-500">
       <div className="container mx-auto px-4 py-4">
@@ -55,9 +58,20 @@ export function DashboardHeader() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-muted-foreground hover:text-foreground hover:bg-muted/20 hover:scale-105 transition-all duration-300"
+                asChild
+                className="text-muted-foreground hover:text-foreground hover:bg-muted/20 hover:scale-105 transition-all duration-300 relative"
               >
-                <Bell className="h-4 w-4" />
+                <Link href="/notifications">
+                  <Bell className="h-4 w-4" />
+                  {stats.unreadCount > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                    >
+                      {stats.unreadCount > 9 ? '9+' : stats.unreadCount}
+                    </Badge>
+                  )}
+                </Link>
               </Button>
 
               <Button

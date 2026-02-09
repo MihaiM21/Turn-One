@@ -35,6 +35,7 @@ export function NavMain({
   }[]
 }) {
   const [currentPath, setCurrentPath] = React.useState<string>("");
+  const [openItems, setOpenItems] = React.useState<Record<string, boolean>>({});
 
   // Update current path when component mounts and when pathname changes
   React.useEffect(() => {
@@ -49,8 +50,16 @@ export function NavMain({
       // Listen for path changes
       window.addEventListener('popstate', updatePath);
       
+      // Listen for Next.js navigation
+      const handleRouteChange = () => {
+        updatePath();
+      };
+      
+      window.addEventListener('routeChange', handleRouteChange);
+      
       return () => {
         window.removeEventListener('popstate', updatePath);
+        window.removeEventListener('routeChange', handleRouteChange);
       };
     }
   }, []);
@@ -67,15 +76,49 @@ export function NavMain({
     return false;
   };
 
+  // Auto-expand sections when navigating to their sub-items
+  React.useEffect(() => {
+    items.forEach((item) => {
+      const active = isItemActive(item.url);
+      const hasActiveSubItem = item.items?.some(subItem => isItemActive(subItem.url)) || false;
+      const shouldBeOpen = item.isActive || active || hasActiveSubItem;
+      
+      if (shouldBeOpen && openItems[item.title] === undefined) {
+        setOpenItems(prev => ({
+          ...prev,
+          [item.title]: true
+        }));
+      }
+    });
+  }, [currentPath, items]);
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Platform</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => {
           const active = isItemActive(item.url);
+          // Check if any subitem is active to keep the section expanded
+          const hasActiveSubItem = item.items?.some(subItem => isItemActive(subItem.url)) || false;
+          const shouldBeOpen = item.isActive || active || hasActiveSubItem;
+          
+          // Determine if this item should be open
+          const isOpen = openItems[item.title] !== undefined 
+            ? openItems[item.title] 
+            : shouldBeOpen;
           
           return (
-            <Collapsible key={item.title} asChild defaultOpen={item.isActive || active}>
+            <Collapsible 
+              key={item.title} 
+              asChild 
+              open={isOpen}
+              onOpenChange={(open) => {
+                setOpenItems(prev => ({
+                  ...prev,
+                  [item.title]: open
+                }));
+              }}
+            >
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip={item.title} isActive={active}>
                   <a href={item.url}>

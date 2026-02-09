@@ -52,6 +52,81 @@ namespace Infrastructure.Services
             return leaderboard;
         }
 
+        public async Task<List<SimpleLeaderboardDto>> GetPredictionsLeaderboardAsync(int limit = 100)
+        {
+            var leaderboard = await _context.Leaderboards
+                .Include(l => l.User)
+                .OrderByDescending(l => l.CorrectPredictions)
+                .ThenByDescending(l => l.TotalPredictions)
+                .Take(limit)
+                .Select(l => new SimpleLeaderboardDto
+                {
+                    UserId = l.UserId,
+                    Username = l.User.Username,
+                    AvatarUrl = l.User.AvatarUrl,
+                    Level = l.User.Level,
+                    Value = l.CorrectPredictions,
+                    Rank = 0
+                })
+                .ToListAsync();
+
+            for (int i = 0; i < leaderboard.Count; i++)
+            {
+                leaderboard[i].Rank = i + 1;
+            }
+
+            return leaderboard;
+        }
+
+        public async Task<List<SimpleLeaderboardDto>> GetCoinsLeaderboardAsync(int limit = 100)
+        {
+            var leaderboard = await _context.Users
+                .OrderByDescending(u => u.Coins)
+                .Take(limit)
+                .Select(u => new SimpleLeaderboardDto
+                {
+                    UserId = u.Id,
+                    Username = u.Username,
+                    AvatarUrl = u.AvatarUrl,
+                    Level = u.Level,
+                    Value = u.Coins,
+                    Rank = 0
+                })
+                .ToListAsync();
+
+            for (int i = 0; i < leaderboard.Count; i++)
+            {
+                leaderboard[i].Rank = i + 1;
+            }
+
+            return leaderboard;
+        }
+
+        public async Task<List<SimpleLeaderboardDto>> GetLevelLeaderboardAsync(int limit = 100)
+        {
+            var leaderboard = await _context.Users
+                .OrderByDescending(u => u.Level)
+                .ThenByDescending(u => u.Experience)
+                .Take(limit)
+                .Select(u => new SimpleLeaderboardDto
+                {
+                    UserId = u.Id,
+                    Username = u.Username,
+                    AvatarUrl = u.AvatarUrl,
+                    Level = u.Level,
+                    Value = u.Experience,
+                    Rank = 0
+                })
+                .ToListAsync();
+
+            for (int i = 0; i < leaderboard.Count; i++)
+            {
+                leaderboard[i].Rank = i + 1;
+            }
+
+            return leaderboard;
+        }
+
         public async Task<List<LeaderboardDto>> GetSeasonLeaderboardAsync(string season, int limit = 100)
         {
             var leaderboard = await _context.Leaderboards

@@ -306,7 +306,7 @@ export default function FeaturesPage() {
               </Link>
             </Button>
             <Button size="lg" variant="outline" className="accent-glow">
-              <Link href="/demo">Demo Dashboard</Link>
+              <Link href="/dashboard">Dashboard</Link>
             </Button>
           </div>
         </div>

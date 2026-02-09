@@ -119,6 +119,26 @@ export const consumeTokens = async (token: string, amount: number) => {
   });
 }
 
+export const purchaseTokens = async (token: string, amount: number, coinCost: number) => {
+  return fetchWithAuth('Token/purchase', token, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ amount, coinCost }),
+  });
+}
+
+export const claimStarterPack = async (token: string) => {
+  return fetchWithAuth('Token/claim-starter-pack', token, {
+    method: 'POST',
+  });
+}
+
+export const getStarterPackStatus = async (token: string) => {
+  return fetchWithAuth('Token/starter-pack-status', token);
+}
+
 // Plan Management API functions
 export const upgradePlan = async (token: string, newPlan: string) => {
   return fetchWithAuth('subscription/upgrade', token, {

@@ -6,6 +6,7 @@ import {
   TriviaAttempt, 
   TriviaResult,
   LeaderboardEntry,
+  SimpleLeaderboardEntry,
   UserStats,
   CoinTransaction
 } from '@/types/game-types';
@@ -150,6 +151,54 @@ export const leaderboardService = {
 
     if (!response.ok) {
       throw new Error('Failed to fetch season leaderboard');
+    }
+
+    const data = await response.json();
+    return data.data;
+  },
+
+  async getPredictionsLeaderboard(limit: number = 100): Promise<SimpleLeaderboardEntry[]> {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/Leaderboard/predictions?limit=${limit}`, {
+      headers: {
+        'Authorization': token || '',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch predictions leaderboard');
+    }
+
+    const data = await response.json();
+    return data.data;
+  },
+
+  async getCoinsLeaderboard(limit: number = 100): Promise<SimpleLeaderboardEntry[]> {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/Leaderboard/coins?limit=${limit}`, {
+      headers: {
+        'Authorization': token || '',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch coins leaderboard');
+    }
+
+    const data = await response.json();
+    return data.data;
+  },
+
+  async getLevelLeaderboard(limit: number = 100): Promise<SimpleLeaderboardEntry[]> {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/Leaderboard/level?limit=${limit}`, {
+      headers: {
+        'Authorization': token || '',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch level leaderboard');
     }
 
     const data = await response.json();

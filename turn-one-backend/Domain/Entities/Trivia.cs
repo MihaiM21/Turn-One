@@ -14,6 +14,7 @@ namespace Domain.Entities
         public int CoinsReward { get; set; }
         public int ExperienceReward { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? LastModifiedAt { get; set; }
         public bool IsActive { get; set; } = true;
         
         // Navigation

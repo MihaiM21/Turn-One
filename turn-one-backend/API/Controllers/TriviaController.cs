@@ -94,6 +94,37 @@ namespace API.Controllers
         }
 
         [Authorize(Roles = "ADMIN")]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateTrivia(Guid id, [FromBody] UpdateTriviaDto triviaDto)
+        {
+            try
+            {
+                Console.WriteLine($"[UpdateTrivia] Route ID: {id}, DTO ID: {triviaDto.Id}");
+                Console.WriteLine($"[UpdateTrivia] DTO: Question={triviaDto.Question}, Category={triviaDto.Category}");
+                
+                if (id != triviaDto.Id)
+                {
+                    Console.WriteLine($"[UpdateTrivia] ID mismatch! Route: {id} vs DTO: {triviaDto.Id}");
+                    return BadRequest(new { success = false, message = "ID mismatch" });
+                }
+
+                var trivia = await _triviaService.UpdateTriviaAsync(triviaDto);
+                return Ok(new { success = true, data = trivia, message = "Trivia updated. All user attempts cleared." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                Console.WriteLine($"[UpdateTrivia] InvalidOperationException: {ex.Message}");
+                return NotFound(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[UpdateTrivia] Exception: {ex.Message}");
+                Console.WriteLine($"[UpdateTrivia] Stack: {ex.StackTrace}");
+                return StatusCode(500, new { success = false, message = "An error occurred" });
+            }
+        }
+
+        [Authorize(Roles = "ADMIN")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTrivia(Guid id)
         {

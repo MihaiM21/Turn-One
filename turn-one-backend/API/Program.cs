@@ -183,9 +183,11 @@ builder.Services.AddScoped<IDailyGiftService, DailyGiftService>();
 
 // Register game hub services
 builder.Services.AddScoped<ICoinService, CoinService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IPredictionService, PredictionService>();
 builder.Services.AddScoped<ITriviaService, TriviaService>();
 builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEmailService, EmailService>(sp =>
 {
     var config = builder.Configuration.GetSection("SmtpSettings");

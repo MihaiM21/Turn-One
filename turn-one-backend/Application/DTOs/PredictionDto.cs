@@ -49,4 +49,33 @@ namespace Application.DTOs
         public int CoinsWagered { get; set; }
         public DateTime RaceDateTime { get; set; }
     }
+
+    public class RaceResultsDto
+    {
+        public string RaceId { get; set; } = string.Empty;
+        public string RaceName { get; set; } = string.Empty;
+        public string Season { get; set; } = string.Empty;
+        
+        // Actual race results
+        public string? PodiumP1 { get; set; }
+        public string? PodiumP2 { get; set; }
+        public string? PodiumP3 { get; set; }
+        public string? FastestLapDriver { get; set; }
+        public string? PolePositionDriver { get; set; }
+        public int? FirstRetirementLap { get; set; }
+        public bool? WillThereBeASafetyCar { get; set; }
+        public int? NumberOfDnfs { get; set; }
+    }
+
+    public class RaceValidationResultDto
+    {
+        public int TotalPredictions { get; set; }
+        public int SettledCount { get; set; }
+        public int WinnersCount { get; set; }
+        public int PartialWinnersCount { get; set; }
+        public int LosersCount { get; set; }
+        public int TotalCoinsAwarded { get; set; }
+        public int TotalPointsAwarded { get; set; }
+        public List<string> SettledUsernames { get; set; } = new();
+    }
 }

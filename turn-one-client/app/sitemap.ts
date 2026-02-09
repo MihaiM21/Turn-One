@@ -17,12 +17,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     
     // Gaming features - high priority
     { url: '/games', changeFrequency: 'weekly' as const, priority: 0.85 },
-    { url: '/games/trivia', changeFrequency: 'weekly' as const, priority: 0.85 },
     { url: '/predictions', changeFrequency: 'weekly' as const, priority: 0.85 },
     { url: '/generator', changeFrequency: 'monthly' as const, priority: 0.7 },
     
     // Community & Profile
-    { url: '/profile', changeFrequency: 'weekly' as const, priority: 0.7 },
+    { url: '/account', changeFrequency: 'weekly' as const, priority: 0.7 },
     { url: '/rewards', changeFrequency: 'weekly' as const, priority: 0.7 },
     
     // Information pages
