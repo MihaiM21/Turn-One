@@ -286,37 +286,55 @@ var f1Service = app.Services.GetRequiredService<F1LiveTimingService>();
 await f1Service.StartAsync();
 
 // Apply migrations and seed data before the app starts
-using (var scope = app.Services.CreateScope())
+try
 {
-    var db = scope.ServiceProvider.GetRequiredService<TurnOneDbContext>();
-
-    // Apply migrations
-    db.Database.Migrate();
-
-    // Seed admin user
-    if (!db.Users.Any(u => u.Email == "mihai@t1f1.com"))
+    using (var scope = app.Services.CreateScope())
     {
-        db.Users.Add(new User
-        {
-            Id = Guid.NewGuid(),
-            Email = "mihai@t1f1.com",
-            Username = "Mihai",
-            Password = BCrypt.Net.BCrypt.HashPassword("default123"),
-            Role = Role.ADMIN,
-            Plan = PlanType.ELITE,
-            PlanStartDate = DateTime.UtcNow,
-            PlanEndDate = DateTime.UtcNow.AddYears(15),
-            AutoRenew = true,
-            CreatedAt = DateTime.UtcNow,
-            LastLogin = DateTime.UtcNow,
-            Tokens = 30,
-            LastTokenRefillDate = DateTime.UtcNow
-        });
-        db.SaveChanges();
-    }
+        var db = scope.ServiceProvider.GetRequiredService<TurnOneDbContext>();
+        
+        Log.Information("Applying database migrations...");
+        
+        // Apply migrations
+        db.Database.Migrate();
+        
+        Log.Information("Database migrations applied successfully");
 
-    // Seed trivia questions
-    await TriviaSeeder.SeedTriviaQuestions(db);
+        // Seed admin user
+        if (!db.Users.Any(u => u.Email == "mihai@t1f1.com"))
+        {
+            Log.Information("Seeding admin user...");
+            db.Users.Add(new User
+            {
+                Id = Guid.NewGuid(),
+                Email = "mihai@t1f1.com",
+                Username = "Mihai",
+                Password = BCrypt.Net.BCrypt.HashPassword("default123"),
+                Role = Role.ADMIN,
+                Plan = PlanType.ELITE,
+                PlanStartDate = DateTime.UtcNow,
+                PlanEndDate = DateTime.UtcNow.AddYears(15),
+                AutoRenew = true,
+                CreatedAt = DateTime.UtcNow,
+                LastLogin = DateTime.UtcNow,
+                Tokens = 30,
+                LastTokenRefillDate = DateTime.UtcNow
+            });
+            db.SaveChanges();
+            Log.Information("Admin user seeded successfully");
+        }
+
+        // Seed trivia questions
+        Log.Information("Seeding trivia questions...");
+        await TriviaSeeder.SeedTriviaQuestions(db);
+        Log.Information("Trivia questions seeded successfully");
+    }
+}
+catch (Exception ex)
+{
+    Log.Error(ex, "Failed to apply migrations or seed data. Connection string: {ConnectionString}", 
+        builder.Configuration.GetConnectionString("DefaultConnection")?.Replace(
+            builder.Configuration.GetConnectionString("DefaultConnection")?.Split('@').FirstOrDefault() ?? "", "***"));
+    throw;
 }
 
 
@@ -363,13 +381,6 @@ app.MapControllers();
 
 // Map SignalR hubs
 app.MapHub<F1LiveDataHub>("/hubs/f1livedata").RequireCors("SignalRCorsPolicy");
-
-// Ensure database is created and migrations are applied
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<TurnOneDbContext>();
-    db.Database.Migrate();
-}
 
 Log.Information("Turn One API started successfully");
 app.Run();
