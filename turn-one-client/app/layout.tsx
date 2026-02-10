@@ -40,6 +40,13 @@ export default function RootLayout({ children, }: {
                 {/* Structured Data for SEO */}
                 <JsonLd data={[organizationSchema, websiteSchema]} />
                 
+                {/* Google AdSense */}
+                <script 
+                    async 
+                    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9643370480021725"
+                    crossOrigin="anonymous"
+                />
+                
                 {/* Preconnect to external domains for performance */}
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

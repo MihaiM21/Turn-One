@@ -128,6 +128,7 @@ namespace Infrastructure.Services
         public async Task<List<TriviaDto>> GetAllTriviaAsync()
         {
             var trivias = await _context.Trivias
+                .Where(t => t.IsActive)
                 .OrderByDescending(t => t.CreatedAt)
                 .Select(t => new TriviaDto
                 {
@@ -168,6 +169,51 @@ namespace Infrastructure.Services
             };
 
             _context.Trivias.Add(trivia);
+            await _context.SaveChangesAsync();
+
+            return new TriviaDto
+            {
+                Id = trivia.Id,
+                Question = trivia.Question,
+                OptionA = trivia.OptionA,
+                OptionB = trivia.OptionB,
+                OptionC = trivia.OptionC,
+                OptionD = trivia.OptionD,
+                CorrectAnswer = trivia.CorrectAnswer,
+                Category = trivia.Category,
+                Difficulty = trivia.Difficulty,
+                CoinsReward = trivia.CoinsReward,
+                ExperienceReward = trivia.ExperienceReward
+            };
+        }
+
+        public async Task<TriviaDto> UpdateTriviaAsync(UpdateTriviaDto triviaDto)
+        {
+            var trivia = await _context.Trivias.FindAsync(triviaDto.Id);
+            if (trivia == null)
+            {
+                throw new InvalidOperationException("Trivia question not found");
+            }
+
+            // Update trivia fields
+            trivia.Question = triviaDto.Question;
+            trivia.OptionA = triviaDto.OptionA;
+            trivia.OptionB = triviaDto.OptionB;
+            trivia.OptionC = triviaDto.OptionC;
+            trivia.OptionD = triviaDto.OptionD;
+            trivia.CorrectAnswer = triviaDto.CorrectAnswer;
+            trivia.Category = triviaDto.Category;
+            trivia.Difficulty = triviaDto.Difficulty;
+            trivia.CoinsReward = triviaDto.CoinsReward;
+            trivia.ExperienceReward = triviaDto.ExperienceReward;
+            trivia.LastModifiedAt = DateTime.UtcNow;
+
+            // Delete all previous attempts for this question so users can retake it
+            var attempts = await _context.TriviaAttempts
+                .Where(a => a.TriviaId == triviaDto.Id)
+                .ToListAsync();
+            
+            _context.TriviaAttempts.RemoveRange(attempts);
             await _context.SaveChangesAsync();
 
             return new TriviaDto

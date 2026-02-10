@@ -48,6 +48,51 @@ namespace API.Controllers
             }
         }
 
+        [HttpGet("predictions")]
+        public async Task<IActionResult> GetPredictionsLeaderboard([FromQuery] int limit = 100)
+        {
+            try
+            {
+                var leaderboard = await _leaderboardService.GetPredictionsLeaderboardAsync(limit);
+                return Ok(new { success = true, data = leaderboard });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetPredictionsLeaderboard: {ex.Message}");
+                return StatusCode(500, new { success = false, message = "An error occurred" });
+            }
+        }
+
+        [HttpGet("coins")]
+        public async Task<IActionResult> GetCoinsLeaderboard([FromQuery] int limit = 100)
+        {
+            try
+            {
+                var leaderboard = await _leaderboardService.GetCoinsLeaderboardAsync(limit);
+                return Ok(new { success = true, data = leaderboard });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetCoinsLeaderboard: {ex.Message}");
+                return StatusCode(500, new { success = false, message = "An error occurred" });
+            }
+        }
+
+        [HttpGet("level")]
+        public async Task<IActionResult> GetLevelLeaderboard([FromQuery] int limit = 100)
+        {
+            try
+            {
+                var leaderboard = await _leaderboardService.GetLevelLeaderboardAsync(limit);
+                return Ok(new { success = true, data = leaderboard });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetLevelLeaderboard: {ex.Message}");
+                return StatusCode(500, new { success = false, message = "An error occurred" });
+            }
+        }
+
         [HttpGet("stats")]
         public async Task<IActionResult> GetUserStats()
         {

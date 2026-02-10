@@ -22,6 +22,7 @@ public class User
     public DateTime LastTokenRefillDate { get; set; } = DateTime.UtcNow;
     
     public DateTime? LastDailyGiftDate { get; set; }
+    public bool HasClaimedStarterPack { get; set; } = false;
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastLogin { get; set; }

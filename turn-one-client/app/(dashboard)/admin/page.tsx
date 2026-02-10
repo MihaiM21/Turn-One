@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Search, Users, Crown, Shield, TrendingUp, Download, Filter, MoreHorizontal, Calendar, Activity, UserCheck, AlertCircle, RefreshCw, Mail, CheckCircle2, XCircle, Trash2, UserPlus, Zap, Send, FileText, Plus } from 'lucide-react';
+import { Search, Users, Crown, Shield, TrendingUp, Download, Filter, MoreHorizontal, Calendar, Activity, UserCheck, AlertCircle, RefreshCw, Mail, CheckCircle2, XCircle, Trash2, UserPlus, Zap, Send, FileText, Plus, Trophy, Brain, Bell } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -54,7 +54,7 @@ interface User {
   id: string;
   email: string;
   username: string;
-  role: 'USER' | 'CONTENT_CREATOR' | 'ADMIN';
+  role: number;
   plan: 'BASIC' | 'PRO' | 'ELITE';
   tokens: number;
   coins: number;
@@ -99,6 +99,17 @@ const planColors: Record<string, string> = {
   '1': 'bg-primary/10 text-primary',
   '2': 'bg-accent/10 text-accent',
   '3': 'bg-primary/20 text-primary'
+};
+
+// Helper function to convert numeric role to string format
+const getRoleString = (role: number | string): string => {
+  const numRole = typeof role === 'string' ? parseInt(role) : role;
+  switch(numRole) {
+    case 0: return 'USER';
+    case 1: return 'CONTENT_CREATOR';
+    case 2: return 'ADMIN';
+    default: return 'USER';
+  }
 };
 
 export default function AdminDashboard() {
@@ -388,8 +399,8 @@ export default function AdminDashboard() {
 
   // Calculate statistics
   const totalUsers = users.length;
-  const adminCount = users.filter(user => user.role === 'ADMIN').length;
-  const contentCreatorCount = users.filter(user => user.role === 'CONTENT_CREATOR').length;
+  const adminCount = users.filter(user => user.role === 2).length;
+  const contentCreatorCount = users.filter(user => user.role === 1).length;
   const totalTokens = users.reduce((sum, user) => sum + user.tokens, 0);
   const totalCoins = users.reduce((sum, user) => sum + user.coins, 0);
   const planDistribution = users.reduce((acc, user) => {
@@ -409,7 +420,7 @@ export default function AdminDashboard() {
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'ALL' || user.role === roleFilter;
+    const matchesRole = roleFilter === 'ALL' || user.role === Number(roleFilter);
     const matchesPlan = planFilter === 'ALL' || user.plan === planFilter;
     
     // Tab filtering
@@ -606,6 +617,78 @@ export default function AdminDashboard() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       Media Library
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="card-hover border-yellow-500/20 hover:border-yellow-500/50 transition-all duration-300 hover:shadow-xl bg-gradient-to-br from-card to-yellow-500/5">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 bg-yellow-500/10 rounded-full flex items-center justify-center">
+                    <Trophy className="h-6 w-6 text-yellow-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-1">Validate Predictions</h3>
+                    <p className="text-sm text-muted-foreground">Enter race results and validate user predictions</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button asChild className="glow-effect">
+                    <Link href="/admin/predictions">
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Validate Races
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="card-hover border-purple-500/20 hover:border-purple-500/50 transition-all duration-300 hover:shadow-xl bg-gradient-to-br from-card to-purple-500/5">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 bg-purple-500/10 rounded-full flex items-center justify-center">
+                    <Brain className="h-6 w-6 text-purple-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-1">Trivia Management</h3>
+                    <p className="text-sm text-muted-foreground">Create and edit F1 trivia questions</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button asChild className="glow-effect">
+                    <Link href="/admin/trivia">
+                      <Brain className="h-4 w-4 mr-2" />
+                      Manage Trivia
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="card-hover border-orange-500/20 hover:border-orange-500/50 transition-all duration-300 hover:shadow-xl bg-gradient-to-br from-card to-orange-500/5">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 bg-orange-500/10 rounded-full flex items-center justify-center">
+                    <Bell className="h-6 w-6 text-orange-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-1">Notifications</h3>
+                    <p className="text-sm text-muted-foreground">Send notifications to users</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button asChild className="glow-effect">
+                    <Link href="/admin/notifications">
+                      <Bell className="h-4 w-4 mr-2" />
+                      Manage Notifications
                     </Link>
                   </Button>
                 </div>
@@ -913,7 +996,7 @@ export default function AdminDashboard() {
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-1">
                             <h3 className="font-semibold text-lg text-foreground">{user.username}</h3>
-                            <Badge variant={user.role === 'ADMIN' ? 'default' : 'secondary'} className="text-xs">
+                            <Badge variant={user.role === 2 ? 'default' : 'secondary'} className="text-xs">
                               {roleNames[user.role] || user.role}
                             </Badge>
                           </div>
@@ -1018,7 +1101,7 @@ export default function AdminDashboard() {
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => {
                             setSelectedUser(user);
-                            setNewRole(user.role);
+                            setNewRole(getRoleString(user.role));
                             setEditType('role');
                           }}>
                             <Shield className="h-4 w-4 mr-2" />

@@ -1,5 +1,15 @@
 namespace Application.DTOs
 {
+    public class SimpleLeaderboardDto
+    {
+        public Guid UserId { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string? AvatarUrl { get; set; }
+        public int Level { get; set; }
+        public int Value { get; set; }
+        public int Rank { get; set; }
+    }
+    
     public class LeaderboardDto
     {
         public Guid UserId { get; set; }

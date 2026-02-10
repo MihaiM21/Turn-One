@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Trophy, Medal, TrendingUp, Award, Flame } from 'lucide-react';
+import { Trophy, Medal, Coins, Target, Zap } from 'lucide-react';
 import { leaderboardService } from '@/lib/gameService';
-import { LeaderboardEntry } from '@/types/game-types';
+import { SimpleLeaderboardEntry } from '@/types/game-types';
 
 export function LeaderboardView() {
-  const [globalLeaderboard, setGlobalLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [seasonLeaderboard, setSeasonLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [predictionsLeaderboard, setPredictionsLeaderboard] = useState<SimpleLeaderboardEntry[]>([]);
+  const [coinsLeaderboard, setCoinsLeaderboard] = useState<SimpleLeaderboardEntry[]>([]);
+  const [levelLeaderboard, setLevelLeaderboard] = useState<SimpleLeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,12 +21,14 @@ export function LeaderboardView() {
   const loadLeaderboards = async () => {
     setLoading(true);
     try {
-      const [global, season] = await Promise.all([
-        leaderboardService.getGlobalLeaderboard(50),
-        leaderboardService.getSeasonLeaderboard('2025', 50)
+      const [predictions, coins, level] = await Promise.all([
+        leaderboardService.getPredictionsLeaderboard(50),
+        leaderboardService.getCoinsLeaderboard(50),
+        leaderboardService.getLevelLeaderboard(50)
       ]);
-      setGlobalLeaderboard(global);
-      setSeasonLeaderboard(season);
+      setPredictionsLeaderboard(predictions);
+      setCoinsLeaderboard(coins);
+      setLevelLeaderboard(level);
     } catch (error) {
       console.error('Failed to load leaderboards:', error);
     } finally {
@@ -60,66 +62,57 @@ export function LeaderboardView() {
     }
   };
 
-  const LeaderboardTable = ({ entries }: { entries: LeaderboardEntry[] }) => (
+  const SimpleLeaderboardTable = ({ 
+    entries, 
+    valueLabel, 
+    valueFormatter 
+  }: { 
+    entries: SimpleLeaderboardEntry[]; 
+    valueLabel: string;
+    valueFormatter?: (value: number) => string;
+  }) => (
     <div className="space-y-2">
-      {entries.map((entry, index) => (
-        <div
-          key={entry.userId}
-          className={`p-4 rounded-lg border transition-all hover:shadow-lg ${getRankClassName(entry.globalRank)}`}
-        >
-          <div className="flex items-center gap-4">
-            {/* Rank */}
-            <div className="flex-shrink-0 w-12 flex items-center justify-center">
-              {getRankIcon(entry.globalRank)}
-            </div>
+      {entries.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <p>No data available yet</p>
+        </div>
+      ) : (
+        entries.map((entry) => (
+          <div
+            key={entry.userId}
+            className={`p-4 rounded-lg border transition-all hover:shadow-lg ${getRankClassName(entry.rank)}`}
+          >
+            <div className="flex items-center gap-4">
+              {/* Rank */}
+              <div className="flex-shrink-0 w-12 flex items-center justify-center">
+                {getRankIcon(entry.rank)}
+              </div>
 
-            {/* User Info */}
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <Avatar className="h-10 w-10 border-2 border-primary/20">
-                <AvatarImage src={entry.avatarUrl} alt={entry.username} />
-                <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                  {entry.username.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold truncate">{entry.username}</p>
-                <p className="text-xs text-muted-foreground">
-                  Level {Math.floor(entry.totalPointsEarned / 1000) + 1}
-                </p>
+              {/* User Info */}
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <Avatar className="h-10 w-10 border-2 border-primary/20">
+                  <AvatarImage src={entry.avatarUrl} alt={entry.username} />
+                  <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                    {entry.username.substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold truncate">{entry.username}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Level {entry.level}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            {/* Stats */}
-            <div className="hidden md:flex items-center gap-6 text-sm">
+              {/* Value */}
               <div className="text-center">
-                <p className="font-bold text-lg">{entry.totalPointsEarned.toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground">Points</p>
+                <p className="font-bold text-lg">{valueFormatter ? valueFormatter(entry.value) : entry.value.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">{valueLabel}</p>
               </div>
-              <div className="text-center">
-                <p className="font-bold text-lg">{entry.accuracyPercentage.toFixed(1)}%</p>
-                <p className="text-xs text-muted-foreground">Accuracy</p>
-              </div>
-              <div className="text-center">
-                <p className="font-bold text-lg flex items-center justify-center gap-1">
-                  <Flame className="w-4 h-4 text-orange-500" />
-                  {entry.currentStreak}
-                </p>
-                <p className="text-xs text-muted-foreground">Streak</p>
-              </div>
-            </div>
-
-            {/* Mobile Stats */}
-            <div className="md:hidden flex flex-col items-end gap-1">
-              <Badge variant="outline" className="bg-primary/10">
-                {entry.totalPointsEarned.toLocaleString()} pts
-              </Badge>
-              <span className="text-xs text-muted-foreground">
-                {entry.accuracyPercentage.toFixed(0)}% accuracy
-              </span>
             </div>
           </div>
-        </div>
-      ))}
+        ))
+      )}
     </div>
   );
 
@@ -152,24 +145,41 @@ export function LeaderboardView() {
         </div>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="global" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 bg-background/50">
-            <TabsTrigger value="global" className="gap-2">
-              <Award className="w-4 h-4" />
-              Global
+        <Tabs defaultValue="predictions" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 bg-background/50">
+            <TabsTrigger value="predictions" className="gap-2">
+              <Target className="w-4 h-4" />
+              Predictions
             </TabsTrigger>
-            <TabsTrigger value="season" className="gap-2">
-              <TrendingUp className="w-4 h-4" />
-              2025 Season
+            <TabsTrigger value="coins" className="gap-2">
+              <Coins className="w-4 h-4" />
+              Coins
+            </TabsTrigger>
+            <TabsTrigger value="level" className="gap-2">
+              <Zap className="w-4 h-4" />
+              Level
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="global" className="space-y-4">
-            <LeaderboardTable entries={globalLeaderboard} />
+          <TabsContent value="predictions" className="space-y-4">
+            <SimpleLeaderboardTable 
+              entries={predictionsLeaderboard} 
+              valueLabel="Correct Predictions"
+            />
           </TabsContent>
 
-          <TabsContent value="season" className="space-y-4">
-            <LeaderboardTable entries={seasonLeaderboard} />
+          <TabsContent value="coins" className="space-y-4">
+            <SimpleLeaderboardTable 
+              entries={coinsLeaderboard} 
+              valueLabel="Coins"
+            />
+          </TabsContent>
+
+          <TabsContent value="level" className="space-y-4">
+            <SimpleLeaderboardTable 
+              entries={levelLeaderboard} 
+              valueLabel="Experience"
+            />
           </TabsContent>
         </Tabs>
       </CardContent>

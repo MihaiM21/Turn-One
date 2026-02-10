@@ -19,6 +19,8 @@ public class TurnOneDbContext : DbContext
     public DbSet<ApiWishlist> ApiWishlists { get; set; } = null!;
     public DbSet<Article> Articles { get; set; } = null!;
     public DbSet<Media> Media { get; set; } = null!;
+    public DbSet<Notification> Notifications { get; set; } = null!;
+    public DbSet<UserNotification> UserNotifications { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

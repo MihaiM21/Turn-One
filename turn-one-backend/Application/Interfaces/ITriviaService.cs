@@ -8,6 +8,7 @@ namespace Application.Interfaces
         Task<TriviaResultDto> SubmitTriviaAttemptAsync(Guid userId, TriviaAttemptDto attemptDto);
         Task<List<TriviaDto>> GetAllTriviaAsync(); // Admin
         Task<TriviaDto> CreateTriviaAsync(CreateTriviaDto triviaDto); // Admin
+        Task<TriviaDto> UpdateTriviaAsync(UpdateTriviaDto triviaDto); // Admin
         Task<bool> DeleteTriviaAsync(Guid triviaId); // Admin
     }
 }

@@ -119,5 +119,47 @@ namespace API.Controllers
                 return StatusCode(500, new { success = false, message = "An error occurred" });
             }
         }
+
+        [Authorize(Roles = "ADMIN")]
+        [HttpGet("races/pending")]
+        public async Task<IActionResult> GetPendingRaces()
+        {
+            try
+            {
+                var races = await _predictionService.GetPendingRacesAsync();
+                return Ok(new { success = true, data = races });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { success = false, message = "An error occurred" });
+            }
+        }
+
+        [Authorize(Roles = "ADMIN")]
+        [HttpPost("race/{raceId}/validate")]
+        public async Task<IActionResult> ValidateRace(string raceId, [FromBody] RaceResultsDto raceResults)
+        {
+            try
+            {
+                // Ensure raceId matches
+                if (raceId != raceResults.RaceId)
+                {
+                    return BadRequest(new { success = false, message = "Race ID mismatch" });
+                }
+
+                var result = await _predictionService.SettleRaceAsync(raceId, raceResults);
+                return Ok(new 
+                { 
+                    success = true, 
+                    message = $"Validated {result.SettledCount} predictions for {raceResults.RaceName}", 
+                    data = result 
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error validating race: {ex.Message}");
+                return StatusCode(500, new { success = false, message = "An error occurred while validating predictions" });
+            }
+        }
     }
 }

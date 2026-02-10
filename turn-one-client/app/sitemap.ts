@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://turnone.racing'
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://turnonehub.com'
   const currentDate = new Date()
 
   // Static pages with their priorities and change frequencies
@@ -17,12 +17,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     
     // Gaming features - high priority
     { url: '/games', changeFrequency: 'weekly' as const, priority: 0.85 },
-    { url: '/games/trivia', changeFrequency: 'weekly' as const, priority: 0.85 },
     { url: '/predictions', changeFrequency: 'weekly' as const, priority: 0.85 },
     { url: '/generator', changeFrequency: 'monthly' as const, priority: 0.7 },
     
     // Community & Profile
-    { url: '/profile', changeFrequency: 'weekly' as const, priority: 0.7 },
+    { url: '/account', changeFrequency: 'weekly' as const, priority: 0.7 },
     { url: '/rewards', changeFrequency: 'weekly' as const, priority: 0.7 },
     
     // Information pages

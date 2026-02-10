@@ -92,6 +92,15 @@ export interface TriviaResult {
   message: string;
 }
 
+export interface SimpleLeaderboardEntry {
+  userId: string;
+  username: string;
+  avatarUrl?: string;
+  level: number;
+  value: number;
+  rank: number;
+}
+
 export interface LeaderboardEntry {
   userId: string;
   username: string;
