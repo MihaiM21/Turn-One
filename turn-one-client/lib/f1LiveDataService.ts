@@ -50,7 +50,7 @@ export class F1LiveDataService {
   private readonly proxyUrl = `${API_URL}/f1livetiming`; // Use backend proxy
   private readonly retryFreq = 15000;
   private readonly maxRetries = 5;
-  
+
   private state: F1LiveData = {};
   private lastReceivedData: F1LiveData = {}; // Store the last data permanently
   private messageCount = 0;
@@ -62,19 +62,19 @@ export class F1LiveDataService {
   private retryCount = 0;
   private lastActivity = 0;
   private lastDataReceived = 0;
-  
+
   private dataCallbacks: F1DataCallback[] = [];
   private statusCallbacks: F1StatusCallback[] = [];
 
   constructor() {
     // Load persisted data from localStorage if available
     this.loadPersistedData();
-    
+
     // Check for session activity periodically
     setInterval(() => {
       this.checkSessionActivity();
     }, 30000); // Check every 30 seconds
-    
+
     // Send keep-alive ping every 15 seconds to maintain connection
     setInterval(() => {
       this.sendKeepAlive();
@@ -86,6 +86,7 @@ export class F1LiveDataService {
       const stored = localStorage.getItem('f1-last-data');
       if (stored) {
         this.lastReceivedData = JSON.parse(stored);
+        this.state = { ...this.lastReceivedData }; // Initialize state with persisted data
         console.log('Loaded persisted F1 data from localStorage');
       }
     } catch (error) {
@@ -185,8 +186,8 @@ export class F1LiveDataService {
             // Update state immediately for real-time data
             if (field === "TimingData" || field === "CarData" || field === "Position") {
               // These fields need immediate updates for live timing
-              this.state[field] = value;
-              this.lastReceivedData[field] = value;
+              this.state = this.deepObjectMerge(this.state, { [field]: value });
+              this.lastReceivedData = this.deepObjectMerge(this.lastReceivedData, { [field]: value });
               // Trigger callback immediately for critical real-time data
               this.notifyDataCallbacks();
             } else {
@@ -218,7 +219,7 @@ export class F1LiveDataService {
       // Persist and notify for non-realtime updates
       if (hasNewData) {
         this.persistData(); // Save to localStorage
-        
+
         // For non-critical updates, debounce the notification
         if (!this.debounceTimer) {
           this.debounceTimer = setTimeout(() => {
@@ -235,7 +236,7 @@ export class F1LiveDataService {
   private checkSessionActivity(): void {
     const now = Date.now();
     const timeSinceLastActivity = now - this.lastActivity;
-    
+
     // Only mark as no-session if we never received any data AND no activity for 5+ minutes
     if (timeSinceLastActivity > 300000 && this.messageCount === 0) {
       console.log('No activity detected and no data ever received');
@@ -252,10 +253,10 @@ export class F1LiveDataService {
       this.notifyStatusCallbacks('connecting');
 
       const hub = encodeURIComponent(JSON.stringify([{ name: this.signalrHub }]));
-      
+
       // Use backend proxy instead of direct connection
       const negotiationUrl = `${this.proxyUrl}/negotiate?connectionData=${hub}&clientProtocol=1.5`;
-      
+
       const negotiationResponse = await fetch(negotiationUrl, {
         method: 'GET',
         headers: {
@@ -289,13 +290,13 @@ export class F1LiveDataService {
 
       this.websocket.onopen = () => {
         console.log(`[${this.signalrUrl}] WebSocket connection established`);
-        
-        this.state = {};
+
+        // this.state = {}; // Keep previous state to avoid flickering
         this.messageCount = 0;
         this.emptyMessageCount = 0;
         this.retryCount = 0;
         this.lastActivity = Date.now();
-        
+
         this.notifyStatusCallbacks('connected');
 
         // Subscribe to F1 live timing feeds
@@ -338,7 +339,7 @@ export class F1LiveDataService {
 
       this.websocket.onclose = (event) => {
         console.log(`WebSocket closed (code: ${event.code}, reason: ${event.reason})`);
-        
+
         if (event.code === 1000) {
           // Normal closure
           this.notifyStatusCallbacks('no-session');
@@ -346,7 +347,7 @@ export class F1LiveDataService {
           this.notifyStatusCallbacks('disconnected');
         }
 
-        this.state = {};
+        // this.state = {}; // Keep state on disconnect to avoid UI clearing
         this.messageCount = 0;
         this.emptyMessageCount = 0;
 
@@ -354,7 +355,7 @@ export class F1LiveDataService {
         if (this.retryCount < this.maxRetries) {
           this.retryCount++;
           console.log(`Retrying connection (${this.retryCount}/${this.maxRetries}) in ${this.retryFreq}ms...`);
-          
+
           this.reconnectTimer = setTimeout(() => {
             this.setupStream();
           }, this.retryFreq);
@@ -367,7 +368,7 @@ export class F1LiveDataService {
 
     } catch (error) {
       console.error(`[${this.signalrUrl}] Connection failed:`, error);
-      
+
       if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
         console.log('Network error - likely CORS issue or no active session');
         this.notifyStatusCallbacks('no-session');

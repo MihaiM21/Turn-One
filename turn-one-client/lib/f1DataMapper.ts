@@ -237,29 +237,29 @@ export class F1DataMapper {
 
     // Map session information
     result.sessionInfo = this.mapSessionInfo(rawData);
-    
+
     // Map weather data
     result.weather = this.mapWeatherData(rawData);
-    
+
     // Map track status
     result.trackStatus = this.mapTrackStatus(rawData);
-    
+
     // Map positions and timing
     result.positions = this.mapPositions(rawData);
-    
+
     // Map race control messages
     result.raceControlMessages = this.mapRaceControlMessages(rawData);
-    
+
     // Map team radio
     result.teamRadio = this.mapTeamRadio(rawData);
-    
+
     // Map fastest laps
     result.fastestLaps = this.mapFastestLaps(rawData);
 
     return result;
   }
 
-  
+
 
   private static mapSessionInfo(rawData: F1RawData): MappedF1Data['sessionInfo'] {
     const sessionInfo = rawData.SessionInfo;
@@ -277,7 +277,7 @@ export class F1DataMapper {
       currentLap: lapCount?.CurrentLap,
       totalLaps: lapCount?.TotalLaps,
       path: sessionInfo?.Path,
-      lapsRemaining: lapCount?.TotalLaps && lapCount?.CurrentLap ? 
+      lapsRemaining: lapCount?.TotalLaps && lapCount?.CurrentLap ?
         lapCount.TotalLaps - lapCount.CurrentLap : undefined
     };
   }
@@ -322,7 +322,7 @@ export class F1DataMapper {
 
     let flagColor = 'green';
     const status = trackStatus.Status || '';
-    
+
     if (status.includes('RED') || status === '6') flagColor = 'red';
     else if (status.includes('YELLOW') || status === '4') flagColor = 'yellow';
     else if (status.includes('GREEN') || status === '1') flagColor = 'green';
@@ -354,33 +354,41 @@ export class F1DataMapper {
       // Process speed data
       const speed = carInfo?.Channels?.[2] || 0;
       const drs = (carInfo?.Channels?.[45] || 0) > 0;
-      
+
       // Process track status
       const isOnTrack = !timing.InPit;
       const retired = timing.Retired || false;
-      
+
       // Process timing data
       const lastLap = timing.LastLapTime?.Value || '';
       const bestLap = timing.BestLapTime?.Value;
       const gap = timing.TimeDiffToFastest || '';
       const interval = timing.TimeDiffToPositionAhead || '';
-      
+
       // Process sector times and segments
       const sectors = timing.Sectors || [];
       const sector1 = sectors[0]?.Value;
       const sector2 = sectors[1]?.Value;
       const sector3 = sectors[2]?.Value;
-      
+
       // Process sector status for highlighting
       const sector1Best = sectors[0]?.OverallFastest;
       const sector2Best = sectors[1]?.OverallFastest;
       const sector3Best = sectors[2]?.OverallFastest;
-      
-      // Process sector segments
-      const sector1Segments = sectors[0]?.Segments?.map(seg => ({ status: seg.Status || 2048 })) || [];
-      const sector2Segments = sectors[1]?.Segments?.map(seg => ({ status: seg.Status || 2048 })) || [];
-      const sector3Segments = sectors[2]?.Segments?.map(seg => ({ status: seg.Status || 2048 })) || [];
-      
+
+      // Process sector segments safely
+      const getSegments = (sectorIndex: number) => {
+        const segments = sectors[sectorIndex]?.Segments;
+        if (Array.isArray(segments)) {
+          return segments.map(seg => ({ status: seg.Status !== undefined ? Number(seg.Status) : 0 }));
+        }
+        return [];
+      };
+
+      const sector1Segments = getSegments(0);
+      const sector2Segments = getSegments(1);
+      const sector3Segments = getSegments(2);
+
       // Get speeds for different points
       const speeds = timing.Speeds || {};
       const speedTrap = parseFloat(speeds.ST?.Value || '0');
@@ -458,25 +466,25 @@ export class F1DataMapper {
   }
 
   private static mapTeamRadio(rawData: F1RawData): MappedF1Data['teamRadio'] {
-  const teamRadio = rawData.TeamRadio;
-  if (!teamRadio || !Array.isArray(teamRadio.Captures)) return [];
+    const teamRadio = rawData.TeamRadio;
+    if (!teamRadio || !Array.isArray(teamRadio.Captures)) return [];
 
-  const result: MappedF1Data['teamRadio'] = [];
+    const result: MappedF1Data['teamRadio'] = [];
 
-  teamRadio.Captures.forEach((capture) => {
-    if (capture.Utc && capture.Path && capture.RacingNumber) {
-      result.push({
-        driverNumber: capture.RacingNumber,
-        timestamp: capture.Utc,
-        path: capture.Path,
-      });
-    }
-  });
+    teamRadio.Captures.forEach((capture) => {
+      if (capture.Utc && capture.Path && capture.RacingNumber) {
+        result.push({
+          driverNumber: capture.RacingNumber,
+          timestamp: capture.Utc,
+          path: capture.Path,
+        });
+      }
+    });
 
-  return result
-    .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
-    .slice(0, 10);
-}
+    return result
+      .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+      .slice(0, 10);
+  }
 
   private static mapFastestLaps(rawData: F1RawData): MappedF1Data['fastestLaps'] {
     const timingData = rawData.TimingData;
@@ -518,13 +526,13 @@ export class F1DataMapper {
 
   private static lapTimeToSeconds(lapTime: string): number {
     if (!lapTime) return Infinity;
-    
+
     const parts = lapTime.split(':');
     if (parts.length === 2) {
       const [minutes, seconds] = parts;
       return parseInt(minutes) * 60 + parseFloat(seconds);
     }
-    
+
     return parseFloat(lapTime) || Infinity;
   }
 }
