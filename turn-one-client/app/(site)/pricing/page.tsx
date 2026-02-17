@@ -5,17 +5,21 @@ import { Check, X, Zap, Trophy, Crown, Camera, Users, TrendingUp, Shield } from 
 import { MainNav } from "@/components/navigation/main-nav"
 import Link from "next/link"
 import { Metadata } from 'next'
+import { generateSEO } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: 'Pricing - Free F1 Telemetry Analysis | Turn One',
+export const metadata: Metadata = generateSEO({
+  title: 'Pricing - Free F1 Telemetry Analysis',
   description: 'Turn One is 100% free to use. Access professional F1 telemetry analysis, live race data, and lap time comparisons. Optional paid plans support the platform and unlock enhanced features.',
-  keywords: ['F1 telemetry', 'free F1 analysis', 'Formula 1 data', 'racing telemetry', 'F1 lap times', 'motorsport analytics'],
-  openGraph: {
-    title: 'Free F1 Telemetry Analysis Platform | Turn One',
-    description: 'Professional F1 telemetry analysis, completely free. No credit card required.',
-    type: 'website',
-  },
-}
+  url: '/pricing',
+  keywords: [
+    'F1 telemetry pricing',
+    'free F1 analysis',
+    'Formula 1 data pricing',
+    'racing telemetry cost',
+    'F1 subscription',
+    'motorsport analytics pricing',
+  ],
+})
 
 export default function PricingPage() {
   const plans = [
