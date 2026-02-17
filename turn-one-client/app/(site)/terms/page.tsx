@@ -4,6 +4,20 @@ import { MainNav } from "@/components/navigation/main-nav"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { ScrollAnimation } from "@/components/animation/scroll-animation"
+import { Metadata } from 'next'
+import { generateSEO } from '@/lib/seo'
+
+export const metadata: Metadata = generateSEO({
+  title: 'Terms of Service',
+  description: 'Turn One Terms of Service - Review the terms and conditions for using our F1 live timing, telemetry analysis, and motorsport intelligence platform.',
+  url: '/terms',
+  keywords: [
+    'F1 terms of service',
+    'user agreement',
+    'terms and conditions',
+    'platform terms',
+  ],
+})
 
 export default function TermsPage() {
     return (

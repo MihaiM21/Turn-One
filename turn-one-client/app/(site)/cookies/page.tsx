@@ -4,6 +4,19 @@ import { MainNav } from "@/components/navigation/main-nav"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { ScrollAnimation } from "@/components/animation/scroll-animation"
+import { Metadata } from 'next'
+import { generateSEO } from '@/lib/seo'
+
+export const metadata: Metadata = generateSEO({
+  title: 'Cookie Policy',
+  description: 'Turn One Cookie Policy - Learn about how we use cookies and tracking technologies on our F1 platform to enhance your experience.',
+  url: '/cookies',
+  keywords: [
+    'cookie policy',
+    'tracking technologies',
+    'web cookies',
+  ],
+})
 
 export default function CookiesPage() {
     return (

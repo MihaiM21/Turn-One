@@ -4,6 +4,20 @@ import { MainNav } from "@/components/navigation/main-nav"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { ScrollAnimation } from "@/components/animation/scroll-animation"
+import { Metadata } from 'next'
+import { generateSEO } from '@/lib/seo'
+
+export const metadata: Metadata = generateSEO({
+  title: 'Privacy Policy',
+  description: 'Turn One Privacy Policy - Learn how we protect your data and privacy while using our F1 live timing and telemetry platform. Transparent data handling and security practices.',
+  url: '/privacy',
+  keywords: [
+    'F1 privacy policy',
+    'data protection',
+    'user privacy',
+    'GDPR compliance',
+  ],
+})
 
 export default function PrivacyPage() {
     return (

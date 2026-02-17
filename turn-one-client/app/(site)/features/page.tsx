@@ -18,6 +18,22 @@ import {
   Globe,
 } from "lucide-react"
 import Link from "next/link"
+import { Metadata } from 'next'
+import { generateSEO } from '@/lib/seo'
+
+export const metadata: Metadata = generateSEO({
+  title: 'Features',
+  description: 'Explore Turn One features - Advanced F1 lap time analysis, real-time telemetry processing, speed trace analysis, interactive track mapping, and comprehensive race data.',
+  url: '/features',
+  keywords: [
+    'F1 features',
+    'telemetry analysis',
+    'lap time analysis',
+    'track mapping',
+    'real-time F1 data',
+    'speed trace analysis',
+  ],
+})
 
 export default function FeaturesPage() {
   const mainFeatures = [

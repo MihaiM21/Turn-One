@@ -4,6 +4,21 @@ import { Badge } from "@/components/ui/badge"
 import { MainNav } from "@/components/navigation/main-nav"
 import { BarChart3, Zap, TrendingUp, Trophy, Users, Activity, Database, Gauge, MapPin, Settings } from "lucide-react"
 import Link from "next/link"
+import { Metadata } from 'next'
+import { generateSEO } from '@/lib/seo'
+
+export const metadata: Metadata = generateSEO({
+  title: 'Services & Pricing',
+  description: 'Turn One F1 services and pricing - Professional telemetry analysis, real-time timing data, enterprise solutions, and custom integrations for racing teams and enthusiasts.',
+  url: '/services',
+  keywords: [
+    'F1 services',
+    'telemetry pricing',
+    'F1 analysis pricing',
+    'enterprise F1 solutions',
+    'racing team services',
+  ],
+})
 
 export default function ServicesPage() {
   return (

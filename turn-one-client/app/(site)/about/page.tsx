@@ -5,6 +5,21 @@ import { MainNav } from "@/components/navigation/main-nav"
 import { Trophy, Users, Target, Zap, BarChart3 } from "lucide-react"
 import Link from "next/link"
 import { ScrollAnimation } from "@/components/animation/scroll-animation"
+import { Metadata } from 'next'
+import { generateSEO } from '@/lib/seo'
+
+export const metadata: Metadata = generateSEO({
+  title: 'About Turn One',
+  description: 'Learn about Turn One - the premier Formula 1 live timing and telemetry platform. Discover our mission to revolutionize F1 data analysis and motorsport intelligence.',
+  url: '/about',
+  keywords: [
+    'about Turn One',
+    'F1 analysis platform',
+    'motorsport intelligence',
+    'F1 data specialists',
+    'telemetry experts',
+  ],
+})
 
 export default function AboutPage() {
   return (
