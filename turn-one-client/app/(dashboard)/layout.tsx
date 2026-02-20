@@ -1,26 +1,20 @@
-'use client';
+import { DashboardLayoutClient } from './dashboard-layout-client';
+import { generateSEO } from '@/lib/seo';
+import { Metadata } from 'next';
 
-import { AppSidebar } from "@/components/app-sidebar";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import ProtectedRoute from "@/components/auth/protected-route";
-import { MainFooter } from "@/components/footer/main-footer";
+// Default metadata for dashboard - can be overridden by page-specific layouts
+export const metadata: Metadata = generateSEO({
+  title: 'Dashboard - Formula 1 Live Timing Platform',
+  description: 'Access your Formula 1 dashboard with live race timing, telemetry analysis, predictions, and comprehensive F1 data. Your central hub for all things Formula 1.',
+  url: '/dashboard',
+  keywords: [
+    'F1 dashboard',
+    'Formula 1 user dashboard',
+    'F1 live data',
+    'personal F1 hub',
+  ],
+});
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <ProtectedRoute>
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <div className="flex flex-col min-h-screen bg-gradient-to-br from-black via-red-950/20 to-black">
-            <div className="flex-grow">
-              {children}
-            </div>
-            <div className="mt-auto">
-              <MainFooter />
-            </div>
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
-    </ProtectedRoute>
-  );
+  return <DashboardLayoutClient>{children}</DashboardLayoutClient>;
 }

@@ -14,41 +14,41 @@ import { getAuthToken } from "@/lib/auth-utils"
 export default function DashboardPage() {
   const [isReady, setIsReady] = useState(false);
   const [hasToken, setHasToken] = useState<boolean | null>(null);
-  
+
   useEffect(() => {
     // Check if user is authenticated
     const token = getAuthToken();
     setHasToken(!!token);
-    
+
     // Set dashboard as ready
     setIsReady(true);
   }, []);
-  
+
   return (
-    <DashboardLoadingContainer 
-      isReady={isReady} 
+    <DashboardLoadingContainer
+      isReady={isReady}
       loadingMessage={hasToken === false ? "Authentication required..." : "Loading dashboard..."}
     >
       <div className="min-h-screen bg-gradient-to-br from-black via-red-950/20 to-black">
-        
+
         <DashboardHeader />
 
         <main className="container mx-auto px-4 py-8 space-y-8">
-          
+
           {/* User stats and daily gift widgets */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-1">
             <UserStatsWidget />
-            <DailyGiftWidget 
+            <DailyGiftWidget
               onGiftClaimed={() => window.location.reload()}
             />
             <LatestSessionWidget />
           </div>
-          
+
           <SessionManager />
 
           <TelemetryOverview />
-          </main>
-        </div>
+        </main>
+      </div>
     </DashboardLoadingContainer>
   );
 }
