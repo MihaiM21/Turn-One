@@ -108,6 +108,9 @@
     "typescript": "^5"
   },
   "overrides": {
-    "undici": "$undici"
+    "undici": "$undici",
+    "ajv": "^8.18.0",
+    "markdown-it": "^14.1.1",
+    "minimatch": "^10.2.1"
   }
 }
