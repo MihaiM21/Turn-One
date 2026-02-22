@@ -63,8 +63,8 @@ export const fetchLaptimeData = async (token: string, year: number, gp: number |
 }
 
 export const fetchAPIDailyStats = async () => {
-  return fetchFromExternalAPI('analytics/daily');
+  return fetchFromExternalAPI('v1/analytics/daily');
 }
 export const fetchAPITotalStats = async () => {
-  return fetchFromExternalAPI('analytics/total');
+  return fetchFromExternalAPI('v1/analytics/total');
 }
