@@ -1,9 +1,8 @@
 'use client';
 
-import { Console } from 'console';
 import { useState, useEffect } from 'react';
 import { loadEnvConfig } from '@next/env'
-import { fetchWithAuth, fetchFromExternalAPI, fetchFromExternalAPIv1, fetchFromExternalAPIv2 } from './data-fetcher';
+import { fetchFromExternalAPI, fetchFromExternalAPIv1, fetchFromExternalAPIv2 } from './data-fetcher';
 
 export const fetchEventsByYear = async (year: number) => {
   return fetchFromExternalAPIv2(`seasons/${year}/events`);
@@ -15,8 +14,7 @@ export const fetchSessionsByEvent = async (year: number, eventName: string) => {
 
 
 
-export const fetchTopSpeeds = async (token: string, year: number, gp: number | string, session: string, version: string = 'v1', topSpeedType: string = 'telemetry') => { //
-  console.log(year)
+export const fetchTopSpeeds = async (token: string, year: number, gp: number | string, session: string, version: string = 'v1', topSpeedType: string = 'telemetry') => {
   if (version === 'v2') {
     return fetchFromExternalAPIv2(`top-speed-${topSpeedType}-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`);
   }
