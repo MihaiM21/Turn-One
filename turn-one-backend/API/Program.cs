@@ -180,6 +180,7 @@ builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddSingleton<IVersionService, VersionService>();
 builder.Services.AddScoped<ILevelSystemService, LevelSystemService>();
 builder.Services.AddScoped<IDailyGiftService, DailyGiftService>();
+builder.Services.AddScoped<ITurnstileService, TurnstileService>();
 
 // Register game hub services
 builder.Services.AddScoped<ICoinService, CoinService>();

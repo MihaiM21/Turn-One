@@ -11,6 +11,7 @@ import { MainNav } from "@/components/navigation/main-nav"
 import { Mail, MapPin, Clock, Send, MessageSquare, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "@/hooks/use-toast"
+import { Turnstile } from "@marsidev/react-turnstile"
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -19,12 +20,23 @@ export default function ContactPage() {
     email: '',
     company: '',
     subject: '',
-    message: ''
+    message: '',
+    turnstileToken: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.turnstileToken) {
+      toast({
+        title: "Validation Error",
+        description: "Please complete the captcha.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -57,7 +69,8 @@ export default function ContactPage() {
           email: '',
           company: '',
           subject: '',
-          message: ''
+          message: '',
+          turnstileToken: ''
         });
       } else {
         toast({
@@ -129,7 +142,7 @@ export default function ContactPage() {
                           <Input
                             id="firstName"
                             value={formData.firstName}
-                            onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                             placeholder="Your first name"
                             className="bg-background/50 border-border/50 focus:border-primary transition-colors"
                             required
@@ -137,11 +150,11 @@ export default function ContactPage() {
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="lastName" className="text-sm font-medium">Last Name</Label>
-                          <Input 
+                          <Input
                             id="lastName"
                             value={formData.lastName}
-                            onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                            placeholder="Your last name" 
+                            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                            placeholder="Your last name"
                             className="bg-background/50 border-border/50 focus:border-primary transition-colors"
                             required
                           />
@@ -154,7 +167,7 @@ export default function ContactPage() {
                           id="email"
                           type="email"
                           value={formData.email}
-                          onChange={(e) => setFormData({...formData, email: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                           placeholder="your.email@example.com"
                           className="bg-background/50 border-border/50 focus:border-primary transition-colors"
                           required
@@ -166,7 +179,7 @@ export default function ContactPage() {
                         <Input
                           id="company"
                           value={formData.company}
-                          onChange={(e) => setFormData({...formData, company: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                           placeholder="Your company or team"
                           className="bg-background/50 border-border/50 focus:border-primary transition-colors"
                         />
@@ -177,7 +190,7 @@ export default function ContactPage() {
                         <Input
                           id="subject"
                           value={formData.subject}
-                          onChange={(e) => setFormData({...formData, subject: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                           placeholder="What can we help you with?"
                           className="bg-background/50 border-border/50 focus:border-primary transition-colors"
                           required
@@ -189,7 +202,7 @@ export default function ContactPage() {
                         <Textarea
                           id="message"
                           value={formData.message}
-                          onChange={(e) => setFormData({...formData, message: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                           placeholder="Tell us more about your needs, questions, or how we can help you with F1 analysis..."
                           rows={6}
                           className="bg-background/50 border-border/50 focus:border-primary transition-colors resize-none"
@@ -197,9 +210,19 @@ export default function ContactPage() {
                         />
                       </div>
 
-                      <Button 
-                        type="submit" 
-                        size="lg" 
+                      <div className="flex justify-center py-2">
+                        <Turnstile
+                          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""}
+                          onSuccess={(token) => setFormData({ ...formData, turnstileToken: token })}
+                          options={{
+                            theme: "dark",
+                          }}
+                        />
+                      </div>
+
+                      <Button
+                        type="submit"
+                        size="lg"
                         className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/20 transition-all duration-300"
                         disabled={isSubmitting}
                       >
