@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
+    "@marsidev/react-turnstile": "^1.4.2",
     "@microsoft/signalr": "^9.0.6",
     "@next/env": "^15.5.4",
     "@payloadcms/next": "^3.62.0",

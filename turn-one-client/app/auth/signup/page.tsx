@@ -12,6 +12,7 @@ import { useState } from "react"
 import { ArrowLeft } from "lucide-react"
 import { register } from "@/lib/auth"
 import { RegisterData } from "@/types/auth-types"
+import { Turnstile } from "@marsidev/react-turnstile"
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("")
@@ -20,12 +21,19 @@ export default function SignUpPage() {
   const [username, setUsername] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const router = useRouter()
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
+
+    if (!turnstileToken) {
+      setError("Please complete the captcha")
+      setIsLoading(false)
+      return
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match")
@@ -39,11 +47,12 @@ export default function SignUpPage() {
         email,
         username,
         password,
-        confirmPassword
+        confirmPassword,
+        turnstileToken
       }
-      
+
       const response = await register(registerData)
-      
+
       if (response.success) {
         // For admin users, proceed directly to dashboard
         if (response.emailConfirmed) {
@@ -136,6 +145,15 @@ export default function SignUpPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="bg-black/50 border-red-800/30 text-white"
+                />
+              </div>
+              <div className="flex justify-center py-2">
+                <Turnstile
+                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""}
+                  onSuccess={(token) => setTurnstileToken(token)}
+                  options={{
+                    theme: "dark",
+                  }}
                 />
               </div>
               {error && <p className="text-sm text-red-400 bg-red-950/20 p-2 rounded">{error}</p>}

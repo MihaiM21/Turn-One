@@ -27,5 +27,7 @@ namespace Application.DTOs
         [Required]
         [MaxLength(2000)]
         public string Message { get; set; } = string.Empty;
+
+        public string TurnstileToken { get; set; } = string.Empty;
     }
 }

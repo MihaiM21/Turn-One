@@ -16,22 +16,34 @@ public class AuthController : ControllerBase
     private readonly TurnOneDbContext _context;
     private readonly IDailyGiftService _dailyGiftService;
     private readonly IEmailService _emailService;
+    private readonly ITurnstileService _turnstileService;
 
     public AuthController(
         IAuthService authService, 
         TurnOneDbContext context, 
         IDailyGiftService dailyGiftService,
-        IEmailService emailService)
+        IEmailService emailService,
+        ITurnstileService turnstileService)
     {
         _authService = authService;
         _context = context;
         _dailyGiftService = dailyGiftService;
         _emailService = emailService;
+        _turnstileService = turnstileService;
     }
 
     [HttpPost("register")]
     public async Task<ActionResult<AuthResponseDto>> Register(RegisterDto registerDto)
     {
+        if (!await _turnstileService.VerifyTokenAsync(registerDto.TurnstileToken))
+        {
+            return BadRequest(new AuthResponseDto 
+            { 
+                Success = false, 
+                Message = "Invalid captcha. Please try again." 
+            });
+        }
+
         var response = await _authService.Register(registerDto);
         
         if (!response.Success)

@@ -10,11 +10,13 @@ public class ContactController : ControllerBase
 {
     private readonly IEmailService _emailService;
     private readonly ILogger<ContactController> _logger;
+    private readonly ITurnstileService _turnstileService;
 
-    public ContactController(IEmailService emailService, ILogger<ContactController> logger)
+    public ContactController(IEmailService emailService, ILogger<ContactController> logger, ITurnstileService turnstileService)
     {
         _emailService = emailService;
         _logger = logger;
+        _turnstileService = turnstileService;
     }
 
     [HttpPost]
@@ -23,6 +25,11 @@ public class ContactController : ControllerBase
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
+        }
+
+        if (!await _turnstileService.VerifyTokenAsync(contactForm.TurnstileToken))
+        {
+            return BadRequest(new { success = false, message = "Invalid captcha. Please try again." });
         }
 
         try
