@@ -304,11 +304,11 @@ namespace Infrastructure.Services
         {
             int points = 0;
 
-            if (prediction.PodiumP1 == actual.PodiumP1) points += 100;
-            if (prediction.PodiumP2 == actual.PodiumP2) points += 75;
-            if (prediction.PodiumP3 == actual.PodiumP3) points += 50;
-            if (prediction.FastestLapDriver == actual.FastestLapDriver) points += 60;
-            if (prediction.PolePositionDriver == actual.PolePositionDriver) points += 40;
+            if (string.Equals(prediction.PodiumP1, actual.PodiumP1, StringComparison.OrdinalIgnoreCase)) points += 100;
+            if (string.Equals(prediction.PodiumP2, actual.PodiumP2, StringComparison.OrdinalIgnoreCase)) points += 75;
+            if (string.Equals(prediction.PodiumP3, actual.PodiumP3, StringComparison.OrdinalIgnoreCase)) points += 50;
+            if (string.Equals(prediction.FastestLapDriver, actual.FastestLapDriver, StringComparison.OrdinalIgnoreCase)) points += 60;
+            if (string.Equals(prediction.PolePositionDriver, actual.PolePositionDriver, StringComparison.OrdinalIgnoreCase)) points += 40;
             
             if (prediction.FirstRetirementLap.HasValue && actual.FirstRetirementLap.HasValue)
             {
@@ -334,12 +334,24 @@ namespace Infrastructure.Services
             int correct = 0;
             int total = 0;
 
-            if (!string.IsNullOrEmpty(prediction.PodiumP1)) { total++; if (prediction.PodiumP1 == actual.PodiumP1) correct++; }
-            if (!string.IsNullOrEmpty(prediction.PodiumP2)) { total++; if (prediction.PodiumP2 == actual.PodiumP2) correct++; }
-            if (!string.IsNullOrEmpty(prediction.PodiumP3)) { total++; if (prediction.PodiumP3 == actual.PodiumP3) correct++; }
-            if (!string.IsNullOrEmpty(prediction.FastestLapDriver)) { total++; if (prediction.FastestLapDriver == actual.FastestLapDriver) correct++; }
-            if (!string.IsNullOrEmpty(prediction.PolePositionDriver)) { total++; if (prediction.PolePositionDriver == actual.PolePositionDriver) correct++; }
+            if (!string.IsNullOrEmpty(prediction.PodiumP1)) { total++; if (string.Equals(prediction.PodiumP1, actual.PodiumP1, StringComparison.OrdinalIgnoreCase)) correct++; }
+            if (!string.IsNullOrEmpty(prediction.PodiumP2)) { total++; if (string.Equals(prediction.PodiumP2, actual.PodiumP2, StringComparison.OrdinalIgnoreCase)) correct++; }
+            if (!string.IsNullOrEmpty(prediction.PodiumP3)) { total++; if (string.Equals(prediction.PodiumP3, actual.PodiumP3, StringComparison.OrdinalIgnoreCase)) correct++; }
+            if (!string.IsNullOrEmpty(prediction.FastestLapDriver)) { total++; if (string.Equals(prediction.FastestLapDriver, actual.FastestLapDriver, StringComparison.OrdinalIgnoreCase)) correct++; }
+            if (!string.IsNullOrEmpty(prediction.PolePositionDriver)) { total++; if (string.Equals(prediction.PolePositionDriver, actual.PolePositionDriver, StringComparison.OrdinalIgnoreCase)) correct++; }
             if (prediction.WillThereBeASafetyCar.HasValue) { total++; if (prediction.WillThereBeASafetyCar == actual.WillThereBeASafetyCar) correct++; }
+            if (prediction.FirstRetirementLap.HasValue && actual.FirstRetirementLap.HasValue)
+            {
+                total++;
+                int diff = Math.Abs(prediction.FirstRetirementLap.Value - actual.FirstRetirementLap.Value);
+                if (diff <= 2) correct++; // Within 2 laps counts as correct for accuracy
+            }
+            if (prediction.NumberOfDnfs.HasValue && actual.NumberOfDnfs.HasValue)
+            {
+                total++;
+                int diff = Math.Abs(prediction.NumberOfDnfs.Value - actual.NumberOfDnfs.Value);
+                if (diff <= 1) correct++; // Within 1 DNF counts as correct for accuracy
+            }
 
             return total > 0 ? (double)correct / total : 0;
         }

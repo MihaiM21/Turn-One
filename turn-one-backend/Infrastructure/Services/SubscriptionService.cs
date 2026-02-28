@@ -151,6 +151,12 @@ public class SubscriptionService : ISubscriptionService
         return user;
     }
 
+    /// <summary>
+    /// Refill period is 30 days for every plan.
+    /// Kept in sync with <see cref="API.Services.TokenRefillBackgroundService.RefillPeriodDays"/>.
+    /// </summary>
+    private const int RefillPeriodDays = 30;
+
     private static int GetMonthlyTokens(PlanType plan) => plan switch
     {
         PlanType.BASIC => 30,
@@ -167,13 +173,7 @@ public class SubscriptionService : ISubscriptionService
         _ => throw new ArgumentOutOfRangeException(nameof(plan))
     };
 
-    private static int GetRefillPeriod(PlanType plan) => plan switch
-    {
-        PlanType.BASIC => 30,  // Monthly
-        PlanType.PRO => 15,    // Bi-weekly
-        PlanType.ELITE => 7,   // Weekly
-        _ => throw new ArgumentOutOfRangeException(nameof(plan))
-    };
+    private static int GetRefillPeriod(PlanType _plan) => RefillPeriodDays;
 
     private static decimal GetTokenDiscount(PlanType plan) => plan switch
     {

@@ -1,142 +1,167 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Upload, Trash2, Edit, Image as ImageIcon, Search, ArrowLeft } from 'lucide-react'
-import { toast } from 'sonner'
-import Link from 'next/link'
+import { useState, useEffect, useMemo } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  Upload, Trash2, Edit, Image as ImageIcon, Search, ArrowLeft,
+  Loader2, HardDrive, FileImage, Calendar, Copy, CheckCircle2, Eye
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 interface MediaItem {
-  id: string
-  url: string
-  fileName: string
-  originalFileName: string
-  altText: string
-  size: number
-  uploadedAt: string
+  id: string;
+  url: string;
+  fileName: string;
+  originalFileName: string;
+  altText: string;
+  size: number;
+  uploadedAt: string;
 }
 
 export default function MediaManagementPage() {
-  const [media, setMedia] = useState<MediaItem[]>([])
-  const [filteredMedia, setFilteredMedia] = useState<MediaItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [editingMedia, setEditingMedia] = useState<MediaItem | null>(null)
-  const [editAltText, setEditAltText] = useState('')
-  const [editName, setEditName] = useState('')
-  const [uploading, setUploading] = useState(false)
+  const [media, setMedia] = useState<MediaItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editingMedia, setEditingMedia] = useState<MediaItem | null>(null);
+  const [editAltText, setEditAltText] = useState('');
+  const [editName, setEditName] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<MediaItem | null>(null);
+  const [previewItem, setPreviewItem] = useState<MediaItem | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
-    loadMedia()
-  }, [])
+    loadMedia();
+  }, []);
 
-  useEffect(() => {
-    if (searchTerm) {
-      const filtered = media.filter(m => 
-        m.originalFileName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        m.altText.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      setFilteredMedia(filtered)
-    } else {
-      setFilteredMedia(media)
-    }
-  }, [searchTerm, media])
+  const filteredMedia = useMemo(() => {
+    if (!searchTerm) return media;
+    return media.filter(m =>
+      m.originalFileName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      m.altText.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [searchTerm, media]);
+
+  const stats = useMemo(() => {
+    const totalSize = media.reduce((sum, m) => sum + m.size, 0);
+    const avgSize = media.length > 0 ? totalSize / media.length : 0;
+    const recentCount = media.filter(m =>
+      new Date(m.uploadedAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    ).length;
+    return { totalSize, avgSize, recentCount };
+  }, [media]);
 
   const loadMedia = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const token = localStorage.getItem('token')
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'
-      
+      const token = localStorage.getItem('token');
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+
       const response = await fetch(`${backendUrl}/image`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
-      })
+      });
 
       if (response.ok) {
-        const data = await response.json()
-        setMedia(data)
-        setFilteredMedia(data)
+        const data = await response.json();
+        setMedia(data);
       }
     } catch (error) {
-      console.error('Error loading media:', error)
-      toast.error('Failed to load media')
+      console.error('Error loading media:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load media',
+        variant: 'destructive',
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file')
-      return
+      toast({ title: 'Error', description: 'Please select an image file', variant: 'destructive' });
+      return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be less than 5MB')
-      return
+      toast({ title: 'Error', description: 'Image must be less than 5MB', variant: 'destructive' });
+      return;
     }
 
-    setUploading(true)
+    setUploading(true);
     try {
-      const formData = new FormData()
-      formData.append('file', file)
+      const formData = new FormData();
+      formData.append('file', file);
 
-      const token = localStorage.getItem('token')
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'
-      
+      const token = localStorage.getItem('token');
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+
       const response = await fetch(`${backendUrl}/image/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
         },
         body: formData
-      })
+      });
 
       if (response.ok) {
-        toast.success('Image uploaded successfully')
-        loadMedia()
+        toast({ title: 'Success', description: 'Image uploaded successfully' });
+        loadMedia();
       } else {
-        let errorMessage = 'Failed to upload image'
+        let errorMessage = 'Failed to upload image';
         try {
-          const error = await response.json()
-          errorMessage = error.message || errorMessage
+          const error = await response.json();
+          errorMessage = error.message || errorMessage;
         } catch {
-          // Response is not JSON, use status text
-          errorMessage = `Failed to upload image: ${response.statusText}`
+          errorMessage = `Failed to upload image: ${response.statusText}`;
         }
-        toast.error(errorMessage)
+        toast({ title: 'Error', description: errorMessage, variant: 'destructive' });
       }
     } catch (error) {
-      console.error('Error uploading image:', error)
-      toast.error('Failed to upload image')
+      console.error('Error uploading image:', error);
+      toast({ title: 'Error', description: 'Failed to upload image', variant: 'destructive' });
     } finally {
-      setUploading(false)
-      e.target.value = ''
+      setUploading(false);
+      e.target.value = '';
     }
-  }
+  };
 
   const handleEdit = (item: MediaItem) => {
-    setEditingMedia(item)
-    setEditAltText(item.altText)
-    setEditName(item.originalFileName)
-  }
+    setEditingMedia(item);
+    setEditAltText(item.altText);
+    setEditName(item.originalFileName);
+  };
 
   const handleSaveEdit = async () => {
-    if (!editingMedia) return
+    if (!editingMedia) return;
 
     try {
-      const token = localStorage.getItem('token')
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'
-      
+      const token = localStorage.getItem('token');
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+
       const response = await fetch(`${backendUrl}/image/${editingMedia.id}`, {
         method: 'PUT',
         headers: {
@@ -147,170 +172,307 @@ export default function MediaManagementPage() {
           altText: editAltText,
           originalFileName: editName
         })
-      })
+      });
 
       if (response.ok) {
-        toast.success('Media updated successfully')
-        loadMedia()
-        setEditingMedia(null)
+        toast({ title: 'Success', description: 'Media updated successfully' });
+        loadMedia();
+        setEditingMedia(null);
       } else {
-        toast.error('Failed to update media')
+        toast({ title: 'Error', description: 'Failed to update media', variant: 'destructive' });
       }
     } catch (error) {
-      console.error('Error updating media:', error)
-      toast.error('Failed to update media')
+      console.error('Error updating media:', error);
+      toast({ title: 'Error', description: 'Failed to update media', variant: 'destructive' });
     }
-  }
+  };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this image?')) return
-
+  const handleDelete = async (item: MediaItem) => {
     try {
-      const token = localStorage.getItem('token')
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'
-      
-      const response = await fetch(`${backendUrl}/image/${id}`, {
+      const token = localStorage.getItem('token');
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+
+      const response = await fetch(`${backendUrl}/image/${item.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
         }
-      })
+      });
 
       if (response.ok) {
-        toast.success('Image deleted successfully')
-        loadMedia()
+        toast({ title: 'Success', description: 'Image deleted successfully' });
+        setDeleteTarget(null);
+        loadMedia();
       } else {
-        toast.error('Failed to delete image')
+        toast({ title: 'Error', description: 'Failed to delete image', variant: 'destructive' });
       }
     } catch (error) {
-      console.error('Error deleting image:', error)
-      toast.error('Failed to delete image')
+      console.error('Error deleting image:', error);
+      toast({ title: 'Error', description: 'Failed to delete image', variant: 'destructive' });
     }
-  }
+  };
+
+  const copyUrl = (item: MediaItem) => {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.replace('/api', '') || 'http://localhost:5271';
+    const fullUrl = `${backendUrl}${item.url}`;
+    navigator.clipboard.writeText(fullUrl);
+    setCopiedId(item.id);
+    setTimeout(() => setCopiedId(null), 2000);
+    toast({ title: 'Copied', description: 'Image URL copied to clipboard' });
+  };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B'
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
-  }
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+    });
+  };
+
+  const getImageUrl = (item: MediaItem) => {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.replace('/api', '') || 'http://localhost:5271';
+    return `${backendUrl}${item.url}`;
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-lg font-medium text-muted-foreground">Loading media library...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
+    <div className="min-h-screen bg-gradient-to-br from-black via-cyan-950/20 to-black">
+      <div className="container mx-auto p-6 max-w-7xl">
+
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
             <Link href="/admin">
-              <ArrowLeft className="h-4 w-4" />
+              <Button variant="ghost" size="sm" className="gap-2 hover:bg-primary/10">
+                <ArrowLeft className="w-4 h-4" />
+                Back to Admin
+              </Button>
             </Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">Media Library</h1>
-            <p className="text-muted-foreground">Manage your uploaded images</p>
+          </div>
+          <div className="modern-gradient rounded-2xl p-8 shadow-xl border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div className="flex items-center gap-4">
+                <div className="h-14 w-14 bg-cyan-500/10 rounded-2xl flex items-center justify-center">
+                  <ImageIcon className="h-7 w-7 text-cyan-400" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                    Media Library
+                  </h1>
+                  <p className="text-muted-foreground mt-1">
+                    Upload and manage images with metadata
+                  </p>
+                </div>
+              </div>
+              <div>
+                <input
+                  type="file"
+                  id="media-upload"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleUpload}
+                  disabled={uploading}
+                />
+                <label htmlFor="media-upload">
+                  <Button disabled={uploading} asChild className="gap-2 bg-cyan-600 hover:bg-cyan-700 cursor-pointer">
+                    <span>
+                      {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      {uploading ? 'Uploading...' : 'Upload Image'}
+                    </span>
+                  </Button>
+                </label>
+              </div>
+            </div>
           </div>
         </div>
-        <div>
-          <input
-            type="file"
-            id="media-upload"
-            accept="image/*"
-            className="hidden"
-            onChange={handleUpload}
-            disabled={uploading}
-          />
-          <label htmlFor="media-upload">
-            <Button disabled={uploading} asChild>
-              <span>
-                <Upload className="mr-2 h-4 w-4" />
-                {uploading ? 'Uploading...' : 'Upload Image'}
-              </span>
-            </Button>
-          </label>
-        </div>
-      </div>
 
-      {/* Search */}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by filename or alt text..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </CardContent>
-      </Card>
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <Card className="border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300 hover:shadow-lg bg-gradient-to-br from-card to-cyan-500/5">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Total Images</p>
+                  <p className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                    {media.length}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">in library</p>
+                </div>
+                <div className="h-12 w-12 bg-cyan-500/10 rounded-full flex items-center justify-center">
+                  <FileImage className="h-6 w-6 text-cyan-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Media Grid */}
-      {loading ? (
-        <div className="text-center py-12">
-          <p>Loading media...</p>
+          <Card className="border-blue-500/20 hover:border-blue-500/40 transition-all duration-300 hover:shadow-lg bg-gradient-to-br from-card to-blue-500/5">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Total Size</p>
+                  <p className="text-3xl font-bold text-blue-400">{formatFileSize(stats.totalSize)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    avg {formatFileSize(stats.avgSize)}/image
+                  </p>
+                </div>
+                <div className="h-12 w-12 bg-blue-500/10 rounded-full flex items-center justify-center">
+                  <HardDrive className="h-6 w-6 text-blue-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-green-500/20 hover:border-green-500/40 transition-all duration-300 hover:shadow-lg bg-gradient-to-br from-card to-green-500/5">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Uploaded (7d)</p>
+                  <p className="text-3xl font-bold text-green-400">{stats.recentCount}</p>
+                  <p className="text-xs text-muted-foreground mt-1">recent additions</p>
+                </div>
+                <div className="h-12 w-12 bg-green-500/10 rounded-full flex items-center justify-center">
+                  <Calendar className="h-6 w-6 text-green-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-purple-500/20 hover:border-purple-500/40 transition-all duration-300 hover:shadow-lg bg-gradient-to-br from-card to-purple-500/5">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">With Alt Text</p>
+                  <p className="text-3xl font-bold text-purple-400">
+                    {media.filter(m => m.altText?.trim()).length}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {media.length > 0 ? Math.round((media.filter(m => m.altText?.trim()).length / media.length) * 100) : 0}% coverage
+                  </p>
+                </div>
+                <div className="h-12 w-12 bg-purple-500/10 rounded-full flex items-center justify-center">
+                  <CheckCircle2 className="h-6 w-6 text-purple-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      ) : filteredMedia.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">
-              {searchTerm ? 'No images found matching your search' : 'No images uploaded yet'}
-            </p>
+
+        {/* Search */}
+        <Card className="mb-6 border-border/50">
+          <CardContent className="p-5">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by filename or alt text..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            {searchTerm && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Showing {filteredMedia.length} of {media.length} images
+              </p>
+            )}
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredMedia.map((item) => {
-            const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.replace('/api', '') || 'http://localhost:5271'
-            const fullUrl = `${backendUrl}${item.url}`
-            
-            return (
-              <Card key={item.id} className="overflow-hidden">
-                <div className="relative aspect-square bg-muted">
+
+        {/* Media Grid */}
+        {filteredMedia.length === 0 ? (
+          <Card className="border-border/50">
+            <CardContent className="py-16 text-center">
+              <div className="h-16 w-16 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <ImageIcon className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-medium text-foreground mb-2">No images found</h3>
+              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                {searchTerm ? 'No images match your search.' : 'Upload your first image to get started.'}
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredMedia.map((item) => (
+              <Card key={item.id} className="overflow-hidden border-border/50 hover:border-cyan-500/30 hover:shadow-lg transition-all duration-300 group">
+                <div className="relative aspect-square bg-muted/30 overflow-hidden">
                   <img
-                    src={fullUrl}
+                    src={getImageUrl(item)}
                     alt={item.altText || item.originalFileName}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
+                  {/* Overlay on hover */}
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setPreviewItem(item)}
+                      className="gap-1.5"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      View
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => copyUrl(item)}
+                      className="gap-1.5"
+                    >
+                      {copiedId === item.id ? <CheckCircle2 className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
+                      {copiedId === item.id ? 'Copied!' : 'URL'}
+                    </Button>
+                  </div>
                 </div>
                 <CardContent className="p-4">
                   <div className="space-y-2">
-                    <p className="font-medium truncate" title={item.originalFileName}>
+                    <p className="font-medium truncate text-sm" title={item.originalFileName}>
                       {item.originalFileName}
                     </p>
-                    {item.altText && (
-                      <p className="text-sm text-muted-foreground truncate" title={item.altText}>
-                        Alt: {item.altText}
+                    {item.altText ? (
+                      <p className="text-xs text-muted-foreground truncate" title={item.altText}>
+                        {item.altText}
                       </p>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] bg-yellow-500/10 text-yellow-400 border-yellow-500/20">
+                        No alt text
+                      </Badge>
                     )}
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>{formatFileSize(item.size)}</span>
                       <span>{formatDate(item.uploadedAt)}</span>
                     </div>
-                    <div className="flex gap-2 pt-2">
+                    <Separator className="opacity-50" />
+                    <div className="flex gap-2">
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => handleEdit(item)}
-                        className="flex-1"
+                        className="flex-1 gap-1.5 text-xs"
                       >
-                        <Edit className="h-3 w-3 mr-1" />
+                        <Edit className="h-3 w-3" />
                         Edit
                       </Button>
                       <Button
                         size="sm"
-                        variant="destructive"
-                        onClick={() => handleDelete(item.id)}
+                        variant="outline"
+                        onClick={() => setDeleteTarget(item)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
@@ -318,60 +480,134 @@ export default function MediaManagementPage() {
                   </div>
                 </CardContent>
               </Card>
-            )
-          })}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
 
-      {/* Edit Dialog */}
-      <Dialog open={!!editingMedia} onOpenChange={() => setEditingMedia(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Media</DialogTitle>
-          </DialogHeader>
-          {editingMedia && (
-            <div className="space-y-4">
-              <div className="relative aspect-video bg-muted rounded-lg overflow-hidden">
-                <img
-                  src={`${(process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5271').replace('/api', '')}${editingMedia.url}`}
-                  alt={editingMedia.altText || editingMedia.originalFileName}
-                  className="w-full h-full object-contain"
-                />
+        {/* Preview Dialog */}
+        <Dialog open={!!previewItem} onOpenChange={() => setPreviewItem(null)}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <ImageIcon className="h-5 w-5 text-cyan-400" />
+                {previewItem?.originalFileName}
+              </DialogTitle>
+            </DialogHeader>
+            {previewItem && (
+              <div className="space-y-4">
+                <div className="relative bg-muted/30 rounded-lg overflow-hidden max-h-[60vh]">
+                  <img
+                    src={getImageUrl(previewItem)}
+                    alt={previewItem.altText || previewItem.originalFileName}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div className="p-3 bg-muted/20 rounded-lg">
+                    <p className="text-muted-foreground text-xs">Size</p>
+                    <p className="font-medium">{formatFileSize(previewItem.size)}</p>
+                  </div>
+                  <div className="p-3 bg-muted/20 rounded-lg">
+                    <p className="text-muted-foreground text-xs">Uploaded</p>
+                    <p className="font-medium">{formatDate(previewItem.uploadedAt)}</p>
+                  </div>
+                  <div className="p-3 bg-muted/20 rounded-lg">
+                    <p className="text-muted-foreground text-xs">Alt Text</p>
+                    <p className="font-medium truncate">{previewItem.altText || 'None'}</p>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-name">File Name</Label>
-                <Input
-                  id="edit-name"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  placeholder="Enter file name"
-                />
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Trash2 className="h-5 w-5 text-destructive" />
+                Delete Image?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete this image and cannot be undone.
+                <div className="mt-3 p-3 bg-muted/30 rounded-lg border text-sm">
+                  <p className="font-medium text-foreground">{deleteTarget?.originalFileName}</p>
+                  <p className="text-muted-foreground">{deleteTarget ? formatFileSize(deleteTarget.size) : ''}</p>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteTarget && handleDelete(deleteTarget)}
+                className="bg-destructive hover:bg-destructive/90"
+              >
+                Delete Image
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Edit Dialog */}
+        <Dialog open={!!editingMedia} onOpenChange={() => setEditingMedia(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Edit className="h-5 w-5 text-cyan-400" />
+                Edit Media
+              </DialogTitle>
+            </DialogHeader>
+            {editingMedia && (
+              <div className="space-y-4">
+                <div className="relative aspect-video bg-muted/30 rounded-lg overflow-hidden">
+                  <img
+                    src={getImageUrl(editingMedia)}
+                    alt={editingMedia.altText || editingMedia.originalFileName}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-name" className="text-sm font-medium">File Name</Label>
+                  <Input
+                    id="edit-name"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    placeholder="Enter file name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-alt" className="text-sm font-medium">Alt Text</Label>
+                  <Input
+                    id="edit-alt"
+                    value={editAltText}
+                    onChange={(e) => setEditAltText(e.target.value)}
+                    placeholder="Describe the image for accessibility"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3 p-3 bg-muted/20 rounded-lg text-sm">
+                  <div>
+                    <p className="text-muted-foreground text-xs">Size</p>
+                    <p className="font-medium">{formatFileSize(editingMedia.size)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">Uploaded</p>
+                    <p className="font-medium">{formatDate(editingMedia.uploadedAt)}</p>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-alt">Alt Text</Label>
-                <Input
-                  id="edit-alt"
-                  value={editAltText}
-                  onChange={(e) => setEditAltText(e.target.value)}
-                  placeholder="Describe the image for accessibility"
-                />
-              </div>
-              <div className="text-sm text-muted-foreground">
-                <p>Size: {formatFileSize(editingMedia.size)}</p>
-                <p>Uploaded: {formatDate(editingMedia.uploadedAt)}</p>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingMedia(null)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveEdit}>
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            )}
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setEditingMedia(null)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEdit} className="bg-cyan-600 hover:bg-cyan-700">
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
-  )
+  );
 }
