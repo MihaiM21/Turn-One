@@ -60,6 +60,8 @@ export function TelemetryPlotGenerator() {
   const [availableEvents, setAvailableEvents] = useState<any[]>([])
   const [availableSessions, setAvailableSessions] = useState<any[]>([])
 
+  const v2SupportedPlots = ["topspeeds", "throttle_average"]
+
   const [isGenerating, setIsGenerating] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
 
@@ -96,6 +98,14 @@ export function TelemetryPlotGenerator() {
     return name;
   }
 
+  const defaultSessions = [
+    { name: "Practice 1", type: "Practice", number: 1 },
+    { name: "Practice 2", type: "Practice", number: 2 },
+    { name: "Practice 3", type: "Practice", number: 3 },
+    { name: "Qualifying", type: "Qualifying", number: null },
+    { name: "Race", type: "Race", number: null },
+  ]
+
   useEffect(() => {
     if (selectedYear && selectedEventName) {
       const event = availableEvents.find(e => (e.official_name || e.name) === selectedEventName);
@@ -103,16 +113,23 @@ export function TelemetryPlotGenerator() {
 
       fetchSessionsByEvent(Number(selectedYear), apiEventName).then(data => {
         const sessions = data.sessions || [];
-        setAvailableSessions(sessions);
+        const resolved = sessions.length > 0 ? sessions : defaultSessions;
+        setAvailableSessions(resolved);
 
-        if (sessions.length > 0) {
-          const currentValid = sessions.find((s: any) => getSessionCode(s.name, s.type, s.number) === selectedSession);
+        if (resolved.length > 0) {
+          const currentValid = resolved.find((s: any) => getSessionCode(s.name, s.type, s.number) === selectedSession);
           if (!currentValid) {
-            const defaultSession = sessions.find((s: any) => s.type === "Practice" && s.number === 1) || sessions[0];
+            const defaultSession = resolved.find((s: any) => s.type === "Practice" && s.number === 1) || resolved[0];
             setSelectedSession(getSessionCode(defaultSession.name, defaultSession.type, defaultSession.number));
           }
         }
-      }).catch(console.error);
+      }).catch(() => {
+        setAvailableSessions(defaultSessions);
+        const currentValid = defaultSessions.find(s => getSessionCode(s.name, s.type, s.number) === selectedSession);
+        if (!currentValid) {
+          setSelectedSession("FP1");
+        }
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedYear, selectedEventName]);
@@ -129,6 +146,13 @@ export function TelemetryPlotGenerator() {
   const { isAuthenticated } = useAuth()
   const authToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null
   const { userProfile, hasTokens, getTokenCount, deductToken, error: tokenError } = useTokens(authToken)
+
+  const handlePlotTypeChange = (val: string) => {
+    setSelectedPlotType(val)
+    if (!v2SupportedPlots.includes(val)) {
+      setSelectedVersion("v1")
+    }
+  }
 
   const plotTypes = [
     { id: "topspeeds", name: "Top Speeds", icon: Gauge, description: "Compare top speeds across teams", isPro: false },
@@ -453,7 +477,7 @@ export function TelemetryPlotGenerator() {
       </CardHeader>
 
       <CardContent className="space-y-6">
-        <Tabs value={selectedPlotType} onValueChange={setSelectedPlotType} className="w-full">
+        <Tabs value={selectedPlotType} onValueChange={handlePlotTypeChange} className="w-full">
           <TabsList className="grid w-full grid-cols-6 bg-muted/20 h-full">
             {plotTypes.map((type) => {
               const IconComponent = type.icon
@@ -461,6 +485,7 @@ export function TelemetryPlotGenerator() {
                 <TabsTrigger
                   key={type.id}
                   value={type.id}
+                  onClick={() => handlePlotTypeChange(type.id)}
                   className="flex flex-col items-center space-y-1 p-3 m-1 data-[state=active]:bg-primary data-[state=active]:text-muted transition-all duration-200 hover:bg-primary/30 relative"
                 >
                   <IconComponent className="h-4 w-4" />
@@ -555,7 +580,9 @@ export function TelemetryPlotGenerator() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="v1">Version 1</SelectItem>
-                    <SelectItem value="v2">Version 2</SelectItem>
+                    <SelectItem value="v2" disabled={!v2SupportedPlots.includes(selectedPlotType)}>
+                      Version 2{!v2SupportedPlots.includes(selectedPlotType) ? " (not supported)" : ""}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
