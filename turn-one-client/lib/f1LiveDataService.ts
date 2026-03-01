@@ -182,17 +182,15 @@ export class F1LiveDataService {
               value = this.parseCompressed(value);
             }
 
-            // Update state immediately for real-time data
+            // Deep-merge ALL fields including real-time data.
+            // F1 sends partial updates (e.g. only changed drivers), so replacing
+            // the whole field would discard existing driver data.
+            this.state = this.deepObjectMerge(this.state, { [field]: value });
+            this.lastReceivedData = this.deepObjectMerge(this.lastReceivedData, { [field]: value });
+
+            // Trigger callback immediately for critical real-time data
             if (field === "TimingData" || field === "CarData" || field === "Position") {
-              // These fields need immediate updates for live timing
-              this.state[field] = value;
-              this.lastReceivedData[field] = value;
-              // Trigger callback immediately for critical real-time data
               this.notifyDataCallbacks();
-            } else {
-              // For other fields, merge them normally
-              this.state = this.deepObjectMerge(this.state, { [field]: value });
-              this.lastReceivedData = this.deepObjectMerge(this.lastReceivedData, { [field]: value });
             }
           }
         }
@@ -290,7 +288,8 @@ export class F1LiveDataService {
       this.websocket.onopen = () => {
         console.log(`[${this.signalrUrl}] WebSocket connection established`);
         
-        this.state = {};
+        // Carry forward last received data so UI keeps showing it until fresh data arrives
+        this.state = { ...this.lastReceivedData };
         this.messageCount = 0;
         this.emptyMessageCount = 0;
         this.retryCount = 0;
@@ -346,7 +345,8 @@ export class F1LiveDataService {
           this.notifyStatusCallbacks('disconnected');
         }
 
-        this.state = {};
+        // Keep state intact so UI continues showing last data during reconnects
+        // this.state is NOT cleared — lastReceivedData is the long-term store
         this.messageCount = 0;
         this.emptyMessageCount = 0;
 
@@ -378,9 +378,14 @@ export class F1LiveDataService {
   }
 
   private notifyDataCallbacks(): void {
+    // Use current state, falling back to last received data so UI is never empty
+    const dataToSend = Object.keys(this.state).length > 0
+      ? { ...this.state }
+      : { ...this.lastReceivedData };
+
     this.dataCallbacks.forEach(callback => {
       try {
-        callback({ ...this.state });
+        callback(dataToSend);
       } catch (error) {
         console.error('Error in data callback:', error);
       }

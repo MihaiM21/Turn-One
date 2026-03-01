@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Search, Users, Crown, Shield, TrendingUp, Download, Filter, MoreHorizontal, Calendar, Activity, UserCheck, AlertCircle, RefreshCw, Mail, CheckCircle2, XCircle, Trash2, UserPlus, Zap, Send, FileText, Plus, Trophy, Brain, Bell } from 'lucide-react';
+import { Search, Users, Crown, Shield, TrendingUp, Download, Filter, MoreHorizontal, Calendar, Activity, UserCheck, AlertCircle, RefreshCw, Mail, CheckCircle2, XCircle, Trash2, UserPlus, Zap, Send, FileText, Plus, Trophy, Brain, Bell, Loader2, Image as ImageIcon, ArrowRight, Coins } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -60,6 +60,7 @@ interface User {
   coins: number;
   createdAt: string;
   lastLogin?: string;
+  lastTokenRefillDate?: string;
 }
 
 interface CurrentUser {
@@ -390,7 +391,7 @@ export default function AdminDashboard() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
           <p className="text-lg font-medium text-muted-foreground">Loading admin dashboard...</p>
         </div>
       </div>
@@ -403,8 +404,16 @@ export default function AdminDashboard() {
   const contentCreatorCount = users.filter(user => user.role === 1).length;
   const totalTokens = users.reduce((sum, user) => sum + user.tokens, 0);
   const totalCoins = users.reduce((sum, user) => sum + user.coins, 0);
+  const normalizePlan = (plan: string | number): string => {
+    const p = String(plan);
+    if (p === '0') return 'BASIC';
+    if (p === '1') return 'PRO';
+    if (p === '2') return 'ELITE';
+    return p;
+  };
   const planDistribution = users.reduce((acc, user) => {
-    acc[user.plan] = (acc[user.plan] || 0) + 1;
+    const key = normalizePlan(user.plan);
+    acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
   
@@ -461,26 +470,31 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-red-950/20 to-black">
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-4">
         {/* Header Section */}
-        <div className="mb-8">
-          <div className="modern-gradient rounded-2xl p-8 shadow-xl glow-effect border border-primary/20 hover:border-primary/40 transition-all duration-300">\
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div>
-                <h1 className="text-4xl font-bold mb-2 gradient-text">Admin Dashboard</h1>
-                <p className="text-muted-foreground text-lg">Manage users, plans, and system administration</p>
+        <div className="mb-4">
+          <div className="modern-gradient rounded-xl p-4 shadow-lg border border-primary/20 hover:border-primary/40 transition-all duration-300">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <Shield className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">Admin Dashboard</h1>
+                  <p className="text-sm text-muted-foreground">Manage users, plans, and system administration</p>
+                </div>
               </div>
               {currentUser && (
                 <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="h-10 w-10 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground font-bold glow-effect">
+                  <CardContent className="p-3">
+                    <div className="flex items-center space-x-2">
+                      <div className="h-8 w-8 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm glow-effect">
                         {currentUser.username.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="font-semibold text-foreground">{currentUser.username}</p>
-                        <div className="flex items-center space-x-2 text-sm">
-                          <Badge className={`${planColors[currentUser.plan]} text-xs`}>
+                        <p className="font-semibold text-sm text-foreground">{currentUser.username}</p>
+                        <div className="flex items-center space-x-1.5 text-xs">
+                          <Badge className={`${planColors[currentUser.plan]} text-[10px]`}>
                             {planNames[currentUser.plan]}
                           </Badge>
                           <span className="text-muted-foreground">•</span>
@@ -496,276 +510,266 @@ export default function AdminDashboard() {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="card-hover border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:scale-105 bg-gradient-to-br from-card to-card/50">
-            <CardContent className="p-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+          <Card className="card-hover border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:scale-105 bg-gradient-to-br from-card to-card/50">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Total Users</p>
-                  <p className="text-3xl font-bold text-foreground bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{totalUsers}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{recentUsers} new this week</p>
+                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Total Users</p>
+                  <p className="text-2xl font-bold text-foreground bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{totalUsers}</p>
+                  <p className="text-xs text-muted-foreground">{recentUsers} new this week</p>
                 </div>
-                <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center glow-effect hover:bg-primary/20 transition-colors">
-                  <Users className="h-6 w-6 text-primary" />
+                <div className="h-9 w-9 bg-primary/10 rounded-full flex items-center justify-center glow-effect hover:bg-primary/20 transition-colors">
+                  <Users className="h-4 w-4 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="card-hover border-accent/20 hover:border-accent/50 transition-all duration-300 hover:shadow-xl hover:scale-105 bg-gradient-to-br from-card to-card/50">
-            <CardContent className="p-6">
+          <Card className="card-hover border-accent/20 hover:border-accent/50 transition-all duration-300 hover:shadow-lg hover:scale-105 bg-gradient-to-br from-card to-card/50">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Admin Users</p>
-                  <p className="text-3xl font-bold text-foreground bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">{adminCount}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Admin Users</p>
+                  <p className="text-2xl font-bold text-foreground bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">{adminCount}</p>
+                  <p className="text-xs text-muted-foreground">
                     {totalUsers > 0 ? ((adminCount / totalUsers) * 100).toFixed(1) : 0}% of users
                   </p>
                 </div>
-                <div className="h-12 w-12 bg-accent/10 rounded-full flex items-center justify-center accent-glow hover:bg-accent/20 transition-colors">
-                  <Shield className="h-6 w-6 text-accent" />
+                <div className="h-9 w-9 bg-accent/10 rounded-full flex items-center justify-center accent-glow hover:bg-accent/20 transition-colors">
+                  <Shield className="h-4 w-4 text-accent" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="card-hover border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:scale-105 bg-gradient-to-br from-card to-card/50">
-            <CardContent className="p-6">
+          <Card className="card-hover border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:scale-105 bg-gradient-to-br from-card to-card/50">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Total Tokens</p>
-                  <p className="text-3xl font-bold text-foreground bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">{totalTokens.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Total Tokens</p>
+                  <p className="text-2xl font-bold text-foreground bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">{totalTokens.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">
                     Avg: {totalUsers ? Math.round(totalTokens / totalUsers).toLocaleString() : 0} per user
                   </p>
                 </div>
-                <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center glow-effect hover:bg-primary/20 transition-colors">
-                  <TrendingUp className="h-6 w-6 text-primary" />
+                <div className="h-9 w-9 bg-primary/10 rounded-full flex items-center justify-center glow-effect hover:bg-primary/20 transition-colors">
+                  <TrendingUp className="h-4 w-4 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="card-hover border-green-500/20 hover:border-green-500/50 transition-all duration-300 hover:shadow-xl hover:scale-105 bg-gradient-to-br from-card to-card/50">
-            <CardContent className="p-6">
+          <Card className="card-hover border-green-500/20 hover:border-green-500/50 transition-all duration-300 hover:shadow-lg hover:scale-105 bg-gradient-to-br from-card to-card/50">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Active Users (7d)</p>
-                  <p className="text-3xl font-bold text-foreground bg-gradient-to-r from-green-500 to-green-400 bg-clip-text text-transparent">{activeUsers}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Active Users (7d)</p>
+                  <p className="text-2xl font-bold text-foreground bg-gradient-to-r from-green-500 to-green-400 bg-clip-text text-transparent">{activeUsers}</p>
+                  <p className="text-xs text-muted-foreground">
                     {totalUsers > 0 ? ((activeUsers / totalUsers) * 100).toFixed(1) : 0}% activity rate
                   </p>
                 </div>
-                <div className="h-12 w-12 bg-green-500/10 rounded-full flex items-center justify-center hover:bg-green-500/20 transition-colors">
-                  <Activity className="h-6 w-6 text-green-500" />
+                <div className="h-9 w-9 bg-green-500/10 rounded-full flex items-center justify-center hover:bg-green-500/20 transition-colors">
+                  <Activity className="h-4 w-4 text-green-500" />
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Quick Actions */}
-        <div className="mb-8 space-y-4">
-          <Card className="card-hover border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-xl bg-gradient-to-br from-card to-primary/5">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center">
-                    <FileText className="h-6 w-6 text-primary" />
+        {/* Quick Actions Grid */}
+        <div className="mb-4">
+          <h2 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
+            <Zap className="h-4 w-4 text-primary" />
+            Quick Actions
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+            <Link href="/admin/articles" className="group">
+              <Card className="h-full border-red-500/20 hover:border-red-500/50 transition-all duration-300 hover:shadow-md bg-gradient-to-br from-card to-red-500/5 cursor-pointer">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 bg-red-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <FileText className="h-4 w-4 text-red-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
+                        Articles
+                        <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-red-400 group-hover:translate-x-0.5 transition-all" />
+                      </h3>
+                      <p className="text-xs text-muted-foreground truncate">Manage blog articles</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-1">Article Management</h3>
-                    <p className="text-sm text-muted-foreground">Create and manage F1 blog articles with rich text editor</p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button asChild variant="outline">
-                    <Link href="/admin/articles">
-                      <FileText className="h-4 w-4 mr-2" />
-                      Manage Articles
-                    </Link>
-                  </Button>
-                  <Button asChild className="glow-effect">
-                    <Link href="/admin/articles/create">
-                      <Plus className="h-4 w-4 mr-2" />
-                      New Article
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </Link>
 
-          <Card className="card-hover border-accent/20 hover:border-accent/50 transition-all duration-300 hover:shadow-xl bg-gradient-to-br from-card to-accent/5">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 bg-accent/10 rounded-full flex items-center justify-center">
-                    <svg className="h-6 w-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
+            <Link href="/admin/media" className="group">
+              <Card className="h-full border-cyan-500/20 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-md bg-gradient-to-br from-card to-cyan-500/5 cursor-pointer">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 bg-cyan-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <ImageIcon className="h-4 w-4 text-cyan-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
+                        Media
+                        <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-cyan-400 group-hover:translate-x-0.5 transition-all" />
+                      </h3>
+                      <p className="text-xs text-muted-foreground truncate">Images &amp; uploads</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-1">Media Library</h3>
-                    <p className="text-sm text-muted-foreground">Upload and manage images with alt text and metadata</p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button asChild variant="outline">
-                    <Link href="/admin/media">
-                      <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      Media Library
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </Link>
 
-          <Card className="card-hover border-yellow-500/20 hover:border-yellow-500/50 transition-all duration-300 hover:shadow-xl bg-gradient-to-br from-card to-yellow-500/5">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 bg-yellow-500/10 rounded-full flex items-center justify-center">
-                    <Trophy className="h-6 w-6 text-yellow-500" />
+            <Link href="/admin/predictions" className="group">
+              <Card className="h-full border-yellow-500/20 hover:border-yellow-500/50 transition-all duration-300 hover:shadow-md bg-gradient-to-br from-card to-yellow-500/5 cursor-pointer">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 bg-yellow-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <Trophy className="h-4 w-4 text-yellow-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
+                        Predictions
+                        <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-yellow-400 group-hover:translate-x-0.5 transition-all" />
+                      </h3>
+                      <p className="text-xs text-muted-foreground truncate">Validate results</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-1">Validate Predictions</h3>
-                    <p className="text-sm text-muted-foreground">Enter race results and validate user predictions</p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button asChild className="glow-effect">
-                    <Link href="/admin/predictions">
-                      <CheckCircle2 className="h-4 w-4 mr-2" />
-                      Validate Races
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </Link>
 
-          <Card className="card-hover border-purple-500/20 hover:border-purple-500/50 transition-all duration-300 hover:shadow-xl bg-gradient-to-br from-card to-purple-500/5">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 bg-purple-500/10 rounded-full flex items-center justify-center">
-                    <Brain className="h-6 w-6 text-purple-500" />
+            <Link href="/admin/trivia" className="group">
+              <Card className="h-full border-purple-500/20 hover:border-purple-500/50 transition-all duration-300 hover:shadow-md bg-gradient-to-br from-card to-purple-500/5 cursor-pointer">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 bg-purple-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <Brain className="h-4 w-4 text-purple-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
+                        Trivia
+                        <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-purple-400 group-hover:translate-x-0.5 transition-all" />
+                      </h3>
+                      <p className="text-xs text-muted-foreground truncate">F1 quiz questions</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-1">Trivia Management</h3>
-                    <p className="text-sm text-muted-foreground">Create and edit F1 trivia questions</p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button asChild className="glow-effect">
-                    <Link href="/admin/trivia">
-                      <Brain className="h-4 w-4 mr-2" />
-                      Manage Trivia
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </Link>
 
-          <Card className="card-hover border-orange-500/20 hover:border-orange-500/50 transition-all duration-300 hover:shadow-xl bg-gradient-to-br from-card to-orange-500/5">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 bg-orange-500/10 rounded-full flex items-center justify-center">
-                    <Bell className="h-6 w-6 text-orange-500" />
+            <Link href="/admin/notifications" className="group">
+              <Card className="h-full border-orange-500/20 hover:border-orange-500/50 transition-all duration-300 hover:shadow-md bg-gradient-to-br from-card to-orange-500/5 cursor-pointer">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 bg-orange-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <Bell className="h-4 w-4 text-orange-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
+                        Notifications
+                        <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-orange-400 group-hover:translate-x-0.5 transition-all" />
+                      </h3>
+                      <p className="text-xs text-muted-foreground truncate">Push to users</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-1">Notifications</h3>
-                    <p className="text-sm text-muted-foreground">Send notifications to users</p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/admin/articles/create" className="group">
+              <Card className="h-full border-green-500/20 hover:border-green-500/50 transition-all duration-300 hover:shadow-md bg-gradient-to-br from-card to-green-500/5 cursor-pointer">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 bg-green-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <Plus className="h-4 w-4 text-green-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
+                        New Article
+                        <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-green-400 group-hover:translate-x-0.5 transition-all" />
+                      </h3>
+                      <p className="text-xs text-muted-foreground truncate">Write a blog post</p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button asChild className="glow-effect">
-                    <Link href="/admin/notifications">
-                      <Bell className="h-4 w-4 mr-2" />
-                      Manage Notifications
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
         </div>
 
-        {/* Additional Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <Card className="card-hover hover:shadow-lg transition-all duration-300 hover:scale-105 border-primary/10 hover:border-primary/30 bg-gradient-to-br from-card to-primary/5">
-            <CardContent className="p-4">
+        {/* Secondary Stats */}
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-2 mb-4">
+          <Card className="border-border/50 hover:border-primary/30 transition-all duration-300 bg-gradient-to-br from-card to-primary/5">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">New Users (7d)</p>
-                  <p className="text-2xl font-bold text-foreground">{recentUsers}</p>
+                  <p className="text-xs font-medium text-muted-foreground">New (7d)</p>
+                  <p className="text-lg font-bold text-foreground">{recentUsers}</p>
                 </div>
-                <UserPlus className="h-5 w-5 text-primary" />
+                <UserPlus className="h-3.5 w-3.5 text-primary" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="card-hover hover:shadow-lg transition-all duration-300 hover:scale-105 border-accent/10 hover:border-accent/30 bg-gradient-to-br from-card to-accent/5">
-            <CardContent className="p-4">
+          <Card className="border-border/50 hover:border-accent/30 transition-all duration-300 bg-gradient-to-br from-card to-accent/5">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Content Creators</p>
-                  <p className="text-2xl font-bold text-foreground">{contentCreatorCount}</p>
+                  <p className="text-xs font-medium text-muted-foreground">Creators</p>
+                  <p className="text-lg font-bold text-foreground">{contentCreatorCount}</p>
                 </div>
-                <Crown className="h-5 w-5 text-accent" />
+                <Crown className="h-3.5 w-3.5 text-accent" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="card-hover hover:shadow-lg transition-all duration-300 hover:scale-105 border-yellow-500/10 hover:border-yellow-500/30 bg-gradient-to-br from-card to-yellow-500/5">
-            <CardContent className="p-4">
+          <Card className="border-border/50 hover:border-yellow-500/30 transition-all duration-300 bg-gradient-to-br from-card to-yellow-500/5">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Total Coins</p>
-                  <p className="text-2xl font-bold text-foreground">{totalCoins.toLocaleString()}</p>
+                  <p className="text-xs font-medium text-muted-foreground">Total Coins</p>
+                  <p className="text-lg font-bold text-foreground">{totalCoins.toLocaleString()}</p>
                 </div>
-                <Zap className="h-5 w-5 text-yellow-500" />
+                <Coins className="h-3.5 w-3.5 text-yellow-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="card-hover hover:shadow-lg transition-all duration-300 hover:scale-105 border-accent/10 hover:border-accent/30 bg-gradient-to-br from-card to-accent/5">
-            <CardContent className="p-4">
+          <Card className="border-border/50 hover:border-accent/30 transition-all duration-300 bg-gradient-to-br from-card to-accent/5">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Elite Plans</p>
-                  <p className="text-2xl font-bold text-foreground">{planDistribution.ELITE || 0}</p>
+                  <p className="text-xs font-medium text-muted-foreground">Elite</p>
+                  <p className="text-lg font-bold text-foreground">{planDistribution.ELITE || 0}</p>
                 </div>
-                <Crown className="h-5 w-5 text-accent" />
+                <Crown className="h-3.5 w-3.5 text-accent" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="card-hover hover:shadow-lg transition-all duration-300 hover:scale-105 border-primary/10 hover:border-primary/30 bg-gradient-to-br from-card to-primary/5">
-            <CardContent className="p-4">
+          <Card className="border-border/50 hover:border-primary/30 transition-all duration-300 bg-gradient-to-br from-card to-primary/5">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Pro Plans</p>
-                  <p className="text-2xl font-bold text-foreground">{planDistribution.PRO || 0}</p>
+                  <p className="text-xs font-medium text-muted-foreground">Pro</p>
+                  <p className="text-lg font-bold text-foreground">{planDistribution.PRO || 0}</p>
                 </div>
-                <Crown className="h-5 w-5 text-primary" />
+                <Crown className="h-3.5 w-3.5 text-primary" />
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Search and Filters */}
-        <Card className="mb-6 card-hover">
+        <Card className="mb-6 border-border/50">
           <CardHeader className="pb-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
-                <CardTitle className="text-lg">User Management Tools</CardTitle>
+                <CardTitle className="text-lg">User Management</CardTitle>
                 <CardDescription>Search, filter, and manage user accounts</CardDescription>
               </div>
               <div className="flex gap-2">
@@ -927,11 +931,11 @@ export default function AdminDashboard() {
         </Card>
 
         {/* User Management */}
-        <Card className="card-hover">
+        <Card className="border-border/50">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-2xl gradient-text">Users Management</CardTitle>
+                <CardTitle className="text-xl font-bold">All Users</CardTitle>
                 <CardDescription className="text-muted-foreground">
                   Page {currentPage} of {totalPages} • {sortedUsers.length} user{sortedUsers.length !== 1 ? 's' : ''} found
                 </CardDescription>
@@ -978,98 +982,82 @@ export default function AdminDashboard() {
               )}
 
               {paginatedUsers.map((user) => (
-                <div key={user.id} className={`bg-card rounded-xl p-6 border shadow-sm hover:shadow-md transition-all duration-200 card-hover ${
-                  selectedUsers.has(user.id) ? 'border-primary/50 bg-primary/5' : 'border-primary/10 hover:border-primary/30'
+                <div key={user.id} className={`bg-card rounded-xl p-5 border shadow-sm hover:shadow-md transition-all duration-200 ${
+                  selectedUsers.has(user.id) ? 'border-primary/50 bg-primary/5' : 'border-border/50 hover:border-primary/30'
                 }`}>
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-4">
+                      <div className="flex items-center gap-3">
                         <Checkbox
                           checked={selectedUsers.has(user.id)}
                           onCheckedChange={() => handleSelectUser(user.id)}
                           id={`user-${user.id}`}
-                          className="mt-1"
                         />
-                        <div className="h-12 w-12 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground font-bold glow-effect">
+                        <div className="h-10 w-10 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">
                           {user.username.charAt(0).toUpperCase()}
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <h3 className="font-semibold text-lg text-foreground">{user.username}</h3>
-                            <Badge variant={user.role === 2 ? 'default' : 'secondary'} className="text-xs">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <h3 className="font-semibold text-foreground truncate">{user.username}</h3>
+                            <Badge variant={user.role === 2 ? 'default' : 'secondary'} className="text-[10px] shrink-0">
                               {roleNames[user.role] || user.role}
                             </Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground mb-2">{user.email}</p>
-                          <div className="flex flex-wrap items-center gap-3 text-sm">
-                            <Badge className={`${planColors[user.plan] || 'bg-muted text-muted-foreground'} font-medium text-xs`}>
+                            <Badge className={`${planColors[user.plan] || 'bg-muted text-muted-foreground'} text-[10px] shrink-0`}>
                               {planNames[user.plan] || user.plan}
                             </Badge>
-                            <div className="flex items-center space-x-1">
-                              <TrendingUp className="h-3 w-3 text-primary" />
-                              <span className="text-muted-foreground font-medium">{user.tokens.toLocaleString()} tokens</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Zap className="h-3 w-3 text-yellow-500" />
-                              <span className="text-muted-foreground font-medium">{user.coins.toLocaleString()} coins</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Calendar className="h-3 w-3 text-muted-foreground" />
-                              <span className="text-muted-foreground">
-                                Joined: {new Date(user.createdAt).toLocaleDateString()}
-                              </span>
-                            </div>
-                            {user.lastLogin && (
-                              <div className="flex items-center space-x-1">
-                                <Activity className="h-3 w-3 text-green-500" />
-                                <span className="text-muted-foreground">
-                                  Last Login: {new Date(user.lastLogin).toLocaleDateString()}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 p-4 bg-muted/20 rounded-lg">
-                        <div className="text-center">
-                          <p className="text-sm font-medium text-foreground">{user.tokens.toLocaleString()}</p>
-                          <p className="text-xs text-muted-foreground">Total Tokens</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm font-medium text-foreground">
-                            {Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24))}
-                          </p>
-                          <p className="text-xs text-muted-foreground">Days Active</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm font-medium text-foreground capitalize">
-                            {planNames[user.plan.toString()] ?? "Unknown" }
-                          </p>
-                          <p className="text-xs text-muted-foreground">Subscription</p>
-                        </div>
-                        <div className="text-center">
-                          <div className="flex items-center justify-center">
                             {user.lastLogin ? (
-                              <UserCheck className="h-4 w-4 text-green-500" />
+                              <div className="h-2 w-2 rounded-full bg-green-500 shrink-0" title="Active" />
                             ) : (
-                              <AlertCircle className="h-4 w-4 text-orange-500" />
+                              <div className="h-2 w-2 rounded-full bg-orange-500 shrink-0" title="Inactive" />
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            {user.lastLogin ? 'Active' : 'Inactive'}
-                          </p>
+                          <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+                          <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <TrendingUp className="h-3 w-3 text-primary" />
+                              {user.tokens.toLocaleString()} tokens
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Coins className="h-3 w-3 text-yellow-500" />
+                              {user.coins.toLocaleString()} coins
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {new Date(user.createdAt).toLocaleDateString()}
+                            </span>
+                            {user.lastTokenRefillDate && (() => {
+                              const nextRefill = new Date(user.lastTokenRefillDate);
+                              nextRefill.setMonth(nextRefill.getMonth() + 1);
+                              const daysLeft = Math.ceil((nextRefill.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                              const isOverdue = daysLeft <= 0;
+                              const isSoon = daysLeft <= 3 && daysLeft > 0;
+                              return (
+                                <span className={`flex items-center gap-1 ${
+                                  isOverdue ? 'text-red-400' : isSoon ? 'text-yellow-400' : 'text-muted-foreground'
+                                }`}>
+                                  <RefreshCw className="h-3 w-3" />
+                                  Refill: {isOverdue ? 'Overdue' : isSoon ? `${daysLeft}d` : nextRefill.toLocaleDateString()}
+                                </span>
+                              );
+                            })()}
+                            {user.lastLogin && (
+                              <span className="flex items-center gap-1">
+                                <Activity className="h-3 w-3 text-green-500" />
+                                Last: {new Date(user.lastLogin).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
                     
 
-                    <div className="flex flex-col sm:flex-row gap-2 mt-4 lg:mt-0">
+                    <div className="flex gap-2 shrink-0">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm" className="hover:scale-105 transition-all duration-300">
-                            <MoreHorizontal className="h-4 w-4 mr-2" />
-                            Quick Actions
+                          <Button variant="outline" size="sm" className="gap-2">
+                            <MoreHorizontal className="h-4 w-4" />
+                            Actions
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56">
@@ -1123,9 +1111,9 @@ export default function AdminDashboard() {
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button 
-                            variant="destructive" 
+                            variant="outline" 
                             size="sm"
-                            className="hover:scale-105 transition-all duration-300"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

@@ -14,7 +14,8 @@ import { predictionService, coinService } from '@/lib/gameService';
 import { CreatePrediction } from '@/types/game-types';
 import { toast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';
-import { f1_2025_races } from '@/lib/constants/f1_races';
+import { f1_2026_races } from '@/lib/constants/f1_races';
+import { f1_2026_drivers } from '@/lib/constants/f1_2026_drivers_full';
 
 interface PredictionGameProps {
   onPredictionCreated?: () => void;
@@ -29,7 +30,7 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
   const [prediction, setPrediction] = useState<Partial<CreatePrediction>>({
     raceId: '',
     raceName: '',
-    season: '2025',
+    season: '2026',
     coinsWagered: 100,
     raceDateTime: new Date()
   });
@@ -54,7 +55,7 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
   // Get upcoming races (races with race sessions in the future)
   const upcomingRaces = useMemo(() => {
     const now = new Date();
-    return f1_2025_races
+    return f1_2026_races
       .map((race, index) => ({
         ...race,
         index,
@@ -68,11 +69,11 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
   const handleRaceSelect = (raceIndexStr: string) => {
     const index = parseInt(raceIndexStr);
     setSelectedRaceIndex(index);
-    const selectedRace = f1_2025_races[index];
+    const selectedRace = f1_2026_races[index];
     const raceSession = selectedRace.sessions.find(s => s.name === 'Race');
     
     if (selectedRace && raceSession) {
-      const raceId = `2025-R${index + 1}`;
+      const raceId = `2026-R${index + 1}`;
       
       // Check if prediction already exists
       if (existingPredictions.includes(raceId)) {
@@ -134,7 +135,7 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
       const predictionData: CreatePrediction = {
         raceId: prediction.raceId!,
         raceName: prediction.raceName!,
-        season: '2025',
+        season: '2026',
         podiumP1: prediction.podiumP1,
         podiumP2: prediction.podiumP2,
         podiumP3: prediction.podiumP3,
@@ -164,7 +165,7 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
       setPrediction({
         raceId: '',
         raceName: '',
-        season: '2025',
+        season: '2026',
         coinsWagered: 100,
         raceDateTime: new Date()
       });
@@ -182,13 +183,7 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
     }
   };
 
-  const drivers = [
-    'Max Verstappen', 'Sergio Perez', 'Lewis Hamilton', 'George Russell',
-    'Charles Leclerc', 'Carlos Sainz', 'Lando Norris', 'Oscar Piastri',
-    'Fernando Alonso', 'Lance Stroll', 'Esteban Ocon', 'Pierre Gasly',
-    'Valtteri Bottas', 'Zhou Guanyu', 'Kevin Magnussen', 'Nico Hulkenberg',
-    'Yuki Tsunoda', 'Daniel Ricciardo', 'Alexander Albon', 'Logan Sargeant'
-  ];
+  const drivers = [...f1_2026_drivers];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -220,7 +215,7 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
                     <SelectItem value="none" disabled>No upcoming races</SelectItem>
                   ) : (
                     upcomingRaces.map((race) => {
-                      const raceId = `2025-R${race.index + 1}`;
+                      const raceId = `2026-R${race.index + 1}`;
                       const hasPrediction = existingPredictions.includes(raceId);
                       
                       return (
@@ -242,10 +237,10 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
               </Select>
               {selectedRaceIndex >= 0 && (
                 <div className="text-xs text-muted-foreground space-y-1">
-                  <p><strong>Circuit:</strong> {f1_2025_races[selectedRaceIndex].circuit}</p>
-                  <p><strong>Country:</strong> {f1_2025_races[selectedRaceIndex].country}</p>
-                  <p><strong>Race Date:</strong> {new Date(f1_2025_races[selectedRaceIndex].sessions.find(s => s.name === 'Race')!.startTime).toLocaleString()}</p>
-                  {f1_2025_races[selectedRaceIndex].hasSprint && (
+                  <p><strong>Circuit:</strong> {f1_2026_races[selectedRaceIndex].circuit}</p>
+                  <p><strong>Country:</strong> {f1_2026_races[selectedRaceIndex].country}</p>
+                  <p><strong>Race Date:</strong> {new Date(f1_2026_races[selectedRaceIndex].sessions.find(s => s.name === 'Race')!.startTime).toLocaleString()}</p>
+                  {f1_2026_races[selectedRaceIndex].hasSprint && (
                     <Badge variant="secondary" className="text-xs">Sprint Weekend</Badge>
                   )}
                 </div>
@@ -463,7 +458,7 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
               <Clock className="w-12 h-12 text-yellow-500 mx-auto" />
               <h4 className="font-bold text-lg">Next Race</h4>
               <p className="text-sm text-muted-foreground">
-                Grand Prix
+                {upcomingRaces.length > 0 ? upcomingRaces[0].grandPrix : 'No upcoming races'}
               </p>
               <Badge variant="outline" className="bg-yellow-500/10 border-yellow-500/30">
                 Predictions close at race start

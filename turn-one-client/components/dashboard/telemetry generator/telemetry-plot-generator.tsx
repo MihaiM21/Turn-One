@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -10,8 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
-import { Download, Play, Settings, TrendingUp, Zap, Clock, Gauge, CircleGauge, ChevronsUp, MonitorCog, Users, UserRound, ChartSpline, AlertTriangle, Coins, ChartScatter} from "lucide-react"
-import { fetchTopSpeeds, fetchThrottleAverages, fetchTrackComparison, fetchSessionResults, fetchThrottleBrakeComparison ,fetchLaptimeData } from "@/lib/dataAcquisition"
+import { Download, Play, Settings, TrendingUp, Zap, Clock, Gauge, CircleGauge, ChevronsUp, MonitorCog, Users, UserRound, ChartSpline, AlertTriangle, Coins, ChartScatter } from "lucide-react"
+import { fetchTopSpeeds, fetchThrottleAverages, fetchTrackComparison, fetchSessionResults, fetchThrottleBrakeComparison, fetchLaptimeData, fetchEventsByYear, fetchSessionsByEvent } from "@/lib/dataAcquisition"
 import { TopSpeedData, ThrottleAverageData, TrackComparisonData, ThrottleBrakeComparisonData, LapTimeData, AdvancedPlotSettings } from "@/types/plot-types"
 import { grandPrixCalendar } from "@/lib/constants/grand-prix"
 import { TopSpeedGraph } from "./plots/top-speed"
@@ -24,17 +24,17 @@ import { TrackComparisonGraph } from "./plots/track-comparison"
 import { SessionResultsGraph } from "./plots/session-results"
 import { ThrottleBrakeComparisonGraph } from "./plots/throttle-brake-comparison"
 import { SessionResultsData } from "@/types/plot-types"
-import { drivers_2025, drivers_2026} from "@/lib/constants/drivers"
+import { drivers_2025, drivers_2026 } from "@/lib/constants/drivers"
 import { LoadingPlot } from "./loading_plot"
 import { useTokens } from "@/hooks/use-tokens"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/components/auth/auth-provider"
 import { isPageStatic } from "next/dist/build/utils"
-import {gForceData, tireData, speedData} from "@/lib/constants/mockup-data"
+import { gForceData, tireData, speedData } from "@/lib/constants/mockup-data"
 
 let drivers: any[];
 const currentYear = new Date().getFullYear();
-switch(currentYear) {
+switch (currentYear) {
   case 2025:
     drivers = drivers_2025;
     break;
@@ -44,7 +44,7 @@ switch(currentYear) {
   default:
     drivers = drivers_2025;
 }
-  
+
 
 export function TelemetryPlotGenerator() {
   const [selectedPlotType, setSelectedPlotType] = useState("topspeeds")
@@ -52,11 +52,88 @@ export function TelemetryPlotGenerator() {
   const [selectedDriver1, setSelectedDriver1] = useState("VER")
   const [selectedDriver2, setSelectedDriver2] = useState("HAM")
   const [selectedSession, setSelectedSession] = useState("FP1")
-  const [selectedYear, setSelectedYear] = useState("2025")
+  const [selectedYear, setSelectedYear] = useState("2026")
   const [selectedGp, setSelectedGp] = useState("1")
+  const [selectedEventName, setSelectedEventName] = useState("Australian Grand Prix")
+  const [selectedVersion, setSelectedVersion] = useState("v1")
+  const [selectedTopSpeedType, setSelectedTopSpeedType] = useState("telemetry")
+  const [availableEvents, setAvailableEvents] = useState<any[]>([])
+  const [availableSessions, setAvailableSessions] = useState<any[]>([])
+
+  const v2SupportedPlots = ["topspeeds", "throttle_average"]
+
   const [isGenerating, setIsGenerating] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
-  
+
+  useEffect(() => {
+    if (selectedYear) {
+      fetchEventsByYear(Number(selectedYear)).then(data => {
+        const events = data.events || [];
+        setAvailableEvents(events);
+
+        if (events.length > 0) {
+          const currentValid = events.find((e: any) => (e.official_name || e.name) === selectedEventName);
+          if (!currentValid) {
+            const defaultEvent = events.find((e: any) => e.name.includes("Australia")) || events[0];
+            setSelectedEventName(defaultEvent.official_name || defaultEvent.name);
+            setSelectedGp(defaultEvent.key ? defaultEvent.key.toString() : "1");
+          } else {
+            setSelectedGp(currentValid.key ? currentValid.key.toString() : "1");
+          }
+        }
+      }).catch(console.error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedYear]);
+
+  const getSessionCode = (name: string, type: string, number: number | null) => {
+    if (type === "Practice") return `FP${number}`;
+    if (type === "Qualifying") return "Q";
+    if (type === "Race") return "R";
+    if (type === "Sprint") return "S";
+    if (type === "Sprint Shootout" || type === "Sprint Qualifying") return "SQ";
+    if (type === "Day 1") return "D1";
+    if (type === "Day 2") return "D2";
+    if (type === "Day 3") return "D3";
+    return name;
+  }
+
+  const defaultSessions = [
+    { name: "Practice 1", type: "Practice", number: 1 },
+    { name: "Practice 2", type: "Practice", number: 2 },
+    { name: "Practice 3", type: "Practice", number: 3 },
+    { name: "Qualifying", type: "Qualifying", number: null },
+    { name: "Race", type: "Race", number: null },
+  ]
+
+  useEffect(() => {
+    if (selectedYear && selectedEventName) {
+      const event = availableEvents.find(e => (e.official_name || e.name) === selectedEventName);
+      const apiEventName = event ? event.name : selectedEventName;
+
+      fetchSessionsByEvent(Number(selectedYear), apiEventName).then(data => {
+        const sessions = data.sessions || [];
+        const resolved = sessions.length > 0 ? sessions : defaultSessions;
+        setAvailableSessions(resolved);
+
+        if (resolved.length > 0) {
+          const currentValid = resolved.find((s: any) => getSessionCode(s.name, s.type, s.number) === selectedSession);
+          if (!currentValid) {
+            const defaultSession = resolved.find((s: any) => s.type === "Practice" && s.number === 1) || resolved[0];
+            setSelectedSession(getSessionCode(defaultSession.name, defaultSession.type, defaultSession.number));
+          }
+        }
+      }).catch(() => {
+        setAvailableSessions(defaultSessions);
+        const currentValid = defaultSessions.find(s => getSessionCode(s.name, s.type, s.number) === selectedSession);
+        if (!currentValid) {
+          setSelectedSession("FP1");
+        }
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedYear, selectedEventName]);
+
   // Advanced settings state
   const [showGrid, setShowGrid] = useState(true)
   const [showLegend, setShowLegend] = useState(true)
@@ -69,6 +146,13 @@ export function TelemetryPlotGenerator() {
   const { isAuthenticated } = useAuth()
   const authToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null
   const { userProfile, hasTokens, getTokenCount, deductToken, error: tokenError } = useTokens(authToken)
+
+  const handlePlotTypeChange = (val: string) => {
+    setSelectedPlotType(val)
+    if (!v2SupportedPlots.includes(val)) {
+      setSelectedVersion("v1")
+    }
+  }
 
   const plotTypes = [
     { id: "topspeeds", name: "Top Speeds", icon: Gauge, description: "Compare top speeds across teams", isPro: false },
@@ -87,9 +171,7 @@ export function TelemetryPlotGenerator() {
 
   ]
 
-  const sessions = ["FP1", "FP2", "FP3", "Q", "R", "S", "SQ"]
   const years = ["2025", "2026"]
-  const gp = grandPrixCalendar[selectedYear]?.races || []
 
 
   const [topSpeedsData, setTopSpeedsData] = useState<TopSpeedData[]>([])
@@ -115,22 +197,49 @@ export function TelemetryPlotGenerator() {
       return
     }
 
+    let apiGpVal: number | string = Number(selectedGp);
+    const event = availableEvents.find(e => (e.official_name || e.name) === selectedEventName);
+    if (event) {
+      if (selectedVersion === 'v1') {
+        const match = event.code ? event.code.match(/F1\d{4}(T?)(\d{2})/) : null;
+        const isTesting = match ? match[1] === 'T' : event.name.toLowerCase().includes('test');
+        if (isTesting) {
+          alert('Version 1 API does not support pre-season testing. Please select a normal Grand Prix or switch to version 2.');
+          return;
+        }
+        const index = availableEvents.indexOf(event);
+        const roundNum = match ? parseInt(match[2], 10) : index + 1;
+        apiGpVal = roundNum;
+      } else if (selectedVersion === 'v2') {
+        // v2 uses the official name (or falling back to standard name) instead of numeric key/round
+        apiGpVal = event.official_name || event.name;
+      }
+    }
+
+    let apiSessionVal = selectedSession;
+    if (selectedVersion === 'v2') {
+      const sessionObj = availableSessions.find(s => getSessionCode(s.name, s.type, s.number) === selectedSession);
+      if (sessionObj) {
+        apiSessionVal = sessionObj.name;
+      }
+    }
+
     setIsGenerating(true)
     let plotGeneratedSuccessfully = false
 
     try {
       if (selectedPlotType === "topspeeds") {
-        const data = await fetchTopSpeeds(authToken, Number(selectedYear), Number(selectedGp), selectedSession)
-        
+        const data = await fetchTopSpeeds(authToken, Number(selectedYear), apiGpVal, apiSessionVal, selectedVersion, selectedTopSpeedType)
+
         let processedData: { team: string; speed: number; color: string }[] = []
-        
+
         // Check if data is in grouped format (FP2 GP1 2025 format)
         if (data && typeof data === 'object' && 'Color' in data && 'Team' in data && 'Top Speed (km/h)' in data) {
           // Handle grouped format: {Color: {0: '#color1', 1: '#color2'}, Team: {0: 'Team1', 1: 'Team2'}, 'Top Speed (km/h)': {0: 329, 1: 327}}
           const colors = data.Color as Record<string, string>
           const teams = data.Team as Record<string, string>
           const speeds = data['Top Speed (km/h)'] as Record<string, number>
-          
+
           // Convert to array format
           processedData = Object.keys(teams).map(key => ({
             team: teams[key],
@@ -146,23 +255,23 @@ export function TelemetryPlotGenerator() {
               color: item.Color
             }))
         }
-        
+
         // Sort the data by top speed
         processedData.sort((a, b) => b.speed - a.speed)
-          
+
         // Calculate domain with margins
         const minSpeed = Math.min(...processedData.map(d => d.speed))
         const maxSpeed = Math.max(...processedData.map(d => d.speed))
         const margin = 5 // 5 km/h margin on each side
         const domain: [number, number] = [Math.floor(minSpeed - margin), Math.ceil(maxSpeed + margin)]
-        
+
         setTopSpeedsData(processedData)
         setSpeedDomain(domain)
         plotGeneratedSuccessfully = true
 
       } else if (selectedPlotType === "throttle_average") {
-        const data = await fetchThrottleAverages(authToken, Number(selectedYear), Number(selectedGp), selectedSession)
-        
+        const data = await fetchThrottleAverages(authToken, Number(selectedYear), apiGpVal, apiSessionVal, selectedVersion)
+
         // Process and sort the data by throttle average
         const processedData = Object.values(data as Record<string, { Driver: string; 'Average Throttle (%)': number; Color: string }>)
           .map(item => ({
@@ -171,7 +280,7 @@ export function TelemetryPlotGenerator() {
             color: item.Color
           }))
           .sort((a, b) => b.throttle - a.throttle)
-        
+
         // Calculate domain with margins
         const minThrottle = Math.min(...processedData.map(d => d.throttle))
         const maxThrottle = Math.max(...processedData.map(d => d.throttle))
@@ -185,8 +294,8 @@ export function TelemetryPlotGenerator() {
       } else if (selectedPlotType === "track_comparison") {
         if (selectedDriver1 && selectedDriver2 && selectedDriver1 !== selectedDriver2) {
           setTrackComparisonData(null)
-          
-          const data = await fetchTrackComparison(authToken, Number(selectedYear), Number(selectedGp), selectedSession, selectedDriver1, selectedDriver2)
+
+          const data = await fetchTrackComparison(authToken, Number(selectedYear), apiGpVal, apiSessionVal, selectedDriver1, selectedDriver2, selectedVersion)
           setTrackComparisonData(data)
           plotGeneratedSuccessfully = true
         } else {
@@ -194,13 +303,13 @@ export function TelemetryPlotGenerator() {
         }
 
       } else if (selectedPlotType === "session_results") {
-        const data = await fetchSessionResults(authToken, Number(selectedYear), Number(selectedGp), selectedSession)
-        
+        const data = await fetchSessionResults(authToken, Number(selectedYear), apiGpVal, apiSessionVal, selectedVersion)
+
         // Process the data
         const processedData = data as SessionResultsData[]
         const maxDelta = Math.max(...processedData.map(d => d.LapTimeDelta))
         const domain: [number, number] = [0, Math.ceil(maxDelta + 0.5)]
-        
+
         setSessionResultsData(processedData)
         setSessionResultsDomain(domain)
         plotGeneratedSuccessfully = true
@@ -208,16 +317,16 @@ export function TelemetryPlotGenerator() {
       } else if (selectedPlotType === "throttle_brake") {
         if (selectedDriver1 && selectedDriver2 && selectedDriver1 !== selectedDriver2) {
           setThrottleBrakeData(null)
-          
-          const data = await fetchThrottleBrakeComparison(authToken, Number(selectedYear), Number(selectedGp), selectedSession, selectedDriver1, selectedDriver2)
+
+          const data = await fetchThrottleBrakeComparison(authToken, Number(selectedYear), apiGpVal, apiSessionVal, selectedDriver1, selectedDriver2, selectedVersion)
           setThrottleBrakeData(data as ThrottleBrakeComparisonData)
           plotGeneratedSuccessfully = true
         } else {
           throw new Error('Please select two different drivers for throttle & brake comparison')
         }
 
-      } else if (selectedPlotType === "laptime"){
-        const data = await fetchLaptimeData(authToken, Number(selectedYear), Number(selectedGp), selectedSession, selectedDriver)
+      } else if (selectedPlotType === "laptime") {
+        const data = await fetchLaptimeData(authToken, Number(selectedYear), apiGpVal, apiSessionVal, selectedDriver, selectedVersion)
         setLapTimeData(data)
         plotGeneratedSuccessfully = true
       } else {
@@ -293,9 +402,9 @@ export function TelemetryPlotGenerator() {
         )
       case "session_results":
         return (
-          <SessionResultsGraph 
-            data={sessionResultsData} 
-            deltaDomain={sessionResultsDomain} 
+          <SessionResultsGraph
+            data={sessionResultsData}
+            deltaDomain={sessionResultsDomain}
             advancedSettings={advancedSettings}
           />
         )
@@ -341,7 +450,7 @@ export function TelemetryPlotGenerator() {
             </Badge>
           </div>
         </div>
-        
+
         {/* Token warning */}
         {isAuthenticated && !hasTokens() && (
           <Alert className="border-yellow-500/50 bg-yellow-500/10 mt-4">
@@ -355,7 +464,7 @@ export function TelemetryPlotGenerator() {
             </AlertDescription>
           </Alert>
         )}
-        
+
         {/* Token error */}
         {tokenError && (
           <Alert className="border-red-500/50 bg-red-500/10">
@@ -368,7 +477,7 @@ export function TelemetryPlotGenerator() {
       </CardHeader>
 
       <CardContent className="space-y-6">
-        <Tabs value={selectedPlotType} onValueChange={setSelectedPlotType} className="w-full">
+        <Tabs value={selectedPlotType} onValueChange={handlePlotTypeChange} className="w-full">
           <TabsList className="grid w-full grid-cols-6 bg-muted/20 h-full">
             {plotTypes.map((type) => {
               const IconComponent = type.icon
@@ -376,6 +485,7 @@ export function TelemetryPlotGenerator() {
                 <TabsTrigger
                   key={type.id}
                   value={type.id}
+                  onClick={() => handlePlotTypeChange(type.id)}
                   className="flex flex-col items-center space-y-1 p-3 m-1 data-[state=active]:bg-primary data-[state=active]:text-muted transition-all duration-200 hover:bg-primary/30 relative"
                 >
                   <IconComponent className="h-4 w-4" />
@@ -391,7 +501,7 @@ export function TelemetryPlotGenerator() {
           </TabsList>
 
           <div className="mt-6 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="year">Year</Label>
                 <Select value={selectedYear} onValueChange={setSelectedYear}>
@@ -407,23 +517,40 @@ export function TelemetryPlotGenerator() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="session">Round</Label>
-                <Select value={selectedGp} onValueChange={setSelectedGp}>
+                <Select value={selectedEventName} onValueChange={(val) => {
+                  setSelectedEventName(val)
+                  const event = availableEvents.find(e => (e.official_name || e.name) === val)
+                  if (event) {
+                    setSelectedGp(event.key ? event.key.toString() : "1")
+                  }
+                }}>
                   <SelectTrigger className="w-full bg-background/50 border-border/50">
                     <SelectValue placeholder="Select round" />
                   </SelectTrigger>
                   <SelectContent>
-                    {gp.map((round) => (
-                      <SelectItem key={round.id} value={round.id}>
-                        {`${round.id}. ${round.name}`}
-                      </SelectItem>
-                    ))}
+                    {availableEvents.length > 0 ? availableEvents.map((event, index) => {
+                      const match = event.code.match(/F1\d{4}(T?)(\d{2})/)
+                      const isTesting = match && match[1] === 'T'
+                      const roundNum = match ? parseInt(match[2], 10) : index + 1
+                      const prefix = isTesting ? 'Test' : `${roundNum}.`
+                      const isDuplicate = availableEvents.filter(e => e.name === event.name).length > 1;
+                      const displayName = isDuplicate ? event.official_name : event.name;
+                      const identifier = event.official_name || event.name;
+                      return (
+                        <SelectItem key={event.key || index} value={identifier}>
+                          {`${prefix} ${displayName}`}
+                        </SelectItem>
+                      )
+                    }) : (
+                      <SelectItem value="loading" disabled>Loading...</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="session">Session</Label>
                 <Select value={selectedSession} onValueChange={setSelectedSession}>
@@ -431,88 +558,123 @@ export function TelemetryPlotGenerator() {
                     <SelectValue placeholder="Select session" />
                   </SelectTrigger>
                   <SelectContent>
-                    {sessions.map((session) => (
-                      <SelectItem key={session} value={session}>
-                        {session.charAt(0).toUpperCase() + session.slice(1)}
-                      </SelectItem>
-                    ))}
+                    {availableSessions.length > 0 ? availableSessions.map((session) => {
+                      const code = getSessionCode(session.name, session.type, session.number)
+                      return (
+                        <SelectItem key={session.key || code} value={code}>
+                          {session.name}
+                        </SelectItem>
+                      )
+                    }) : (
+                      <SelectItem value="loading" disabled>Loading...</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="version">API Version</Label>
+                <Select value={selectedVersion} onValueChange={setSelectedVersion}>
+                  <SelectTrigger className="w-full bg-background/50 border-border/50">
+                    <SelectValue placeholder="Select version" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="v1">Version 1</SelectItem>
+                    <SelectItem value="v2" disabled={!v2SupportedPlots.includes(selectedPlotType)}>
+                      Version 2{!v2SupportedPlots.includes(selectedPlotType) ? " (not supported)" : ""}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {selectedPlotType === "topspeeds" && selectedVersion === "v2" && (
+                <div className="space-y-2">
+                  <Label htmlFor="topSpeedType">Speed Source</Label>
+                  <Select value={selectedTopSpeedType} onValueChange={setSelectedTopSpeedType}>
+                    <SelectTrigger className="w-full bg-background/50 border-border/50">
+                      <SelectValue placeholder="Select data source" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="telemetry">Track Telemetry</SelectItem>
+                      <SelectItem value="st">Speed Trap</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             {(selectedPlotType === "speed" || selectedPlotType === "laptime") && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Driver 1 */}
-              <div className="space-y-2">
-                <Label htmlFor="driver">Driver</Label>
-                <Select value={selectedDriver} onValueChange={setSelectedDriver}>
-                  <SelectTrigger className="w-full bg-background/50 border-border/50">
-                    <SelectValue placeholder="Select driver" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {drivers.map((driver) => (
-                      <SelectItem key={driver} value={driver}>
-                        {driver}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {selectedPlotType === "speed" && (
-              <div className="space-y-2">
-                <Label htmlFor="driver">Driver</Label>
-                <Select value={selectedDriver} onValueChange={setSelectedDriver}>
-                  <SelectTrigger className="w-full bg-background/50 border-border/50">
-                    <SelectValue placeholder="Select driver" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {drivers.map((driver) => (
-                      <SelectItem key={driver} value={driver}>
-                        {driver}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Driver 1 */}
+                <div className="space-y-2">
+                  <Label htmlFor="driver">Driver</Label>
+                  <Select value={selectedDriver} onValueChange={setSelectedDriver}>
+                    <SelectTrigger className="w-full bg-background/50 border-border/50">
+                      <SelectValue placeholder="Select driver" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {drivers.map((driver) => (
+                        <SelectItem key={driver} value={driver}>
+                          {driver}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {selectedPlotType === "speed" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="driver">Driver</Label>
+                    <Select value={selectedDriver} onValueChange={setSelectedDriver}>
+                      <SelectTrigger className="w-full bg-background/50 border-border/50">
+                        <SelectValue placeholder="Select driver" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {drivers.map((driver) => (
+                          <SelectItem key={driver} value={driver}>
+                            {driver}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>)}
               </div>)}
-            </div>)}
-            
+
             {(selectedPlotType === "track_comparison" || selectedPlotType === "throttle_brake") && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Driver 1 */}
-              <div className="space-y-2">
-                <Label htmlFor="driver1">Driver 1</Label>
-                <Select value={selectedDriver1} onValueChange={setSelectedDriver1}>
-                  <SelectTrigger className="w-full bg-background/50 border-border/50">
-                    <SelectValue placeholder="Select driver 1" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {drivers.map((driver) => (
-                      <SelectItem key={driver} value={driver}>
-                        {driver}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {/* Driver 2 */}
-              <div className="space-y-2">
-                <Label htmlFor="driver2">Driver 2</Label>
-                <Select value={selectedDriver2} onValueChange={setSelectedDriver2}>
-                  <SelectTrigger className="w-full bg-background/50 border-border/50">
-                    <SelectValue placeholder="Select driver 2" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {drivers.map((driver) => (
-                      <SelectItem key={driver} value={driver}>
-                        {driver}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>)}
-            
-          
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Driver 1 */}
+                <div className="space-y-2">
+                  <Label htmlFor="driver1">Driver 1</Label>
+                  <Select value={selectedDriver1} onValueChange={setSelectedDriver1}>
+                    <SelectTrigger className="w-full bg-background/50 border-border/50">
+                      <SelectValue placeholder="Select driver 1" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {drivers.map((driver) => (
+                        <SelectItem key={driver} value={driver}>
+                          {driver}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {/* Driver 2 */}
+                <div className="space-y-2">
+                  <Label htmlFor="driver2">Driver 2</Label>
+                  <Select value={selectedDriver2} onValueChange={setSelectedDriver2}>
+                    <SelectTrigger className="w-full bg-background/50 border-border/50">
+                      <SelectValue placeholder="Select driver 2" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {drivers.map((driver) => (
+                        <SelectItem key={driver} value={driver}>
+                          {driver}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>)}
+
+
             {/* <div className="space-y-2">
               <Label htmlFor="laps">Lap Range</Label>
               <Input id="laps" placeholder="1-20" className="bg-background/50 border-border/50" />

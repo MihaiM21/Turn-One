@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Activity, Clock, Gauge, Trophy } from "lucide-react"
-import { fetchAPIDailyStats, fetchAPITotalStats} from "@/lib/dataAcquisition"
+import { fetchAPIDailyStats, fetchAPITotalStats } from "@/lib/dataAcquisition"
 import { useState, useEffect } from "react"
 
 interface TotalStats {
@@ -74,13 +74,12 @@ export function TelemetryOverview() {
           <CardContent>
             <div className="text-2xl font-bold text-white">{stat.value}</div>
             <p
-              className={`text-xs ${
-                stat.trend === "improvement"
-                  ? "text-green-400"
-                  : stat.trend === "decline"
-                    ? "text-red-400"
-                    : "text-yellow-400"
-              }`}
+              className={`text-xs ${stat.trend === "improvement"
+                ? "text-green-400"
+                : stat.trend === "decline"
+                  ? "text-red-400"
+                  : "text-yellow-400"
+                }`}
             >
               {stat.change}
             </p>

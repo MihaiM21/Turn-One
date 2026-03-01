@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
 import { DashboardHeader } from "@/components/dashboard/live dashboard/dashboard-header";
+import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links";
 
 interface FeatureProps {
   icon: LucideIcon;
@@ -313,6 +314,8 @@ export default function DocumentationPage() {
           </div>
         </CardContent>
       </Card>
+
+      <ExploreMoreLinks currentPage="/docs" />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { BarChart3, Mail, Phone, MapPin, Twitter, Linkedin, Github, Zap, Youtube, Instagram } from "lucide-react"
 import VersionDisplay from "@/components/ui/version-display"
+import { ObfuscatedEmail } from "@/components/ui/obfuscated-email"
 
 export function MainFooter() {
   const currentYear = new Date().getFullYear()
@@ -95,7 +96,7 @@ export function MainFooter() {
             <div className="space-y-3">
               <div className="flex items-center space-x-3 text-sm">
                 <Mail className="h-4 w-4 text-primary" />
-                <span className="text-muted-foreground">contact@t1f1.com</span>
+                <ObfuscatedEmail user="contact" domain="t1f1.com" className="text-muted-foreground" />
               </div>
               {/* <div className="flex items-center space-x-3 text-sm">
                 <Phone className="h-4 w-4 text-primary" />

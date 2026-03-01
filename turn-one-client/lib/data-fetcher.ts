@@ -13,12 +13,12 @@ export async function fetchWithAuth<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const token = getAuthToken();
-  
+
   if (!token) {
     console.error('No authentication token available for request to', endpoint);
     throw new Error('No authentication token found');
   }
-  
+
   const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`,
@@ -27,20 +27,20 @@ export async function fetchWithAuth<T>(
 
   try {
 
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers
     });
 
-    
+
 
     if (!response.ok) {
       // Try to parse error message from response
       try {
         const errorData = await response.json();
         throw new Error(
-          errorData.message || 
-          errorData.error || 
+          errorData.message ||
+          errorData.error ||
           `API request failed with status ${response.status}`
         );
       } catch (e) {
@@ -72,13 +72,90 @@ export const fetchFromExternalAPI = async (endpoint: string, options: RequestIni
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
-        errorData.error || 
-        errorData.message || 
+        errorData.error ||
+        errorData.message ||
         `External API request failed with status ${response.status}`
       );
     }
 
-    return response.json();
+    const data = await response.json();
+
+    // Catch 200 OK responses that are actually errors
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      if (data.error) throw new Error(data.error);
+      if (data.detail && typeof data.detail === 'string') throw new Error(data.detail);
+      if (data.message && typeof data.message === 'string' && data.message.toLowerCase().includes('error')) throw new Error(data.message);
+    }
+
+    return data;
+  } catch (error) {
+    console.error(`❌ Error fetching from external API [${endpoint}]:`, error);
+    throw error;
+  }
+};
+
+export const fetchFromExternalAPIv1 = async (endpoint: string, options: RequestInit = {}) => {
+  try {
+    const response = await fetch(`${EXTERNAL_API_BASE_URL}/v1/${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.error ||
+        errorData.message ||
+        `External API request failed with status ${response.status}`
+      );
+    }
+
+    const data = await response.json();
+
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      if (data.error) throw new Error(data.error);
+      if (data.detail && typeof data.detail === 'string') throw new Error(data.detail);
+      if (data.message && typeof data.message === 'string' && data.message.toLowerCase().includes('error')) throw new Error(data.message);
+    }
+
+    return data;
+  } catch (error) {
+    console.error(`❌ Error fetching from external API [${endpoint}]:`, error);
+    throw error;
+  }
+};
+
+export const fetchFromExternalAPIv2 = async (endpoint: string, options: RequestInit = {}) => {
+  try {
+    const response = await fetch(`${EXTERNAL_API_BASE_URL}/v2/${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.error ||
+        errorData.message ||
+        `External API request failed with status ${response.status}`
+      );
+    }
+
+    const data = await response.json();
+
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      if (data.error) throw new Error(data.error);
+      if (data.detail && typeof data.detail === 'string') throw new Error(data.detail);
+      if (data.message && typeof data.message === 'string' && data.message.toLowerCase().includes('error')) throw new Error(data.message);
+    }
+
+    return data;
   } catch (error) {
     console.error(`❌ Error fetching from external API [${endpoint}]:`, error);
     throw error;
