@@ -60,6 +60,7 @@ interface User {
   coins: number;
   createdAt: string;
   lastLogin?: string;
+  lastTokenRefillDate?: string;
 }
 
 interface CurrentUser {
@@ -403,8 +404,16 @@ export default function AdminDashboard() {
   const contentCreatorCount = users.filter(user => user.role === 1).length;
   const totalTokens = users.reduce((sum, user) => sum + user.tokens, 0);
   const totalCoins = users.reduce((sum, user) => sum + user.coins, 0);
+  const normalizePlan = (plan: string | number): string => {
+    const p = String(plan);
+    if (p === '0') return 'BASIC';
+    if (p === '1') return 'PRO';
+    if (p === '2') return 'ELITE';
+    return p;
+  };
   const planDistribution = users.reduce((acc, user) => {
-    acc[user.plan] = (acc[user.plan] || 0) + 1;
+    const key = normalizePlan(user.plan);
+    acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
   
@@ -1016,6 +1025,21 @@ export default function AdminDashboard() {
                               <Calendar className="h-3 w-3" />
                               {new Date(user.createdAt).toLocaleDateString()}
                             </span>
+                            {user.lastTokenRefillDate && (() => {
+                              const nextRefill = new Date(user.lastTokenRefillDate);
+                              nextRefill.setMonth(nextRefill.getMonth() + 1);
+                              const daysLeft = Math.ceil((nextRefill.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                              const isOverdue = daysLeft <= 0;
+                              const isSoon = daysLeft <= 3 && daysLeft > 0;
+                              return (
+                                <span className={`flex items-center gap-1 ${
+                                  isOverdue ? 'text-red-400' : isSoon ? 'text-yellow-400' : 'text-muted-foreground'
+                                }`}>
+                                  <RefreshCw className="h-3 w-3" />
+                                  Refill: {isOverdue ? 'Overdue' : isSoon ? `${daysLeft}d` : nextRefill.toLocaleDateString()}
+                                </span>
+                              );
+                            })()}
                             {user.lastLogin && (
                               <span className="flex items-center gap-1">
                                 <Activity className="h-3 w-3 text-green-500" />
