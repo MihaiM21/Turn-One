@@ -461,31 +461,31 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-red-950/20 to-black">
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-4">
         {/* Header Section */}
-        <div className="mb-8">
-          <div className="modern-gradient rounded-2xl p-8 shadow-xl border border-primary/20 hover:border-primary/40 transition-all duration-300">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div className="flex items-center gap-4">
-                <div className="h-14 w-14 bg-primary/10 rounded-2xl flex items-center justify-center">
-                  <Shield className="h-7 w-7 text-primary" />
+        <div className="mb-4">
+          <div className="modern-gradient rounded-xl p-4 shadow-lg border border-primary/20 hover:border-primary/40 transition-all duration-300">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <Shield className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">Admin Dashboard</h1>
-                  <p className="text-muted-foreground mt-1">Manage users, plans, and system administration</p>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">Admin Dashboard</h1>
+                  <p className="text-sm text-muted-foreground">Manage users, plans, and system administration</p>
                 </div>
               </div>
               {currentUser && (
                 <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="h-10 w-10 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground font-bold glow-effect">
+                  <CardContent className="p-3">
+                    <div className="flex items-center space-x-2">
+                      <div className="h-8 w-8 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm glow-effect">
                         {currentUser.username.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="font-semibold text-foreground">{currentUser.username}</p>
-                        <div className="flex items-center space-x-2 text-sm">
-                          <Badge className={`${planColors[currentUser.plan]} text-xs`}>
+                        <p className="font-semibold text-sm text-foreground">{currentUser.username}</p>
+                        <div className="flex items-center space-x-1.5 text-xs">
+                          <Badge className={`${planColors[currentUser.plan]} text-[10px]`}>
                             {planNames[currentUser.plan]}
                           </Badge>
                           <span className="text-muted-foreground">•</span>
@@ -501,68 +501,68 @@ export default function AdminDashboard() {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="card-hover border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:scale-105 bg-gradient-to-br from-card to-card/50">
-            <CardContent className="p-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+          <Card className="card-hover border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:scale-105 bg-gradient-to-br from-card to-card/50">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Total Users</p>
-                  <p className="text-3xl font-bold text-foreground bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{totalUsers}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{recentUsers} new this week</p>
+                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Total Users</p>
+                  <p className="text-2xl font-bold text-foreground bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{totalUsers}</p>
+                  <p className="text-xs text-muted-foreground">{recentUsers} new this week</p>
                 </div>
-                <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center glow-effect hover:bg-primary/20 transition-colors">
-                  <Users className="h-6 w-6 text-primary" />
+                <div className="h-9 w-9 bg-primary/10 rounded-full flex items-center justify-center glow-effect hover:bg-primary/20 transition-colors">
+                  <Users className="h-4 w-4 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="card-hover border-accent/20 hover:border-accent/50 transition-all duration-300 hover:shadow-xl hover:scale-105 bg-gradient-to-br from-card to-card/50">
-            <CardContent className="p-6">
+          <Card className="card-hover border-accent/20 hover:border-accent/50 transition-all duration-300 hover:shadow-lg hover:scale-105 bg-gradient-to-br from-card to-card/50">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Admin Users</p>
-                  <p className="text-3xl font-bold text-foreground bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">{adminCount}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Admin Users</p>
+                  <p className="text-2xl font-bold text-foreground bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">{adminCount}</p>
+                  <p className="text-xs text-muted-foreground">
                     {totalUsers > 0 ? ((adminCount / totalUsers) * 100).toFixed(1) : 0}% of users
                   </p>
                 </div>
-                <div className="h-12 w-12 bg-accent/10 rounded-full flex items-center justify-center accent-glow hover:bg-accent/20 transition-colors">
-                  <Shield className="h-6 w-6 text-accent" />
+                <div className="h-9 w-9 bg-accent/10 rounded-full flex items-center justify-center accent-glow hover:bg-accent/20 transition-colors">
+                  <Shield className="h-4 w-4 text-accent" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="card-hover border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:scale-105 bg-gradient-to-br from-card to-card/50">
-            <CardContent className="p-6">
+          <Card className="card-hover border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:scale-105 bg-gradient-to-br from-card to-card/50">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Total Tokens</p>
-                  <p className="text-3xl font-bold text-foreground bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">{totalTokens.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Total Tokens</p>
+                  <p className="text-2xl font-bold text-foreground bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">{totalTokens.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">
                     Avg: {totalUsers ? Math.round(totalTokens / totalUsers).toLocaleString() : 0} per user
                   </p>
                 </div>
-                <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center glow-effect hover:bg-primary/20 transition-colors">
-                  <TrendingUp className="h-6 w-6 text-primary" />
+                <div className="h-9 w-9 bg-primary/10 rounded-full flex items-center justify-center glow-effect hover:bg-primary/20 transition-colors">
+                  <TrendingUp className="h-4 w-4 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="card-hover border-green-500/20 hover:border-green-500/50 transition-all duration-300 hover:shadow-xl hover:scale-105 bg-gradient-to-br from-card to-card/50">
-            <CardContent className="p-6">
+          <Card className="card-hover border-green-500/20 hover:border-green-500/50 transition-all duration-300 hover:shadow-lg hover:scale-105 bg-gradient-to-br from-card to-card/50">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Active Users (7d)</p>
-                  <p className="text-3xl font-bold text-foreground bg-gradient-to-r from-green-500 to-green-400 bg-clip-text text-transparent">{activeUsers}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Active Users (7d)</p>
+                  <p className="text-2xl font-bold text-foreground bg-gradient-to-r from-green-500 to-green-400 bg-clip-text text-transparent">{activeUsers}</p>
+                  <p className="text-xs text-muted-foreground">
                     {totalUsers > 0 ? ((activeUsers / totalUsers) * 100).toFixed(1) : 0}% activity rate
                   </p>
                 </div>
-                <div className="h-12 w-12 bg-green-500/10 rounded-full flex items-center justify-center hover:bg-green-500/20 transition-colors">
-                  <Activity className="h-6 w-6 text-green-500" />
+                <div className="h-9 w-9 bg-green-500/10 rounded-full flex items-center justify-center hover:bg-green-500/20 transition-colors">
+                  <Activity className="h-4 w-4 text-green-500" />
                 </div>
               </div>
             </CardContent>
@@ -570,25 +570,25 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions Grid */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Zap className="h-5 w-5 text-primary" />
+        <div className="mb-4">
+          <h2 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
+            <Zap className="h-4 w-4 text-primary" />
             Quick Actions
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
             <Link href="/admin/articles" className="group">
-              <Card className="h-full border-red-500/20 hover:border-red-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-red-500/5 bg-gradient-to-br from-card to-red-500/5 cursor-pointer">
-                <CardContent className="p-5">
-                  <div className="flex items-start gap-4">
-                    <div className="h-11 w-11 bg-red-500/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                      <FileText className="h-5 w-5 text-red-400" />
+              <Card className="h-full border-red-500/20 hover:border-red-500/50 transition-all duration-300 hover:shadow-md bg-gradient-to-br from-card to-red-500/5 cursor-pointer">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 bg-red-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <FileText className="h-4 w-4 text-red-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground mb-1 flex items-center justify-between">
+                      <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
                         Articles
-                        <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-red-400 group-hover:translate-x-1 transition-all" />
+                        <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-red-400 group-hover:translate-x-0.5 transition-all" />
                       </h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2">Create and manage F1 blog articles</p>
+                      <p className="text-xs text-muted-foreground truncate">Manage blog articles</p>
                     </div>
                   </div>
                 </CardContent>
@@ -596,18 +596,18 @@ export default function AdminDashboard() {
             </Link>
 
             <Link href="/admin/media" className="group">
-              <Card className="h-full border-cyan-500/20 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/5 bg-gradient-to-br from-card to-cyan-500/5 cursor-pointer">
-                <CardContent className="p-5">
-                  <div className="flex items-start gap-4">
-                    <div className="h-11 w-11 bg-cyan-500/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                      <ImageIcon className="h-5 w-5 text-cyan-400" />
+              <Card className="h-full border-cyan-500/20 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-md bg-gradient-to-br from-card to-cyan-500/5 cursor-pointer">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 bg-cyan-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <ImageIcon className="h-4 w-4 text-cyan-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground mb-1 flex items-center justify-between">
-                        Media Library
-                        <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" />
+                      <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
+                        Media
+                        <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-cyan-400 group-hover:translate-x-0.5 transition-all" />
                       </h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2">Upload and manage images with metadata</p>
+                      <p className="text-xs text-muted-foreground truncate">Images &amp; uploads</p>
                     </div>
                   </div>
                 </CardContent>
@@ -615,18 +615,18 @@ export default function AdminDashboard() {
             </Link>
 
             <Link href="/admin/predictions" className="group">
-              <Card className="h-full border-yellow-500/20 hover:border-yellow-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-yellow-500/5 bg-gradient-to-br from-card to-yellow-500/5 cursor-pointer">
-                <CardContent className="p-5">
-                  <div className="flex items-start gap-4">
-                    <div className="h-11 w-11 bg-yellow-500/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                      <Trophy className="h-5 w-5 text-yellow-400" />
+              <Card className="h-full border-yellow-500/20 hover:border-yellow-500/50 transition-all duration-300 hover:shadow-md bg-gradient-to-br from-card to-yellow-500/5 cursor-pointer">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 bg-yellow-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <Trophy className="h-4 w-4 text-yellow-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground mb-1 flex items-center justify-between">
+                      <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
                         Predictions
-                        <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-yellow-400 group-hover:translate-x-1 transition-all" />
+                        <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-yellow-400 group-hover:translate-x-0.5 transition-all" />
                       </h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2">Enter results and validate predictions</p>
+                      <p className="text-xs text-muted-foreground truncate">Validate results</p>
                     </div>
                   </div>
                 </CardContent>
@@ -634,18 +634,18 @@ export default function AdminDashboard() {
             </Link>
 
             <Link href="/admin/trivia" className="group">
-              <Card className="h-full border-purple-500/20 hover:border-purple-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/5 bg-gradient-to-br from-card to-purple-500/5 cursor-pointer">
-                <CardContent className="p-5">
-                  <div className="flex items-start gap-4">
-                    <div className="h-11 w-11 bg-purple-500/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                      <Brain className="h-5 w-5 text-purple-400" />
+              <Card className="h-full border-purple-500/20 hover:border-purple-500/50 transition-all duration-300 hover:shadow-md bg-gradient-to-br from-card to-purple-500/5 cursor-pointer">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 bg-purple-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <Brain className="h-4 w-4 text-purple-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground mb-1 flex items-center justify-between">
+                      <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
                         Trivia
-                        <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-purple-400 group-hover:translate-x-1 transition-all" />
+                        <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-purple-400 group-hover:translate-x-0.5 transition-all" />
                       </h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2">Create and edit F1 trivia questions</p>
+                      <p className="text-xs text-muted-foreground truncate">F1 quiz questions</p>
                     </div>
                   </div>
                 </CardContent>
@@ -653,18 +653,18 @@ export default function AdminDashboard() {
             </Link>
 
             <Link href="/admin/notifications" className="group">
-              <Card className="h-full border-orange-500/20 hover:border-orange-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/5 bg-gradient-to-br from-card to-orange-500/5 cursor-pointer">
-                <CardContent className="p-5">
-                  <div className="flex items-start gap-4">
-                    <div className="h-11 w-11 bg-orange-500/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                      <Bell className="h-5 w-5 text-orange-400" />
+              <Card className="h-full border-orange-500/20 hover:border-orange-500/50 transition-all duration-300 hover:shadow-md bg-gradient-to-br from-card to-orange-500/5 cursor-pointer">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 bg-orange-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <Bell className="h-4 w-4 text-orange-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground mb-1 flex items-center justify-between">
+                      <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
                         Notifications
-                        <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-orange-400 group-hover:translate-x-1 transition-all" />
+                        <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-orange-400 group-hover:translate-x-0.5 transition-all" />
                       </h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2">Send push notifications to users</p>
+                      <p className="text-xs text-muted-foreground truncate">Push to users</p>
                     </div>
                   </div>
                 </CardContent>
@@ -672,18 +672,18 @@ export default function AdminDashboard() {
             </Link>
 
             <Link href="/admin/articles/create" className="group">
-              <Card className="h-full border-green-500/20 hover:border-green-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/5 bg-gradient-to-br from-card to-green-500/5 cursor-pointer">
-                <CardContent className="p-5">
-                  <div className="flex items-start gap-4">
-                    <div className="h-11 w-11 bg-green-500/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                      <Plus className="h-5 w-5 text-green-400" />
+              <Card className="h-full border-green-500/20 hover:border-green-500/50 transition-all duration-300 hover:shadow-md bg-gradient-to-br from-card to-green-500/5 cursor-pointer">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 bg-green-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <Plus className="h-4 w-4 text-green-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground mb-1 flex items-center justify-between">
+                      <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
                         New Article
-                        <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-green-400 group-hover:translate-x-1 transition-all" />
+                        <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-green-400 group-hover:translate-x-0.5 transition-all" />
                       </h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2">Write a new F1 blog post</p>
+                      <p className="text-xs text-muted-foreground truncate">Write a blog post</p>
                     </div>
                   </div>
                 </CardContent>
@@ -693,63 +693,63 @@ export default function AdminDashboard() {
         </div>
 
         {/* Secondary Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-2 mb-4">
           <Card className="border-border/50 hover:border-primary/30 transition-all duration-300 bg-gradient-to-br from-card to-primary/5">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">New (7d)</p>
-                  <p className="text-xl font-bold text-foreground">{recentUsers}</p>
+                  <p className="text-xs font-medium text-muted-foreground">New (7d)</p>
+                  <p className="text-lg font-bold text-foreground">{recentUsers}</p>
                 </div>
-                <UserPlus className="h-4 w-4 text-primary" />
+                <UserPlus className="h-3.5 w-3.5 text-primary" />
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-border/50 hover:border-accent/30 transition-all duration-300 bg-gradient-to-br from-card to-accent/5">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Creators</p>
-                  <p className="text-xl font-bold text-foreground">{contentCreatorCount}</p>
+                  <p className="text-xs font-medium text-muted-foreground">Creators</p>
+                  <p className="text-lg font-bold text-foreground">{contentCreatorCount}</p>
                 </div>
-                <Crown className="h-4 w-4 text-accent" />
+                <Crown className="h-3.5 w-3.5 text-accent" />
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-border/50 hover:border-yellow-500/30 transition-all duration-300 bg-gradient-to-br from-card to-yellow-500/5">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Total Coins</p>
-                  <p className="text-xl font-bold text-foreground">{totalCoins.toLocaleString()}</p>
+                  <p className="text-xs font-medium text-muted-foreground">Total Coins</p>
+                  <p className="text-lg font-bold text-foreground">{totalCoins.toLocaleString()}</p>
                 </div>
-                <Coins className="h-4 w-4 text-yellow-500" />
+                <Coins className="h-3.5 w-3.5 text-yellow-500" />
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-border/50 hover:border-accent/30 transition-all duration-300 bg-gradient-to-br from-card to-accent/5">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Elite</p>
-                  <p className="text-xl font-bold text-foreground">{planDistribution.ELITE || 0}</p>
+                  <p className="text-xs font-medium text-muted-foreground">Elite</p>
+                  <p className="text-lg font-bold text-foreground">{planDistribution.ELITE || 0}</p>
                 </div>
-                <Crown className="h-4 w-4 text-accent" />
+                <Crown className="h-3.5 w-3.5 text-accent" />
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-border/50 hover:border-primary/30 transition-all duration-300 bg-gradient-to-br from-card to-primary/5">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Pro</p>
-                  <p className="text-xl font-bold text-foreground">{planDistribution.PRO || 0}</p>
+                  <p className="text-xs font-medium text-muted-foreground">Pro</p>
+                  <p className="text-lg font-bold text-foreground">{planDistribution.PRO || 0}</p>
                 </div>
-                <Crown className="h-4 w-4 text-primary" />
+                <Crown className="h-3.5 w-3.5 text-primary" />
               </div>
             </CardContent>
           </Card>
