@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { DashboardHeader } from "@/components/dashboard/live dashboard/dashboard-header";
+import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links";
 import { Trophy, ArrowRight } from 'lucide-react';
 
 export default function PredictionsPage() {
@@ -37,6 +38,8 @@ export default function PredictionsPage() {
             </div>
           </CardContent>
         </Card>
+
+        <ExploreMoreLinks currentPage="/predictions" />
       </div>
     </div>
   );

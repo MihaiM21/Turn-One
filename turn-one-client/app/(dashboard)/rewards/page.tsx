@@ -7,6 +7,7 @@ import { UserStatsWidget } from '@/components/dashboard/user-stats-widget';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Gift, Trophy, Coins, TrendingUp } from 'lucide-react';
+import { ExploreMoreLinks } from '@/components/dashboard/explore-more-links';
 
 export default function DailyRewards() {
   const [authToken, setAuthToken] = useState<string | null>(null);
@@ -157,6 +158,8 @@ export default function DailyRewards() {
           </CardContent>
         </Card>
       )}
+
+      <ExploreMoreLinks currentPage="/rewards" />
     </div>
   );
 }

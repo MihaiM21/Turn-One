@@ -73,6 +73,7 @@
     AlertCircle
   } from 'lucide-react';
   import { DashboardHeader } from "@/components/dashboard/live dashboard/dashboard-header"
+  import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links"
   interface LiveSessionData {
     sessionInfo?: {
       type: string;
@@ -751,6 +752,10 @@
         </div>
 
   )}
+
+  <div className="container mx-auto px-4">
+    <ExploreMoreLinks currentPage="/live2" />
+  </div>
   </div>
   )}
   

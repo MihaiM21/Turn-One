@@ -29,6 +29,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { DashboardHeader } from "@/components/dashboard/live dashboard/dashboard-header"
+import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links"
 interface LiveSessionData {
   sessionInfo?: {
     type: string;
@@ -131,16 +132,26 @@ export default function LiveDashboard() {
   const handleF1Status: F1StatusCallback = useCallback((status) => {
     setConnectionStatus(status);
     
-    if (status === 'no-session' || status === 'disconnected') {
-      setLiveData(null);
-      setLastUpdate(null);
-    }
+    // Don't clear liveData on transient disconnects/no-session —
+    // keep showing last data until new data arrives.
+    // Only clear on explicit manual disconnect (handled in handleDisconnect).
   }, []);
 
   // Auto-connect on mount
   useEffect(() => {
     f1Service.onData(handleF1Data);
     f1Service.onStatus(handleF1Status);
+
+    // Hydrate from existing data (localStorage / prior connection) so UI isn't blank
+    const existingData = f1Service.getCurrentData();
+    if (Object.keys(existingData).length > 0) {
+      try {
+        const mapped = F1DataMapper.mapF1Data(existingData);
+        setLiveData(mapped);
+        const ts = f1Service.getLastDataTimestamp();
+        if (ts) setLastUpdate(new Date(ts));
+      } catch { /* ignore stale data errors */ }
+    }
 
     // Auto-connect to check for live sessions
     f1Service.connect();
@@ -640,5 +651,9 @@ export default function LiveDashboard() {
         </div>
 
   )}
+
+  <div className="container mx-auto px-4">
+    <ExploreMoreLinks currentPage="/live" />
+  </div>
   </div>
   )}

@@ -7,6 +7,7 @@ import { DailyGiftWidget } from "@/components/dashboard/daily-gift-widget"
 import { UserStatsWidget } from "@/components/dashboard/user-stats-widget"
 import { LatestSessionWidget } from "@/components/dashboard/latest-session-widget"
 import { DashboardLoadingContainer } from "@/components/dashboard/dashboard-loading-container"
+import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links"
 import { useEffect, useState } from "react"
 import { getAuthToken } from "@/lib/auth-utils"
 
@@ -47,6 +48,8 @@ export default function DashboardPage() {
           <SessionManager />
 
           <TelemetryOverview />
+
+          <ExploreMoreLinks currentPage="/dashboard" />
         </main>
       </div>
     </DashboardLoadingContainer>

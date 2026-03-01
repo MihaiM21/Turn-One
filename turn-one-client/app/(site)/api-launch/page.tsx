@@ -6,6 +6,7 @@ import { Rocket, Bell, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { ObfuscatedEmail } from "@/components/ui/obfuscated-email";
 
 export default function ApiLaunchPage() {
   const [email, setEmail] = useState("");
@@ -203,7 +204,7 @@ export default function ApiLaunchPage() {
           transition={{ delay: 1.5 }}
           className="mt-12 text-sm text-gray-500"
         >
-          <p>Questions? Contact us at contact@t1f1.com</p>
+          <p>Questions? Contact us at <ObfuscatedEmail user="contact" domain="t1f1.com" /></p>
         </motion.div>
       </div>
     </div>

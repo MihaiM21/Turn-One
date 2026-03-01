@@ -22,6 +22,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { DashboardHeader } from "@/components/dashboard/live dashboard/dashboard-header";
+import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links";
 import { 
   PredictionGame, 
   TriviaGame, 
@@ -282,6 +283,8 @@ export default function GameHubPage() {
             {userStats && <UserStatsCard stats={userStats} />}
           </TabsContent>
         </Tabs>
+
+        <ExploreMoreLinks currentPage="/games" />
       </div>
     </div>
   );

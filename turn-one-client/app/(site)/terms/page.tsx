@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { MainNav } from "@/components/navigation/main-nav"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { ObfuscatedEmail } from "@/components/ui/obfuscated-email"
 import { ScrollAnimation } from "@/components/animation/scroll-animation"
 import { Metadata } from 'next'
 import { generateSEO } from '@/lib/seo'
@@ -224,7 +225,7 @@ export default function TermsPage() {
                                         If you have any questions about these Terms, please contact us at:
                                     </p>
                                     <p className="text-gray-300 font-medium">
-                                        Email: legal@t1f1.com<br />
+                                        Email: <ObfuscatedEmail user="legal" domain="t1f1.com" /><br />
                                         Address: Turn One Headquarters, 1 Racing Lane, Monaco, 98000<br />
                                         Phone: +1 (555) 123-4567
                                     </p>

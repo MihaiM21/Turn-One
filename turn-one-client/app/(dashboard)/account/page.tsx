@@ -43,6 +43,7 @@ import {
   AlertCircle
 } from "lucide-react"
 import { useAuth } from "@/lib/auth"
+import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links"
 import { 
   fetchUserProfile, 
   updateUserProfile, 
@@ -1021,6 +1022,8 @@ export default function AccountPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+    <ExploreMoreLinks currentPage="/account" />
     </div>
 
 

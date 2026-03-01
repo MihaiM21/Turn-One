@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from "react"
+import { ObfuscatedEmail } from "@/components/ui/obfuscated-email"
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -232,12 +233,12 @@ export default function ContactPage() {
                         <div className="flex-1">
                           <CardTitle className="text-lg mb-1">Email Us</CardTitle>
                           <CardDescription>
-                            <a
-                              href="mailto:contact@t1f1.com"
+                            <ObfuscatedEmail
+                              user="contact"
+                              domain="t1f1.com"
+                              asLink
                               className="text-primary hover:text-primary/80 transition-colors font-medium"
-                            >
-                              contact@t1f1.com
-                            </a>
+                            />
                           </CardDescription>
                         </div>
                       </div>
