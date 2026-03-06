@@ -1,35 +1,48 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { LiveTimingGrid } from '@/components/dashboard/live-timing-grid';
-import { LiveWeather } from '@/components/dashboard/live-weather';
 import { getF1LiveDataService, type F1DataCallback, type F1StatusCallback } from '@/lib/f1LiveDataService';
 import { F1DataMapper, type MappedF1Data } from '@/lib/f1DataMapper';
 import { 
   Clock, 
   Activity, 
-  Zap, 
   Thermometer, 
-  Wind, 
-  Car,
-  Flag,
-  Timer,
   Radio,
   AlertTriangle,
-  Trophy,
-  MapPin,
   Wifi,
   WifiOff,
-  Settings,
   PlayCircle,
   StopCircle,
   AlertCircle
 } from 'lucide-react';
 import { DashboardHeader } from "@/components/dashboard/live dashboard/dashboard-header"
 import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links"
+import { TrackMap } from '@/components/dashboard/track-map';
+import { DashboardModuleGrid } from '@/components/dashboard/dashboard-module-grid';
+import { useDashboardLayout } from '@/hooks/useDashboardLayout';
+
+const TEAM_COLORS: Record<string, string> = {
+  'Mercedes':         '#00D2BE',
+  'Red Bull Racing':  '#3671C6',
+  'Red Bull':         '#3671C6',
+  'Ferrari':          '#E8002D',
+  'McLaren':          '#FF8000',
+  'Alpine':           '#FF87BC',
+  'AlphaTauri':       '#64C4FF',
+  'RB':               '#6692FF',
+  'Aston Martin':     '#229971',
+  'Williams':         '#64ACFF',
+  'Alfa Romeo':       '#B12039',
+  'Haas':             '#B6BABD',
+  'Kick Sauber':      '#52E252',
+  'Sauber':           '#52E252',
+};
+
+const getTeamColor = (team?: string): string =>
+  (team && TEAM_COLORS[team]) || '#6b7280';
 interface LiveSessionData {
   sessionInfo?: {
     type: string;
@@ -113,6 +126,17 @@ export default function LiveDashboard() {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isManuallyConnected, setIsManuallyConnected] = useState(false);
   const [isReady, setIsReady] = useState(false);
+
+  const {
+    modules,
+    editMode,
+    setEditMode,
+    toggleVisible,
+    moveToColumn,
+    moveUp,
+    moveDown,
+    reset,
+  } = useDashboardLayout();
 
   const f1Service = getF1LiveDataService();
   const f1Url = "https://livetiming.formula1.com";
@@ -257,144 +281,165 @@ export default function LiveDashboard() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen mx-4">
+    <div className="flex flex-col min-h-screen">
       <DashboardHeader />
-      <div className="container mx-auto px-4 py-6 lg:px-8 lg:py-10">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10">
-          <div className="flex items-center gap-4">
-            <Badge variant="outline" 
-              className="px-5 py-2 bg-primary/10 backdrop-blur-md border-primary/30 
-                       hover:bg-primary/15 transition-all duration-300 shadow-lg shadow-primary/5
-                       flex items-center gap-3">
-              <Activity className="w-4 h-4 text-primary animate-pulse" />
-              <span className="font-medium tracking-wide">Live Timing</span>
-            </Badge>
+      <div className="container mx-auto px-4 py-8 lg:px-8 space-y-6">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            {/* F1 red accent stripe */}
+            <div className="flex flex-col gap-0.5 mt-1 shrink-0">
+              <div className="w-1 h-3.5 rounded-full bg-red-600" />
+              <div className="w-1 h-3.5 rounded-full bg-red-500" />
+              <div className="w-1 h-3.5 rounded-full bg-red-400" />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <span className="text-[11px] font-black uppercase tracking-widest text-red-500">Formula 1</span>
+                {liveData?.sessionInfo?.type && (
+                  <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase rounded border border-border/40 bg-muted/50 text-muted-foreground tracking-wider">
+                    {liveData.sessionInfo.type}
+                  </span>
+                )}
+                {isConnected && (
+                  <span className="flex items-center gap-1 text-[11px] font-bold text-green-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />
+                    LIVE
+                  </span>
+                )}
+                {liveData?.trackStatus?.flagColor && (
+                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className={`inline-block w-3 h-3 rounded-sm ${
+                      liveData.trackStatus.flagColor === 'green' ? 'bg-green-500' :
+                      liveData.trackStatus.flagColor === 'yellow' ? 'bg-yellow-400' :
+                      liveData.trackStatus.flagColor === 'red' ? 'bg-red-500' : 'bg-gray-500'
+                    }`} />
+                    {liveData.trackStatus.message || liveData.trackStatus.flagColor}
+                  </span>
+                )}
+              </div>
+              <h1 className="text-3xl font-black tracking-tight leading-none">
+                {liveData?.sessionInfo?.name || 'Live Timing'}
+              </h1>
+              {liveData?.sessionInfo && (
+                <div className="flex flex-wrap items-center gap-3 mt-1.5 text-sm">
+                  <span className={`font-semibold ${
+                    liveData.sessionInfo.status === 'Started' ? 'text-green-400' :
+                    liveData.sessionInfo.status === 'Finished' ? 'text-red-400' :
+                    'text-muted-foreground'
+                  }`}>
+                    {liveData.sessionInfo.status}
+                  </span>
+                  {liveData.sessionInfo.currentLap && liveData.sessionInfo.totalLaps && (
+                    <>
+                      <span className="text-border/60">·</span>
+                      <span className="font-mono text-muted-foreground">
+                        Lap <span className="text-foreground font-bold tabular-nums">{liveData.sessionInfo.currentLap}</span>
+                        <span className="text-muted-foreground">/{liveData.sessionInfo.totalLaps}</span>
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          {/* Connection Status */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border/40 bg-muted/30 text-sm">
               {getConnectionIcon()}
-              <div className={`w-2 h-2 rounded-full ${getConnectionStatusColor()}`}></div>
+              <span className="font-medium">{getConnectionLabel()}</span>
+              <div className={`w-1.5 h-1.5 rounded-full ${getConnectionStatusColor()}`} />
             </div>
-            <Badge variant={isConnected ? "default" : "secondary"} className="capitalize">
-              {getConnectionLabel()}
-            </Badge>
-            
-            {/* Connection Controls */}
-            <div className="flex gap-2">
-              {!isConnected && connectionStatus !== 'connecting' && (
-                <button
-                  onClick={handleManualConnect}
-                  className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-primary/20 hover:bg-primary/30 text-primary transition-colors"
-                >
-                  <PlayCircle className="w-3 h-3" />
-                  Connect
-                </button>
-              )}
-              
-              {(isConnected || connectionStatus === 'connecting') && (
-                <button
-                  onClick={handleDisconnect}
-                  className="flex items-center gap-1 px-2 py-1 text-xs rounded bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-colors"
-                >
-                  <StopCircle className="w-3 h-3" />
-                  Disconnect
-                </button>
-              )}
-            </div>
-            </div>
+            {!isConnected && connectionStatus !== 'connecting' && (
+              <button
+                onClick={handleManualConnect}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                <PlayCircle className="w-4 h-4" />
+                Connect
+              </button>
+            )}
+            {(isConnected || connectionStatus === 'connecting') && (
+              <button
+                onClick={handleDisconnect}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
+              >
+                <StopCircle className="w-4 h-4" />
+                Disconnect
+              </button>
+            )}
+            {lastUpdate && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Clock className="w-3 h-3" />
+                Updated {lastUpdate.toLocaleTimeString()}
+              </div>
+            )}
           </div>
-          
-          {/* Last Update */}
-          {lastUpdate && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Clock className="w-3 h-3" />
-              Last update: {lastUpdate.toLocaleTimeString()}
-            </div>
-          )}
         </div>
-      </div>
 
       {!liveData && connectionStatus === 'connecting' && (
-        <Card className="card-hover transform transition-all duration-500 hover:scale-[1.01]
-                        border-primary/20 bg-gradient-to-br from-background/95 to-background
-                        shadow-xl shadow-primary/5">
-          <CardContent className="flex items-center justify-center py-20">
-            <div className="text-center space-y-6">
-              <div className="relative">
-                <div className="absolute inset-0 animate-ping rounded-full bg-primary/10"></div>
-                <div className="animate-spin w-16 h-16 border-4 border-primary border-t-transparent 
-                              rounded-full mx-auto shadow-lg"></div>
-              </div>
-              <div className="space-y-3">
-                <p className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/60 
-                             bg-clip-text text-transparent">
-                  Connecting to F1 Live Timing...
-                </p>
-                <p className="text-sm text-muted-foreground/80">
-                  Establishing secure connection to Formula 1 telemetry feed
-                </p>
-              </div>
+        <Card className="border border-primary/20">
+          <CardContent className="flex flex-col items-center justify-center py-24 gap-6">
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full bg-primary/10 animate-ping" />
+              <div className="w-14 h-14 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+            <div className="text-center space-y-2">
+              <p className="text-lg font-semibold">Connecting to F1 Live Timing...</p>
+              <p className="text-sm text-muted-foreground">Establishing connection to Formula 1 telemetry feed</p>
             </div>
           </CardContent>
         </Card>
       )}
 
       {hasNoSession && (
-        <Card className="card-hover border-orange-500/20 bg-orange-500/5">
-          <CardContent className="flex items-center justify-center py-16">
-            <div className="text-center space-y-6">
-              <AlertCircle className="w-16 h-16 text-orange-500 mx-auto" />
-              <div>
-                <h2 className="text-2xl font-bold mb-2">No Live F1 Session</h2>
-                <p className="text-muted-foreground mb-4">
-                  There is currently no active Formula 1 session broadcasting live timing data.
-                </p>
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  <p>Live timing is available during:</p>
-                  <ul className="list-disc list-inside space-y-1">
-                    <li>Practice Sessions</li>
-                    <li>Qualifying Sessions</li>
-                    <li>Sprint Sessions</li>
-                    <li>Race Sessions</li>
-                  </ul>
-                </div>
-              </div>
-              <button
-                onClick={handleManualConnect}
-                className="flex items-center gap-2 mx-auto px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-lg transition-colors"
-              >
-                <PlayCircle className="w-4 h-4" />
-                Retry Connection
-              </button>
+        <Card className="border-orange-500/20 bg-orange-500/5">
+          <CardContent className="flex flex-col items-center justify-center py-20 gap-6">
+            <div className="w-16 h-16 rounded-full bg-orange-500/10 flex items-center justify-center">
+              <AlertCircle className="w-8 h-8 text-orange-500" />
             </div>
+            <div className="text-center space-y-2">
+              <h2 className="text-xl font-bold">No Live F1 Session</h2>
+              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                There is currently no active Formula 1 session broadcasting live timing data.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {['Practice', 'Qualifying', 'Sprint', 'Race'].map(type => (
+                <div key={type} className="px-4 py-2 rounded-lg border border-border/40 bg-muted/30 text-sm text-center text-muted-foreground">
+                  {type}
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={handleManualConnect}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
+            >
+              <PlayCircle className="w-4 h-4" />
+              Retry Connection
+            </button>
           </CardContent>
         </Card>
       )}
 
       {connectionStatus === 'error' && (
-        <Card className="card-hover border-red-500/20 bg-red-500/5">
-          <CardContent className="flex items-center justify-center py-16">
-            <div className="text-center space-y-6">
-              <WifiOff className="w-16 h-16 text-red-500 mx-auto" />
-              <div>
-                <h2 className="text-2xl font-bold mb-2">Connection Error</h2>
-                <p className="text-muted-foreground mb-4">
-                  Failed to connect to F1 Live Timing service. This might be due to network issues or CORS restrictions.
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  For development, consider using a CORS proxy or running the app with appropriate CORS configuration.
-                </p>
-              </div>
-              <button
-                onClick={handleManualConnect}
-                className="flex items-center gap-2 mx-auto px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-lg transition-colors"
-              >
-                <PlayCircle className="w-4 h-4" />
-                Retry Connection
-              </button>
+        <Card className="border-red-500/20 bg-red-500/5">
+          <CardContent className="flex flex-col items-center justify-center py-20 gap-6">
+            <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center">
+              <WifiOff className="w-8 h-8 text-red-500" />
             </div>
+            <div className="text-center space-y-2">
+              <h2 className="text-xl font-bold">Connection Error</h2>
+              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                Failed to connect to F1 Live Timing. This may be due to network issues or CORS restrictions.
+              </p>
+            </div>
+            <button
+              onClick={handleManualConnect}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
+            >
+              <PlayCircle className="w-4 h-4" />
+              Retry Connection
+            </button>
           </CardContent>
         </Card>
       )}
@@ -403,257 +448,247 @@ export default function LiveDashboard() {
         <div className="space-y-6">
        
 
-          {/* Session Info */}
-          <Card className="overflow-hidden border border-primary/10 shadow-2xl 
-                          bg-gradient-to-br from-background/95 to-background/90 backdrop-blur-md
-                          transform transition-all duration-500 hover:shadow-primary/10 hover:border-primary/20">
-            <div className="relative">
-              {/* Top Section with Session Name and Type */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-border/10 backdrop-blur-sm">
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <div className={`absolute inset-0 ${
-                      liveData.sessionInfo?.status === 'Started' 
-                        ? 'animate-ping-slow bg-green-400/30' 
-                        : liveData.sessionInfo?.status === 'Finished'
-                        ? 'bg-red-400/30'
-                        : 'bg-primary/30'
-                    } rounded-full blur-sm`} />
-                    <div className={`w-3 h-3 rounded-full ${
-                      liveData.sessionInfo?.status === 'Started' 
-                        ? 'bg-green-400 shadow-lg shadow-green-500/30' 
-                        : liveData.sessionInfo?.status === 'Finished'
-                        ? 'bg-red-400 shadow-lg shadow-red-500/30'
-                        : 'bg-primary shadow-lg shadow-primary/30'
-                    }`} />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm uppercase tracking-wider font-medium text-primary">
-                        {liveData.sessionInfo?.type}
-                      </span>
-                      <div className="h-4 w-px bg-border/20" />
-                      <span className="text-base font-semibold text-foreground">
-                        {liveData.sessionInfo?.name}
-                      </span>
-                    </div>
-                    <span className={`text-sm font-medium ${
-                      liveData.sessionInfo?.status === 'Started'
-                        ? 'text-green-400'
-                        : liveData.sessionInfo?.status === 'Finished'
-                        ? 'text-red-400'
-                        : 'text-primary/80'
-                    }`}>
-                      {liveData.sessionInfo?.status}
-                    </span>
-                  </div>
+          {/* Race Status Bar */}
+          {(liveData.trackStatus || liveData.sessionInfo?.currentLap) && (
+            <div className={`flex flex-wrap items-center gap-x-6 gap-y-2 px-5 py-3 rounded-xl border ${
+              liveData.trackStatus?.flagColor === 'red'    ? 'border-red-500/30 bg-red-500/5' :
+              liveData.trackStatus?.flagColor === 'yellow' ? 'border-yellow-400/30 bg-yellow-400/5' :
+              'border-border/40 bg-card/60'
+            }`}>
+              {/* Flag indicator */}
+              {liveData.trackStatus?.flagColor && (
+                <div className="flex items-center gap-2">
+                  <div className={`w-4 h-4 rounded-sm ${
+                    liveData.trackStatus.flagColor === 'green'  ? 'bg-green-500' :
+                    liveData.trackStatus.flagColor === 'yellow' ? 'bg-yellow-400' :
+                    liveData.trackStatus.flagColor === 'red'    ? 'bg-red-500' : 'bg-gray-500'
+                  }`} />
+                  <span className="text-sm font-bold uppercase tracking-wide">
+                    {liveData.trackStatus.flagColor === 'green'  ? 'Green Flag' :
+                     liveData.trackStatus.flagColor === 'yellow' ? 'Yellow Flag' :
+                     liveData.trackStatus.flagColor === 'red'    ? 'Red Flag' :
+                     liveData.trackStatus.flagColor}
+                  </span>
                 </div>
-
-                {/* Right Side Info */}
-                <div className="flex items-center gap-6">
-                  {liveData.sessionInfo?.currentLap && liveData.sessionInfo?.totalLaps && (
-                    <div className="flex items-center gap-2 bg-background/40 rounded-full px-4 py-1.5 border border-border/10 backdrop-blur-sm">
-                      <Flag className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium tabular-nums">
-                        Lap {liveData.sessionInfo.currentLap}/{liveData.sessionInfo.totalLaps}
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 bg-background/40 rounded-full px-4 py-1.5 border border-border/10 backdrop-blur-sm">
-                    <Clock className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-medium font-mono tabular-nums">
-                      {/* <LiveTimer initialTime={liveData.sessionInfo?.timeRemaining} isRunning={liveData.sessionInfo?.status === 'Started'} /> */}
-                      25:00
-                    </span>
+              )}
+              {/* Lap counter + progress bar */}
+              {liveData.sessionInfo?.currentLap && liveData.sessionInfo?.totalLaps && (
+                <>
+                  {liveData.trackStatus?.flagColor && <div className="w-px h-5 bg-border/40 hidden sm:block" />}
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Lap</span>
+                    <span className="text-xl font-black tabular-nums">{liveData.sessionInfo.currentLap}</span>
+                    <span className="text-sm text-muted-foreground">/ {liveData.sessionInfo.totalLaps}</span>
                   </div>
-                </div>
-              </div>
-
-              {/* Bottom Stats Bar */}
-              {/* <div className="grid grid-cols-3 divide-x divide-border/10">
-                <div className="px-6 py-3 bg-background/30">
-                  <div className="flex items-center gap-3">
-                    <Timer className="w-4 h-4 text-primary/70" />
-                    <div>
-                      <span className="text-xs uppercase tracking-wider text-primary/60 block">Session Type</span>
-                      <span className="text-sm font-medium text-foreground/90">{liveData.sessionInfo?.type}</span>
-                    </div>
+                  <div className="flex-1 min-w-[100px] h-1.5 bg-muted/50 rounded-full overflow-hidden hidden sm:block">
+                    <div
+                      className="h-full bg-primary rounded-full transition-all duration-1000"
+                      style={{ width: `${Math.round((liveData.sessionInfo.currentLap / liveData.sessionInfo.totalLaps) * 100)}%` }}
+                    />
                   </div>
-                </div>
-                <div className="px-6 py-3 bg-background/30">
-                  <div className="flex items-center gap-3">
-                    <Activity className="w-4 h-4 text-primary/70" />
-                    <div>
-                      <span className="text-xs uppercase tracking-wider text-primary/60 block">Status</span>
-                      <span className={`text-sm font-medium ${
-                        liveData.sessionInfo?.status === 'Started'
-                          ? 'text-green-400'
-                          : liveData.sessionInfo?.status === 'Finished'
-                          ? 'text-red-400'
-                          : 'text-foreground/90'
-                      }`}>
-                        {liveData.sessionInfo?.status}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="px-6 py-3 bg-background/30">
-                  <div className="flex items-center gap-3">
-                    <MapPin className="w-4 h-4 text-primary/70" />
-                    <div>
-                      <span className="text-xs uppercase tracking-wider text-primary/60 block">Track Status</span>
-                      <span className="text-sm font-medium text-foreground/90">Active</span>
-                    </div>
-                  </div>
-                </div>
-              </div> */}
-            </div>
-          </Card>
-
-          {/* Main Dashboard Grid */}
-          <div className="grid grid-cols-12 gap-6">
-            {/* Left Column - Live Timing (7/12) */}
-            <div className="col-span-12 xl:col-span-7">
-
-              {/* Live Timing Grid */}
-              {liveData.positions && (
-                <LiveTimingGrid positions={liveData.positions} />
+                </>
+              )}
+              {/* Track status message */}
+              {liveData.trackStatus?.message && (
+                <>
+                  <div className="w-px h-5 bg-border/40 hidden sm:block" />
+                  <span className="text-sm text-muted-foreground">{liveData.trackStatus.message}</span>
+                </>
               )}
             </div>
+          )}
 
-            {/* Right Column - Info & Updates (5/12) */}
-            <div className="col-span-12 xl:col-span-5 space-y-6">
-              {/* Weather, Race Control, and Team Radio Section */}
-              <div className="space-y-3">
-                {/* Weather Component */}
-                {liveData.weather && (
-                  <Card className="overflow-hidden border border-primary/10 shadow-xl py-0 
-                                bg-gradient-to-br from-background/95 to-background/90 backdrop-blur-md
-                                transform transition-all duration-500 hover:shadow-primary/10 hover:border-primary/20">
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-border/10 backdrop-blur-sm">
-                      <div className="flex items-center gap-3">
-                        <Thermometer className="w-4 h-4 text-primary" />
-                        <span className="text-xs uppercase tracking-wider font-medium text-primary/90">Track Conditions</span>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 bg-primary/10 rounded-full px-3 py-1">
-                          <span className="text-xs font-medium tabular-nums text-primary">
-                            {liveData.weather.temperature}°C Air
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 bg-primary/10 rounded-full px-3 py-1">
-                          <span className="text-xs font-medium tabular-nums text-primary">
-                            {liveData.weather.trackTemp}°C Track
-                          </span>
-                        </div>
-                      </div>
+          {/* Modular Dashboard Grid */}
+          <DashboardModuleGrid
+            modules={modules}
+            editMode={editMode}
+            setEditMode={setEditMode}
+            toggleVisible={toggleVisible}
+            moveToColumn={moveToColumn}
+            moveUp={moveUp}
+            moveDown={moveDown}
+            reset={reset}
+            slots={[
+              {
+                id: 'timing-grid',
+                content: liveData.positions ? (
+                  <LiveTimingGrid positions={liveData.positions} />
+                ) : null,
+              },
+              {
+                id: 'track-map',
+                content: liveData.positions ? (
+                  <TrackMap
+                    drivers={liveData.positions}
+                    sessionLocation={liveData.sessionInfo?.location}
+                    sessionYear={liveData.sessionInfo?.year}
+                  />
+                ) : null,
+              },
+              {
+                id: 'weather',
+                content: liveData.weather ? (
+                  <Card className="overflow-hidden border border-border/40">
+                    <div className="px-4 py-3 border-b border-border/40 flex items-center gap-2">
+                      <Thermometer className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-semibold">Track Conditions</span>
                     </div>
-                    <div className="flex divide-x divide-border/5">
-                      <div className="flex-1 px-3 py-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] uppercase tracking-wider text-primary/60">Humidity</span>
-                          <span className="text-[11px] font-medium text-foreground/80">{liveData.weather.humidity}%</span>
-                        </div>
+                    <div className="p-4 grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-1">Air Temp</p>
+                        <p className="text-2xl font-bold tabular-nums">{liveData.weather.temperature}°C</p>
                       </div>
-                      <div className="flex-1 px-3 py-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] uppercase tracking-wider text-primary/60">Wind</span>
-                          <span className="text-[11px] font-medium text-foreground/80">{liveData.weather.windSpeed} km/h</span>
-                        </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-1">Track Temp</p>
+                        <p className="text-2xl font-bold tabular-nums">{liveData.weather.trackTemp}°C</p>
                       </div>
-                      <div className="flex-1 px-3 py-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] uppercase tracking-wider text-primary/60">Conditions</span>
-                          <span className="text-[11px] font-medium text-foreground/80">{liveData.weather.conditions}</span>
-                        </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-1">Humidity</p>
+                        <p className="text-lg font-semibold tabular-nums">{liveData.weather.humidity}%</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-1">Wind</p>
+                        <p className="text-lg font-semibold tabular-nums">{liveData.weather.windSpeed} km/h</p>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-1">Conditions</p>
+                        <p className="text-sm font-semibold capitalize">{liveData.weather.conditions?.replace(/-/g, ' ')}</p>
                       </div>
                     </div>
                   </Card>
-                )}
-
-                {/* Race Control Messages */}
-                <Card className="overflow-hidden border border-primary/10 shadow-xl 
-                                bg-gradient-to-br from-background/95 to-background/90 backdrop-blur-md
-                                transform transition-all duration-500 hover:shadow-primary/10 hover:border-primary/20">
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-border/10 backdrop-blur-sm">
-                    <div className="flex items-center gap-3">
-                      <AlertTriangle className="w-4 h-4 text-primary" />
-                      <span className="text-xs uppercase tracking-wider font-medium text-primary/90">Race Control</span>
+                ) : null,
+              },
+              {
+                id: 'race-control',
+                content: (
+                  <Card className="overflow-hidden border border-border/40">
+                    <div className="px-4 py-3 border-b border-border/40 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-semibold">Race Control</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                        <span className="text-xs text-muted-foreground">Live</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 bg-primary/10 rounded-full px-3 py-1">
-                      <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-lg shadow-primary/20" />
-                      <span className="text-xs uppercase text-primary font-medium">Live Feed</span>
-                    </div>
-                  </div>
-                  <ScrollArea className="h-[240px] px-1">
-                    <div className="divide-y divide-border/10">
-                      {liveData.raceControlMessages?.map((message, index) => (
-                        <div key={index} className="px-3 py-2">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={`text-[10px] uppercase font-medium ${
-                              message.severity === 'critical' ? 'text-red-400' :
-                              message.severity === 'warning' ? 'text-yellow-400' :
-                              'text-blue-400'
-                            }`}>
-                              {message.category}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground">{message.timestamp}</span>
-                          </div>
-                          <p className="text-[11px] leading-relaxed text-foreground/80">{message.message}</p>
+                    <ScrollArea className="h-[280px]">
+                      {liveData.raceControlMessages && liveData.raceControlMessages.length > 0 ? (
+                        <div className="divide-y divide-border/20">
+                          {liveData.raceControlMessages.map((message, index) => {
+                            const severityColor =
+                              message.severity === 'critical' ? '#ef4444' :
+                              message.severity === 'warning'  ? '#eab308' : '#3b82f6';
+                            const severityBg =
+                              message.severity === 'critical' ? 'rgba(239,68,68,0.05)' :
+                              message.severity === 'warning'  ? 'rgba(234,179,8,0.05)' : 'transparent';
+                            const flagLabel = (message as any).flag as string | undefined;
+                            const flagColor =
+                              flagLabel === 'RED'    ? '#ef4444' :
+                              flagLabel === 'YELLOW' ? '#eab308' :
+                              flagLabel === 'GREEN'  ? '#22c55e' :
+                              flagLabel === 'BLUE'   ? '#3b82f6' : null;
+                            return (
+                              <div key={index} className="flex gap-0" style={{ backgroundColor: severityBg }}>
+                                <div className="w-0.5 shrink-0 rounded-l" style={{ backgroundColor: severityColor }} />
+                                <div className="flex-1 px-3 py-2.5">
+                                  <div className="flex items-center justify-between gap-2 mb-1">
+                                    <div className="flex items-center gap-1.5">
+                                      {flagLabel && flagColor && (
+                                        <span
+                                          className="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide"
+                                          style={{ backgroundColor: flagColor, color: flagColor === '#eab308' ? '#000' : '#fff' }}
+                                        >
+                                          {flagLabel}
+                                        </span>
+                                      )}
+                                      <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: severityColor }}>
+                                        {message.category}
+                                      </span>
+                                    </div>
+                                    <span className="text-[11px] text-muted-foreground tabular-nums shrink-0">{message.timestamp}</span>
+                                  </div>
+                                  <p className="text-sm text-foreground/85 leading-relaxed">{message.message}</p>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </Card>
-
-                {/* Team Radio */}
-                <Card className="overflow-hidden border border-primary/10 shadow-xl 
-                                bg-gradient-to-br from-background/95 to-background/90 backdrop-blur-md
-                                transform transition-all duration-500 hover:shadow-primary/10 hover:border-primary/20">
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-border/10 backdrop-blur-sm">
-                    <div className="flex items-center gap-3">
-                      <Radio className="w-4 h-4 text-primary" />
-                      <span className="text-xs uppercase tracking-wider font-medium text-primary/90">Team Radio</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-primary/10 rounded-full px-3 py-1">
-                      <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-lg shadow-primary/20" />
-                      <span className="text-xs uppercase text-primary font-medium">Live Feed</span>
-                    </div>
-                  </div>
-                  <ScrollArea className="h-[300px] px-1">
-                    <div className="divide-y divide-border/10">
-                      {liveData.teamRadio?.map((radio, index) => (
-                        <div key={index} className="px-3 py-2">
-                          <div className="flex items-center justify-between mb-1.5">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-medium text-primary/80">#{radio.driverNumber}</span>
-                              <span className="text-[11px] font-medium text-foreground/80">{radio.driverNumber}</span>
-                            </div>
-                            <span className="text-[10px] text-muted-foreground">{radio.timestamp}</span>
-                          </div>
-                          {radio.path && (
-                            <audio
-                              controls
-                              className="w-full h-[24px] [&::-webkit-media-controls-panel]:bg-primary/5 [&::-webkit-media-controls-current-time-display]:text-[11px] [&::-webkit-media-controls-time-remaining-display]:text-[11px] [&::-webkit-media-controls-timeline]:accent-primary [&::-webkit-media-controls-timeline]:h-[3px] rounded focus:outline-none"
-                              src={`${f1Url}/static/${liveData.sessionInfo?.path}${radio.path}`}
-                            >
-                              Your browser does not support the audio element.
-                            </audio>
-                          )}
+                      ) : (
+                        <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
+                          No messages yet
                         </div>
-                      ))}
+                      )}
+                    </ScrollArea>
+                  </Card>
+                ),
+              },
+              {
+                id: 'team-radio',
+                content: (
+                  <Card className="overflow-hidden border border-border/40">
+                    <div className="px-4 py-3 border-b border-border/40 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Radio className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-semibold">Team Radio</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                        <span className="text-xs text-muted-foreground">Live</span>
+                      </div>
                     </div>
-                  </ScrollArea>
-                </Card>
-              </div>
-            </div>
-          </div>
+                    <ScrollArea className="h-[320px]">
+                      {liveData.teamRadio && liveData.teamRadio.length > 0 ? (
+                        <div className="divide-y divide-border/20">
+                          {liveData.teamRadio.map((radio, index) => {
+                            const radioDriver = liveData.positions?.find(p => p.driverNumber === radio.driverNumber);
+                            const radioTeamColor = getTeamColor(radioDriver?.team);
+                            return (
+                              <div key={index} className="flex gap-0">
+                                <div className="w-1 shrink-0 rounded-l" style={{ backgroundColor: radioTeamColor }} />
+                                <div className="flex-1 px-3 py-2.5 space-y-2">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div>
+                                      <span className="text-sm font-bold">
+                                        {radioDriver?.driverName || `#${radio.driverNumber}`}
+                                      </span>
+                                      {radioDriver?.team && (
+                                        <span className="ml-2 text-xs font-medium" style={{ color: radioTeamColor }}>
+                                          {radioDriver.team}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className="text-[11px] text-muted-foreground tabular-nums shrink-0">{radio.timestamp}</span>
+                                  </div>
+                                  {radio.path && (
+                                    <audio
+                                      controls
+                                      className="w-full h-8 rounded-lg"
+                                      src={`${f1Url}/static/${liveData.sessionInfo?.path}${radio.path}`}
+                                    >
+                                      Your browser does not support the audio element.
+                                    </audio>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
+                          No radio messages yet
+                        </div>
+                      )}
+                    </ScrollArea>
+                  </Card>
+                ),
+              },
+            ]}
+          />
         </div>
+      )}
 
-  )}
-
-  <div className="container mx-auto px-4">
-    <ExploreMoreLinks currentPage="/live" />
-  </div>
-  </div>
+        <ExploreMoreLinks currentPage="/live" />
+      </div>
+    </div>
   )}
