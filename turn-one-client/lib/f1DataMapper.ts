@@ -138,6 +138,8 @@ export interface MappedF1Data {
     currentLap?: number;
     totalLaps?: number;
     path?: string;
+    location?: string;
+    year?: number;
   };
   weather?: {
     temperature: number;
@@ -277,6 +279,8 @@ export class F1DataMapper {
       currentLap: lapCount?.CurrentLap,
       totalLaps: lapCount?.TotalLaps,
       path: sessionInfo?.Path,
+      location: sessionInfo?.Meeting?.Location,
+      year: sessionInfo?.Path ? parseInt(sessionInfo.Path.slice(0, 4), 10) || undefined : undefined,
       lapsRemaining: lapCount?.TotalLaps && lapCount?.CurrentLap ? 
         lapCount.TotalLaps - lapCount.CurrentLap : undefined
     };

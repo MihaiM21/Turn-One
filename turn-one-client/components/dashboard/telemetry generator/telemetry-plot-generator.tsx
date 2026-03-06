@@ -29,7 +29,6 @@ import { LoadingPlot } from "./loading_plot"
 import { useTokens } from "@/hooks/use-tokens"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/components/auth/auth-provider"
-import { isPageStatic } from "next/dist/build/utils"
 import { gForceData, tireData, speedData } from "@/lib/constants/mockup-data"
 
 let drivers: any[];
