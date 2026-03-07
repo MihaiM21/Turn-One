@@ -4,27 +4,7 @@ import { useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { MapPin, Loader2 } from 'lucide-react';
 import { useCircuitData } from '@/hooks/useCircuitData';
-
-// -----------------------------------------------------------------
-// Helpers
-// -----------------------------------------------------------------
-
-const TEAM_COLORS: Record<string, string> = {
-  'Mercedes':         '#00D2BE',
-  'Red Bull Racing':  '#3671C6',
-  'Red Bull':         '#3671C6',
-  'Ferrari':          '#E8002D',
-  'McLaren':          '#FF8000',
-  'Alpine':           '#FF87BC',
-  'AlphaTauri':       '#64C4FF',
-  'RB':               '#6692FF',
-  'Aston Martin':     '#229971',
-  'Williams':         '#64ACFF',
-  'Alfa Romeo':       '#B12039',
-  'Haas':             '#B6BABD',
-  'Kick Sauber':      '#52E252',
-  'Sauber':           '#52E252',
-};
+import { useTeamData } from '@/hooks/useTeamData';
 
 /** Return the index into x/y from miniSectorsIndexes based on completed segments. */
 function getTrackIndex(
@@ -110,6 +90,7 @@ const VIEW_H = 300;
 
 export function TrackMap({ drivers, sessionLocation, sessionYear }: TrackMapProps) {
   const { data: circuit, loading, error } = useCircuitData(sessionLocation, sessionYear);
+  const { teamColors } = useTeamData(sessionYear);
 
   // Build the SVG polyline points string and the normaliser once the circuit loads
   const { polylinePoints, norm } = useMemo(() => {
@@ -144,11 +125,11 @@ export function TrackMap({ drivers, sessionLocation, sessionYear }: TrackMapProp
           d.sector3Segments,
         );
         const pt = norm(circuit.x[rawIdx], circuit.y[rawIdx]);
-        const color = TEAM_COLORS[d.team] ?? '#6b7280';
+        const color = teamColors[d.team] ?? '#6b7280';
         const tla = d.driverName.split(' ').pop()?.slice(0, 3).toUpperCase() ?? d.driverNumber;
         return { ...d, svgX: pt.x, svgY: pt.y, color, tla };
       });
-  }, [circuit, norm, drivers]);
+  }, [circuit, norm, drivers, teamColors]);
 
   const offTrack = drivers.filter(d => !d.isOnTrack || d.retired);
 
@@ -261,7 +242,7 @@ export function TrackMap({ drivers, sessionLocation, sessionYear }: TrackMapProp
               Off track:
             </span>
             {offTrack.map(d => {
-              const color = TEAM_COLORS[d.team] ?? '#6b7280';
+              const color = teamColors[d.team] ?? '#6b7280';
               const tla = d.driverName.split(' ').pop()?.slice(0, 3).toUpperCase() ?? d.driverNumber;
               return (
                 <span

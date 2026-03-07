@@ -30,6 +30,7 @@ interface F1RawData {
       Retired?: boolean;
       NumberOfLaps?: number;
       NumberOfPitStops?: number;
+      KnockedOut?: boolean;
       LastLapTime?: {
         Value?: string;
         Status?: number;
@@ -126,6 +127,20 @@ interface F1RawData {
     Utc?: string;
     Remaining?: string;
   };
+  TimingAppData?: {
+    Lines?: Record<string, {
+      Stints?: Array<{
+        LapFlags?: number;
+        Compound?: string;
+        New?: string;      // "true" | "false"
+        TyresNotChanged?: string;
+        TotalLaps?: number;
+        StartLaps?: number;
+        LapTime?: string;
+        LapNumber?: number;
+      }>;
+    }>;
+  };
 }
 
 export interface MappedF1Data {
@@ -134,12 +149,14 @@ export interface MappedF1Data {
     name: string;
     status: string;
     timeRemaining: string;
+    clockUtc?: string;
     lapsRemaining?: number;
     currentLap?: number;
     totalLaps?: number;
     path?: string;
     location?: string;
     year?: number;
+    qualiSegment?: 'Q1' | 'Q2' | 'Q3';
   };
   weather?: {
     temperature: number;
@@ -195,6 +212,7 @@ export interface MappedF1Data {
     positionChange?: number;
     isOnTrack: boolean;
     retired?: boolean;
+    knockedOut?: boolean;
     numberOfLaps?: number;
     numberOfPitStops?: number;
     tires: {
@@ -248,6 +266,11 @@ export class F1DataMapper {
     
     // Map positions and timing
     result.positions = this.mapPositions(rawData);
+
+    // For qualifying, recompute gaps from best lap times within the current segment
+    if (result.positions && result.sessionInfo?.qualiSegment) {
+      result.positions = this.recomputeQualiGaps(result.positions);
+    }
     
     // Map race control messages
     result.raceControlMessages = this.mapRaceControlMessages(rawData);
@@ -276,14 +299,35 @@ export class F1DataMapper {
       name: sessionInfo?.Meeting?.Name || 'F1 Session',
       status: sessionInfo?.SessionStatus || 'Unknown',
       timeRemaining: extrapolatedClock?.Remaining || '00:00:00',
+      clockUtc: extrapolatedClock?.Utc,
       currentLap: lapCount?.CurrentLap,
       totalLaps: lapCount?.TotalLaps,
       path: sessionInfo?.Path,
       location: sessionInfo?.Meeting?.Location,
       year: sessionInfo?.Path ? parseInt(sessionInfo.Path.slice(0, 4), 10) || undefined : undefined,
       lapsRemaining: lapCount?.TotalLaps && lapCount?.CurrentLap ? 
-        lapCount.TotalLaps - lapCount.CurrentLap : undefined
+        lapCount.TotalLaps - lapCount.CurrentLap : undefined,
+      qualiSegment: F1DataMapper.detectQualiSegment(sessionInfo?.Name, sessionData?.Status, rawData),
     };
+  }
+
+  private static detectQualiSegment(
+    sessionName: string | undefined,
+    sessionStatus: string | undefined,
+    rawData: F1RawData
+  ): 'Q1' | 'Q2' | 'Q3' | undefined {
+    if (!sessionName?.includes('Qualifying')) return undefined;
+    const status = sessionStatus || '';
+    if (/qualifying\s*3|q3/i.test(status)) return 'Q3';
+    if (/qualifying\s*2|q2/i.test(status)) return 'Q2';
+    if (/qualifying\s*1|q1/i.test(status)) return 'Q1';
+    // Fallback: count non-knocked-out, non-retired drivers
+    // 22-car grid: Q1→16 advance, Q2→10 advance, Q3→10 compete
+    const lines = rawData.TimingData?.Lines ?? {};
+    const active = Object.values(lines).filter(l => !l.KnockedOut && !l.Retired).length;
+    if (active > 0 && active <= 10) return 'Q3';
+    if (active > 0 && active <= 16) return 'Q2';
+    return 'Q1';
   }
 
   private static mapWeatherData(rawData: F1RawData): MappedF1Data['weather'] {
@@ -415,17 +459,101 @@ export class F1DataMapper {
         drs,
         isOnTrack,
         retired,
+        knockedOut: timing.KnockedOut || false,
         numberOfLaps: timing.NumberOfLaps || 0,
         numberOfPitStops: timing.NumberOfPitStops || 0,
-        // For now, we'll estimate tire data since it's not always available in live timing
-        tires: {
-          compound: 'medium' as const,
-          age: timing.NumberOfLaps ? Math.min(timing.NumberOfLaps, 20) : 1
-        }
+        tires: this.mapTyres(rawData, driverNumber, timing.NumberOfLaps),
       });
     });
 
     return positions.sort((a, b) => a.position - b.position);
+  }
+
+  /** Extract current tyre compound and age from TimingAppData stints. */
+  private static mapTyres(
+    rawData: F1RawData,
+    driverNumber: string,
+    totalLaps: number | undefined
+  ): { compound: 'soft' | 'medium' | 'hard' | 'intermediate' | 'wet'; age: number } {
+    const DEFAULT = { compound: 'medium' as const, age: 0 };
+    const stints = rawData.TimingAppData?.Lines?.[driverNumber]?.Stints;
+    if (!stints || stints.length === 0) return DEFAULT;
+
+    // Last element is the current stint
+    const current = stints[stints.length - 1];
+    if (!current) return DEFAULT;
+
+    const compoundMap: Record<string, 'soft' | 'medium' | 'hard' | 'intermediate' | 'wet'> = {
+      SOFT:         'soft',
+      MEDIUM:       'medium',
+      HARD:         'hard',
+      INTERMEDIATE: 'intermediate',
+      WET:          'wet',
+      // Sometimes the API sends lowercase or abbreviated
+      soft:         'soft',
+      medium:       'medium',
+      hard:         'hard',
+      intermediate: 'intermediate',
+      wet:          'wet',
+    };
+
+    const compound = compoundMap[current.Compound ?? ''] ?? 'medium';
+
+    // Age = laps completed on this stint
+    // TotalLaps is updated live; fall back to (totalDriverLaps - startLaps)
+    let age = current.TotalLaps ?? 0;
+    if (age === 0 && current.StartLaps !== undefined && totalLaps !== undefined) {
+      age = Math.max(0, totalLaps - current.StartLaps);
+    }
+
+    return { compound, age };
+  }
+
+  /** Parse an F1 lap-time string ("1:20.456" or "80.456") into milliseconds. Returns null if unparseable. */
+  private static parseLapTimeMs(t: string | undefined): number | null {
+    if (!t) return null;
+    const cleaned = t.replace(/[^0-9:.]/g, '');
+    const colonIdx = cleaned.indexOf(':');
+    if (colonIdx !== -1) {
+      const mins = parseInt(cleaned.slice(0, colonIdx), 10);
+      const secs = parseFloat(cleaned.slice(colonIdx + 1));
+      if (isNaN(mins) || isNaN(secs)) return null;
+      return (mins * 60 + secs) * 1000;
+    }
+    const secs = parseFloat(cleaned);
+    return isNaN(secs) ? null : secs * 1000;
+  }
+
+  /** Format a positive gap in milliseconds as "+M:SS.mmm" or "+S.mmm". */
+  private static formatGapMs(ms: number): string {
+    if (ms <= 0) return '';
+    const totalSecs = ms / 1000;
+    if (totalSecs >= 60) {
+      const m = Math.floor(totalSecs / 60);
+      const s = (totalSecs % 60).toFixed(3).padStart(6, '0');
+      return `+${m}:${s}`;
+    }
+    return `+${totalSecs.toFixed(3)}`;
+  }
+
+  /** Recompute the gap field for every position based on best-lap-time differences (used for FP / Qualifying). */
+  private static recomputeQualiGaps(
+    positions: NonNullable<MappedF1Data['positions']>
+  ): NonNullable<MappedF1Data['positions']> {
+    // Find the fastest best lap among non-knocked-out drivers with a valid time
+    let fastestMs: number | null = null;
+    for (const p of positions) {
+      if (p.knockedOut) continue;
+      const ms = this.parseLapTimeMs(p.bestLapTime);
+      if (ms !== null && (fastestMs === null || ms < fastestMs)) fastestMs = ms;
+    }
+    if (fastestMs === null) return positions; // No times yet — leave as-is
+
+    return positions.map(p => {
+      const ms = this.parseLapTimeMs(p.bestLapTime);
+      const gap = ms !== null ? this.formatGapMs(ms - fastestMs!) : p.gap;
+      return { ...p, gap };
+    });
   }
 
   private static mapRaceControlMessages(rawData: F1RawData): MappedF1Data['raceControlMessages'] {

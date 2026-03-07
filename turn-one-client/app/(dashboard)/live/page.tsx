@@ -21,28 +21,11 @@ import {
 import { DashboardHeader } from "@/components/dashboard/live dashboard/dashboard-header"
 import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links"
 import { TrackMap } from '@/components/dashboard/track-map';
+import { SessionTimer } from '@/components/dashboard/session-timer';
 import { DashboardModuleGrid } from '@/components/dashboard/dashboard-module-grid';
 import { useDashboardLayout } from '@/hooks/useDashboardLayout';
+import { useTeamData } from '@/hooks/useTeamData';
 
-const TEAM_COLORS: Record<string, string> = {
-  'Mercedes':         '#00D2BE',
-  'Red Bull Racing':  '#3671C6',
-  'Red Bull':         '#3671C6',
-  'Ferrari':          '#E8002D',
-  'McLaren':          '#FF8000',
-  'Alpine':           '#FF87BC',
-  'AlphaTauri':       '#64C4FF',
-  'RB':               '#6692FF',
-  'Aston Martin':     '#229971',
-  'Williams':         '#64ACFF',
-  'Alfa Romeo':       '#B12039',
-  'Haas':             '#B6BABD',
-  'Kick Sauber':      '#52E252',
-  'Sauber':           '#52E252',
-};
-
-const getTeamColor = (team?: string): string =>
-  (team && TEAM_COLORS[team]) || '#6b7280';
 interface LiveSessionData {
   sessionInfo?: {
     type: string;
@@ -140,6 +123,14 @@ export default function LiveDashboard() {
 
   const f1Service = getF1LiveDataService();
   const f1Url = "https://livetiming.formula1.com";
+
+  const sessionType = liveData?.sessionInfo?.type;
+  const sessionYear = liveData?.sessionInfo?.year;
+  const qualiSegment = liveData?.sessionInfo?.qualiSegment;
+  const isQuali = sessionType === 'Qualifying' || sessionType === 'Sprint Shootout';
+  const isPractice = sessionType?.startsWith('Practice') ?? false;
+  const isSessionRunning = liveData?.sessionInfo?.status === 'Started';
+  const { teamColors } = useTeamData(sessionYear);
 
   // Data callback
   const handleF1Data: F1DataCallback = useCallback((rawData) => {
@@ -448,8 +439,8 @@ export default function LiveDashboard() {
         <div className="space-y-6">
        
 
-          {/* Race Status Bar */}
-          {(liveData.trackStatus || liveData.sessionInfo?.currentLap) && (
+          {/* Session Status Bar */}
+          {(liveData.trackStatus || liveData.sessionInfo?.currentLap || liveData.sessionInfo?.timeRemaining) && (
             <div className={`flex flex-wrap items-center gap-x-6 gap-y-2 px-5 py-3 rounded-xl border ${
               liveData.trackStatus?.flagColor === 'red'    ? 'border-red-500/30 bg-red-500/5' :
               liveData.trackStatus?.flagColor === 'yellow' ? 'border-yellow-400/30 bg-yellow-400/5' :
@@ -471,8 +462,8 @@ export default function LiveDashboard() {
                   </span>
                 </div>
               )}
-              {/* Lap counter + progress bar */}
-              {liveData.sessionInfo?.currentLap && liveData.sessionInfo?.totalLaps && (
+              {/* Race: Lap counter + progress bar */}
+              {!isQuali && !isPractice && liveData.sessionInfo?.currentLap && liveData.sessionInfo?.totalLaps && (
                 <>
                   {liveData.trackStatus?.flagColor && <div className="w-px h-5 bg-border/40 hidden sm:block" />}
                   <div className="flex items-baseline gap-1.5">
@@ -484,6 +475,21 @@ export default function LiveDashboard() {
                     <div
                       className="h-full bg-primary rounded-full transition-all duration-1000"
                       style={{ width: `${Math.round((liveData.sessionInfo.currentLap / liveData.sessionInfo.totalLaps) * 100)}%` }}
+                    />
+                  </div>
+                </>
+              )}
+              {/* FP / Qualifying: session timer */}
+              {(isQuali || isPractice) && liveData.sessionInfo?.timeRemaining && (
+                <>
+                  {liveData.trackStatus?.flagColor && <div className="w-px h-5 bg-border/40 hidden sm:block" />}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Time</span>
+                    <SessionTimer
+                      timeRemaining={liveData.sessionInfo.timeRemaining}
+                      clockUtc={liveData.sessionInfo.clockUtc}
+                      isRunning={isSessionRunning}
+                      qualiSegment={qualiSegment}
                     />
                   </div>
                 </>
@@ -512,7 +518,12 @@ export default function LiveDashboard() {
               {
                 id: 'timing-grid',
                 content: liveData.positions ? (
-                  <LiveTimingGrid positions={liveData.positions} />
+                  <LiveTimingGrid
+                    positions={liveData.positions}
+                    sessionType={sessionType}
+                    sessionYear={sessionYear}
+                    qualiSegment={qualiSegment}
+                  />
                 ) : null,
               },
               {
@@ -642,7 +653,7 @@ export default function LiveDashboard() {
                         <div className="divide-y divide-border/20">
                           {liveData.teamRadio.map((radio, index) => {
                             const radioDriver = liveData.positions?.find(p => p.driverNumber === radio.driverNumber);
-                            const radioTeamColor = getTeamColor(radioDriver?.team);
+                            const radioTeamColor = teamColors[radioDriver?.team ?? ''] ?? '#6b7280';
                             return (
                               <div key={index} className="flex gap-0">
                                 <div className="w-1 shrink-0 rounded-l" style={{ backgroundColor: radioTeamColor }} />
