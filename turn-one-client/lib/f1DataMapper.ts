@@ -30,7 +30,7 @@ interface F1RawData {
       Retired?: boolean;
       NumberOfLaps?: number;
       NumberOfPitStops?: number;
-      KnockedOut?: boolean;
+      KnockedOut?: boolean | string;  // F1 feed sends "true"/"false" strings
       LastLapTime?: {
         Value?: string;
         Status?: number;
@@ -139,6 +139,7 @@ interface F1RawData {
         LapTime?: string;
         LapNumber?: number;
       }>;
+      KnockedOut?: boolean | string;  // Also present here
     }>;
   };
 }
@@ -241,16 +242,15 @@ export interface MappedF1Data {
 }
 
 export class F1DataMapper {
-  private static driverCache: Map<string, any> = new Map();
-
   public static mapF1Data(rawData: F1RawData): MappedF1Data {
     const result: MappedF1Data = {};
 
-    // Cache driver information
+    // Build a driver lookup scoped to THIS call only — never shared across requests
+    const driverCache = new Map<string, NonNullable<F1RawData['DriverList']>[string]>();
     if (rawData.DriverList) {
-      Object.entries(rawData.DriverList).forEach(([key, driver]) => {
+      Object.entries(rawData.DriverList).forEach(([, driver]) => {
         if (driver.RacingNumber) {
-          this.driverCache.set(driver.RacingNumber, driver);
+          driverCache.set(driver.RacingNumber, driver);
         }
       });
     }
@@ -265,7 +265,7 @@ export class F1DataMapper {
     result.trackStatus = this.mapTrackStatus(rawData);
     
     // Map positions and timing
-    result.positions = this.mapPositions(rawData);
+    result.positions = this.mapPositions(rawData, driverCache);
 
     // For qualifying, recompute gaps from best lap times within the current segment
     if (result.positions && result.sessionInfo?.qualiSegment) {
@@ -279,7 +279,7 @@ export class F1DataMapper {
     result.teamRadio = this.mapTeamRadio(rawData);
     
     // Map fastest laps
-    result.fastestLaps = this.mapFastestLaps(rawData);
+    result.fastestLaps = this.mapFastestLaps(rawData, driverCache);
 
     return result;
   }
@@ -324,7 +324,10 @@ export class F1DataMapper {
     // Fallback: count non-knocked-out, non-retired drivers
     // 22-car grid: Q1→16 advance, Q2→10 advance, Q3→10 compete
     const lines = rawData.TimingData?.Lines ?? {};
-    const active = Object.values(lines).filter(l => !l.KnockedOut && !l.Retired).length;
+    const active = Object.values(lines).filter(l => {
+      const ko = l.KnockedOut;
+      return !(ko === true || ko === 'true') && !l.Retired;
+    }).length;
     if (active > 0 && active <= 10) return 'Q3';
     if (active > 0 && active <= 16) return 'Q2';
     return 'Q1';
@@ -383,7 +386,10 @@ export class F1DataMapper {
     };
   }
 
-  private static mapPositions(rawData: F1RawData): MappedF1Data['positions'] {
+  private static mapPositions(
+    rawData: F1RawData,
+    driverCache: Map<string, NonNullable<F1RawData['DriverList']>[string]>
+  ): MappedF1Data['positions'] {
     const timingData = rawData.TimingData;
     const carData = rawData.CarData;
     const positionData = rawData.Position;
@@ -393,7 +399,7 @@ export class F1DataMapper {
     const positions: MappedF1Data['positions'] = [];
 
     Object.entries(timingData.Lines).forEach(([driverNumber, timing]) => {
-      const driver = this.driverCache.get(driverNumber);
+      const driver = driverCache.get(driverNumber);
       const carInfo = carData?.[driverNumber];
       const posInfo = positionData?.[driverNumber];
 
@@ -406,6 +412,10 @@ export class F1DataMapper {
       // Process track status
       const isOnTrack = !timing.InPit;
       const retired = timing.Retired || false;
+
+      // KnockedOut is sent as a boolean OR as the string "true"/"false"
+      const rawKO = timing.KnockedOut ?? rawData.TimingAppData?.Lines?.[driverNumber]?.KnockedOut;
+      const knockedOut = rawKO === true || rawKO === 'true';
       
       // Process timing data
       const lastLap = timing.LastLapTime?.Value || '';
@@ -459,7 +469,7 @@ export class F1DataMapper {
         drs,
         isOnTrack,
         retired,
-        knockedOut: timing.KnockedOut || false,
+        knockedOut,
         numberOfLaps: timing.NumberOfLaps || 0,
         numberOfPitStops: timing.NumberOfPitStops || 0,
         tires: this.mapTyres(rawData, driverNumber, timing.NumberOfLaps),
@@ -610,7 +620,10 @@ export class F1DataMapper {
     .slice(0, 10);
 }
 
-  private static mapFastestLaps(rawData: F1RawData): MappedF1Data['fastestLaps'] {
+  private static mapFastestLaps(
+    rawData: F1RawData,
+    driverCache: Map<string, NonNullable<F1RawData['DriverList']>[string]>
+  ): MappedF1Data['fastestLaps'] {
     const timingData = rawData.TimingData;
     if (!timingData?.Lines) return [];
 
@@ -621,7 +634,7 @@ export class F1DataMapper {
     }> = [];
 
     Object.entries(timingData.Lines).forEach(([driverNumber, timing]) => {
-      const driver = this.driverCache.get(driverNumber);
+      const driver = driverCache.get(driverNumber);
       const bestLap = timing.BestLapTime?.Value;
 
       if (bestLap && driver) {
