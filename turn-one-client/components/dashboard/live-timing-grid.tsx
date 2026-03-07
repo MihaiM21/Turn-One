@@ -1,8 +1,10 @@
 'use client';
 
+import React from 'react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { TrendingUp, TrendingDown, Trophy } from 'lucide-react';
+import { TrendingUp, TrendingDown, Trophy, Timer, Zap } from 'lucide-react';
+import { useTeamData } from '@/hooks/useTeamData';
 
 interface Position {
   position: number;
@@ -27,6 +29,10 @@ interface Position {
   drs: boolean;
   positionChange?: number; // +1 gained, -1 lost, 0 no change
   isOnTrack: boolean;
+  retired?: boolean;
+  knockedOut?: boolean;
+  numberOfLaps?: number;
+  numberOfPitStops?: number;
   tires: {
     compound: 'soft' | 'medium' | 'hard' | 'intermediate' | 'wet';
     age: number;
@@ -35,25 +41,11 @@ interface Position {
 
 interface LiveTimingGridProps {
   positions: Position[];
+  sessionType?: string;
+  sessionYear?: number;
+  qualiSegment?: 'Q1' | 'Q2' | 'Q3';
   className?: string;
 }
-
-const TEAM_COLORS: Record<string, string> = {
-  'Mercedes':         '#00D2BE',
-  'Red Bull Racing':  '#3671C6',
-  'Red Bull':         '#3671C6',
-  'Ferrari':          '#E8002D',
-  'McLaren':          '#FF8000',
-  'Alpine':           '#FF87BC',
-  'AlphaTauri':       '#64C4FF',
-  'RB':               '#6692FF',
-  'Aston Martin':     '#229971',
-  'Williams':         '#64ACFF',
-  'Alfa Romeo':       '#B12039',
-  'Haas':             '#B6BABD',
-  'Kick Sauber':      '#52E252',
-  'Sauber':           '#52E252',
-};
 
 const SEGMENT_COLOR: Record<number, string> = {
   2051: '#a855f7',
@@ -70,7 +62,25 @@ const TIRE_STYLES: Record<string, { bg: string; dark: boolean; label: string }> 
   wet:          { bg: '#3b82f6', dark: false, label: 'W' },
 };
 
-export function LiveTimingGrid({ positions, className }: LiveTimingGridProps) {
+export function LiveTimingGrid({ positions, sessionType, sessionYear, qualiSegment, className }: LiveTimingGridProps) {
+  const { teamColors } = useTeamData(sessionYear);
+
+  const isQuali = sessionType === 'Qualifying' || sessionType === 'Sprint Shootout';
+  const isPractice = sessionType?.startsWith('Practice') ?? false;
+  const isRace = !isQuali && !isPractice;
+
+  // Position after which eliminated drivers are shown
+  // 22-car grid: Q1 bottom 6 out (after P16), Q2 bottom 6 out (after P10), Q3 no cutoff
+  const eliminationCutoff = isQuali
+    ? qualiSegment === 'Q1' ? 16 : qualiSegment === 'Q2' ? 10 : null
+    : null;
+
+  const sessionBadge = isQuali
+    ? { label: qualiSegment ?? 'QUALI', color: '#a855f7' }
+    : isPractice
+    ? { label: sessionType ?? 'PRACTICE', color: '#3b82f6' }
+    : { label: 'RACE', color: '#ef4444' };
+
   const getPositionChangeIcon = (change?: number) => {
     if (!change || change === 0) return null;
     if (change > 0) return <TrendingUp className="w-3 h-3 text-green-500 shrink-0" />;
@@ -82,8 +92,14 @@ export function LiveTimingGrid({ positions, className }: LiveTimingGridProps) {
       {/* Header with colour legend */}
       <div className="px-4 py-3 border-b border-border/40 flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-2">
-          <Trophy className="w-4 h-4 text-primary" />
+          {isQuali ? <Zap className="w-4 h-4 text-primary" /> : isPractice ? <Timer className="w-4 h-4 text-primary" /> : <Trophy className="w-4 h-4 text-primary" />}
           <span className="text-sm font-semibold">Live Timing</span>
+          <span
+            className="text-[10px] font-black px-2 py-0.5 rounded tracking-wider uppercase"
+            style={{ backgroundColor: `${sessionBadge.color}20`, color: sessionBadge.color, border: `1px solid ${sessionBadge.color}40` }}
+          >
+            {sessionBadge.label}
+          </span>
           <span className="text-xs text-muted-foreground">— {positions.length} drivers</span>
         </div>
         <div className="hidden sm:flex items-center gap-4 text-[11px] text-muted-foreground">
@@ -105,23 +121,49 @@ export function LiveTimingGrid({ positions, className }: LiveTimingGridProps) {
             <tr className="border-b border-border/40 text-xs uppercase tracking-wider text-muted-foreground bg-muted/30">
               <th className="text-left px-3 py-2.5 font-medium w-14">Pos</th>
               <th className="text-left px-2 py-2.5 font-medium">Driver</th>
-              <th className="text-right px-3 py-2.5 font-medium">Gap</th>
-              <th className="text-right px-3 py-2.5 font-medium hidden sm:table-cell">Last Lap</th>
-              <th className="text-right px-3 py-2.5 font-medium hidden md:table-cell">Best Lap</th>
+              {isQuali || isPractice ? (
+                <>
+                  <th className="text-right px-3 py-2.5 font-medium">Best Lap</th>
+                  <th className="text-right px-3 py-2.5 font-medium hidden sm:table-cell">Gap</th>
+                  <th className="text-right px-3 py-2.5 font-medium hidden md:table-cell">Last Lap</th>
+                </>
+              ) : (
+                <>
+                  <th className="text-right px-3 py-2.5 font-medium">Gap</th>
+                  <th className="text-right px-3 py-2.5 font-medium hidden sm:table-cell">Last Lap</th>
+                  <th className="text-right px-3 py-2.5 font-medium hidden md:table-cell">Best Lap</th>
+                </>
+              )}
               <th className="text-left px-4 py-2.5 font-medium hidden xl:table-cell">S1 · S2 · S3</th>
               <th className="text-right px-3 py-2.5 font-medium">Tyre</th>
             </tr>
           </thead>
           <tbody>
             {positions.map((driver, index) => {
-              const teamColor = TEAM_COLORS[driver.team] ?? '#6b7280';
+              const teamColor = teamColors[driver.team] ?? '#6b7280';
               const tire = TIRE_STYLES[driver.tires.compound] ?? { bg: '#6b7280', dark: false, label: '?' };
+              const isKnockedOut = driver.knockedOut && isQuali;
+              const showEliminationLine = eliminationCutoff !== null && driver.position === eliminationCutoff;
               return (
+              <React.Fragment key={driver.driverNumber}>
+              {showEliminationLine && (
+                <tr>
+                  <td colSpan={7} className="px-3 py-0.5">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 border-b border-dashed border-red-500/50" />
+                      <span className="text-[10px] font-bold text-red-400/80 uppercase tracking-wider shrink-0">
+                        ── Elimination ──
+                      </span>
+                      <div className="flex-1 border-b border-dashed border-red-500/50" />
+                    </div>
+                  </td>
+                </tr>
+              )}
               <tr
-                key={driver.driverNumber}
                 className={cn(
                   'border-b border-border/20 transition-colors hover:bg-muted/20',
-                  !driver.isOnTrack && 'opacity-40',
+                  (!driver.isOnTrack || driver.retired) && 'opacity-40',
+                  isKnockedOut && 'opacity-35',
                   index % 2 === 1 && 'bg-muted/[0.03]'
                 )}
               >
@@ -163,29 +205,61 @@ export function LiveTimingGrid({ positions, className }: LiveTimingGridProps) {
                         DRS
                       </span>
                     )}
+                    {isKnockedOut && (
+                      <span className="shrink-0 text-[10px] font-bold px-1 py-0.5 rounded bg-red-500/20 text-red-400 leading-none">
+                        OUT
+                      </span>
+                    )}
                   </div>
                 </td>
 
-                {/* Gap */}
-                <td className="px-3 py-3 text-right font-mono text-sm">
-                  {driver.position === 1 ? (
-                    <span className="text-[11px] font-bold tracking-wide" style={{ color: teamColor }}>LEADER</span>
-                  ) : (
-                    <span className="text-foreground/80 tabular-nums">{driver.gap || '—'}</span>
-                  )}
-                </td>
-
-                {/* Last Lap */}
-                <td className="px-3 py-3 text-right font-mono text-sm text-foreground/80 hidden sm:table-cell tabular-nums">
-                  {driver.lastLapTime || '—'}
-                </td>
-
-                {/* Best Lap */}
-                <td className="px-3 py-3 text-right font-mono text-sm hidden md:table-cell tabular-nums">
-                  <span className={driver.bestLapTime ? 'text-purple-400 font-semibold' : 'text-foreground/25'}>
-                    {driver.bestLapTime || '—'}
-                  </span>
-                </td>
+                {/* Timing columns — different layout for Quali/Practice vs Race */}
+                {isQuali || isPractice ? (
+                  <>
+                    {/* Best Lap — primary in FP/Quali */}
+                    <td className="px-3 py-3 text-right font-mono tabular-nums">
+                      <span className={cn(
+                        'font-bold',
+                        driver.bestLapTime ? 'text-purple-300 text-sm' : 'text-foreground/25 text-sm'
+                      )}>
+                        {driver.bestLapTime || '—'}
+                      </span>
+                    </td>
+                    {/* Gap to leader's best lap */}
+                    <td className="px-3 py-3 text-right font-mono text-sm hidden sm:table-cell tabular-nums">
+                      {driver.position === 1 ? (
+                        <span className="text-[11px] font-bold tracking-wide" style={{ color: teamColor }}>LEADER</span>
+                      ) : (
+                        <span className="text-foreground/70">{driver.gap || '—'}</span>
+                      )}
+                    </td>
+                    {/* Last Lap */}
+                    <td className="px-3 py-3 text-right font-mono text-sm text-foreground/70 hidden md:table-cell tabular-nums">
+                      {driver.lastLapTime || '—'}
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    {/* Gap — race interval */}
+                    <td className="px-3 py-3 text-right font-mono text-sm">
+                      {driver.position === 1 ? (
+                        <span className="text-[11px] font-bold tracking-wide" style={{ color: teamColor }}>LEADER</span>
+                      ) : (
+                        <span className="text-foreground/80 tabular-nums">{driver.gap || '—'}</span>
+                      )}
+                    </td>
+                    {/* Last Lap */}
+                    <td className="px-3 py-3 text-right font-mono text-sm text-foreground/80 hidden sm:table-cell tabular-nums">
+                      {driver.lastLapTime || '—'}
+                    </td>
+                    {/* Best Lap */}
+                    <td className="px-3 py-3 text-right font-mono text-sm hidden md:table-cell tabular-nums">
+                      <span className={driver.bestLapTime ? 'text-purple-400 font-semibold' : 'text-foreground/25'}>
+                        {driver.bestLapTime || '—'}
+                      </span>
+                    </td>
+                  </>
+                )}
 
                 {/* Sectors with inline-coloured mini segments */}
                 <td className="px-4 py-3 hidden xl:table-cell">
@@ -235,6 +309,7 @@ export function LiveTimingGrid({ positions, className }: LiveTimingGridProps) {
                   </div>
                 </td>
               </tr>
+              </React.Fragment>
               );
             })}
           </tbody>
