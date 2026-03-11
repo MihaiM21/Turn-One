@@ -3,6 +3,7 @@ import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import './globals.css'
 import type React from "react"
+import Script from "next/script"
 import { MainFooter } from "@/components/footer/main-footer"
 import { Suspense } from "react"
 import { AuthProvider } from "@/components/auth/auth-provider"
@@ -55,6 +56,19 @@ export default function RootLayout({ children, }: {
                 <link rel="dns-prefetch" href="https://www.formula1.com" />
                 <link rel="dns-prefetch" href="https://media.api-sports.io" />
             </head>
+            {/* Google Analytics */}
+            <Script
+                src="https://www.googletagmanager.com/gtag/js?id=G-KY3D64KP8W"
+                strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+                {`
+                    window.dataLayer = window.dataLayer || [];
+                    function gtag(){dataLayer.push(arguments);}
+                    gtag('js', new Date());
+                    gtag('config', 'G-KY3D64KP8W');
+                `}
+            </Script>
             <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
                 <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
                     <AuthProvider>
