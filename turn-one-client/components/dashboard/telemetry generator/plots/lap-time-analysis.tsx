@@ -144,7 +144,7 @@ export function LapTimeAnalysisGraph({ lapTimeData, advancedSettings }: { lapTim
           <ResponsiveContainer width="100%" height={settings.chartHeight}>
             <LineChart 
               data={filteredData} 
-              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+              margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
               className={settings.animateChart ? "animate-in fade-in-0 zoom-in-95 duration-1000" : ""}
             >
               {settings.showGrid && (
@@ -161,15 +161,25 @@ export function LapTimeAnalysisGraph({ lapTimeData, advancedSettings }: { lapTim
                 className={settings.animateChart ? "animate-in slide-in-from-bottom-2 duration-1000 delay-300" : ""}
               />
               <YAxis 
-                stroke="#9CA3AF" 
+                stroke="#9CA3AF"
+                width={68}
+                tickCount={6}
                 domain={['dataMin - 0.5', 'dataMax + 0.5']}
-                label={{ value: 'Lap Time (seconds)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#9CA3AF' } }}
+                tickFormatter={(value: number) => {
+                  // Handle both seconds (~89) and microseconds (~89_000_000) from the API
+                  const secs = value > 1000 ? value / 1_000_000 : value
+                  const m = Math.floor(secs / 60)
+                  const s = (secs % 60).toFixed(1)
+                  return `${m}:${s.padStart(4, '0')}`
+                }}
+                label={{ value: 'Lap Time', angle: -90, position: 'insideLeft', offset: 15, style: { textAnchor: 'middle', fill: '#9CA3AF', fontSize: 11 } }}
                 className={settings.animateChart ? "animate-in slide-in-from-left-2 duration-1000 delay-300" : ""}
               />
               <Tooltip content={<CustomTooltip />} />
               {settings.showLegend && <Legend />}
               
               <Line
+                name="Lap Time"
                 type="monotone"
                 dataKey="lap_times_seconds"
                 stroke="#6B7280"
