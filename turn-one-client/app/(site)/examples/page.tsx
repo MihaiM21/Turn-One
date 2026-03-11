@@ -17,6 +17,7 @@ import {
   Zap,
   Trophy,
   PlayCircle,
+  Radio,
 } from "lucide-react"
 import { TopSpeedGraph } from "@/components/dashboard/telemetry generator/plots/top-speed"
 import { ThrottleAverageGraph } from "@/components/dashboard/telemetry generator/plots/throttle_average_comparison"
@@ -24,6 +25,8 @@ import { LapTimeAnalysisGraph } from "@/components/dashboard/telemetry generator
 import { ThrottleBrakeComparisonGraph } from "@/components/dashboard/telemetry generator/plots/throttle-brake-comparison"
 import { SessionResultsGraph } from "@/components/dashboard/telemetry generator/plots/session-results"
 import { TrackComparisonGraph } from "@/components/dashboard/telemetry generator/plots/track-comparison"
+import { LiveTimingGrid } from "@/components/dashboard/live-timing-grid"
+import { LiveWeather } from "@/components/dashboard/live-weather"
 import {
   fetchTopSpeeds,
   fetchSessionResults,
@@ -40,6 +43,31 @@ import {
   SessionResultsData,
   TrackComparisonData,
 } from "@/types/plot-types"
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LIVE DASHBOARD MOCK DATA
+// ─────────────────────────────────────────────────────────────────────────────
+
+const mockPositions = [
+  { position: 1, driverNumber: "4",  driverName: "NOR", team: "McLaren",        gap: "—",      interval: "—",      lastLapTime: "1:24.312", bestLapTime: "1:24.312", speed: 0, drs: false, isOnTrack: false, positionChange: 0,  tires: { compound: "soft" as const, age: 2 }, sector1: "28.801", sector2: "35.104", sector3: "20.407" },
+  { position: 2, driverNumber: "81", driverName: "PIA", team: "McLaren",        gap: "+0.213", interval: "+0.213", lastLapTime: "1:24.525", bestLapTime: "1:24.525", speed: 0, drs: false, isOnTrack: false, positionChange: 0,  tires: { compound: "soft" as const, age: 2 }, sector1: "28.933", sector2: "35.217", sector3: "20.375" },
+  { position: 3, driverNumber: "44", driverName: "HAM", team: "Ferrari",        gap: "+0.348", interval: "+0.135", lastLapTime: "1:24.660", bestLapTime: "1:24.660", speed: 0, drs: false, isOnTrack: false, positionChange: 1,  tires: { compound: "soft" as const, age: 2 }, sector1: "28.771", sector2: "35.480", sector3: "20.409" },
+  { position: 4, driverNumber: "16", driverName: "LEC", team: "Ferrari",        gap: "+0.501", interval: "+0.153", lastLapTime: "1:24.813", bestLapTime: "1:24.813", speed: 0, drs: false, isOnTrack: false, positionChange: -1, tires: { compound: "soft" as const, age: 3 }, sector1: "28.855", sector2: "35.387", sector3: "20.571" },
+  { position: 5, driverNumber: "1",  driverName: "VER", team: "Red Bull Racing", gap: "+0.524", interval: "+0.023", lastLapTime: "1:24.836", bestLapTime: "1:24.836", speed: 0, drs: false, isOnTrack: false, positionChange: 0,  tires: { compound: "soft" as const, age: 2 }, sector1: "28.789", sector2: "35.540", sector3: "20.507" },
+  { position: 6, driverNumber: "63", driverName: "RUS", team: "Mercedes",       gap: "+0.698", interval: "+0.174", lastLapTime: "1:25.010", bestLapTime: "1:25.010", speed: 0, drs: false, isOnTrack: false, positionChange: 0,  tires: { compound: "soft" as const, age: 3 }, sector1: "28.912", sector2: "35.622", sector3: "20.476" },
+] as const
+
+const mockWeather = {
+  temperature: 22,
+  humidity: 62,
+  trackTemp: 38,
+  windSpeed: 15,
+  windDirection: 240,
+  visibility: 10,
+  rainfall: false,
+  pressure: 1013,
+  conditions: "cloudy" as const,
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LOADING SKELETON
@@ -87,6 +115,8 @@ interface ShowcaseSection {
   bullets: string[]
   chart: React.ReactNode
   reversed?: boolean
+  ctaHref?: string
+  ctaLabel?: string
 }
 
 const YEAR = 2025
@@ -101,7 +131,23 @@ export default function ExamplesPage() {
   const [lapTimes, setLapTimes] = useState<LapTimeData[] | null>(null)
 
   useEffect(() => {
-    fetchTopSpeeds("", YEAR, GP, "Q").then(setTopSpeeds).catch(console.error)
+    fetchTopSpeeds("", YEAR, GP, "Q").then((data: any) => {
+      let processed: TopSpeedData[]
+      if (data && typeof data === 'object' && 'Color' in data && 'Team' in data && 'Top Speed (km/h)' in data) {
+        const colors = data.Color as Record<string, string>
+        const teams = data.Team as Record<string, string>
+        const speeds = data['Top Speed (km/h)'] as Record<string, number>
+        processed = Object.keys(teams).map(k => ({ team: teams[k], speed: speeds[k], color: colors[k] }))
+      } else {
+        processed = Object.values(data as Record<string, any>).map(item => ({
+          team: item.Team,
+          speed: item['Top Speed (km/h)'],
+          color: item.Color,
+        }))
+      }
+      processed.sort((a, b) => b.speed - a.speed)
+      setTopSpeeds(processed)
+    }).catch(console.error)
   }, [])
 
   useEffect(() => {
@@ -117,7 +163,16 @@ export default function ExamplesPage() {
   }, [])
 
   useEffect(() => {
-    fetchThrottleAverages("", YEAR, GP, "Q").then(setThrottleAverages).catch(console.error)
+    fetchThrottleAverages("", YEAR, GP, "Q").then((data: any) => {
+      const processed: ThrottleAverageData[] = Object.values(data as Record<string, any>)
+        .map(item => ({
+          driver: item.Driver,
+          throttle: item['Average Throttle (%)'],
+          color: item.Color,
+        }))
+        .sort((a, b) => b.throttle - a.throttle)
+      setThrottleAverages(processed)
+    }).catch(console.error) 
   }, [])
 
   useEffect(() => {
@@ -268,6 +323,34 @@ export default function ExamplesPage() {
       ),
       reversed: true,
     },
+    {
+      id: "livedashboard",
+      icon: Radio,
+      badge: "Real-Time",
+      title: "Live Race Dashboard",
+      subtitle: "Timing tower · Weather · Track position — all in one screen",
+      description:
+        "Every session, live. The Turn One dashboard connects directly to the official F1 timing stream and delivers real-time gaps, sector colours, tire age, DRS status, and weather conditions — updating every fraction of a second as the session unfolds.",
+      bullets: [
+        "Live timing grid with gap, interval, sector colours and tire compound",
+        "Real-time track and air temperature, wind speed and rainfall status",
+        "Qualifying segment tracker with Q1/Q2/Q3 cutoff indicators",
+        "Fully customisable — rearrange and hide widgets to suit your workflow",
+      ],
+      chart: (
+        <div className="space-y-3">
+          <LiveTimingGrid
+            positions={mockPositions as any}
+            sessionType="Qualifying"
+            sessionYear={2025}
+            qualiSegment="Q3"
+          />
+          <LiveWeather weather={mockWeather} />
+        </div>
+      ),
+      ctaHref: "/live",
+      ctaLabel: "Open Live Dashboard",
+    },
   ]
 
   return (
@@ -377,8 +460,8 @@ export default function ExamplesPage() {
 
                   <div>
                     <Button asChild variant="outline" size="sm" className="gap-2 mt-2">
-                      <Link href="/generator">
-                        Try this plot
+                      <Link href={section.ctaHref ?? "/generator"}>
+                        {section.ctaLabel ?? "Try this plot"}
                         <ArrowRight className="w-4 h-4" />
                       </Link>
                     </Button>
