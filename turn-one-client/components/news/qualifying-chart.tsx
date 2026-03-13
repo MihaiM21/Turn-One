@@ -59,7 +59,7 @@ export function QualifyingChart({ data, sessionName }: QualifyingChartProps) {
             <BarChart
               data={chartData}
               layout="horizontal"
-              margin={{ top: 5, right: 60, left: 20, bottom: 5 }}
+              margin={{ top: 24, right: 20, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
               <XAxis
@@ -79,7 +79,7 @@ export function QualifyingChart({ data, sessionName }: QualifyingChartProps) {
                 ))}
                 <LabelList 
                   dataKey="delta" 
-                  position="right"
+                  position="top"
                   style={{ fill: "#F9FAFB", fontSize: "12px", fontWeight: "600" }}
                   formatter={(value: any) => `+${Number(value).toFixed(3)}s`}
                 />
