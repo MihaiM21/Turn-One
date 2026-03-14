@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, notFound } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Calendar, User, Clock, Tag, ArrowLeft } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -10,23 +11,32 @@ import Link from 'next/link'
 import { Breadcrumb } from '@/components/seo/breadcrumb'
 import { JsonLd } from '@/components/seo/json-ld'
 import { generateArticleSchema } from '@/lib/seo'
-import { getArticleBySlug, type Article } from '@/lib/articleService'
+import { BackendServiceError, getArticleBySlug, type Article } from '@/lib/articleService'
 
 export default function DynamicArticlePage() {
   const params = useParams()
+  const router = useRouter()
   const [article, setArticle] = useState<Article | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const loadArticle = async () => {
-      const data = await getArticleBySlug(params.slug as string)
-      if (data) {
-        setArticle(data)
+      try {
+        const data = await getArticleBySlug(params.slug as string, { throwOnServerError: true })
+        if (data) {
+          setArticle(data)
+        }
+      } catch (error) {
+        if (error instanceof BackendServiceError) {
+          router.replace('/server-error')
+          return
+        }
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
     loadArticle()
-  }, [params.slug])
+  }, [params.slug, router])
 
   if (loading) {
     return (

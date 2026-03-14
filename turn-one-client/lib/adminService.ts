@@ -201,3 +201,30 @@ export const deleteUser = async (userId: string) => {
         return { success: false, error: 'Failed to delete user' };
     }
 };
+
+export const refreshNewsSessionData = async () => {
+    const token = getToken();
+    if (!token) {
+        return { success: false, error: 'No token found' };
+    }
+
+    try {
+        const response = await fetch('/api/news/latest-session', {
+            method: 'POST',
+            headers: {
+                'Authorization': token,
+            },
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            return { success: false, error: errorData.error || 'Failed to refresh news data' };
+        }
+
+        const data = await response.json();
+        return { success: true, data };
+    } catch (error) {
+        console.error('Error refreshing news session data:', error);
+        return { success: false, error: 'Failed to refresh news data' };
+    }
+};

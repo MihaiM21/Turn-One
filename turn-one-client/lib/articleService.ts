@@ -1,6 +1,16 @@
 // Article API Service
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5271/api';
 
+export class BackendServiceError extends Error {
+  public readonly status?: number;
+
+  constructor(message: string, status?: number) {
+    super(message);
+    this.name = 'BackendServiceError';
+    this.status = status;
+  }
+}
+
 export interface Article {
   id?: string;
   slug: string;
@@ -23,6 +33,7 @@ export async function getArticles(params?: {
   featured?: boolean;
   category?: string;
   limit?: number;
+  throwOnServerError?: boolean;
 }): Promise<Article[]> {
   try {
     const queryParams = new URLSearchParams();
@@ -34,28 +45,54 @@ export async function getArticles(params?: {
     const response = await fetch(url);
     
     if (!response.ok) {
+      if (params?.throwOnServerError && response.status >= 500) {
+        throw new BackendServiceError('Backend service unavailable', response.status);
+      }
+
       throw new Error('Failed to fetch articles');
     }
     
     return await response.json();
   } catch (error) {
+    if (params?.throwOnServerError && error instanceof TypeError) {
+      throw new BackendServiceError('Backend service unreachable');
+    }
+
+    if (error instanceof BackendServiceError) {
+      throw error;
+    }
+
     console.error('Error fetching articles:', error);
     return [];
   }
 }
 
 // Get single article by slug (public)
-export async function getArticleBySlug(slug: string): Promise<Article | null> {
+export async function getArticleBySlug(
+  slug: string,
+  options?: { throwOnServerError?: boolean }
+): Promise<Article | null> {
   try {
     const response = await fetch(`${API_URL}/article/${slug}`);
     
     if (!response.ok) {
       if (response.status === 404) return null;
+      if (options?.throwOnServerError && response.status >= 500) {
+        throw new BackendServiceError('Backend service unavailable', response.status);
+      }
       throw new Error('Failed to fetch article');
     }
     
     return await response.json();
   } catch (error) {
+    if (options?.throwOnServerError && error instanceof TypeError) {
+      throw new BackendServiceError('Backend service unreachable');
+    }
+
+    if (error instanceof BackendServiceError) {
+      throw error;
+    }
+
     console.error('Error fetching article:', error);
     return null;
   }
