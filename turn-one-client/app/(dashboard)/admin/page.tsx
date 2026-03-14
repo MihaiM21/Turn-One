@@ -133,6 +133,7 @@ export default function AdminDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [activeTab, setActiveTab] = useState('all');
+  const [refreshingNews, setRefreshingNews] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -387,6 +388,27 @@ export default function AdminDashboard() {
     setEmailMessage('');
   };
 
+  const refreshNewsData = async () => {
+    setRefreshingNews(true);
+
+    const result = await adminService.refreshNewsSessionData();
+
+    if (result.success) {
+      toast({
+        title: 'News Data Refreshed',
+        description: 'Latest session data has been requested and cached for the news page.',
+      });
+    } else {
+      toast({
+        title: 'Refresh Failed',
+        description: result.error,
+        variant: 'destructive',
+      });
+    }
+
+    setRefreshingNews(false);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -585,6 +607,31 @@ export default function AdminDashboard() {
             Quick Actions
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+            <button type="button" className="group text-left" onClick={refreshNewsData} disabled={refreshingNews}>
+              <Card className="h-full border-blue-500/20 hover:border-blue-500/50 transition-all duration-300 hover:shadow-md bg-gradient-to-br from-card to-blue-500/5 cursor-pointer disabled:opacity-70">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 bg-blue-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      {refreshingNews ? (
+                        <Loader2 className="h-4 w-4 text-blue-400 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4 text-blue-400" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
+                        Refresh News
+                        <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all" />
+                      </h3>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {refreshingNews ? 'Requesting new data...' : 'Fetch latest session now'}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </button>
+
             <Link href="/admin/articles" className="group">
               <Card className="h-full border-red-500/20 hover:border-red-500/50 transition-all duration-300 hover:shadow-md bg-gradient-to-br from-card to-red-500/5 cursor-pointer">
                 <CardContent className="p-3">

@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useEffect, useState } from "react"
-import { getArticles, type Article } from '@/lib/articleService'
+import { useRouter } from 'next/navigation'
+import { BackendServiceError, getArticles, type Article } from '@/lib/articleService'
 
 export default function BlogPage() {
+  const router = useRouter()
   const [blogPosts, setBlogPosts] = useState<Article[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -18,9 +20,17 @@ export default function BlogPage() {
   }, [])
 
   const loadArticles = async () => {
-    const articles = await getArticles()
-    setBlogPosts(articles)
-    setLoading(false)
+    try {
+      const articles = await getArticles({ throwOnServerError: true })
+      setBlogPosts(articles)
+    } catch (error) {
+      if (error instanceof BackendServiceError) {
+        router.replace('/server-error')
+        return
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   const featuredPost = blogPosts.find(post => post.featured) || blogPosts[0]

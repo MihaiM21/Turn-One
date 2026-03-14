@@ -1,12 +1,32 @@
 import { SessionDashboardData } from "@/types/news-types";
-import { fetchFromExternalAPI } from "@/lib/data-fetcher";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://apidev.t1f1.com";
+const NEWS_LATEST_SESSION_ENDPOINT = "/api/news/latest-session";
+
+async function fetchLatestSessionFromInternalApi(): Promise<SessionDashboardData> {
+  const response = await fetch(NEWS_LATEST_SESSION_ENDPOINT, {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    let message = `Failed to fetch latest session data (${response.status})`;
+    try {
+      const errorData = (await response.json()) as { error?: string };
+      message = errorData.error || message;
+    } catch {
+      // Keep fallback message when body is not JSON.
+    }
+
+    throw new Error(message);
+  }
+
+  return (await response.json()) as SessionDashboardData;
+}
 
 export async function getLatestSessionData(): Promise<SessionDashboardData> {
-  return fetchFromExternalAPI(`v1/dashboard`);
+  return fetchLatestSessionFromInternalApi();
 }
 
 export async function getLatestSessionDataClient(): Promise<SessionDashboardData> {
-  return fetchFromExternalAPI(`v1/dashboard`);
+  return fetchLatestSessionFromInternalApi();
 }
