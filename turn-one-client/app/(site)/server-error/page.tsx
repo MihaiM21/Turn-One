@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { AlertTriangle, ArrowLeft, RefreshCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
