@@ -110,9 +110,9 @@ export function DailyGiftWidget({ onGiftClaimed }: DailyGiftWidgetProps) {
 
   if (isChecking) {
     return (
-      <Card className="bg-background/60 backdrop-blur-sm">
-        <CardContent className="flex items-center justify-center p-6">
-          <Loader2 className="h-5 w-5 animate-spin mr-2" />
+      <Card className="border-border/40 bg-card/40 backdrop-blur-sm">
+        <CardContent className="flex items-center justify-center p-5 text-sm">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           <span>Checking daily gift status...</span>
         </CardContent>
       </Card>
@@ -122,20 +122,20 @@ export function DailyGiftWidget({ onGiftClaimed }: DailyGiftWidgetProps) {
   // If there's no auth token, show a message
   if (!authToken) {
     return (
-      <Card className="bg-background/60 backdrop-blur-sm border-red-500/30">
-        <CardHeader className="pb-2">
+      <Card className="border-red-500/30 bg-card/40 backdrop-blur-sm">
+        <CardHeader className="pb-1.5 pt-5">
           <div className="flex justify-between items-center">
-            <CardTitle className="flex items-center text-lg">
-              <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
+            <CardTitle className="flex items-center text-base">
+              <AlertTriangle className="mr-2 h-4 w-4 text-red-500" />
               Auth Required
             </CardTitle>
           </div>
-          <CardDescription>
+          <CardDescription className="text-xs">
             Please log in to claim daily gifts
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2">
-          <p className="text-sm text-muted-foreground">
+        <CardContent className="space-y-1.5 pt-0">
+          <p className="text-xs text-muted-foreground">
             Log in to receive 50 coins and 25 XP daily!
           </p>
         </CardContent>
@@ -146,23 +146,23 @@ export function DailyGiftWidget({ onGiftClaimed }: DailyGiftWidgetProps) {
   // Show error state when API connection fails
   if (hasError) {
     return (
-      <Card className="bg-background/60 backdrop-blur-sm border-red-500/30">
-        <CardHeader className="pb-2">
+      <Card className="border-red-500/30 bg-card/40 backdrop-blur-sm">
+        <CardHeader className="pb-1.5 pt-5">
           <div className="flex justify-between items-center">
-            <CardTitle className="flex items-center text-lg">
-              <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
+            <CardTitle className="flex items-center text-base">
+              <AlertTriangle className="mr-2 h-4 w-4 text-red-500" />
               Connection Error
             </CardTitle>
           </div>
-          <CardDescription>
+          <CardDescription className="text-xs">
             Unable to check gift status
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-2 pt-0">
           <Button
             onClick={() => window.location.reload()}
             size="sm"
-            className="w-full"
+            className="h-8 w-full text-xs"
           >
             Try Again
           </Button>
@@ -172,53 +172,53 @@ export function DailyGiftWidget({ onGiftClaimed }: DailyGiftWidgetProps) {
   }
 
   return (
-    <Card className={`bg-background/60 backdrop-blur-sm ${canClaim ? 'border-yellow-500/50' : ''}`}>
-      <CardHeader className="pb-2">
+    <Card className={`border-border/40 bg-card/40 backdrop-blur-sm ${canClaim ? 'border-yellow-500/50' : ''}`}>
+      <CardHeader className="pb-1.5 pt-5">
         <div className="flex justify-between items-center">
-          <CardTitle className="flex items-center text-lg">
-            <Gift className="h-5 w-5 mr-2" />
+          <CardTitle className="flex items-center text-base">
+            <Gift className="mr-2 h-4 w-4" />
             Daily Gift
           </CardTitle>
           {canClaim && (
-            <Badge variant="secondary" className="bg-yellow-500/50 text-yellow-200">
+            <Badge variant="secondary" className="bg-yellow-500/50 px-2 py-0 text-[10px] uppercase text-yellow-200">
               Available!
             </Badge>
           )}
         </div>
-        <CardDescription>
+        <CardDescription className="text-xs">
           {canClaim 
             ? "Claim your daily 50 coins and 25 XP!" 
             : "You've already claimed your gift today. Come back tomorrow!"}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-2.5 pt-0">
         <div className="flex justify-center">
           <Button
             onClick={handleClaimGift}
             disabled={isLoading || !canClaim}
             size="sm"
-            className={`w-full ${canClaim ? 'bg-yellow-600 hover:bg-yellow-500' : 'bg-muted'}`}
+            className={`h-8 w-full text-xs ${canClaim ? 'bg-yellow-600 hover:bg-yellow-500' : 'bg-muted'}`}
           >
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                 Claiming...
               </>
             ) : canClaim ? (
               <>
-                <Gift className="mr-2 h-4 w-4" />
+                <Gift className="mr-1.5 h-3.5 w-3.5" />
                 Claim Gift
               </>
             ) : (
               <>
-                <Check className="mr-2 h-4 w-4" />
+                <Check className="mr-1.5 h-3.5 w-3.5" />
                 Claimed
               </>
             )}
           </Button>
         </div>
         
-        <div className="text-center pt-1">
+        <div className="pt-0.5 text-center">
           <a href="/rewards" className="text-xs text-primary hover:underline">
             View all rewards
           </a>

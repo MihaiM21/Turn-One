@@ -46,16 +46,16 @@ export function LatestSessionWidget() {
 
   if (loading) {
     return (
-      <Card className="bg-card/30 backdrop-blur-sm border-border/30">
-        <CardHeader>
-          <Skeleton className="h-6 w-40 bg-muted/20" />
-          <Skeleton className="h-4 w-56 bg-muted/20" />
+      <Card className="border-border/40 bg-card/40 backdrop-blur-sm">
+        <CardHeader className="pb-1.5 pt-4">
+          <Skeleton className="h-4 w-28 bg-muted/20" />
+          <Skeleton className="h-3 w-48 bg-muted/20" />
         </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <Skeleton className="h-4 w-full bg-muted/20" />
-            <Skeleton className="h-4 w-full bg-muted/20" />
-            <Skeleton className="h-4 w-3/4 bg-muted/20" />
+        <CardContent className="space-y-2 pt-0">
+          <div className="space-y-1.5">
+            <Skeleton className="h-3.5 w-full bg-muted/20" />
+            <Skeleton className="h-3.5 w-full bg-muted/20" />
+            <Skeleton className="h-3.5 w-3/4 bg-muted/20" />
           </div>
         </CardContent>
       </Card>
@@ -67,26 +67,34 @@ export function LatestSessionWidget() {
   }
 
   return (
-    <Card className="bg-card/30 backdrop-blur-sm border-border/30 hover:border-border/50 transition-all duration-300">
-      <CardHeader className="pb-3">
+    <Card className="border-border/40 bg-card/40 backdrop-blur-sm transition-all duration-300 hover:border-primary/30">
+      <CardHeader className="pb-2 pt-4">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-lg font-semibold mb-1">Latest Session</CardTitle>
+            <CardTitle className="mb-0.5 text-base font-semibold">Latest Session</CardTitle>
             <CardDescription className="text-xs">Performance highlights</CardDescription>
           </div>
-          <Badge variant="outline" className="text-xs border-primary/30 text-primary">
-            New
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="border-primary/30 px-2 py-0 text-[10px] uppercase text-primary">
+              New
+            </Badge>
+            <Button asChild variant="outline" size="sm" className="h-7 px-2.5 text-xs hover:border-primary/30 hover:bg-primary/10">
+              <Link href="/news">
+                View
+                <ArrowRight className="ml-1 h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-2 pt-0">
         {/* Session Info */}
-        <div className="flex items-center gap-3 pb-3 border-b border-border/30">
-          <Badge variant="outline" className={`${getSessionTypeColor(sessionData.session_type)} px-2.5 py-1 text-xs font-medium`}>
+        <div className="flex items-center gap-2 border-b border-border/30 pb-1">
+          <Badge variant="outline" className={`${getSessionTypeColor(sessionData.session_type)} px-2 py-0.5 text-[11px] font-medium`}>
             {sessionData.session_name}
           </Badge>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Calendar className="w-3 h-3" />
+            <Calendar className="h-2.5 w-2.5" />
             <span className="font-mono">{sessionData.year}</span>
             <span>•</span>
             <span>R{sessionData.round}</span>
@@ -94,16 +102,18 @@ export function LatestSessionWidget() {
         </div>
 
         {/* Key Stats */}
-        <div className="space-y-2.5">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {sessionData.qualifying_results && sessionData.qualifying_results.length > 0 && (
-            <div className="flex items-center gap-2.5 text-sm">
-              <Trophy className="w-4 h-4 text-yellow-500/70 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="font-semibold" style={{ color: sessionData.qualifying_results[0].Color }}>
+            <div className="rounded-md border border-border/40 bg-background/40 px-2 py-1.5 text-sm">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Trophy className="h-3.5 w-3.5 flex-shrink-0 text-yellow-500/70" />
+                <span className="truncate font-medium" style={{ color: sessionData.qualifying_results[0].Color }}>
                   {sessionData.qualifying_results[0].Driver}
                 </span>
-                <span className="text-muted-foreground mx-1.5">•</span>
-                <span className="font-mono text-xs text-foreground">
+              </div>
+              <div className="mt-0.5 text-xs text-muted-foreground">
+                Lap
+                <span className="ml-1 font-mono text-foreground">
                   {sessionData.qualifying_results[0].LapTime}
                 </span>
               </div>
@@ -111,14 +121,16 @@ export function LatestSessionWidget() {
           )}
 
           {sessionData.top_speed && sessionData.top_speed.length > 0 && (
-            <div className="flex items-center gap-2.5 text-sm">
-              <Gauge className="w-4 h-4 text-blue-500/70 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="font-semibold truncate" style={{ color: sessionData.top_speed[0].Color }}>
+            <div className="rounded-md border border-border/40 bg-background/40 px-2 py-1.5 text-sm">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Gauge className="h-3.5 w-3.5 flex-shrink-0 text-blue-500/70" />
+                <span className="truncate font-medium" style={{ color: sessionData.top_speed[0].Color }}>
                   {sessionData.top_speed[0].Team}
                 </span>
-                <span className="text-muted-foreground mx-1.5">•</span>
-                <span className="font-mono text-xs text-foreground">
+              </div>
+              <div className="mt-0.5 text-xs text-muted-foreground">
+                Top speed
+                <span className="ml-1 font-mono text-foreground">
                   {sessionData.top_speed[0]["Top Speed (km/h)"]} km/h
                 </span>
               </div>
@@ -126,33 +138,22 @@ export function LatestSessionWidget() {
           )}
 
           {sessionData.throttle_comparison && sessionData.throttle_comparison.length > 0 && (
-            <div className="flex items-center gap-2.5 text-sm">
-              <Zap className="w-4 h-4 text-green-500/70 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="font-semibold" style={{ color: sessionData.throttle_comparison[0].Color }}>
+            <div className="rounded-md border border-border/40 bg-background/40 px-2 py-1.5 text-sm sm:col-span-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Zap className="h-3.5 w-3.5 flex-shrink-0 text-green-500/70" />
+                <span className="truncate font-medium" style={{ color: sessionData.throttle_comparison[0].Color }}>
                   {sessionData.throttle_comparison[0].Driver}
                 </span>
-                <span className="text-muted-foreground mx-1.5">•</span>
-                <span className="font-mono text-xs text-foreground">
+              </div>
+              <div className="mt-0.5 text-xs text-muted-foreground">
+                Avg throttle
+                <span className="ml-1 font-mono text-foreground">
                   {sessionData.throttle_comparison[0]["Average Throttle (%)"].toFixed(1)}%
                 </span>
               </div>
             </div>
           )}
         </div>
-
-        {/* View Full Analysis Button */}
-        <Button
-          asChild
-          variant="outline"
-          size="sm"
-          className="w-full mt-4 hover:bg-primary/10 hover:border-primary/30 transition-all"
-        >
-          <Link href="/news">
-            View Full Analysis
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Link>
-        </Button>
       </CardContent>
     </Card>
   );
