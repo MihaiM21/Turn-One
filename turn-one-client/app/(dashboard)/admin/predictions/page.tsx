@@ -191,7 +191,7 @@ export default function AdminPredictionsPage() {
       const token = getAuthToken();
       if (!token) return;
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/Prediction/races/pending`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/Prediction/races/pending`, {
         headers: { 'Authorization': token },
       });
 
@@ -255,7 +255,7 @@ export default function AdminPredictionsPage() {
       if (!token) throw new Error('Not authenticated');
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/Prediction/race/${selectedRace.raceId}/validate`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/Prediction/race/${selectedRace.raceId}/validate`,
         {
           method: 'POST',
           headers: {
