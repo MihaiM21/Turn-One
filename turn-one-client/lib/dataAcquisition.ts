@@ -60,6 +60,18 @@ export const fetchLaptimeData = async (token: string, year: number, gp: number |
   return version === 'v2' ? fetchFromExternalAPIv2(endpoint) : fetchFromExternalAPIv1(endpoint);
 }
 
+export const fetchSpeedDistributionData = async (
+  token: string,
+  year: number,
+  gp: number | string,
+  session: string,
+  driver: string,
+  version: string = 'v1'
+) => {
+  const endpoint = `speed-distribution-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}&driver=${encodeURIComponent(driver)}`;
+  return version === 'v2' ? fetchFromExternalAPIv2(endpoint) : fetchFromExternalAPIv1(endpoint);
+}
+
 export const fetchAPIDailyStats = async () => {
   return fetchFromExternalAPI('v1/analytics/daily');
 }

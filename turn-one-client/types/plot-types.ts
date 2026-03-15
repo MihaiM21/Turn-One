@@ -84,3 +84,17 @@
     lap_times_formatted: string;
     compound: string;
   }
+
+  export interface SpeedDistributionRawPoint {
+    "Time (s)": number;
+    "Speed (km/h)": number;
+    Driver: string;
+    Color: string;
+  }
+
+  export interface SpeedDistributionPoint {
+    time: number;
+    speed: number;
+    driver: string;
+    color: string;
+  }

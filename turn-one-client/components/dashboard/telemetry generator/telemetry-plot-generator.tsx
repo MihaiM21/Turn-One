@@ -11,8 +11,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { Download, Play, Settings, TrendingUp, Zap, Clock, Gauge, CircleGauge, ChevronsUp, MonitorCog, Users, UserRound, ChartSpline, AlertTriangle, Coins, ChartScatter } from "lucide-react"
-import { fetchTopSpeeds, fetchThrottleAverages, fetchTrackComparison, fetchSessionResults, fetchThrottleBrakeComparison, fetchLaptimeData, fetchEventsByYear, fetchSessionsByEvent } from "@/lib/dataAcquisition"
-import { TopSpeedData, ThrottleAverageData, TrackComparisonData, ThrottleBrakeComparisonData, LapTimeData, AdvancedPlotSettings } from "@/types/plot-types"
+import { fetchTopSpeeds, fetchThrottleAverages, fetchTrackComparison, fetchSessionResults, fetchThrottleBrakeComparison, fetchLaptimeData, fetchEventsByYear, fetchSessionsByEvent, fetchSpeedDistributionData } from "@/lib/dataAcquisition"
+import { TopSpeedData, ThrottleAverageData, TrackComparisonData, ThrottleBrakeComparisonData, LapTimeData, AdvancedPlotSettings, SpeedDistributionPoint, SpeedDistributionRawPoint } from "@/types/plot-types"
 import { grandPrixCalendar } from "@/lib/constants/grand-prix"
 import { TopSpeedGraph } from "./plots/top-speed"
 import { GForceGraph } from "./plots/gforce"
@@ -23,6 +23,7 @@ import { ThrottleAverageGraph } from "./plots/throttle_average_comparison"
 import { TrackComparisonGraph } from "./plots/track-comparison"
 import { SessionResultsGraph } from "./plots/session-results"
 import { ThrottleBrakeComparisonGraph } from "./plots/throttle-brake-comparison"
+import { SpeedDistributionGraph } from "./plots/speed-distribution"
 import { SessionResultsData } from "@/types/plot-types"
 import { drivers_2025, drivers_2026 } from "@/lib/constants/drivers"
 import { LoadingPlot } from "./loading_plot"
@@ -50,6 +51,9 @@ export function TelemetryPlotGenerator() {
   const [selectedDriver, setSelectedDriver] = useState("VER")
   const [selectedDriver1, setSelectedDriver1] = useState("VER")
   const [selectedDriver2, setSelectedDriver2] = useState("HAM")
+  const [selectedSpeedDriver1, setSelectedSpeedDriver1] = useState("VER")
+  const [selectedSpeedDriver2, setSelectedSpeedDriver2] = useState("none")
+  const [selectedSpeedDriver3, setSelectedSpeedDriver3] = useState("none")
   const [selectedSession, setSelectedSession] = useState("FP1")
   const [selectedYear, setSelectedYear] = useState("2026")
   const [selectedGp, setSelectedGp] = useState("1")
@@ -59,7 +63,7 @@ export function TelemetryPlotGenerator() {
   const [availableEvents, setAvailableEvents] = useState<any[]>([])
   const [availableSessions, setAvailableSessions] = useState<any[]>([])
 
-  const v2SupportedPlots = ["topspeeds", "throttle_average"]
+  const v2SupportedPlots = ["topspeeds", "throttle_average", "speed_distribution"]
 
   const [isGenerating, setIsGenerating] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
@@ -86,14 +90,24 @@ export function TelemetryPlotGenerator() {
   }, [selectedYear]);
 
   const getSessionCode = (name: string, type: string, number: number | null) => {
-    if (type === "Practice") return `FP${number}`;
-    if (type === "Qualifying") return "Q";
-    if (type === "Race") return "R";
-    if (type === "Sprint") return "S";
-    if (type === "Sprint Shootout" || type === "Sprint Qualifying") return "SQ";
-    if (type === "Day 1") return "D1";
-    if (type === "Day 2") return "D2";
-    if (type === "Day 3") return "D3";
+    const normalizedName = name.toLowerCase();
+    const normalizedType = type.toLowerCase();
+
+    // Name-first mapping avoids collisions when APIs use generic types
+    // like "Race" for both Sprint and Race, or "Qualifying" for both formats.
+    if (normalizedName.includes("sprint shootout") || normalizedName.includes("sprint qualifying")) return "SQ";
+    if (normalizedName === "sprint") return "S";
+    if (normalizedName === "qualifying") return "Q";
+    if (normalizedName === "race") return "R";
+
+    if (normalizedType === "practice") return `FP${number}`;
+    if (normalizedType === "sprint shootout" || normalizedType === "sprint qualifying") return "SQ";
+    if (normalizedType === "sprint") return "S";
+    if (normalizedType === "qualifying") return "Q";
+    if (normalizedType === "race") return "R";
+    if (normalizedType === "day 1") return "D1";
+    if (normalizedType === "day 2") return "D2";
+    if (normalizedType === "day 3") return "D3";
     return name;
   }
 
@@ -159,11 +173,11 @@ export function TelemetryPlotGenerator() {
     { id: "laptime", name: "Lap Time Analysis", icon: Clock, description: "Compare lap times and sector performance", isPro: false },
     { id: "track_comparison", name: "H2H Track Comparison", icon: Users, description: "Head-to-head track comparison visualization", isPro: false },
     { id: "throttle_brake", name: "H2H Throttle & Brake", icon: ChartSpline, description: "Compare throttle and brake inputs across drivers on their fastest laps", isPro: false },
+    { id: "speed_distribution", name: "Speed Trace", icon: Gauge, description: "Overlay up to 3 drivers by speed over time", isPro: false },
     { id: "session_results", name: "Optimal Qualifying Time", icon: MonitorCog, description: "Visualize session results and lap time deltas", isPro: false },
     //Premium features
     { id: "driver_analysis", name: "Driver Analysis", icon: UserRound, description: "Driver performance analysis", isPro: true },
     { id: "chevronsup", name: "Chevrons Up", icon: ChevronsUp, description: "Just a test icon", isPro: true },
-    { id: "speed", name: "Speed Trace", icon: Gauge, description: "Speed, throttle, and brake analysis", isPro: true },
     { id: "tire", name: "Tire Temperature", icon: TrendingUp, description: "Tire temperature evolution", isPro: true },
     { id: "gforce", name: "G-Force Analysis", icon: Zap, description: "Lateral and longitudinal forces", isPro: true },
     { id: "drag_downforce", name: "Drag & Downforce", icon: ChartScatter, description: "Drag and downforce analysis", isPro: true },
@@ -182,6 +196,11 @@ export function TelemetryPlotGenerator() {
   const [sessionResultsDomain, setSessionResultsDomain] = useState<[number, number]>([0, 3])
   const [throttleBrakeData, setThrottleBrakeData] = useState<ThrottleBrakeComparisonData | null>(null)
   const [lapTimeData, setLapTimeData] = useState<LapTimeData[]>([])
+  const [speedDistributionData, setSpeedDistributionData] = useState<SpeedDistributionPoint[]>([])
+
+  const selectedSpeedDrivers = Array.from(
+    new Set([selectedSpeedDriver1, selectedSpeedDriver2, selectedSpeedDriver3].filter((driver) => driver !== "none"))
+  )
 
   const handleGeneratePlot = async () => {
     // Check if user is authenticated
@@ -328,6 +347,48 @@ export function TelemetryPlotGenerator() {
         const data = await fetchLaptimeData(authToken, Number(selectedYear), apiGpVal, apiSessionVal, selectedDriver, selectedVersion)
         setLapTimeData(data)
         plotGeneratedSuccessfully = true
+      } else if (selectedPlotType === "speed_distribution") {
+        if (selectedSpeedDrivers.length === 0) {
+          throw new Error("Select at least one driver for Speed vs Time")
+        }
+
+        const rawResponses = await Promise.all(
+          selectedSpeedDrivers.map((driverCode) =>
+            fetchSpeedDistributionData(
+              authToken,
+              Number(selectedYear),
+              apiGpVal,
+              apiSessionVal,
+              driverCode,
+              selectedVersion
+            )
+          )
+        )
+
+        const mergedRows = rawResponses.flatMap((rawData) =>
+          Array.isArray(rawData) ? rawData : Object.values(rawData || {})
+        )
+
+        const normalized = mergedRows
+          .map((item) => {
+            const row = item as SpeedDistributionRawPoint & Partial<SpeedDistributionPoint>
+            return {
+              time: Number(row["Time (s)"] ?? row.time),
+              speed: Number(row["Speed (km/h)"] ?? row.speed),
+              driver: String(row.Driver ?? row.driver ?? ""),
+              color: String(row.Color ?? row.color ?? "#F9FAFB")
+            }
+          })
+          .filter((point) => Number.isFinite(point.time) && Number.isFinite(point.speed) && point.driver)
+
+        const filtered = normalized.filter((point) => selectedSpeedDrivers.includes(point.driver))
+
+        if (filtered.length === 0) {
+          throw new Error("No Speed vs Time data available for selected driver(s)")
+        }
+
+        setSpeedDistributionData(filtered)
+        plotGeneratedSuccessfully = true
       } else {
         // Default case for other plot types
         await new Promise(resolve => setTimeout(resolve, 2000))
@@ -419,6 +480,14 @@ export function TelemetryPlotGenerator() {
             ) : "No throttle & brake comparison data available"}
           </div>
         )
+      case "speed_distribution":
+        return (
+          <SpeedDistributionGraph
+            data={speedDistributionData}
+            selectedDrivers={selectedSpeedDrivers}
+            advancedSettings={advancedSettings}
+          />
+        )
       default:
         return null
     }
@@ -491,7 +560,7 @@ export function TelemetryPlotGenerator() {
                   <span className="text-xs font-medium">{type.name}</span>
                   {type.isPro && (
                     <Badge variant="secondary" className="absolute -top-1 -right-1 text-[8px] px-1 py-0 h-4 bg-primary/90 text-primary-foreground font-bold accent-glow border border-primary/50">
-                      Coming Soon
+                      PRO
                     </Badge>
                   )}
                 </TabsTrigger>
@@ -609,7 +678,7 @@ export function TelemetryPlotGenerator() {
                   API Version 2 is currently experimental and may return incomplete data or change without notice.
                   <br />
                   <span className="text-sm text-muted-foreground">
-                    v2 is currently supported for Top Speeds and Throttle Average only.
+                    v2 is currently supported for Top Speeds, Throttle Average, and Speed vs Time.
                   </span>
                 </AlertDescription>
               </Alert>
@@ -686,6 +755,60 @@ export function TelemetryPlotGenerator() {
                   </Select>
                 </div>
               </div>)}
+
+            {selectedPlotType === "speed_distribution" && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="speed-driver-1">Driver 1</Label>
+                  <Select value={selectedSpeedDriver1} onValueChange={setSelectedSpeedDriver1}>
+                    <SelectTrigger className="w-full bg-background/50 border-border/50">
+                      <SelectValue placeholder="Select driver 1" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {drivers.map((driver) => (
+                        <SelectItem key={`sd1-${driver}`} value={driver}>
+                          {driver}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="speed-driver-2">Driver 2</Label>
+                  <Select value={selectedSpeedDriver2} onValueChange={setSelectedSpeedDriver2}>
+                    <SelectTrigger className="w-full bg-background/50 border-border/50">
+                      <SelectValue placeholder="Optional" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {drivers.map((driver) => (
+                        <SelectItem key={`sd2-${driver}`} value={driver}>
+                          {driver}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="speed-driver-3">Driver 3</Label>
+                  <Select value={selectedSpeedDriver3} onValueChange={setSelectedSpeedDriver3}>
+                    <SelectTrigger className="w-full bg-background/50 border-border/50">
+                      <SelectValue placeholder="Optional" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {drivers.map((driver) => (
+                        <SelectItem key={`sd3-${driver}`} value={driver}>
+                          {driver}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
 
 
             {/* <div className="space-y-2">
@@ -1041,6 +1164,37 @@ export function TelemetryPlotGenerator() {
                           {throttleBrakeData?.session_info?.session_name || '-'}
                         </div>
                         <div className="text-muted-foreground">Session</div>
+                      </div>
+                    </>
+                  ) : selectedPlotType === "speed_distribution" ? (
+                    <>
+                      <div className="bg-muted/20 rounded-lg p-3 text-center">
+                        <div className="text-lg font-bold text-primary">
+                          {selectedSpeedDrivers.length || 0}
+                        </div>
+                        <div className="text-muted-foreground">Selected Drivers</div>
+                      </div>
+                      <div className="bg-muted/20 rounded-lg p-3 text-center">
+                        <div className="text-lg font-bold text-primary">
+                          {speedDistributionData.length > 0
+                            ? `${Math.max(...speedDistributionData.map(point => point.speed)).toFixed(1)} km/h`
+                            : '-'}
+                        </div>
+                        <div className="text-muted-foreground">Peak Speed</div>
+                      </div>
+                      <div className="bg-muted/20 rounded-lg p-3 text-center">
+                        <div className="text-lg font-bold text-primary">
+                          {speedDistributionData.length > 0
+                            ? `${(speedDistributionData.reduce((acc, point) => acc + point.speed, 0) / speedDistributionData.length).toFixed(1)} km/h`
+                            : '-'}
+                        </div>
+                        <div className="text-muted-foreground">Average Speed</div>
+                      </div>
+                      <div className="bg-muted/20 rounded-lg p-3 text-center">
+                        <div className="text-lg font-bold text-primary">
+                          {speedDistributionData.length || 0}
+                        </div>
+                        <div className="text-muted-foreground">Data Points</div>
                       </div>
                     </>
                   ) : (

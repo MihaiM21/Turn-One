@@ -25,6 +25,7 @@ import { LapTimeAnalysisGraph } from "@/components/dashboard/telemetry generator
 import { ThrottleBrakeComparisonGraph } from "@/components/dashboard/telemetry generator/plots/throttle-brake-comparison"
 import { SessionResultsGraph } from "@/components/dashboard/telemetry generator/plots/session-results"
 import { TrackComparisonGraph } from "@/components/dashboard/telemetry generator/plots/track-comparison"
+import { SpeedDistributionGraph } from "@/components/dashboard/telemetry generator/plots/speed-distribution"
 import { LiveTimingGrid } from "@/components/dashboard/live-timing-grid"
 import { LiveWeather } from "@/components/dashboard/live-weather"
 import {
@@ -34,6 +35,7 @@ import {
   fetchThrottleBrakeComparison,
   fetchThrottleAverages,
   fetchLaptimeData,
+  fetchSpeedDistributionData,
 } from "@/lib/dataAcquisition"
 import {
   TopSpeedData,
@@ -42,6 +44,8 @@ import {
   ThrottleBrakeComparisonData,
   SessionResultsData,
   TrackComparisonData,
+  SpeedDistributionPoint,
+  SpeedDistributionRawPoint,
 } from "@/types/plot-types"
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -121,6 +125,7 @@ interface ShowcaseSection {
 
 const YEAR = 2025
 const GP = 12
+const SPEED_DISTRIBUTION_DRIVERS = ["VER", "NOR", "HAM"]
 
 export default function ExamplesPage() {
   const [topSpeeds, setTopSpeeds] = useState<TopSpeedData[] | null>(null)
@@ -129,6 +134,7 @@ export default function ExamplesPage() {
   const [throttleBrake, setThrottleBrake] = useState<ThrottleBrakeComparisonData | null>(null)
   const [throttleAverages, setThrottleAverages] = useState<ThrottleAverageData[] | null>(null)
   const [lapTimes, setLapTimes] = useState<LapTimeData[] | null>(null)
+  const [speedDistribution, setSpeedDistribution] = useState<SpeedDistributionPoint[] | null>(null)
 
   useEffect(() => {
     fetchTopSpeeds("", YEAR, GP, "Q").then((data: any) => {
@@ -177,6 +183,34 @@ export default function ExamplesPage() {
 
   useEffect(() => {
     fetchLaptimeData("", YEAR, GP, "R", "VER").then(setLapTimes).catch(console.error)
+  }, [])
+
+  useEffect(() => {
+    Promise.all(
+      SPEED_DISTRIBUTION_DRIVERS.map((driverCode) =>
+        fetchSpeedDistributionData("", YEAR, GP, "Q", driverCode)
+      )
+    )
+      .then((responses) => {
+        const mergedRows = responses.flatMap((response) =>
+          Array.isArray(response) ? response : Object.values(response || {})
+        )
+
+        const normalized = mergedRows
+          .map((item) => {
+            const row = item as SpeedDistributionRawPoint & Partial<SpeedDistributionPoint>
+            return {
+              time: Number(row["Time (s)"] ?? row.time),
+              speed: Number(row["Speed (km/h)"] ?? row.speed),
+              driver: String(row.Driver ?? row.driver ?? ""),
+              color: String(row.Color ?? row.color ?? "#F9FAFB"),
+            }
+          })
+          .filter((point) => Number.isFinite(point.time) && Number.isFinite(point.speed) && point.driver)
+
+        setSpeedDistribution(normalized)
+      })
+      .catch(console.error)
   }, [])
 
   const sections: ShowcaseSection[] = [
@@ -275,6 +309,30 @@ export default function ExamplesPage() {
         <PlotSkeleton height={460} />
       ),
       reversed: true,
+    },
+    {
+      id: "speed_distribution",
+      icon: Gauge,
+      badge: "Speed Trace",
+      title: "Speed vs Time Overlay",
+      subtitle: "VER vs NOR vs HAM · 2025 British Grand Prix · Qualifying",
+      description:
+        "Overlay multiple drivers on the same speed-vs-time graph to compare acceleration phases, peak velocity points, and where each driver gains or loses momentum over the lap.",
+      bullets: [
+        "Three-driver overlay in a single chart",
+        "Hover any point to see all drivers' speeds at that moment",
+        "Built from one-driver API calls merged client-side",
+        "Ideal for straight-line and exit performance comparison",
+      ],
+      chart: speedDistribution ? (
+        <SpeedDistributionGraph
+          data={speedDistribution}
+          selectedDrivers={SPEED_DISTRIBUTION_DRIVERS}
+          advancedSettings={{ ...chartSettings, chartHeight: 460 }}
+        />
+      ) : (
+        <PlotSkeleton height={460} />
+      ),
     },
     {
       id: "throttleaverage",
