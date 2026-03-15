@@ -580,7 +580,7 @@ export function TelemetryPlotGenerator() {
                   <SelectContent>
                     <SelectItem value="v1">Version 1</SelectItem>
                     <SelectItem value="v2" disabled={!v2SupportedPlots.includes(selectedPlotType)}>
-                      Version 2{!v2SupportedPlots.includes(selectedPlotType) ? " (not supported)" : ""}
+                      Version 2 (Experimental){!v2SupportedPlots.includes(selectedPlotType) ? " - not supported" : ""}
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -601,6 +601,20 @@ export function TelemetryPlotGenerator() {
                 </div>
               )}
             </div>
+
+            {selectedVersion === "v2" && (
+              <Alert className="border-yellow-500/50 bg-yellow-500/10">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  API Version 2 is currently experimental and may return incomplete data or change without notice.
+                  <br />
+                  <span className="text-sm text-muted-foreground">
+                    v2 is currently supported for Top Speeds and Throttle Average only.
+                  </span>
+                </AlertDescription>
+              </Alert>
+            )}
+
             {(selectedPlotType === "speed" || selectedPlotType === "laptime") && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Driver 1 */}
