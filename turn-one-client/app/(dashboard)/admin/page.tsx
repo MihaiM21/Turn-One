@@ -113,6 +113,39 @@ const getRoleString = (role: number | string): string => {
   }
 };
 
+// Helper function to convert string role to numeric format
+const getRoleNumber = (role: string): number => {
+  switch(role) {
+    case 'USER': return 0;
+    case 'CONTENT_CREATOR': return 1;
+    case 'ADMIN': return 2;
+    default: return 0;
+  }
+};
+
+// Helper function to convert numeric plan to string format
+const getPlanString = (plan: number | string): string => {
+  const numPlan = typeof plan === 'string' ? parseInt(plan) : plan;
+  switch(numPlan) {
+    case 0: return 'BASIC';
+    case 1: return 'PRO';
+    case 2: return 'ELITE';
+    default: return 'BASIC';
+  }
+};
+
+// Helper function to convert string plan to numeric format
+const getPlanNumber = (plan: string): number => {
+  switch(plan) {
+    case 'BASIC': return 0;
+    case 'PRO': return 1;
+    case 'ELITE': return 2;
+    default: return 0;
+  }
+};
+
+
+
 export default function AdminDashboard() {
   const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
@@ -429,7 +462,7 @@ export default function AdminDashboard() {
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'ALL' || user.role === Number(roleFilter);
+    const matchesRole = roleFilter === 'ALL' || user.role === getRoleNumber(roleFilter);
     const matchesPlan = planFilter === 'ALL' || user.plan === planFilter;
     
     // Tab filtering
@@ -485,25 +518,14 @@ export default function AdminDashboard() {
                 </div>
               </div>
               {currentUser && (
-                <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
-                  <CardContent className="p-3">
-                    <div className="flex items-center space-x-2">
-                      <div className="h-8 w-8 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm glow-effect">
-                        {currentUser.username.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-sm text-foreground">{currentUser.username}</p>
-                        <div className="flex items-center space-x-1.5 text-xs">
-                          <Badge className={`${planColors[currentUser.plan]} text-[10px]`}>
-                            {planNames[currentUser.plan]}
-                          </Badge>
-                          <span className="text-muted-foreground">•</span>
-                          <span className="text-muted-foreground">{currentUser.tokens.toLocaleString()} tokens</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="flex items-center space-x-2">
+                  <div className="h-8 w-8 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm glow-effect">
+                    {currentUser.username.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm text-foreground">{currentUser.username}</p>
+                  </div>
+                </div>
               )}
             </div>
           </div>
