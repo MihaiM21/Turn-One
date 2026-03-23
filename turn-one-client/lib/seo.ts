@@ -4,6 +4,7 @@
  */
 
 import type { Metadata } from 'next'
+import { SOCIAL_LINKS } from '@/lib/social-links'
 
 // Base domain configuration
 export const SITE_CONFIG = {
@@ -242,10 +243,10 @@ export function generateOrganizationSchema() {
     logo: `${SITE_CONFIG.url}/logo.png`,
     description: SITE_CONFIG.description,
     sameAs: [
-      // Add your social media URLs
-      'https://twitter.com/TurnOneOfficial',
-      'https://instagram.com/TurnOneOfficial',
-      'https://youtube.com/@TurnOneOfficial',
+      SOCIAL_LINKS.twitter,
+      SOCIAL_LINKS.instagram,
+      SOCIAL_LINKS.youtube,
+      SOCIAL_LINKS.discord,
     ],
     contactPoint: {
       '@type': 'ContactPoint',
