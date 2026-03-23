@@ -644,8 +644,8 @@ export default function AdminDashboard() {
         </div>
 
         {/* Compact Overview */}
-        <Card className="mb-2.5 border-border/50 bg-gradient-to-r from-card via-card to-card/80">
-          <CardContent className="p-2">
+        <Card className="mb-2.5 border-transparent bg-transparent">
+          <CardContent className="p-0">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5">
               {primaryStats.map((stat) => {
                 const StatIcon = stat.icon;
