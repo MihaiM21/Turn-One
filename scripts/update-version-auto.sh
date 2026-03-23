@@ -150,6 +150,8 @@ get_commit_type() {
         echo "fix"
     elif [[ $message =~ ^\[?perf(ormance)?\]?(\(.+\))?:?[[:space:]]+ ]]; then
         echo "perf"
+    elif [[ $message =~ ^\[?patch\]?(\(.+\))?:?[[:space:]]+ ]]; then
+        echo "perf"
     elif [[ $message =~ ^\[?major\]?(\(.+\))?:?[[:space:]]+ ]]; then
         echo "major"
     elif [[ $message =~ ^\[?(docs|chore|style|refactor|test|build|ci)\]?(\(.+\))?:?[[:space:]]+ ]]; then

@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Menu, X, BarChart3, Zap, Rocket } from "lucide-react"
+import { Menu, X, BarChart3 } from "lucide-react"
+import { SOCIAL_LINKS } from "@/lib/social-links"
 
 interface MainNavProps {
   variant?: "homepage" | "dashboard"
@@ -137,6 +138,12 @@ export function MainNav({ variant = "homepage" }: MainNavProps) {
                 ))}
                 
                 <div className="border-t border-border pt-4 mt-4">
+                  <Button asChild variant="outline" className="w-full mb-3 border-primary/40 hover:border-primary hover:bg-primary/10">
+                    <Link href={SOCIAL_LINKS.discord} target="_blank" rel="noopener noreferrer" onClick={() => setIsMenuOpen(false)}>
+                      <img src="/discord.svg" alt="Discord" className="h-4 w-4 mr-2" />
+                      Join Discord
+                    </Link>
+                  </Button>
                   <Button asChild className="w-full bg-primary hover:bg-primary/90 text-white">
                     <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
                       <BarChart3 className="h-4 w-4 mr-2" />
