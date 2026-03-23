@@ -23,7 +23,7 @@ jobs:
           commits=$(git log --format=%H origin/${{ github.base_ref }}..HEAD)
           
           # Pattern for conventional commits
-          pattern='^\[(feat|fix|perf|docs|style|refactor|test|chore|build|ci|major|patch)\]:|^(feat|fix|perf|docs|style|refactor|test|chore|build|ci)(\(.+\))?:'
+          pattern='^\[(feat|fix|perf|patch|docs|style|refactor|test|chore|build|ci|major|patch)\]:|^(feat|fix|perf|patch|docs|style|refactor|test|chore|build|ci)(\(.+\))?:'
           
           invalid_commits=()
           commit_count=0
