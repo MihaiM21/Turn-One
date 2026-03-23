@@ -178,10 +178,13 @@ export default function PrivacyPage() {
                                         If you have questions or concerns about this Privacy Policy or our privacy practices, please contact us at:
                                     </p>
                                     <p className="text-gray-300 font-medium">
-                                        Email: <ObfuscatedEmail user="privacy" domain="t1f1.com" /><br />
-                                        Address: Turn One Headquarters, 1 Racing Lane, Monaco, 98000<br />
-                                        Phone: +1 (555) 123-4567
+                                        Email: <ObfuscatedEmail user="contact" domain="t1f1.com" /><br />
                                     </p>
+                                    {/*<p className="text-gray-300 font-medium">*/}
+                                    {/*    Email: <ObfuscatedEmail user="privacy" domain="t1f1.com" /><br />*/}
+                                    {/*    Address: Turn One Headquarters, 1 Racing Lane, Monaco, 98000<br />*/}
+                                    {/*    Phone: +1 (555) 123-4567*/}
+                                    {/*</p>*/}
                                 </section>
                                 
                                 <div className="border-t border-red-800/20 pt-6 text-gray-400 text-sm">
