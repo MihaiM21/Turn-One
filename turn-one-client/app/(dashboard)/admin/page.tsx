@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Search, Users, Crown, Shield, TrendingUp, Download, Filter, MoreHorizontal, Calendar, Activity, UserCheck, AlertCircle, RefreshCw, Mail, CheckCircle2, XCircle, Trash2, UserPlus, Zap, Send, FileText, Plus, Trophy, Brain, Bell, Loader2, Image as ImageIcon, ArrowRight, Coins } from 'lucide-react';
+import { Search, Users, Crown, Shield, TrendingUp, Download, Filter, MoreHorizontal, Calendar, Activity, AlertCircle, RefreshCw, Mail, CheckCircle2, XCircle, Trash2, UserPlus, Zap, Send, FileText, Plus, Trophy, Brain, Bell, Loader2, Image as ImageIcon, ArrowRight, Coins, type LucideIcon } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -501,19 +501,131 @@ export default function AdminDashboard() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedUsers = sortedUsers.slice(startIndex, startIndex + itemsPerPage);
 
+  const primaryStats: Array<{
+    label: string;
+    value: string | number;
+    helper: string;
+    icon: LucideIcon;
+    wrapperClass: string;
+    iconClass: string;
+    valueClass: string;
+  }> = [
+    {
+      label: 'Total Users',
+      value: totalUsers,
+      helper: `${recentUsers} new this week`,
+      icon: Users,
+      wrapperClass: 'border-primary/25 bg-gradient-to-br from-card to-primary/5',
+      iconClass: 'bg-primary/10 text-primary',
+      valueClass: 'from-primary to-accent',
+    },
+    {
+      label: 'Admin Users',
+      value: adminCount,
+      helper: `${totalUsers > 0 ? ((adminCount / totalUsers) * 100).toFixed(1) : 0}% of users`,
+      icon: Shield,
+      wrapperClass: 'border-accent/25 bg-gradient-to-br from-card to-accent/5',
+      iconClass: 'bg-accent/10 text-accent',
+      valueClass: 'from-accent to-accent/70',
+    },
+    {
+      label: 'Total Tokens',
+      value: totalTokens.toLocaleString(),
+      helper: `Avg ${totalUsers ? Math.round(totalTokens / totalUsers).toLocaleString() : 0} per user`,
+      icon: TrendingUp,
+      wrapperClass: 'border-primary/25 bg-gradient-to-br from-card to-primary/5',
+      iconClass: 'bg-primary/10 text-primary',
+      valueClass: 'from-primary to-primary/70',
+    },
+    {
+      label: 'Active (7d)',
+      value: activeUsers,
+      helper: `${totalUsers > 0 ? ((activeUsers / totalUsers) * 100).toFixed(1) : 0}% activity`,
+      icon: Activity,
+      wrapperClass: 'border-green-500/25 bg-gradient-to-br from-card to-green-500/5',
+      iconClass: 'bg-green-500/10 text-green-500',
+      valueClass: 'from-green-500 to-green-400',
+    },
+  ];
+
+  const quickActionItems: Array<{
+    href: string;
+    label: string;
+    icon: LucideIcon;
+    borderClass: string;
+    bgClass: string;
+    iconClass: string;
+    hoverClass: string;
+  }> = [
+    {
+      href: '/admin/articles',
+      label: 'Articles',
+      icon: FileText,
+      borderClass: 'border-red-500/25',
+      bgClass: 'from-card to-red-500/5',
+      iconClass: 'bg-red-500/10 text-red-400',
+      hoverClass: 'group-hover:text-red-400',
+    },
+    {
+      href: '/admin/media',
+      label: 'Media',
+      icon: ImageIcon,
+      borderClass: 'border-cyan-500/25',
+      bgClass: 'from-card to-cyan-500/5',
+      iconClass: 'bg-cyan-500/10 text-cyan-400',
+      hoverClass: 'group-hover:text-cyan-400',
+    },
+    {
+      href: '/admin/predictions',
+      label: 'Predictions',
+      icon: Trophy,
+      borderClass: 'border-yellow-500/25',
+      bgClass: 'from-card to-yellow-500/5',
+      iconClass: 'bg-yellow-500/10 text-yellow-400',
+      hoverClass: 'group-hover:text-yellow-400',
+    },
+    {
+      href: '/admin/trivia',
+      label: 'Trivia',
+      icon: Brain,
+      borderClass: 'border-purple-500/25',
+      bgClass: 'from-card to-purple-500/5',
+      iconClass: 'bg-purple-500/10 text-purple-400',
+      hoverClass: 'group-hover:text-purple-400',
+    },
+    {
+      href: '/admin/notifications',
+      label: 'Notifications',
+      icon: Bell,
+      borderClass: 'border-orange-500/25',
+      bgClass: 'from-card to-orange-500/5',
+      iconClass: 'bg-orange-500/10 text-orange-400',
+      hoverClass: 'group-hover:text-orange-400',
+    },
+    {
+      href: '/admin/articles/create',
+      label: 'New Article',
+      icon: Plus,
+      borderClass: 'border-green-500/25',
+      bgClass: 'from-card to-green-500/5',
+      iconClass: 'bg-green-500/10 text-green-400',
+      hoverClass: 'group-hover:text-green-400',
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-red-950/20 to-black">
-      <div className="container mx-auto p-4">
+      <div className="container mx-auto px-3 py-4 md:px-4 md:py-5">
         {/* Header Section */}
-        <div className="mb-4">
-          <div className="modern-gradient rounded-xl p-4 shadow-lg border border-primary/20 hover:border-primary/40 transition-all duration-300">
+        <div className="mb-3">
+          <div className="modern-gradient rounded-xl p-3 md:p-4 shadow-md border border-primary/20 hover:border-primary/35 transition-all duration-200">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center">
                   <Shield className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">Admin Dashboard</h1>
+                  <h1 className="text-xl md:text-2xl font-semibold bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">Admin Dashboard</h1>
                   <p className="text-sm text-muted-foreground">Manage users, plans, and system administration</p>
                 </div>
               </div>
@@ -531,254 +643,120 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-          <Card className="card-hover border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:scale-105 bg-gradient-to-br from-card to-card/50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Total Users</p>
-                  <p className="text-2xl font-bold text-foreground bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{totalUsers}</p>
-                  <p className="text-xs text-muted-foreground">{recentUsers} new this week</p>
-                </div>
-                <div className="h-9 w-9 bg-primary/10 rounded-full flex items-center justify-center glow-effect hover:bg-primary/20 transition-colors">
-                  <Users className="h-4 w-4 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Compact Overview */}
+        <Card className="mb-2.5 border-border/50 bg-gradient-to-r from-card via-card to-card/80">
+          <CardContent className="p-2">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5">
+              {primaryStats.map((stat) => {
+                const StatIcon = stat.icon;
+                return (
+                  <div
+                    key={stat.label}
+                    className={`rounded-lg border ${stat.wrapperClass} px-2.5 py-2 transition-colors hover:border-primary/45`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-medium text-muted-foreground truncate">{stat.label}</p>
+                        <p className={`text-lg md:text-xl font-bold bg-gradient-to-r ${stat.valueClass} bg-clip-text text-transparent`}>
+                          {stat.value}
+                        </p>
+                      </div>
+                      <div className={`h-6 w-6 rounded-md flex items-center justify-center ${stat.iconClass}`}>
+                        <StatIcon className="h-3.5 w-3.5" />
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground truncate">{stat.helper}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card className="card-hover border-accent/20 hover:border-accent/50 transition-all duration-300 hover:shadow-lg hover:scale-105 bg-gradient-to-br from-card to-card/50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Admin Users</p>
-                  <p className="text-2xl font-bold text-foreground bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">{adminCount}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {totalUsers > 0 ? ((adminCount / totalUsers) * 100).toFixed(1) : 0}% of users
-                  </p>
-                </div>
-                <div className="h-9 w-9 bg-accent/10 rounded-full flex items-center justify-center accent-glow hover:bg-accent/20 transition-colors">
-                  <Shield className="h-4 w-4 text-accent" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="card-hover border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:scale-105 bg-gradient-to-br from-card to-card/50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Total Tokens</p>
-                  <p className="text-2xl font-bold text-foreground bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">{totalTokens.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Avg: {totalUsers ? Math.round(totalTokens / totalUsers).toLocaleString() : 0} per user
-                  </p>
-                </div>
-                <div className="h-9 w-9 bg-primary/10 rounded-full flex items-center justify-center glow-effect hover:bg-primary/20 transition-colors">
-                  <TrendingUp className="h-4 w-4 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="card-hover border-green-500/20 hover:border-green-500/50 transition-all duration-300 hover:shadow-lg hover:scale-105 bg-gradient-to-br from-card to-card/50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-0.5">Active Users (7d)</p>
-                  <p className="text-2xl font-bold text-foreground bg-gradient-to-r from-green-500 to-green-400 bg-clip-text text-transparent">{activeUsers}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {totalUsers > 0 ? ((activeUsers / totalUsers) * 100).toFixed(1) : 0}% activity rate
-                  </p>
-                </div>
-                <div className="h-9 w-9 bg-green-500/10 rounded-full flex items-center justify-center hover:bg-green-500/20 transition-colors">
-                  <Activity className="h-4 w-4 text-green-500" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Actions Grid */}
-        <div className="mb-4">
-          <h2 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
+        {/* Quick Actions Strip */}
+        <div className="mb-3">
+          <h2 className="text-sm font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
             <Zap className="h-4 w-4 text-primary" />
             Quick Actions
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-            <Link href="/admin/articles" className="group">
-              <Card className="h-full border-red-500/20 hover:border-red-500/50 transition-all duration-300 hover:shadow-md bg-gradient-to-br from-card to-red-500/5 cursor-pointer">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 bg-red-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                      <FileText className="h-4 w-4 text-red-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
-                        Articles
-                        <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-red-400 group-hover:translate-x-0.5 transition-all" />
-                      </h3>
-                      <p className="text-xs text-muted-foreground truncate">Manage blog articles</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link href="/admin/media" className="group">
-              <Card className="h-full border-cyan-500/20 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-md bg-gradient-to-br from-card to-cyan-500/5 cursor-pointer">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 bg-cyan-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                      <ImageIcon className="h-4 w-4 text-cyan-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
-                        Media
-                        <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-cyan-400 group-hover:translate-x-0.5 transition-all" />
-                      </h3>
-                      <p className="text-xs text-muted-foreground truncate">Images &amp; uploads</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1.5">
+            {quickActionItems.map((action) => {
+              const ActionIcon = action.icon;
+              return (
+                <Link key={action.href} href={action.href} className="group">
+                  <div
+                    className={`h-full rounded-lg border ${action.borderClass} bg-gradient-to-br ${action.bgClass} px-2 py-2 transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <div className={`h-6 w-6 rounded-md flex items-center justify-center shrink-0 ${action.iconClass}`}>
+                        <ActionIcon className="h-3.5 w-3.5" />
+                      </div>
+                      <span className="text-xs font-medium text-foreground truncate">{action.label}</span>
+                      <ArrowRight className={`ml-auto h-3 w-3 text-muted-foreground transition-all group-hover:translate-x-0.5 ${action.hoverClass}`} />
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link href="/admin/predictions" className="group">
-              <Card className="h-full border-yellow-500/20 hover:border-yellow-500/50 transition-all duration-300 hover:shadow-md bg-gradient-to-br from-card to-yellow-500/5 cursor-pointer">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 bg-yellow-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                      <Trophy className="h-4 w-4 text-yellow-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
-                        Predictions
-                        <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-yellow-400 group-hover:translate-x-0.5 transition-all" />
-                      </h3>
-                      <p className="text-xs text-muted-foreground truncate">Validate results</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link href="/admin/trivia" className="group">
-              <Card className="h-full border-purple-500/20 hover:border-purple-500/50 transition-all duration-300 hover:shadow-md bg-gradient-to-br from-card to-purple-500/5 cursor-pointer">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 bg-purple-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                      <Brain className="h-4 w-4 text-purple-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
-                        Trivia
-                        <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-purple-400 group-hover:translate-x-0.5 transition-all" />
-                      </h3>
-                      <p className="text-xs text-muted-foreground truncate">F1 quiz questions</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link href="/admin/notifications" className="group">
-              <Card className="h-full border-orange-500/20 hover:border-orange-500/50 transition-all duration-300 hover:shadow-md bg-gradient-to-br from-card to-orange-500/5 cursor-pointer">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 bg-orange-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                      <Bell className="h-4 w-4 text-orange-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
-                        Notifications
-                        <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-orange-400 group-hover:translate-x-0.5 transition-all" />
-                      </h3>
-                      <p className="text-xs text-muted-foreground truncate">Push to users</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link href="/admin/articles/create" className="group">
-              <Card className="h-full border-green-500/20 hover:border-green-500/50 transition-all duration-300 hover:shadow-md bg-gradient-to-br from-card to-green-500/5 cursor-pointer">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 bg-green-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                      <Plus className="h-4 w-4 text-green-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm text-foreground flex items-center justify-between">
-                        New Article
-                        <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-green-400 group-hover:translate-x-0.5 transition-all" />
-                      </h3>
-                      <p className="text-xs text-muted-foreground truncate">Write a blog post</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+                </Link>
+              );
+            })}
           </div>
         </div>
 
         {/* Secondary Stats */}
-        <div className="grid grid-cols-3 md:grid-cols-5 gap-2 mb-4">
-          <Card className="border-border/50 hover:border-primary/30 transition-all duration-300 bg-gradient-to-br from-card to-primary/5">
-            <CardContent className="p-3">
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-2 mb-3">
+          <Card className="border-border/50 hover:border-primary/30 transition-all duration-200 bg-gradient-to-br from-card to-primary/5">
+            <CardContent className="p-2.5">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">New (7d)</p>
-                  <p className="text-lg font-bold text-foreground">{recentUsers}</p>
+                  <p className="text-base md:text-lg font-semibold text-foreground">{recentUsers}</p>
                 </div>
                 <UserPlus className="h-3.5 w-3.5 text-primary" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-border/50 hover:border-accent/30 transition-all duration-300 bg-gradient-to-br from-card to-accent/5">
-            <CardContent className="p-3">
+          <Card className="border-border/50 hover:border-accent/30 transition-all duration-200 bg-gradient-to-br from-card to-accent/5">
+            <CardContent className="p-2.5">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Creators</p>
-                  <p className="text-lg font-bold text-foreground">{contentCreatorCount}</p>
+                  <p className="text-base md:text-lg font-semibold text-foreground">{contentCreatorCount}</p>
                 </div>
                 <Crown className="h-3.5 w-3.5 text-accent" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-border/50 hover:border-yellow-500/30 transition-all duration-300 bg-gradient-to-br from-card to-yellow-500/5">
-            <CardContent className="p-3">
+          <Card className="border-border/50 hover:border-yellow-500/30 transition-all duration-200 bg-gradient-to-br from-card to-yellow-500/5">
+            <CardContent className="p-2.5">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Total Coins</p>
-                  <p className="text-lg font-bold text-foreground">{totalCoins.toLocaleString()}</p>
+                  <p className="text-base md:text-lg font-semibold text-foreground">{totalCoins.toLocaleString()}</p>
                 </div>
                 <Coins className="h-3.5 w-3.5 text-yellow-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-border/50 hover:border-accent/30 transition-all duration-300 bg-gradient-to-br from-card to-accent/5">
-            <CardContent className="p-3">
+          <Card className="border-border/50 hover:border-accent/30 transition-all duration-200 bg-gradient-to-br from-card to-accent/5">
+            <CardContent className="p-2.5">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Elite</p>
-                  <p className="text-lg font-bold text-foreground">{planDistribution.ELITE || 0}</p>
+                  <p className="text-base md:text-lg font-semibold text-foreground">{planDistribution.ELITE || 0}</p>
                 </div>
                 <Crown className="h-3.5 w-3.5 text-accent" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-border/50 hover:border-primary/30 transition-all duration-300 bg-gradient-to-br from-card to-primary/5">
-            <CardContent className="p-3">
+          <Card className="border-border/50 hover:border-primary/30 transition-all duration-200 bg-gradient-to-br from-card to-primary/5">
+            <CardContent className="p-2.5">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Pro</p>
-                  <p className="text-lg font-bold text-foreground">{planDistribution.PRO || 0}</p>
+                  <p className="text-base md:text-lg font-semibold text-foreground">{planDistribution.PRO || 0}</p>
                 </div>
                 <Crown className="h-3.5 w-3.5 text-primary" />
               </div>
@@ -787,9 +765,9 @@ export default function AdminDashboard() {
         </div>
 
         {/* Search and Filters */}
-        <Card className="mb-6 border-border/50">
-          <CardHeader className="pb-4">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <Card className="mb-5 border-border/50">
+          <CardHeader className="pb-3">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
               <div>
                 <CardTitle className="text-lg">User Management</CardTitle>
                 <CardDescription>Search, filter, and manage user accounts</CardDescription>
@@ -799,7 +777,7 @@ export default function AdminDashboard() {
                   variant="outline" 
                   size="sm" 
                   onClick={() => fetchUsers()}
-                  className="hover:scale-105 transition-all duration-300"
+                  className="hover:scale-[1.02] transition-all duration-200"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Refresh
@@ -808,7 +786,7 @@ export default function AdminDashboard() {
                   variant="outline" 
                   size="sm" 
                   onClick={exportUsers}
-                  className="accent-glow hover:scale-105 transition-all duration-300"
+                  className="accent-glow hover:scale-[1.02] transition-all duration-200"
                 >
                   <Download className="h-4 w-4 mr-2" />
                   Export CSV
@@ -817,7 +795,7 @@ export default function AdminDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-3">
               <div className="relative md:col-span-2">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
@@ -906,7 +884,7 @@ export default function AdminDashboard() {
 
             {/* Bulk Actions Bar */}
             {selectedUsers.size > 0 && (
-              <div className="mt-4 p-4 bg-primary/10 rounded-lg border border-primary/20 flex items-center justify-between">
+              <div className="mt-3 p-3 bg-primary/10 rounded-lg border border-primary/20 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <CheckCircle2 className="h-5 w-5 text-primary" />
                   <span className="font-medium text-foreground">
@@ -957,7 +935,7 @@ export default function AdminDashboard() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-xl font-bold">All Users</CardTitle>
+                <CardTitle className="text-lg font-semibold">All Users</CardTitle>
                 <CardDescription className="text-muted-foreground">
                   Page {currentPage} of {totalPages} • {sortedUsers.length} user{sortedUsers.length !== 1 ? 's' : ''} found
                 </CardDescription>
@@ -965,30 +943,30 @@ export default function AdminDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
               <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="all" className="flex items-center gap-2">
+                <TabsTrigger value="all" className="flex items-center gap-1.5 text-xs md:text-sm">
                   <Users className="h-4 w-4" />
                   All Users
                 </TabsTrigger>
-                <TabsTrigger value="active" className="flex items-center gap-2">
+                <TabsTrigger value="active" className="flex items-center gap-1.5 text-xs md:text-sm">
                   <Activity className="h-4 w-4" />
                   Active
                 </TabsTrigger>
-                <TabsTrigger value="inactive" className="flex items-center gap-2">
+                <TabsTrigger value="inactive" className="flex items-center gap-1.5 text-xs md:text-sm">
                   <XCircle className="h-4 w-4" />
                   Inactive
                 </TabsTrigger>
-                <TabsTrigger value="new" className="flex items-center gap-2">
+                <TabsTrigger value="new" className="flex items-center gap-1.5 text-xs md:text-sm">
                   <UserPlus className="h-4 w-4" />
                   New (7d)
                 </TabsTrigger>
               </TabsList>
             </Tabs>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {paginatedUsers.length > 0 && (
-                <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-lg border border-border">
+                <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border border-border">
                   <Checkbox
                     checked={selectedUsers.size === paginatedUsers.length && paginatedUsers.length > 0}
                     onCheckedChange={handleSelectAll}
@@ -1004,22 +982,22 @@ export default function AdminDashboard() {
               )}
 
               {paginatedUsers.map((user) => (
-                <div key={user.id} className={`bg-card rounded-xl p-5 border shadow-sm hover:shadow-md transition-all duration-200 ${
+                <div key={user.id} className={`bg-card rounded-xl p-4 border shadow-sm hover:shadow transition-colors duration-200 ${
                   selectedUsers.has(user.id) ? 'border-primary/50 bg-primary/5' : 'border-border/50 hover:border-primary/30'
                 }`}>
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2.5">
                         <Checkbox
                           checked={selectedUsers.has(user.id)}
                           onCheckedChange={() => handleSelectUser(user.id)}
                           id={`user-${user.id}`}
                         />
-                        <div className="h-10 w-10 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">
+                        <div className="h-9 w-9 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground font-bold text-xs shrink-0">
                           {user.username.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
+                          <div className="flex items-center gap-1.5 mb-0.5">
                             <h3 className="font-semibold text-foreground truncate">{user.username}</h3>
                             <Badge variant={user.role === 2 ? 'default' : 'secondary'} className="text-[10px] shrink-0">
                               {roleNames[user.role] || user.role}
@@ -1034,7 +1012,7 @@ export default function AdminDashboard() {
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground truncate">{user.email}</p>
-                          <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-muted-foreground">
+                          <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <TrendingUp className="h-3 w-3 text-primary" />
                               {user.tokens.toLocaleString()} tokens
@@ -1191,7 +1169,7 @@ export default function AdminDashboard() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6 pt-6 border-t border-border">
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
                 <div className="text-sm text-muted-foreground">
                   Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, sortedUsers.length)} of {sortedUsers.length} results
                 </div>
