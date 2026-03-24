@@ -6,18 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Trophy, 
   Coins, 
   Target, 
-  Brain, 
-  TrendingUp, 
+  Brain,
   Medal,
-  Zap,
   Star,
-  Award,
-  Flame,
   Activity,
   Sparkles
 } from 'lucide-react';
