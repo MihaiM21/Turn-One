@@ -7,11 +7,10 @@ import { BarChart3, Zap, Users, Trophy, TrendingUp, Clock, Rocket, ArrowRight, C
 import { MainNav } from "@/components/navigation/main-nav"
 import Link from "next/link"
 import { ScrollAnimation } from "@/components/animation/scroll-animation"
-import { NumberOneOutline } from "@/components/animation/hero-particles"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Loading } from "@/components/ui/loading"
-import { getArticles, type Article } from '@/lib/articleService'
+import { getArticles } from '@/lib/articleService'
 import { SOCIAL_LINKS } from "@/lib/social-links"
 
 interface FeaturedArticle {
