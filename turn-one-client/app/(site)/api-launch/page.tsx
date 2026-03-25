@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ObfuscatedEmail } from "@/components/ui/obfuscated-email";
+import {MainNav} from "@/components/navigation/main-nav";
 
 export default function ApiLaunchPage() {
   const [email, setEmail] = useState("");
@@ -56,6 +57,7 @@ export default function ApiLaunchPage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden ">
+      <MainNav />
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-red-500/5 rounded-full blur-3xl animate-pulse" />
