@@ -60,6 +60,26 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
+  async redirects() {
+    return [
+      {
+        source: '/auth/register',
+        destination: '/auth/signup',
+        permanent: true,
+      },
+      {
+        source: '/cdn-cgi/email-protection',
+        destination: '/contact',
+        permanent: false,
+      },
+      {
+        source: '/cdn-cgi/l/email-protection',
+        destination: '/contact',
+        permanent: false,
+      },
+    ];
+  },
   
   // Image optimization
   images: {

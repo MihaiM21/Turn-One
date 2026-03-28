@@ -88,7 +88,6 @@ export default function AccountPage() {
   const { isAuthenticated } = useAuth()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState("profile")
   
   const [profileData, setProfileData] = useState<UserProfile>({
     id: "",

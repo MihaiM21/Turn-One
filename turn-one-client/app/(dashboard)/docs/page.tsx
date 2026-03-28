@@ -3,11 +3,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ArrowRight, Zap, Activity, Signal, Database, ChartLine, Cloud, 
-         BarChart, Timer, MapPin, Gauge, Wind, Radio, Bell, FileJson, 
-         KeyRound, Settings, RefreshCw, Mail, ExternalLink, Play,
+import { ArrowRight, Signal, Database, ChartLine,
+         BarChart, Timer, MapPin, Gauge, Wind, FileJson, 
+         Mail, ExternalLink, Play,
          type LucideIcon } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
 import { DashboardHeader } from "@/components/dashboard/live dashboard/dashboard-header";

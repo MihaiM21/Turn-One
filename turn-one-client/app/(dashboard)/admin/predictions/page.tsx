@@ -32,7 +32,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   CheckCircle2, Trophy, Users, ArrowLeft, Calendar, Clock,
   AlertCircle, Coins, TrendingUp, Eye, Flag, Loader2,
-  ChevronRight, XCircle, Award, Target, Zap, ShieldCheck
+  ChevronRight, Award, Target, Zap, ShieldCheck
 } from 'lucide-react';
 import Link from 'next/link';
 import { getAuthToken } from '@/lib/auth-utils';

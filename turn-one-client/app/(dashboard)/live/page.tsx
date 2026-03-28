@@ -108,7 +108,6 @@ export default function LiveDashboard() {
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error' | 'no-session'>('disconnected');
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isManuallyConnected, setIsManuallyConnected] = useState(false);
-  const [isReady, setIsReady] = useState(false);
 
   const {
     modules,
