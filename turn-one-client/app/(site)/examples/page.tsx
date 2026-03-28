@@ -577,7 +577,7 @@ export default function ExamplesPage() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="gap-2 text-base font-semibold px-10 py-6">
-              <Link href="/auth/register">
+              <Link href="/auth/signup">
                 Get Started Free
                 <ArrowRight className="w-5 h-5" />
               </Link>
