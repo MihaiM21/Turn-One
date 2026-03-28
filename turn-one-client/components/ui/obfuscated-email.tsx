@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 
 interface ObfuscatedEmailProps {
   user: string;
@@ -17,7 +17,17 @@ interface ObfuscatedEmailProps {
  * Usage: <ObfuscatedEmail user="contact" domain="t1f1.com" />
  */
 export function ObfuscatedEmail({ user, domain, className, asLink = false }: ObfuscatedEmailProps) {
-  const email = useMemo(() => `${user}@${domain}`, [user, domain]);
+  const [email, setEmail] = useState<string | null>(null);
+
+  // Render email only after hydration so it is absent from SSR HTML,
+  // preventing Cloudflare Email Obfuscation from rewriting links.
+  useEffect(() => {
+    setEmail(`${user}@${domain}`);
+  }, [user, domain]);
+
+  if (!email) {
+    return <span className={className} aria-hidden="true" />;
+  }
 
   if (asLink) {
     return (
