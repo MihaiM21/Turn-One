@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { Download, Play, Settings, TrendingUp, Zap, Clock, Gauge, CircleGauge, ChevronsUp, MonitorCog, Users, UserRound, ChartSpline, AlertTriangle, Coins, ChartScatter } from "lucide-react"
-import { fetchTopSpeeds, fetchThrottleAverages, fetchTrackComparison, fetchSessionResults, fetchThrottleBrakeComparison, fetchLaptimeData, fetchEventsByYear, fetchSessionsByEvent, fetchSpeedDistributionData } from "@/lib/dataAcquisition"
+import { fetchTopSpeeds, fetchThrottleAverages, fetchTrackComparison, fetchTrackComparisonPlot, fetchSessionResults, fetchThrottleBrakeComparison, fetchLaptimeData, fetchEventsByYear, fetchSessionsByEvent, fetchSpeedDistributionData } from "@/lib/dataAcquisition"
 import { TopSpeedData, ThrottleAverageData, TrackComparisonData, ThrottleBrakeComparisonData, LapTimeData, AdvancedPlotSettings, SpeedDistributionPoint, SpeedDistributionRawPoint } from "@/types/plot-types"
 import { grandPrixCalendar } from "@/lib/constants/grand-prix"
 import { TopSpeedGraph } from "./plots/top-speed"
@@ -67,6 +67,7 @@ export function TelemetryPlotGenerator() {
 
   const [isGenerating, setIsGenerating] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [useExperimentalTrackComparison, setUseExperimentalTrackComparison] = useState(false)
 
   useEffect(() => {
     if (selectedYear) {
@@ -191,12 +192,21 @@ export function TelemetryPlotGenerator() {
   const [speedDomain, setSpeedDomain] = useState<[number, number]>([320, 335])
   const [throttleAverageData, setThrottleAverageData] = useState<ThrottleAverageData[]>([])
   const [throttleDomain, setThrottleDomain] = useState<[number, number]>([85, 100])
+  const [trackComparisonPlotUrl, setTrackComparisonPlotUrl] = useState<string | null>(null)
   const [trackComparisonData, setTrackComparisonData] = useState<TrackComparisonData | null>(null)
   const [sessionResultsData, setSessionResultsData] = useState<SessionResultsData[]>([])
   const [sessionResultsDomain, setSessionResultsDomain] = useState<[number, number]>([0, 3])
   const [throttleBrakeData, setThrottleBrakeData] = useState<ThrottleBrakeComparisonData | null>(null)
   const [lapTimeData, setLapTimeData] = useState<LapTimeData[]>([])
   const [speedDistributionData, setSpeedDistributionData] = useState<SpeedDistributionPoint[]>([])
+
+  useEffect(() => {
+    return () => {
+      if (trackComparisonPlotUrl) {
+        URL.revokeObjectURL(trackComparisonPlotUrl)
+      }
+    }
+  }, [trackComparisonPlotUrl])
 
   const selectedSpeedDrivers = Array.from(
     new Set([selectedSpeedDriver1, selectedSpeedDriver2, selectedSpeedDriver3].filter((driver) => driver !== "none"))
@@ -311,10 +321,29 @@ export function TelemetryPlotGenerator() {
 
       } else if (selectedPlotType === "track_comparison") {
         if (selectedDriver1 && selectedDriver2 && selectedDriver1 !== selectedDriver2) {
-          setTrackComparisonData(null)
+          if (useExperimentalTrackComparison) {
+            setTrackComparisonPlotUrl((previousUrl) => {
+              if (previousUrl) {
+                URL.revokeObjectURL(previousUrl)
+              }
+              return null
+            })
+            setTrackComparisonData(null)
 
-          const data = await fetchTrackComparison(authToken, Number(selectedYear), apiGpVal, apiSessionVal, selectedDriver1, selectedDriver2, selectedVersion)
-          setTrackComparisonData(data)
+            const data = await fetchTrackComparison(authToken, Number(selectedYear), apiGpVal, apiSessionVal, selectedDriver1, selectedDriver2, selectedVersion)
+            setTrackComparisonData(data as TrackComparisonData)
+          } else {
+            setTrackComparisonData(null)
+            setTrackComparisonPlotUrl((previousUrl) => {
+              if (previousUrl) {
+                URL.revokeObjectURL(previousUrl)
+              }
+              return null
+            })
+
+            const plotUrl = await fetchTrackComparisonPlot(authToken, Number(selectedYear), apiGpVal, apiSessionVal, selectedDriver1, selectedDriver2, selectedVersion)
+            setTrackComparisonPlotUrl(plotUrl)
+          }
           plotGeneratedSuccessfully = true
         } else {
           throw new Error('Please select two different drivers for track comparison')
@@ -449,8 +478,50 @@ export function TelemetryPlotGenerator() {
           <ThrottleAverageGraph data={throttleAverageData} throttleDomain={throttleDomain} advancedSettings={advancedSettings} />
         )
       case "track_comparison":
-        return trackComparisonData ? (
-          <TrackComparisonGraph data={trackComparisonData} advancedSettings={advancedSettings} />
+        return useExperimentalTrackComparison ? (
+          trackComparisonData ? (
+            <div className="space-y-4">
+              <Alert className="border-yellow-500/50 bg-yellow-500/10">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  Experimental mode enabled.
+                  <br />
+                  <span className="text-sm text-muted-foreground">
+                    Using the legacy custom telemetry visual. Data quality and behavior may vary.
+                  </span>
+                </AlertDescription>
+              </Alert>
+              <TrackComparisonGraph data={trackComparisonData} advancedSettings={advancedSettings} />
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-[700px] text-muted-foreground space-y-4">
+              {isGenerating ? (
+                <>
+                  <LoadingPlot />
+                </>
+              ) : "No track comparison data available"}
+            </div>
+          )
+        ) : trackComparisonPlotUrl ? (
+          <div className="space-y-4">
+            <Alert className="border-yellow-500/50 bg-yellow-500/10">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                The custom H2H Track Comparison visual is currently under maintenance.
+                <br />
+                <span className="text-sm text-muted-foreground">
+                  Showing the official plot image from the external API endpoint.
+                </span>
+              </AlertDescription>
+            </Alert>
+            <div className="flex items-center justify-center min-h-[700px] rounded-lg border border-border/50 bg-background/40 p-4">
+              <img
+                src={trackComparisonPlotUrl}
+                alt={`H2H Track Comparison Plot (${selectedDriver1} vs ${selectedDriver2})`}
+                className="max-h-[700px] w-auto max-w-full rounded-md object-contain"
+              />
+            </div>
+          </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-[700px] text-muted-foreground space-y-4">
             {isGenerating ? (
@@ -755,6 +826,31 @@ export function TelemetryPlotGenerator() {
                   </Select>
                 </div>
               </div>)}
+
+            {selectedPlotType === "track_comparison" && (
+              <Alert className="border-blue-500/40 bg-blue-500/10 py-2">
+                <AlertTriangle className="h-3.5 w-3.5" />
+                <AlertDescription className="text-xs leading-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <span>Default mode uses the external plot image endpoint for stability.</span>
+                    
+                  </div>
+                  <span className="text-xs text-muted-foreground block mt-1">
+                    Enable experimental mode to use the legacy custom telemetry rendering.
+                  </span>
+                  <div className="flex items-center gap-2 whitespace-nowrap py-2">
+                      <Label htmlFor="experimental-track-comparison" className="text-xs font-medium">
+                        Experimental
+                      </Label>
+                      <Switch
+                        id="experimental-track-comparison"
+                        checked={useExperimentalTrackComparison}
+                        onCheckedChange={setUseExperimentalTrackComparison}
+                      />
+                    </div>
+                </AlertDescription>
+              </Alert>
+            )}
 
             {selectedPlotType === "speed_distribution" && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

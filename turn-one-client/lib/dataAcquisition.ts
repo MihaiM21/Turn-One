@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { loadEnvConfig } from '@next/env'
-import { fetchFromExternalAPI, fetchFromExternalAPIv1, fetchFromExternalAPIv2 } from './data-fetcher';
+import { fetchFromExternalAPI, fetchFromExternalAPIv1, fetchFromExternalAPIv1Image, fetchFromExternalAPIv2, fetchFromExternalAPIv2Image } from './data-fetcher';
 
 export const fetchEventsByYear = async (year: number) => {
   return fetchFromExternalAPIv2(`seasons/${year}/events`);
@@ -35,6 +35,19 @@ export const fetchTrackComparison = async (
 ) => {
   const endpoint = `track-comparison-2drivers-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}&driver1=${driver1}&driver2=${driver2}`;
   return version === 'v2' ? fetchFromExternalAPIv2(endpoint) : fetchFromExternalAPIv1(endpoint);
+}
+
+export const fetchTrackComparisonPlot = async (
+  token: string,
+  year: number,
+  gp: number | string,
+  session: string,
+  driver1: string,
+  driver2: string,
+  version: string = 'v1'
+) => {
+  const endpoint = `track-comparison-2drivers-plot?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}&driver1=${driver1}&driver2=${driver2}`;
+  return version === 'v2' ? fetchFromExternalAPIv2Image(endpoint) : fetchFromExternalAPIv1Image(endpoint);
 }
 
 export const fetchSessionResults = async (token: string, year: number, gp: number | string, session: string, version: string = 'v1') => {

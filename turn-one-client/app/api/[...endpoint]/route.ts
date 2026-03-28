@@ -1,5 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const getContentType = (response: Response) => response.headers.get('content-type') || '';
+
+const parseErrorMessage = async (response: Response, fallback: string) => {
+  const contentType = getContentType(response);
+
+  if (contentType.includes('application/json')) {
+    const errorData = await response.json().catch(() => ({}));
+    return errorData.message || errorData.error || fallback;
+  }
+
+  const text = await response.text().catch(() => '');
+  return text || fallback;
+};
+
+const buildProxyResponseHeaders = (response: Response) => {
+  const proxiedHeaders = new Headers();
+  const contentType = response.headers.get('content-type');
+
+  if (contentType) {
+    proxiedHeaders.set('Content-Type', contentType);
+  }
+
+  // Keep existing cache behavior for proxy responses.
+  proxiedHeaders.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+
+  return proxiedHeaders;
+};
+
 /**
  * External API Proxy Handler
  * 
@@ -51,7 +79,7 @@ export async function GET(
       method: 'GET',
       headers: {
         'X-API-Key': EXTERNAL_API_KEY,
-        'Content-Type': 'application/json',
+        'Accept': '*/*',
       },
       // Optional: Add cache control
       next: { revalidate: 60 }, // Cache for 60 seconds
@@ -62,13 +90,10 @@ export async function GET(
       console.error(`[External API Proxy] API request failed with status ${response.status}`);
       
       // Try to get error details from the API response
-      let errorMessage = `External API request failed with status ${response.status}`;
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.message || errorData.error || errorMessage;
-      } catch (e) {
-        // If we can't parse the error, use the default message
-      }
+      const errorMessage = await parseErrorMessage(
+        response,
+        `External API request failed with status ${response.status}`
+      );
 
       return NextResponse.json(
         { error: errorMessage },
@@ -76,14 +101,22 @@ export async function GET(
       );
     }
 
-    // Parse and return the successful response
-    const data = await response.json();
-    
-    return NextResponse.json(data, {
-      status: 200,
-      headers: {
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
-      },
+    // Return JSON as JSON, and forward binary/text payloads without parsing.
+    const contentType = getContentType(response);
+    const proxyHeaders = buildProxyResponseHeaders(response);
+
+    if (contentType.includes('application/json')) {
+      const data = await response.json();
+      return NextResponse.json(data, {
+        status: response.status,
+        headers: proxyHeaders,
+      });
+    }
+
+    const body = await response.arrayBuffer();
+    return new NextResponse(body, {
+      status: response.status,
+      headers: proxyHeaders,
     });
 
   } catch (error) {
@@ -132,9 +165,9 @@ export async function POST(
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = await parseErrorMessage(response, 'External API request failed');
       return NextResponse.json(
-        { error: errorData.message || 'External API request failed' },
+        { error: errorMessage },
         { status: response.status }
       );
     }

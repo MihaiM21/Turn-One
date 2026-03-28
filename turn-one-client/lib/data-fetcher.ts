@@ -161,3 +161,47 @@ export const fetchFromExternalAPIv2 = async (endpoint: string, options: RequestI
     throw error;
   }
 };
+
+const fetchImageFromExternalAPI = async (
+  pathPrefix: 'v1' | 'v2',
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<string> => {
+  try {
+    const response = await fetch(`${EXTERNAL_API_BASE_URL}/${pathPrefix}/${endpoint}`, {
+      ...options,
+      headers: {
+        ...options.headers,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.error ||
+        errorData.message ||
+        `External API request failed with status ${response.status}`
+      );
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.startsWith('image/')) {
+      const errorBody = await response.text().catch(() => 'Unexpected non-image response');
+      throw new Error(errorBody || 'Unexpected non-image response from external API');
+    }
+
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+  } catch (error) {
+    console.error(`❌ Error fetching image from external API [${endpoint}]:`, error);
+    throw error;
+  }
+};
+
+export const fetchFromExternalAPIv1Image = async (endpoint: string, options: RequestInit = {}) => {
+  return fetchImageFromExternalAPI('v1', endpoint, options);
+};
+
+export const fetchFromExternalAPIv2Image = async (endpoint: string, options: RequestInit = {}) => {
+  return fetchImageFromExternalAPI('v2', endpoint, options);
+};
