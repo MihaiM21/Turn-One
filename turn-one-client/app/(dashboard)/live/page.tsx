@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import Link from 'next/link';
 import { LiveTimingGrid } from '@/components/dashboard/live-timing-grid';
 import { getF1LiveDataService, type F1DataCallback, type F1StatusCallback } from '@/lib/f1LiveDataService';
 import { F1DataMapper, type MappedF1Data } from '@/lib/f1DataMapper';
@@ -363,6 +364,13 @@ export default function LiveDashboard() {
                 Updated {lastUpdate.toLocaleTimeString()}
               </div>
             )}
+            <Link
+              href="/live2"
+              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/15 text-primary transition-colors"
+              title="Try our experimental live dashboard with enhanced features"
+            >
+              <span>Try Experimental</span>
+            </Link>
           </div>
         </div>
 

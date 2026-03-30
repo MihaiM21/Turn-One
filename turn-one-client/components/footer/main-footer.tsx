@@ -63,6 +63,7 @@ export function MainFooter() {
                 { href: "/about", label: "About Us" },
                 { href: "/features", label: "Features" },
                 { href: "/pricing", label: "Pricing" },
+                { href: "/account", label: "Account" },
               ].map((link) => (
                 <Link
                   key={link.href}
@@ -75,15 +76,15 @@ export function MainFooter() {
             </div>
           </div>
 
-          {/* Services */}
+          {/* Gaming & Features */}
           <div className="space-y-4">
-            <h3 className="text-foreground font-semibold text-lg">Services</h3>
+            <h3 className="text-foreground font-semibold text-lg">Gaming</h3>
             <div className="space-y-2">
               {[
-                { href: "/features", label: "Telemetry Features" },
-                { href: "/dashboard", label: "Live Dashboard" },
-                // { href: "/team", label: "Expert Team" },
-                { href: "/contact", label: "Contact Us" },
+                { href: "/games", label: "Game Hub" },
+                { href: "/predictions", label: "Predictions" },
+                { href: "/rewards", label: "Rewards & Leveling" },
+                { href: "/live", label: "Live Timing" },
               ].map((link) => (
                 <Link
                   key={link.href}
@@ -96,18 +97,28 @@ export function MainFooter() {
             </div>
           </div>
 
-          {/* Contact Info */}
+          {/* Resources & Support */}
           <div className="space-y-4">
-            <h3 className="text-foreground font-semibold text-lg">Contact</h3>
-            <div className="space-y-3">
+            <h3 className="text-foreground font-semibold text-lg">Resources</h3>
+            <div className="space-y-2">
+              {[
+                { href: "/docs", label: "API Documentation" },
+                { href: "/contact", label: "Contact Support" },
+              ].map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="block text-muted-foreground hover:text-primary transition-colors duration-200 text-sm py-1"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+            <div className="space-y-3 mt-6">
               <div className="flex items-center space-x-3 text-sm">
                 <Mail className="h-4 w-4 text-primary" />
                 <ObfuscatedEmail user="contact" domain="t1f1.com" className="text-muted-foreground" />
               </div>
-              {/* <div className="flex items-center space-x-3 text-sm">
-                <Phone className="h-4 w-4 text-primary" />
-                <span className="text-muted-foreground">+1 (555) 123-4567</span>
-              </div> */}
               <div className="flex items-center space-x-3 text-sm">
                 <MapPin className="h-4 w-4 text-primary" />
                 <span className="text-muted-foreground">At the racetrack</span>
@@ -119,7 +130,7 @@ export function MainFooter() {
                 </Link>
               </div>
             </div>
-            <Button asChild className="w-full bg-primary hover:bg-primary/90 text-white">
+            <Button asChild className="w-full bg-primary hover:bg-primary/90 text-white mt-4">
               <Link href="/dashboard">
                 <BarChart3 className="h-4 w-4 mr-2" />
                 Start Analysis
