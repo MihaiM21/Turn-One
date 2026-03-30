@@ -63,6 +63,19 @@ const nextConfig: NextConfig = {
 
   async redirects() {
     return [
+      // Redirect www subdomain to non-www canonical domain
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'www.turnonehub.com',
+          },
+        ],
+        destination: 'https://turnonehub.com/:path*',
+        permanent: true,
+      },
+      // Handle legacy auth routes
       {
         source: '/auth/register',
         destination: '/auth/signup',
