@@ -25,7 +25,7 @@ export const SITE_CONFIG = {
     'Formula One',
     'F1 races',
     'Formula 1 races',
-    
+
     // Primary Live Timing & Telemetry Keywords
     'F1 live timing',
     'Formula 1 live timing',
@@ -37,7 +37,7 @@ export const SITE_CONFIG = {
     'F1 real-time data',
     'F1 telemetry analysis',
     'real-time F1 telemetry',
-    
+
     // Live Race & Tracking Keywords
     'F1 live race tracker',
     'Formula 1 live updates',
@@ -48,7 +48,7 @@ export const SITE_CONFIG = {
     'F1 sector times',
     'F1 race data',
     'F1 pit stop timing',
-    
+
     // Analytics & Statistics Keywords
     'F1 analytics',
     'Formula 1 statistics',
@@ -57,7 +57,7 @@ export const SITE_CONFIG = {
     'Formula 1 data analysis',
     'F1 performance data',
     'F1 race analytics',
-    
+
     // Team & Driver Keywords
     'F1 drivers',
     'F1 teams',
@@ -65,13 +65,13 @@ export const SITE_CONFIG = {
     'F1 championship',
     'Formula 1 championship',
     'F1 results',
-    
+
     // News & Updates
     'F1 news',
     'Formula 1 news',
     'F1 updates',
     'F1 today',
-    
+
     // Community & Features
     'F1 dashboard',
     'F1 predictions',
@@ -127,13 +127,13 @@ export function generateSEO({
   section,
   tags = [],
 }: SEOProps = {}): Metadata {
-  const pageTitle = title 
-    ? `${title} | ${SITE_CONFIG.shortName}` 
+  const pageTitle = title
+    ? `${title} | ${SITE_CONFIG.shortName}`
     : SITE_CONFIG.name
-  
+
   const pageUrl = url ? `${SITE_CONFIG.url}${url}` : SITE_CONFIG.url
   const fullImageUrl = image.startsWith('http') ? image : `${SITE_CONFIG.url}${image}`
-  
+
   const allKeywords = [...SITE_CONFIG.keywords, ...keywords]
 
   const metadata: Metadata = {
@@ -144,25 +144,25 @@ export function generateSEO({
     authors: [{ name: author }],
     creator: SITE_CONFIG.author,
     publisher: SITE_CONFIG.author,
-    
+
     // Robots
     robots: noIndex
       ? {
-          index: false,
-          follow: false,
-          nocache: true,
-        }
+        index: false,
+        follow: false,
+        nocache: true,
+      }
       : {
+        index: true,
+        follow: true,
+        googleBot: {
           index: true,
           follow: true,
-          googleBot: {
-            index: true,
-            follow: true,
-            'max-video-preview': -1,
-            'max-image-preview': 'large',
-            'max-snippet': -1,
-          },
+          'max-video-preview': -1,
+          'max-image-preview': 'large',
+          'max-snippet': -1,
         },
+      },
 
     // Open Graph
     openGraph: {
@@ -209,17 +209,17 @@ export function generateSEO({
     // Additional metadata
     category: 'Sports & Gaming',
     classification: 'Formula 1 Gaming Platform',
-    
+
     // App links for mobile
     appleWebApp: {
       capable: true,
       title: SITE_CONFIG.shortName,
       statusBarStyle: 'black-translucent',
     },
-    
+
     // PWA & Mobile
     applicationName: SITE_CONFIG.shortName,
-    
+
     // Verification tags (add your actual codes)
     verification: {
       google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION || '',

@@ -558,15 +558,6 @@ export default function AdminDashboard() {
     hoverClass: string;
   }> = [
     {
-      href: '/admin/articles',
-      label: 'Articles',
-      icon: FileText,
-      borderClass: 'border-red-500/25',
-      bgClass: 'from-card to-red-500/5',
-      iconClass: 'bg-red-500/10 text-red-400',
-      hoverClass: 'group-hover:text-red-400',
-    },
-    {
       href: '/admin/media',
       label: 'Media',
       icon: ImageIcon,
@@ -601,15 +592,6 @@ export default function AdminDashboard() {
       bgClass: 'from-card to-orange-500/5',
       iconClass: 'bg-orange-500/10 text-orange-400',
       hoverClass: 'group-hover:text-orange-400',
-    },
-    {
-      href: '/admin/articles/create',
-      label: 'New Article',
-      icon: Plus,
-      borderClass: 'border-green-500/25',
-      bgClass: 'from-card to-green-500/5',
-      iconClass: 'bg-green-500/10 text-green-400',
-      hoverClass: 'group-hover:text-green-400',
     },
   ];
 

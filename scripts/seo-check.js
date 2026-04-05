@@ -81,7 +81,6 @@ async function runChecks() {
   // 2. SEO Components
   log('\n2. SEO Components:', 'blue');
   if (checkExists('turn-one-client/components/seo/breadcrumb.tsx', 'Breadcrumb Component')) score++;
-  if (checkExists('turn-one-client/components/seo/article.tsx', 'Article Component')) score++;
   if (checkExists('turn-one-client/lib/seo-utils.ts', 'SEO Utilities')) score++;
 
   // 3. Page Metadata

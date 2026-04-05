@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+using Domain.Entities;
 using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,7 +17,7 @@ public class TurnOneDbContext : DbContext
     public DbSet<Leaderboard> Leaderboards { get; set; } = null!;
     public DbSet<CoinTransaction> CoinTransactions { get; set; } = null!;
     public DbSet<ApiWishlist> ApiWishlists { get; set; } = null!;
-    public DbSet<Article> Articles { get; set; } = null!;
+
     public DbSet<Media> Media { get; set; } = null!;
     public DbSet<Notification> Notifications { get; set; } = null!;
     public DbSet<UserNotification> UserNotifications { get; set; } = null!;
@@ -109,26 +109,6 @@ public class TurnOneDbContext : DbContext
             entity.Property(e => e.IpAddress).IsRequired(false);
             entity.HasIndex(e => e.Email).IsUnique();
             entity.HasIndex(e => e.SubscribedAt);
-        });
-
-        modelBuilder.Entity<Article>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Slug).IsRequired();
-            entity.Property(e => e.Title).IsRequired();
-            entity.Property(e => e.Excerpt).IsRequired();
-            entity.Property(e => e.Content).IsRequired();
-            entity.Property(e => e.Category).IsRequired();
-            entity.Property(e => e.Author).IsRequired();
-            entity.Property(e => e.Featured).IsRequired().HasDefaultValue(false);
-            entity.Property(e => e.IsPublished).IsRequired().HasDefaultValue(true);
-            entity.Property(e => e.PublishDate).IsRequired();
-            entity.Property(e => e.CreatedAt).IsRequired();
-            entity.Property(e => e.UpdatedAt).IsRequired();
-            entity.HasIndex(e => e.Slug).IsUnique();
-            entity.HasIndex(e => e.PublishDate);
-            entity.HasIndex(e => e.Featured);
-            entity.HasIndex(e => e.IsPublished);
         });
 
         modelBuilder.Entity<Media>(entity =>
