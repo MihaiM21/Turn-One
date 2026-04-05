@@ -13,7 +13,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     
     // Live features - updated frequently
     { url: '/live', changeFrequency: 'hourly' as const, priority: 0.95 },
-    { url: '/live2', changeFrequency: 'hourly' as const, priority: 0.9 },
     
     // Gaming features - high priority
     { url: '/games', changeFrequency: 'weekly' as const, priority: 0.85 },
