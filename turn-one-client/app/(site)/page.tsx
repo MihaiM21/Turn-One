@@ -43,12 +43,19 @@ const cards: Card[] = [
     comingSoon: true,
   },
   {
-    id: "telemetry",
-    title: "TELEMETRY",
-    link: "/telemetry",
+    id: "AI",
+    title: "AI",
+    link: "https://ai.t1f1.com",
     position: 95, // Right part of the image
     comingSoon: true,
   },
+  // {
+  //   id: "CONSOLE",
+  //   title: "CONSOLE",
+  //   link: "https://console.t1f1.com",
+  //   position: 95, // Right part of the image
+  //   comingSoon: true,
+  // },
 ];
 
 export default function HomePage() {
@@ -260,7 +267,7 @@ export default function HomePage() {
       <div className="flex items-center justify-center flex-1 w-full">
 
         {/* Container to constrain width */}
-        <div className="w-full max-w-7xl mx-auto px-0 md:px-8 relative flex items-center justify-center">
+        <div className="w-full max-w-8xl mx-auto px-0 md:px-8 relative flex items-center justify-center">
           {/* Navigation Buttons  - hidden on mobile */}
           <motion.button
             onClick={() => navigateToCard(activeCard !== null ? activeCard - 1 : 0)}
