@@ -5,6 +5,7 @@ export const f1_2025_races = [
     circuit: 'Melbourne Grand Prix Circuit',
     country: 'Australia',
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -39,6 +40,7 @@ export const f1_2025_races = [
     circuit: 'Shanghai International Circuit',
     country: 'China',
     hasSprint: true,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -73,6 +75,7 @@ export const f1_2025_races = [
     circuit: 'Suzuka International Racing Course',
     country: 'Japan',
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -107,6 +110,7 @@ export const f1_2025_races = [
     circuit: 'Bahrain International Circuit',
     country: 'Bahrain',
     hasSprint: false,
+    cancelled: true,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -141,6 +145,7 @@ export const f1_2025_races = [
     circuit: 'Jeddah Corniche Circuit',
     country: 'Saudi Arabia',
     hasSprint: false,
+    cancelled: true,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -175,6 +180,7 @@ export const f1_2025_races = [
     circuit: 'Miami International Autodrome',
     country: 'USA',
     hasSprint: true,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -209,6 +215,7 @@ export const f1_2025_races = [
     circuit: 'Imola Circuit',
     country: 'Italy',
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -243,6 +250,7 @@ export const f1_2025_races = [
     circuit: 'Circuit de Monaco',
     country: 'Monaco',
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -277,6 +285,7 @@ export const f1_2025_races = [
     circuit: 'Circuit de Barcelona-Catalunya',
     country: 'Spain',
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -311,6 +320,7 @@ export const f1_2025_races = [
     circuit: 'Circuit Gilles-Villeneuve',
     country: 'Canada',
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -345,6 +355,7 @@ export const f1_2025_races = [
     circuit: 'Red Bull Ring',
     country: 'Austria',
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -379,6 +390,7 @@ export const f1_2025_races = [
     circuit: 'Silverstone Circuit',
     country: 'United Kingdom',
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: 'FP1',
@@ -413,6 +425,7 @@ export const f1_2025_races = [
     circuit: 'Spa-Francorchamps',
     country: 'Belgium',
     hasSprint: true,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -447,6 +460,7 @@ export const f1_2025_races = [
     circuit: 'Hungaroring',
     country: 'Hungary',
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -481,6 +495,7 @@ export const f1_2025_races = [
     circuit: 'Zandvoort Circuit',
     country: 'Netherlands',
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -515,6 +530,7 @@ export const f1_2025_races = [
     circuit: 'Monza Circuit',
     country: 'Italy',
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -549,6 +565,7 @@ export const f1_2025_races = [
     circuit: 'Baku City Circuit',
     country: 'Azerbaijan',
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -583,6 +600,7 @@ export const f1_2025_races = [
     circuit: 'Marina Bay Street Circuit',
     country: 'Singapore',
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -617,6 +635,7 @@ export const f1_2025_races = [
     circuit: 'Circuit of the Americas',
     country: 'USA',
     hasSprint: true,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -651,6 +670,7 @@ export const f1_2025_races = [
     circuit: 'Autódromo Hermanos Rodríguez',
     country: 'Mexico',
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -685,6 +705,7 @@ export const f1_2025_races = [
     circuit: 'Interlagos Circuit',
     country: 'Brazil',
     hasSprint: true,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -719,6 +740,7 @@ export const f1_2025_races = [
     circuit: 'Las Vegas Street Circuit',
     country: 'USA',
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -753,6 +775,7 @@ export const f1_2025_races = [
     circuit: 'Lusail International Circuit',
     country: 'Qatar',
     hasSprint: true,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -787,6 +810,7 @@ export const f1_2025_races = [
     circuit: 'Yas Marina Circuit',
     country: 'UAE',
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: 'Free Practice 1',
@@ -824,6 +848,7 @@ export const f1_2026_races = [
     circuit: "Albert Park Circuit",
     country: "Australia",
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -858,6 +883,7 @@ export const f1_2026_races = [
     circuit: "Shanghai International Circuit",
     country: "China",
     hasSprint: true,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -892,6 +918,7 @@ export const f1_2026_races = [
     circuit: "Suzuka International Racing Course",
     country: "Japan",
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -926,6 +953,7 @@ export const f1_2026_races = [
     circuit: "Bahrain International Circuit",
     country: "Bahrain",
     hasSprint: false,
+    cancelled: true,
     sessions: [
       {
         name: "Free Practice 1",
@@ -960,6 +988,7 @@ export const f1_2026_races = [
     circuit: "Jeddah Corniche Circuit",
     country: "Saudi Arabia",
     hasSprint: false,
+    cancelled: true,
     sessions: [
       {
         name: "Free Practice 1",
@@ -994,6 +1023,7 @@ export const f1_2026_races = [
     circuit: "Miami International Autodrome",
     country: "USA",
     hasSprint: true,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -1028,6 +1058,7 @@ export const f1_2026_races = [
     circuit: "Circuit Gilles-Villeneuve",
     country: "Canada",
     hasSprint: true,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -1062,6 +1093,7 @@ export const f1_2026_races = [
     circuit: "Circuit de Monaco",
     country: "Monaco",
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -1096,6 +1128,7 @@ export const f1_2026_races = [
     circuit: "Circuit de Barcelona-Catalunya",
     country: "Spain",
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -1130,6 +1163,7 @@ export const f1_2026_races = [
     circuit: "Red Bull Ring",
     country: "Austria",
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -1164,6 +1198,7 @@ export const f1_2026_races = [
     circuit: "Silverstone Circuit",
     country: "United Kingdom",
     hasSprint: true,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -1198,6 +1233,7 @@ export const f1_2026_races = [
     circuit: "Spa-Francorchamps",
     country: "Belgium",
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -1232,6 +1268,7 @@ export const f1_2026_races = [
     circuit: "Hungaroring",
     country: "Hungary",
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -1266,6 +1303,7 @@ export const f1_2026_races = [
     circuit: "Zandvoort Circuit",
     country: "Netherlands",
     hasSprint: true,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -1300,6 +1338,7 @@ export const f1_2026_races = [
     circuit: "Monza Circuit",
     country: "Italy",
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -1334,6 +1373,7 @@ export const f1_2026_races = [
     circuit: "Madring",
     country: "Spain",
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -1368,6 +1408,7 @@ export const f1_2026_races = [
     circuit: "Baku City Circuit",
     country: "Azerbaijan",
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -1402,6 +1443,7 @@ export const f1_2026_races = [
     circuit: "Marina Bay Street Circuit",
     country: "Singapore",
     hasSprint: true,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -1436,6 +1478,7 @@ export const f1_2026_races = [
     circuit: "Circuit of the Americas",
     country: "USA",
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -1470,6 +1513,7 @@ export const f1_2026_races = [
     circuit: "Autódromo Hermanos Rodríguez",
     country: "Mexico",
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -1504,6 +1548,7 @@ export const f1_2026_races = [
     circuit: "Interlagos Circuit",
     country: "Brazil",
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -1538,6 +1583,7 @@ export const f1_2026_races = [
     circuit: "Las Vegas Street Circuit",
     country: "USA",
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -1572,6 +1618,7 @@ export const f1_2026_races = [
     circuit: "Lusail International Circuit",
     country: "Qatar",
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",
@@ -1606,6 +1653,7 @@ export const f1_2026_races = [
     circuit: "Yas Marina Circuit",
     country: "UAE",
     hasSprint: false,
+    cancelled: false,
     sessions: [
       {
         name: "Free Practice 1",

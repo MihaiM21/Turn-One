@@ -8,6 +8,7 @@ type F1Race = {
   circuit: string;
   country: string;
   hasSprint: boolean;
+  cancelled?: boolean;
   sessions: F1Session[];
 };
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -54,6 +55,7 @@ export function SessionManager() {
 
     for (let i = 0; i < f1_2026_races.length; i++) {
       const race = f1_2026_races[i]
+      if (race.cancelled) continue
       const liveIdx = race.sessions.findIndex((s: F1Session) => getSessionStatus(s) === "live")
       if (liveIdx !== -1) {
         selectedRaceIdx = i
@@ -65,6 +67,7 @@ export function SessionManager() {
     if (selectedRaceIdx === -1) {
       for (let i = 0; i < f1_2026_races.length; i++) {
         const race = f1_2026_races[i]
+        if (race.cancelled) continue
         const upcomingIdx = race.sessions.findIndex((s: F1Session) => getSessionStatus(s) === "upcoming")
         if (upcomingIdx !== -1) {
           selectedRaceIdx = i
@@ -76,9 +79,13 @@ export function SessionManager() {
 
     for (let i = 0; i < f1_2026_races.length; i++) {
       const race = f1_2026_races[i]
+      if (race.cancelled) continue
       const allPassed = race.sessions.every((s: F1Session) => getSessionStatus(s) === "passed")
       if (allPassed) lastRaceIdx = i
-      if (i > selectedRaceIdx && nextRaceIdx === -1) nextRaceIdx = i
+      if (i > selectedRaceIdx && nextRaceIdx === -1) {
+        const nextRace = f1_2026_races[i]
+        if (!nextRace.cancelled) nextRaceIdx = i
+      }
     }
 
     return { selectedRaceIdx, selectedSessionIdx, lastRaceIdx, nextRaceIdx }
@@ -125,14 +132,14 @@ export function SessionManager() {
       {selectedRace && (
         <Card
           key={selectedRace.grandPrix}
-          className="overflow-hidden border border-primary/20 bg-gradient-to-br from-primary/20 via-background to-background shadow-[0_10px_28px_-22px_rgba(0,0,0,0.85)]"
+          className={`overflow-hidden border ${selectedRace.cancelled ? 'border-destructive/20 bg-gradient-to-br from-destructive/10 via-background to-background opacity-75' : 'border-primary/20 bg-gradient-to-br from-primary/20 via-background to-background'} shadow-[0_10px_28px_-22px_rgba(0,0,0,0.85)]`}
         >
           <CardHeader className="pb-2 pt-5">
             <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
                   <Calendar className="h-3.5 w-3.5 text-primary" />
-                  <span>Next Event Window</span>
+                  <span>{selectedRace.cancelled ? 'Cancelled Event' : 'Next Event Window'}</span>
                 </div>
                 <CardTitle className="text-xl tracking-tight">{selectedRace.grandPrix}</CardTitle>
                 <CardDescription className="flex items-center gap-2 text-xs sm:text-sm">
@@ -140,10 +147,16 @@ export function SessionManager() {
                   <span>{selectedRace.circuit}</span>
                   <span className="text-primary">•</span>
                   <span>{selectedRace.country}</span>
+                  {selectedRace.cancelled && (
+                    <>
+                      <span className="text-destructive">•</span>
+                      <Badge variant="destructive" className="ml-1">Cancelled</Badge>
+                    </>
+                  )}
                 </CardDescription>
               </div>
 
-              {selectedSession && (
+              {selectedSession && !selectedRace.cancelled && (
                 <div className="rounded-xl border border-primary/25 bg-background/60 px-3 py-2 backdrop-blur-sm">
                   <div className="mb-1 flex items-center justify-between gap-3">
                     <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{targetLabel}</span>
@@ -170,43 +183,49 @@ export function SessionManager() {
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="grid grid-cols-1 gap-2 py-1 sm:grid-cols-2 xl:grid-cols-3">
-              {selectedRace.sessions.map((session: F1Session, idx: number) => {
-                const status = getSessionStatus(session)
-                const start = session.startTime
-                const end = session.endTime
-                const dateStr = start.toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short" })
-                const startTimeStr = start.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })
-                const endTimeStr = end.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })
-                let highlight = false
-                if (status === "live") highlight = true
-                if (selectedRace.sessions.findIndex((s: F1Session) => getSessionStatus(s) === "live") === -1) {
-                  const nextUpcomingIdx = selectedRace.sessions.findIndex((s: F1Session) => getSessionStatus(s) === "upcoming")
-                  if (nextUpcomingIdx === idx) highlight = true
-                }
-                return (
-                  <div
-                    key={session.name}
-                    className={`rounded-lg border px-3 py-2.5 transition-all duration-300 ${highlight ? "border-primary/60 bg-primary/10 shadow-[0_8px_20px_-16px_rgba(239,68,68,0.9)]" : "border-border/50 bg-background/70"}`}
-                  >
-                    <div className="mb-1.5 flex items-center justify-between gap-2">
-                      <span className={`font-semibold text-xs sm:text-sm tracking-tight ${highlight ? "text-primary" : "text-foreground"}`}>{session.name}</span>
-                      <Badge
-                        variant="outline"
-                        className={`px-1.5 py-0 text-[9px] uppercase ${status === "passed" ? "border-border text-muted-foreground" : status === "live" ? "border-red-400/40 text-red-300" : "border-primary/30 text-primary"}`}
-                      >
-                        {status}
-                      </Badge>
+            {selectedRace.cancelled ? (
+              <div className="py-4 text-center text-sm text-muted-foreground">
+                This Grand Prix has been cancelled and will not take place.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-2 py-1 sm:grid-cols-2 xl:grid-cols-3">
+                {selectedRace.sessions.map((session: F1Session, idx: number) => {
+                  const status = getSessionStatus(session)
+                  const start = session.startTime
+                  const end = session.endTime
+                  const dateStr = start.toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short" })
+                  const startTimeStr = start.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })
+                  const endTimeStr = end.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })
+                  let highlight = false
+                  if (status === "live") highlight = true
+                  if (selectedRace.sessions.findIndex((s: F1Session) => getSessionStatus(s) === "live") === -1) {
+                    const nextUpcomingIdx = selectedRace.sessions.findIndex((s: F1Session) => getSessionStatus(s) === "upcoming")
+                    if (nextUpcomingIdx === idx) highlight = true
+                  }
+                  return (
+                    <div
+                      key={session.name}
+                      className={`rounded-lg border px-3 py-2.5 transition-all duration-300 ${highlight ? "border-primary/60 bg-primary/10 shadow-[0_8px_20px_-16px_rgba(239,68,68,0.9)]" : "border-border/50 bg-background/70"}`}
+                    >
+                      <div className="mb-1.5 flex items-center justify-between gap-2">
+                        <span className={`font-semibold text-xs sm:text-sm tracking-tight ${highlight ? "text-primary" : "text-foreground"}`}>{session.name}</span>
+                        <Badge
+                          variant="outline"
+                          className={`px-1.5 py-0 text-[9px] uppercase ${status === "passed" ? "border-border text-muted-foreground" : status === "live" ? "border-red-400/40 text-red-300" : "border-primary/30 text-primary"}`}
+                        >
+                          {status}
+                        </Badge>
+                      </div>
+                      <div className="text-xs font-mono text-foreground">
+                        {dateStr} <span className="text-primary">·</span> {startTimeStr}
+                        <span className="text-muted-foreground"> - </span>
+                        {endTimeStr} <span className="text-xs text-muted-foreground">UTC</span>
+                      </div>
                     </div>
-                    <div className="text-xs font-mono text-foreground">
-                      {dateStr} <span className="text-primary">·</span> {startTimeStr}
-                      <span className="text-muted-foreground"> - </span>
-                      {endTimeStr} <span className="text-xs text-muted-foreground">UTC</span>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
