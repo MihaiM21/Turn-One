@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
-import './globals.css'
 import type React from "react"
 import Script from "next/script"
 import { MainFooter } from "@/components/footer/main-footer"
@@ -18,7 +17,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 // Enhanced SEO metadata for the entire application
 export const metadata: Metadata = generateSEO({
     title: undefined, // Use default full name from config
-    description: 'Experience Formula 1 like never before with Turn One - your ultimate F1 gaming hub featuring live race tracking, predictions, trivia games, real-time telemetry, and comprehensive F1 statistics. Join the fastest-growing F1 community online.',
+    description: 'Turn One is the ultimate Formula 1 platform for fans and creators, featuring real-time telemetry, live race tracking, F1 statistics, predictions, and interactive tools designed to turn race data into powerful insights.',
     keywords: [
         'F1 2026 season',
         'Formula 1 real-time data',
