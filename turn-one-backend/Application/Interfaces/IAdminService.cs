@@ -13,5 +13,6 @@ namespace Application.Interfaces
         Task<bool> UpdateUserCoinsAsync(Guid userId, int coins);
         Task<bool> DeleteUserAsync(Guid userId);
         Task<bool> IsUserAdminAsync(Guid userId);
+        Task<List<User>> GetOnlineUsersAsync(int minutes = 30);
     }
 }

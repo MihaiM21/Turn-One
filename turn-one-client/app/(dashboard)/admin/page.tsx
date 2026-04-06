@@ -49,6 +49,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import * as adminService from '@/lib/adminService';
 import * as userService from '@/lib/userService';
+import { OnlineUsersWidget } from '@/components/dashboard/online-users-widget';
 
 interface User {
   id: string;
@@ -612,12 +613,15 @@ export default function AdminDashboard() {
                 </div>
               </div>
               {currentUser && (
-                <div className="flex items-center space-x-2">
-                  <div className="h-8 w-8 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm glow-effect">
-                    {currentUser.username.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm text-foreground">{currentUser.username}</p>
+                <div className="flex items-center gap-3">
+                  <OnlineUsersWidget />
+                  <div className="flex items-center space-x-2">
+                    <div className="h-8 w-8 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm glow-effect">
+                      {currentUser.username.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm text-foreground">{currentUser.username}</p>
+                    </div>
                   </div>
                 </div>
               )}

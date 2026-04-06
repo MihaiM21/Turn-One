@@ -90,5 +90,14 @@ namespace Infrastructure.Services
             var user = await _context.Users.FindAsync(userId);
             return user?.Role == Role.ADMIN;
         }
+
+        public async Task<List<User>> GetOnlineUsersAsync(int minutes = 30)
+        {
+            var cutoffTime = DateTime.UtcNow.AddMinutes(-minutes);
+            return await _context.Users
+                .Where(u => u.LastLogin.HasValue && u.LastLogin >= cutoffTime)
+                .OrderByDescending(u => u.LastLogin)
+                .ToListAsync();
+        }
     }
 }

@@ -201,3 +201,28 @@ export const deleteUser = async (userId: string) => {
         return { success: false, error: 'Failed to delete user' };
     }
 };
+
+export const fetchOnlineUsers = async () => {
+    const token = getToken();
+    if (!token) {
+        return { success: false, error: 'No token found', count: 0, users: [] };
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/admin/online-users`, {
+            headers: {
+                'Authorization': token,
+            },
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, count: data.count, users: data.users };
+        } else {
+            return { success: false, error: 'Failed to fetch online users', count: 0, users: [] };
+        }
+    } catch (error) {
+        console.error('Error fetching online users:', error);
+        return { success: false, error: 'Failed to fetch online users', count: 0, users: [] };
+    }
+};

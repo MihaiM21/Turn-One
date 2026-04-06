@@ -167,6 +167,30 @@ public class AdminController : ControllerBase
             return StatusCode(500, new { message = "Failed to check admin status", error = ex.Message });
         }
     }
+
+    [HttpGet("online-users")]
+    public async Task<ActionResult> GetOnlineUsers([FromQuery] int minutes = 30)
+    {
+        try
+        {
+            var onlineUsers = await _adminService.GetOnlineUsersAsync(minutes);
+            return Ok(new { 
+                count = onlineUsers.Count,
+                users = onlineUsers.Select(u => new {
+                    id = u.Id,
+                    username = u.Username,
+                    email = u.Email,
+                    role = u.Role.ToString(),
+                    lastLogin = u.LastLogin,
+                    avatarUrl = u.AvatarUrl
+                })
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to retrieve online users", error = ex.Message });
+        }
+    }
 }
 
 public class UpdatePlanRequest
