@@ -5,6 +5,7 @@ import type React from "react"
 import Script from "next/script"
 import { MainFooter } from "@/components/footer/main-footer"
 import { Suspense } from "react"
+import './globals.css'
 import { AuthProvider } from "@/components/auth/auth-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner";
