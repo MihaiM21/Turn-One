@@ -458,8 +458,8 @@ export default function ExamplesPage() {
           <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
             {[
               { label: "Plot Types", value: "9+" },
-              { label: "Sessions Covered", value: "500+" },
-              { label: "Years of Data", value: "2020–2025" },
+              { label: "Sessions Covered", value: "1000+" },
+              { label: "Years of Data", value: "2020–2026" },
               { label: "Drivers Tracked", value: "All" },
             ].map((s) => (
               <div key={s.label} className="text-center">
