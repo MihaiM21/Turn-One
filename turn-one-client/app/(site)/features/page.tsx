@@ -20,6 +20,7 @@ import {
 import Link from "next/link"
 import { Metadata } from 'next'
 import { generateSEO } from '@/lib/seo'
+import { CallToAction } from "@/components/call-to-action"
 
 export const metadata: Metadata = generateSEO({
   title: 'Features',
@@ -183,7 +184,7 @@ export default function FeaturesPage() {
       </section>
 
       {/* Technical Features Grid */}
-      <section className="py-16 px-4 bg-card">
+      <section className="py-16 px-4 ">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12 text-primary">Technical Capabilities</h2>
 
@@ -231,7 +232,7 @@ export default function FeaturesPage() {
       </section>
 
       {/* Use Cases */}
-      <section className="py-16 px-4 bg-card">
+      <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12 text-primary">Who Uses Turn One</h2>
 
@@ -306,26 +307,7 @@ export default function FeaturesPage() {
 
       {/* CTA Section */}
       <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Experience the <span className="text-primary">Future</span> of F1 Analysis
-          </h2>
-          <p className="text-xl text-muted-foreground mb-8">
-            Join the revolution in motorsport analytics. Start your free trial today and discover what professional F1
-            analysis can reveal about racing performance.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="glow-effect group">
-              <Link href="/dashboard" className="flex items-center">
-                Start Free Trial
-                <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">→</span>
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" className="accent-glow">
-              <Link href="/dashboard">Dashboard</Link>
-            </Button>
-          </div>
-        </div>
+        <CallToAction />
       </section>
     </div>
   )

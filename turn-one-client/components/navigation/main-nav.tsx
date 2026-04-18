@@ -40,13 +40,17 @@ export function MainNav({ variant = "homepage" }: MainNavProps) {
       <nav
         className={`fixed left-1/2 -translate-x-1/2 z-50 ${
           isScrolled
-            ? "top-4 w-[95%] max-w-6xl rounded-2xl bg-black/90 backdrop-blur-xl shadow-2xl border border-border"
-            : "top-0 w-full bg-transparent"
+            ? "top-4 w-[95%] max-w-6xl rounded-2xl bg-black/90 backdrop-blur-xl shadow-2xl border border-white/20"
+            : "top-0 w-full bg-transparent border-b shadow-none"
         }`}
         style={{
           transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
           willChange: 'transform, width, top, background-color, border-radius',
-          backdropFilter: isScrolled ? 'blur(20px)' : 'blur(0px)'
+          backdropFilter: isScrolled ? 'blur(20px)' : 'blur(0px)',
+          // Am scăzut intensitatea folosind o culoare cu opacitate (ex: color-mix sau rgba)
+          borderImage: !isScrolled 
+            ? "linear-gradient(to right, transparent, color-mix(in srgb, var(--foreground), transparent 70%), transparent) 1" 
+            : "none"
         }}
       >
         <div className={`mx-auto ${
@@ -67,12 +71,6 @@ export function MainNav({ variant = "homepage" }: MainNavProps) {
                   <img src="logo.png" alt="Logo Turn One"/>
                 </div>
               </div>
-              {/* <div className="flex flex-col">
-                <span className="text-foreground font-bold text-xl gradient-text">
-                  Turn One
-                </span>
-                <span className="text-xs text-muted-foreground font-medium tracking-wider">PERFORMANCE</span>
-              </div> */}
             </Link>
 
             <div className="hidden md:flex items-center space-x-1">

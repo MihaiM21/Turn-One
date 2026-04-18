@@ -119,7 +119,7 @@ export default function ApiLaunchPage() {
               transition={{ duration: 0.5 }}
               className="font-bold text-red-500 min-w-[180px] inline-block"
             >
-              {showQ2 ? "Q2 2026" : "soon"}
+              {showQ2 ? "Q3 2026" : "soon"}
             </motion.span>
           </AnimatePresence>
         </motion.div>

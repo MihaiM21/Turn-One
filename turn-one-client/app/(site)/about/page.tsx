@@ -7,6 +7,8 @@ import Link from "next/link"
 import { ScrollAnimation } from "@/components/animation/scroll-animation"
 import { Metadata } from 'next'
 import { generateSEO } from '@/lib/seo'
+import { CallToAction } from "@/components/call-to-action"
+
 
 export const metadata: Metadata = generateSEO({
   title: 'About Turn One',
@@ -114,7 +116,7 @@ export default function AboutPage() {
       </section>
 
       {/* Timeline Section */}
-      <section className="py-24 bg-card">
+      <section className="py-24 bg-background">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center mb-16">
             <ScrollAnimation direction="up">
@@ -270,39 +272,8 @@ export default function AboutPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-primary text-white">
-        <div className="container mx-auto px-4 text-center">
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-balance">Join Our Journey</h2>
-            <p className="text-xl mb-8 opacity-90 text-pretty">
-              Be part of the next chapter in Formula One intelligence. Experience the future of motorsport analysis.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                variant="secondary"
-                className="text-lg h-14 px-8 bg-white text-primary hover:bg-white/90 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl group"
-                asChild
-              >
-                <Link href="/dashboard">
-                  <BarChart3 className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
-                  Start Analysis
-                </Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="secondary"
-                className="text-lg h-14 px-8 bg-white text-primary hover:bg-white hover:text-primary transition-all duration-300 hover:scale-105 group"
-                asChild
-              >
-                <Link href="/features">
-                  View Features
-                  <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">→</span>
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </div>
+      <section className="py-24 bg-background text-white">
+        <CallToAction />
       </section>
     </div>
   )
