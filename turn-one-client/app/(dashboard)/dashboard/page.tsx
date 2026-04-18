@@ -10,6 +10,7 @@ import { DashboardLoadingContainer } from "@/components/dashboard/dashboard-load
 import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links"
 import { useEffect, useState } from "react"
 import { getAuthToken } from "@/lib/auth-utils"
+import { GeneratorCard } from "@/components/dashboard/live dashboard/generator-card"
 
 
 export default function DashboardPage() {
@@ -36,8 +37,10 @@ export default function DashboardPage() {
 
         <main className="container mx-auto px-4 py-8 space-y-8">
 
+          <GeneratorCard />
+
           {/* User stats and daily gift widgets */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-1">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-1 mt-1">
             <UserStatsWidget />
             <DailyGiftWidget
               onGiftClaimed={() => window.location.reload()}
