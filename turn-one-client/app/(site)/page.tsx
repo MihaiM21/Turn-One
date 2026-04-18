@@ -13,13 +13,13 @@ type Card = {
   comingSoon?: boolean;
 };
 
-const sharedBackgroundImage = "/turn-one-car/2026-turn-one-car/0001.webp";
+const sharedBackgroundImage = "/turn-one-car/2026-turn-one-car/Cockpit_Image_01.webp";
 
 const cards: Card[] = [
   { id: "home",      title: "HOME",      link: "/home",               comingSoon: false },
   { id: "dashboard", title: "DASHBOARD", link: "/dashboard",          comingSoon: false },
+  { id: "F1 LIVE",        title: "F1 LIVE",        link: "/live", comingSoon: false  },
   { id: "store",     title: "STORE",     link: "/store",              comingSoon: true  },
-  { id: "AI",        title: "AI",        link: "https://ai.t1f1.com", comingSoon: true  },
   { id: "API",       title: "API CONSOLE",       link: "https://api.t1f1.com", comingSoon: true  },
   // { id: "DOCS",       title: "DOCS",       link: "https://docs.t1f1.com", comingSoon: true  },
 ];
@@ -348,7 +348,8 @@ function CardInner({
                         : card.id === "dashboard" ? "Live race data & analytics"
                         : card.id === "store" ? "Official merchandise"
                         : card.id === "API" ? "API Console"
-                        : card.id === "DOCS" ? "Documentation" : "Explore AI insights"}
+                        : card.id === "F1 LIVE" ? "Live timing & telemetry"
+                        : card.id === "DOCS" ? "Documentation" : "News"}
                     </p>
                   </motion.div>
                 )}
