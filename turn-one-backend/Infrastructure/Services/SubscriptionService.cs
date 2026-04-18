@@ -61,8 +61,12 @@ public class SubscriptionService : ISubscriptionService
         
         if (daysSinceLastRefill < refillPeriod)
             throw new InvalidOperationException($"Too soon for token refill. Last refill was {daysSinceLastRefill} days ago, next refill in {refillPeriod - daysSinceLastRefill} days");
-
-        user.Tokens += GetMonthlyTokens(user.Plan);
+        
+        // If user has the ammount already, just update the date to prevent abuse of the refill system
+        if(user.Tokens < GetMonthlyTokens(user.Plan)){
+            user.Tokens += GetMonthlyTokens(user.Plan);
+        }
+        
         user.LastTokenRefillDate = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
