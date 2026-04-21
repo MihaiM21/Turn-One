@@ -56,16 +56,24 @@ public class TelemetryIngestionService
 
         if (!_activeSessions.TryGetValue(userId, out var context))
         {
-            // First frame received - wait for static to init session
             if (messageType == "static")
             {
                 context = await InitializeSessionAsync(userId, plan, mode, payload);
-                if (context != null)
-                {
-                    _activeSessions[userId] = context;
-                }
             }
-            if (context == null) return; // Drop from persistence/laps until static arrives
+            else
+            {
+                // We missed the static frame (e.g. backend restarted mid-race). Create a fallback session.
+                context = await InitializeSessionAsync(userId, plan, mode, null);
+            }
+
+            if (context != null)
+            {
+                _activeSessions[userId] = context;
+            }
+            else 
+            {
+                return;
+            }
         }
 
         // 2. Spectator push
@@ -132,13 +140,20 @@ public class TelemetryIngestionService
         }
     }
 
-    private async Task<TelemetrySessionContext?> InitializeSessionAsync(Guid userId, PlanType plan, TelemetryMode mode, JsonElement staticPayload)
+    private async Task<TelemetrySessionContext?> InitializeSessionAsync(Guid userId, PlanType plan, TelemetryMode mode, JsonElement? staticPayload)
     {
         try
         {
-            string car = staticPayload.GetProperty("carModel").GetString() ?? "Unknown Car";
-            string track = staticPayload.GetProperty("track").GetString() ?? "Unknown Track";
-            string driver = staticPayload.GetProperty("playerName").GetString() ?? "Player";
+            string car = "Unknown Car";
+            string track = "Unknown Track";
+            string driver = "Player";
+
+            if (staticPayload.HasValue)
+            {
+                car = staticPayload.Value.TryGetProperty("carModel", out var cProp) ? (cProp.GetString() ?? "Unknown Car") : "Unknown Car";
+                track = staticPayload.Value.TryGetProperty("track", out var tProp) ? (tProp.GetString() ?? "Unknown Track") : "Unknown Track";
+                driver = staticPayload.Value.TryGetProperty("playerName", out var dProp) ? (dProp.GetString() ?? "Player") : "Player";
+            }
             
             using var scope = _scopeFactory.CreateScope();
             var sessionService = scope.ServiceProvider.GetRequiredService<ITelemetrySessionService>();
