@@ -31,7 +31,7 @@ export default function SessionDetailPage() {
         const fetchSession = async () => {
             try {
                 const token = localStorage.getItem("token");
-                const url = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271";
+                const url = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271/api").replace(/\/api\/?$/, "");
                 const res = await fetch(`${url}/api/telemetry/sessions/${id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -52,7 +52,7 @@ export default function SessionDetailPage() {
     const handleVisibilityUpdate = async (newVis: number) => {
         try {
             const token = localStorage.getItem("token");
-            const url = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271";
+            const url = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271/api").replace(/\/api\/?$/, "");
             await fetch(`${url}/api/telemetry/sessions/${id}/visibility`, {
                 method: 'PATCH',
                 headers: { 

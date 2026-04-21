@@ -20,7 +20,7 @@ export default function LeaderboardsPage() {
     useEffect(() => {
         const fetchLeaderboards = async () => {
             try {
-                const url = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271";
+                const url = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271/api").replace(/\/api\/?$/, "");
                 const res = await fetch(`${url}/api/telemetry/leaderboards`);
                 if (res.ok) {
                     const data = await res.json();

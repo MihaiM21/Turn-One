@@ -243,7 +243,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 var accessToken = context.Request.Query["access_token"];
 
                 // If requesting SignalR hub and token is in query string
-                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                if (!string.IsNullOrEmpty(accessToken) && 
+                    (path.StartsWithSegments("/hubs") || path.StartsWithSegments("/api/hubs") || path.StartsWithSegments("/api/ws")))
                 {
                     context.Token = accessToken;
                     return Task.CompletedTask;
@@ -387,8 +388,8 @@ app.UseMiddleware<WebSocketMiddleware>();
 app.MapControllers();
 
 // Map SignalR hubs
-app.MapHub<F1LiveDataHub>("/hubs/f1live").RequireCors("SignalRCorsPolicy");
-app.MapHub<SimTelemetryHub>("/hubs/simtelemetry").RequireCors("SignalRCorsPolicy");
+app.MapHub<F1LiveDataHub>("/api/hubs/f1live").RequireCors("SignalRCorsPolicy");
+app.MapHub<SimTelemetryHub>("/api/hubs/simtelemetry").RequireCors("SignalRCorsPolicy");
 
 Log.Information("Turn One API started successfully");
 app.Run();
