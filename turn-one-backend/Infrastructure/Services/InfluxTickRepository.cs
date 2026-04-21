@@ -96,6 +96,59 @@ public class InfluxTickRepository : ITelemetryTickRepository, IDisposable
         }
     }
 
+    public async Task<List<ChartPoint>> GetSessionPhysicsChartAsync(PlanType planType, Guid sessionId)
+    {
+        var bucket = planType switch
+        {
+            PlanType.BASIC => "telemetry_basic",
+            PlanType.PRO => "telemetry_pro",
+            PlanType.ELITE => "telemetry_elite",
+            _ => "telemetry_basic"
+        };
+
+        var query = $@"
+            from(bucket: ""{bucket}"")
+            |> range(start: 0)
+            |> filter(fn: (r) => r.sessionId == ""{sessionId}"" and r.msgType == ""physics"")
+            |> filter(fn: (r) => r._field == ""speedKmh"" or r._field == ""rpms"" or r._field == ""gas"" or r._field == ""brake"" or r._field == ""gear"")
+            |> aggregateWindow(every: 1s, fn: mean, createEmpty: false)
+            |> pivot(rowKey:[""_time""], columnKey: [""_field""], valueColumn: ""_value"")
+        ";
+
+        var points = new List<ChartPoint>();
+
+        try
+        {
+            var tables = await _client.GetQueryApi().QueryAsync(query, _org);
+            foreach (var record in tables.SelectMany(t => t.Records))
+            {
+                var pt = new ChartPoint
+                {
+                    Timestamp = record.GetTimeInDateTime()?.ToUniversalTime().Subtract(new DateTime(1970, 1, 1)).Ticks / 10000 ?? 0
+                };
+                
+                if (record.Values.ContainsKey("speedKmh") && record.Values["speedKmh"] != null)
+                    pt.SpeedKmh = Convert.ToDouble(record.Values["speedKmh"]);
+                if (record.Values.ContainsKey("rpms") && record.Values["rpms"] != null)
+                    pt.Rpms = Convert.ToDouble(record.Values["rpms"]);
+                if (record.Values.ContainsKey("gas") && record.Values["gas"] != null)
+                    pt.Gas = Convert.ToDouble(record.Values["gas"]);
+                if (record.Values.ContainsKey("brake") && record.Values["brake"] != null)
+                    pt.Brake = Convert.ToDouble(record.Values["brake"]);
+                if (record.Values.ContainsKey("gear") && record.Values["gear"] != null)
+                    pt.Gear = Convert.ToInt32(record.Values["gear"]);
+
+                points.Add(pt);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to query InfluxDB for chart");
+        }
+
+        return points.OrderBy(p => p.Timestamp).ToList();
+    }
+
     public void Dispose()
     {
         _client.Dispose();

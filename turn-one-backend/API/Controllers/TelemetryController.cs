@@ -87,6 +87,23 @@ public class TelemetryController : ControllerBase
         return Ok(session);
     }
 
+    [HttpGet("sessions/{id}/chart")]
+    public async Task<ActionResult> GetSessionChartData([FromServices] ITelemetryTickRepository tickRepo, Guid id)
+    {
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId)) return Unauthorized();
+
+        var planStr = User.FindFirstValue("Plan");
+        if (!Enum.TryParse<PlanType>(planStr, out var plan)) plan = PlanType.BASIC;
+
+        // Verify ownership/visibility
+        var session = await _sessionService.GetSessionDetailAsync(id, userId);
+        if (session == null) return NotFound();
+
+        var chartData = await tickRepo.GetSessionPhysicsChartAsync(plan, id);
+        return Ok(chartData);
+    }
+
     [HttpPatch("sessions/{id}/visibility")]
     public async Task<IActionResult> UpdateVisibility(Guid id, [FromBody] TelemetryVisibility visibility)
     {

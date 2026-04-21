@@ -4,6 +4,16 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+
+interface ChartPoint {
+    timestamp: number;
+    speedKmh: number;
+    rpms: number;
+    gas: number;
+    brake: number;
+    gear: number;
+}
 
 interface SessionDto {
     id: string;
@@ -23,7 +33,9 @@ export default function SessionDetailPage() {
     const id = params.id as string;
     
     const [session, setSession] = useState<SessionDto | null>(null);
+    const [chartData, setChartData] = useState<ChartPoint[]>([]);
     const [loading, setLoading] = useState(true);
+    const [chartLoading, setChartLoading] = useState(false);
 
     useEffect(() => {
         if (!id) return;
@@ -45,8 +57,26 @@ export default function SessionDetailPage() {
                 setLoading(false);
             }
         };
+        const fetchChart = async () => {
+            try {
+                setChartLoading(true);
+                const token = localStorage.getItem("token");
+                const url = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271/api").replace(/\/api\/?$/, "");
+                const res = await fetch(`${url}/api/telemetry/sessions/${id}/chart`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setChartData(data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch chart details", err);
+            } finally {
+                setChartLoading(false);
+            }
+        };
 
-        fetchSession();
+        fetchSession().then(fetchChart);
     }, [id]);
 
     const handleVisibilityUpdate = async (newVis: number) => {
@@ -122,9 +152,41 @@ export default function SessionDetailPage() {
                     </Card>
                 </div>
 
-                <Card className="border-primary/20 bg-gradient-to-br from-black/80 to-black/60 shadow-xl backdrop-blur-md mb-6">
-                    <CardContent className="p-12 text-center text-muted-foreground">
-                        Detailed per-lap telemetry charts will appear here using the historical InfluxDB data.
+                <Card className="border-primary/20 bg-gradient-to-br from-black/80 to-black/60 shadow-xl backdrop-blur-md mb-6 overflow-hidden">
+                    <CardContent className="p-6">
+                        <h2 className="text-xl font-bold mb-4 text-white uppercase tracking-widest text-sm">Speed & RPM Telemetry</h2>
+                        {chartLoading ? (
+                            <div className="h-64 flex items-center justify-center text-muted-foreground animate-pulse font-mono text-sm">
+                                Loading time-series data from InfluxDB...
+                            </div>
+                        ) : chartData.length === 0 ? (
+                            <div className="h-64 flex items-center justify-center text-muted-foreground font-mono text-sm max-w-md text-center mx-auto">
+                                No telemetry ticks found. You may need to ensure you complete some movement on track before quitting!
+                            </div>
+                        ) : (
+                            <div className="h-80 w-full mt-4">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#primary" strokeOpacity={0.1} vertical={false} />
+                                        <XAxis 
+                                            dataKey="timestamp" 
+                                            tickFormatter={(t) => format(new Date(t), "HH:mm:ss")} 
+                                            stroke="#555" 
+                                            tick={{fill: '#888', fontSize: 10}}
+                                        />
+                                        <YAxis yAxisId="left" stroke="#555" tick={{fill: '#888', fontSize: 10}} />
+                                        <YAxis yAxisId="right" orientation="right" stroke="#555" tick={{fill: '#888', fontSize: 10}} />
+                                        <Tooltip 
+                                            contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', borderColor: '#ef4444', borderRadius: '8px', backdropFilter: 'blur(4px)' }}
+                                            labelFormatter={(t) => format(new Date(t), "HH:mm:ss")}
+                                        />
+                                        <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                                        <Line yAxisId="left" type="monotone" dataKey="speedKmh" stroke="#ef4444" dot={false} strokeWidth={2} name="Speed (km/h)" />
+                                        <Line yAxisId="right" type="monotone" dataKey="rpms" stroke="#3b82f6" dot={false} strokeWidth={2} name="RPM" />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>
