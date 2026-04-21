@@ -18,6 +18,7 @@ import {
   SquareTerminal,
   Activity,
   Gamepad2,
+  Gauge,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -72,6 +73,29 @@ const data = {
       //     url: "#",
       //   },
       // ],
+    },
+    {
+      title: "Simracing",
+      url: "/simracing",
+      icon: Gauge,
+      items: [
+        {
+          title: "Live Telemetry",
+          url: "/simracing",
+        },
+        {
+          title: "My Sessions",
+          url: "/simracing/sessions",
+        },
+        {
+          title: "Live Streams",
+          url: "/simracing/spectate",
+        },
+        {
+          title: "Leaderboards",
+          url: "/simracing/leaderboards",
+        },
+      ],
     },
     {
       title: "Game",

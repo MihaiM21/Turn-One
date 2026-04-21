@@ -279,6 +279,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Add authorization policies if needed
 builder.Services.AddAuthorization();
 
+// === SIMRACING TELEMETRY DI ===
+builder.Services.AddScoped<ITelemetrySessionService, TelemetrySessionService>();
+builder.Services.AddSingleton<ITelemetryTickRepository, InfluxTickRepository>();
+builder.Services.AddSingleton<TelemetryIngestionService>();
+builder.Services.AddSingleton(System.Threading.Channels.Channel.CreateUnbounded<TickItem>());
+builder.Services.AddHostedService<TelemetryPersistenceWorker>();
+
 var app = builder.Build();
 
 // Start F1 live timing service
@@ -370,17 +377,18 @@ app.UseAuthorization();
 // app.UseHttpsRedirection();
 
 // Configure WebSocket middleware
-var webSocketOptions = new WebSocketOptions
+app.UseWebSockets(new WebSocketOptions
 {
-    KeepAliveInterval = TimeSpan.FromSeconds(120)
-};
-app.UseWebSockets(webSocketOptions);
+    KeepAliveInterval = TimeSpan.FromMinutes(2)
+});
+app.UseMiddleware<TelemetryWebSocketMiddleware>();
 app.UseMiddleware<WebSocketMiddleware>();
 
 app.MapControllers();
 
 // Map SignalR hubs
-app.MapHub<F1LiveDataHub>("/hubs/f1livedata").RequireCors("SignalRCorsPolicy");
+app.MapHub<F1LiveDataHub>("/hubs/f1live").RequireCors("SignalRCorsPolicy");
+app.MapHub<SimTelemetryHub>("/hubs/simtelemetry").RequireCors("SignalRCorsPolicy");
 
 Log.Information("Turn One API started successfully");
 app.Run();
