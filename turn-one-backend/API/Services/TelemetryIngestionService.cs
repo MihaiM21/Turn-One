@@ -48,6 +48,12 @@ public class TelemetryIngestionService
 
     public async Task ProcessFrameAsync(Guid userId, PlanType plan, TelemetryMode mode, string messageType, JsonElement payload)
     {
+        long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // 1. ALWAYS push to the private user SignalR group for Live Dashboard
+        var group1 = $"telemetry_{userId}";
+        await _hubContext.Clients.Group(group1).SendAsync("ReceiveTelemetry", messageType, payload, timestamp);
+
         if (!_activeSessions.TryGetValue(userId, out var context))
         {
             // First frame received - wait for static to init session
@@ -59,18 +65,13 @@ public class TelemetryIngestionService
                     _activeSessions[userId] = context;
                 }
             }
-            if (context == null) return; // Drop frames until static arrives
+            if (context == null) return; // Drop from persistence/laps until static arrives
         }
 
-        long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
-        // 1. SignalR push
-        var group1 = $"telemetry_{userId}";
-        var group2 = $"spectate_{context.SessionId}";
-
-        await _hubContext.Clients.Group(group1).SendAsync("ReceiveTelemetry", messageType, payload, timestamp);
+        // 2. Spectator push
         if (context.Visibility == TelemetryVisibility.Public)
         {
+            var group2 = $"spectate_{context.SessionId}";
             await _hubContext.Clients.Group(group2).SendAsync("ReceiveTelemetry", messageType, payload, timestamp);
         }
 
