@@ -27,7 +27,7 @@ export default function MySessionsPage() {
         const fetchSessions = async () => {
             try {
                 const token = localStorage.getItem("token");
-                const url = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271";
+                const url = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271/api").replace(/\/api\/?$/, "");
                 const res = await fetch(`${url}/api/telemetry/sessions/me`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });

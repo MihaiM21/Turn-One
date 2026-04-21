@@ -66,11 +66,12 @@ class SimTelemetryService {
     public async connect(spectateSessionId?: string) {
         if (this.connection) return;
 
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271";
+        const backendUrlStr = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271/api";
+        const backendUrl = backendUrlStr.replace(/\/api\/?$/, "");
         const token = localStorage.getItem("token");
 
         this.connection = new signalR.HubConnectionBuilder()
-            .withUrl(`${backendUrl}/hubs/simtelemetry`, {
+            .withUrl(`${backendUrl}/api/hubs/simtelemetry`, {
                 accessTokenFactory: () => token || "",
                 skipNegotiation: true,
                 transport: signalR.HttpTransportType.WebSockets
