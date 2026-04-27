@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { simTelemetryService, ConnectionStatus, SimPhysics, SimGraphics, SimStatic } from "@/lib/simTelemetryService";
+import {
+    simTelemetryService,
+    ConnectionStatus,
+    SimPhysics,
+    SimGraphics,
+    SimStatic,
+} from "@/lib/simTelemetryService";
 import { SimVitalsCard } from "@/components/dashboard/simracing/sim-vitals-card";
 import { SimPedalsCard } from "@/components/dashboard/simracing/sim-pedals-card";
 import { SimTyreCard } from "@/components/dashboard/simracing/sim-tyre-card";
@@ -10,6 +16,7 @@ import { SimBrakesCard } from "@/components/dashboard/simracing/sim-brakes-card"
 import { SimLapPanel } from "@/components/dashboard/simracing/sim-lap-panel";
 import { SimSessionStatusCard } from "@/components/dashboard/simracing/sim-session-status-card";
 import { SimConnectionBanner } from "@/components/dashboard/simracing/sim-connection-banner";
+import { Eye } from "lucide-react";
 
 export default function SpectateSessionDashboard() {
     const params = useParams();
@@ -54,44 +61,65 @@ export default function SpectateSessionDashboard() {
         <div className="relative w-full min-h-screen p-6 bg-gradient-to-br from-black via-red-950/20 to-black font-sans text-white">
             <SimConnectionBanner status={status} isActive={isActive} />
 
-            <div className="container mx-auto px-4 py-8 space-y-8 max-w-7xl">
-                <div className="mb-6 flex items-center justify-between">
+            <div className="container mx-auto px-4 py-8 max-w-7xl">
+                {/* Header */}
+                <div className="mb-8 flex items-start justify-between">
                     <div>
-                        <h1 className="text-3xl font-black italic tracking-tight text-white">
-                            SPECTATING: <span className="text-primary">{staticInfo?.playerName || "---"}</span>
-                        </h1>
+                        <div className="flex items-center gap-3 mb-1">
+                            <Eye className="w-5 h-5 text-primary" />
+                            <h1 className="text-3xl font-black italic tracking-tight">
+                                SPECTATING:{" "}
+                                <span className="text-primary">{staticInfo?.playerName || "---"}</span>
+                            </h1>
+                        </div>
+                        <p className="text-muted-foreground text-sm ml-8">Read-only cockpit view</p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right space-y-2">
                         <div className="inline-block px-3 py-1 bg-black/60 border border-primary/40 text-primary font-bold tracking-widest text-xs rounded-md shadow-[0_0_15px_rgba(220,38,38,0.2)] uppercase">
                             Spectator View
                         </div>
-                        <p className="text-muted-foreground mt-1 text-sm">{staticInfo?.carModel || "---"} @ {staticInfo?.track || "---"}</p>
+                        <p className="text-muted-foreground text-xs">
+                            {staticInfo?.carModel || "---"} · {staticInfo?.track || "---"}
+                        </p>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                <div className="col-span-12 md:col-span-8">
-                    <SimVitalsCard physics={physics} maxRpm={staticInfo?.maxRpm || 8500} />
-                </div>
-                <div className="col-span-12 md:col-span-4 h-full min-h-[160px]">
-                    <SimPedalsCard physics={physics} />
-                </div>
+                {/* Telemetry Grid */}
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                        <div className="col-span-12 md:col-span-8">
+                            <SimVitalsCard physics={physics} maxRpm={staticInfo?.maxRpm || 8500} />
+                        </div>
+                        <div className="col-span-12 md:col-span-4">
+                            <SimPedalsCard physics={physics} />
+                        </div>
+                    </div>
 
-                <div className="col-span-12 md:col-span-6">
-                    <SimTyreCard physics={physics} />
-                </div>
-                <div className="col-span-12 md:col-span-6">
-                    <SimBrakesCard physics={physics} />
-                </div>
+                    <SectionDivider label="Tyres & Brakes" />
 
-                <div className="col-span-12 md:col-span-6 h-full">
-                    <SimLapPanel graphics={graphics} />
-                </div>
-                <div className="col-span-12 md:col-span-6 h-full">
-                    <SimSessionStatusCard graphics={graphics} />
-                </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <SimTyreCard physics={physics} />
+                        <SimBrakesCard physics={physics} />
+                    </div>
+
+                    <SectionDivider label="Lap Info" />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <SimLapPanel graphics={graphics} />
+                        <SimSessionStatusCard graphics={graphics} />
+                    </div>
                 </div>
             </div>
+        </div>
+    );
+}
+
+function SectionDivider({ label }: { label: string }) {
+    return (
+        <div className="flex items-center gap-3 text-[10px] font-bold tracking-widest text-muted-foreground/40 uppercase">
+            <div className="flex-1 h-px bg-primary/10" />
+            <span>{label}</span>
+            <div className="flex-1 h-px bg-primary/10" />
         </div>
     );
 }
