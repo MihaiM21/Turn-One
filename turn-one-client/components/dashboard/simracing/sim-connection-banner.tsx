@@ -1,36 +1,66 @@
 "use client";
 
 import { ConnectionStatus } from "@/lib/simTelemetryService";
+import { WifiOff, Wifi, MonitorDot } from "lucide-react";
+import { ReactNode } from "react";
 
 interface SimConnectionBannerProps {
     status: ConnectionStatus;
     isActive: boolean;
 }
 
+interface BannerConfig {
+    icon: ReactNode;
+    border: string;
+    bg: string;
+    title: string;
+    message: string;
+    showDownload: boolean;
+}
+
 export function SimConnectionBanner({ status, isActive }: SimConnectionBannerProps) {
     if (status === "connected" && isActive) return null;
 
-    let bannerColor = "bg-yellow-500/10 border-yellow-500/20 text-yellow-200 backdrop-blur-md shadow-xl";
-    let title = "Connecting to Telemetry Server...";
-    let message = "Please wait.";
+    const configs: Record<string, BannerConfig> = {
+        disconnected: {
+            icon: <WifiOff className="w-10 h-10 text-primary" />,
+            border: "border-primary/30",
+            bg: "bg-primary/10",
+            title: "Turn One Link Disconnected",
+            message: "Start the Turn One Link desktop app and connect to your account to begin streaming telemetry.",
+            showDownload: true,
+        },
+        connecting: {
+            icon: <Wifi className="w-10 h-10 text-yellow-400 animate-pulse" />,
+            border: "border-yellow-500/30",
+            bg: "bg-yellow-500/10",
+            title: "Connecting to Telemetry Server...",
+            message: "Establishing connection. Please wait.",
+            showDownload: false,
+        },
+        connected: {
+            icon: <MonitorDot className="w-10 h-10 text-blue-400 animate-pulse" />,
+            border: "border-blue-500/30",
+            bg: "bg-blue-500/10",
+            title: "Waiting for Data...",
+            message: "Turn One Link is connected. Launch ACC and get on track!",
+            showDownload: false,
+        },
+    };
 
-    if (status === "disconnected") {
-        bannerColor = "bg-primary/10 border-primary/20 text-primary-foreground backdrop-blur-md shadow-xl shadow-primary/20";
-        title = "Turn One Link Disconnected";
-        message = "Start the Turn One Link desktop app and connect to your account.";
-    } else if (status === "connected" && !isActive) {
-        bannerColor = "bg-blue-500/10 border-blue-500/20 text-blue-200 backdrop-blur-md shadow-xl";
-        title = "Waiting for Data...";
-        message = "Turn One Link is connected. Fire up ACC and get on track!";
-    }
+    const cfg = configs[status] ?? configs.connecting;
 
     return (
-        <div className={`absolute inset-0 z-50 backdrop-blur-sm bg-black/80 flex items-center justify-center rounded-xl m-6`}>
-            <div className={`p-8 rounded-2xl border-2 max-w-lg text-center ${bannerColor}`}>
-                <h2 className="text-2xl font-black mb-2">{title}</h2>
-                <p className="opacity-80 mb-6">{message}</p>
-                {status === "disconnected" && (
-                    <button className="bg-primary hover:bg-primary/80 text-primary-foreground font-bold py-2 px-6 rounded-lg transition-colors shadow-[0_0_15px_rgba(220,38,38,0.3)]">
+        <div
+            className="absolute inset-0 z-50 flex items-center justify-center rounded-xl m-4"
+            style={{ backdropFilter: "blur(8px)", background: "rgba(0,0,0,0.85)" }}
+        >
+            <div className={`p-8 rounded-2xl border-2 max-w-md w-full text-center ${cfg.border} ${cfg.bg} shadow-2xl`}>
+                <div className="flex justify-center mb-4">{cfg.icon}</div>
+                <h2 className="text-2xl font-black mb-2 text-white">{cfg.title}</h2>
+                <p className="text-muted-foreground mb-6 leading-relaxed">{cfg.message}</p>
+                {cfg.showDownload && (
+                    <button className="bg-primary hover:bg-primary/80 text-primary-foreground font-bold py-2.5 px-8 rounded-lg transition-all shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)]">
                         Download Turn One Link
                     </button>
                 )}
