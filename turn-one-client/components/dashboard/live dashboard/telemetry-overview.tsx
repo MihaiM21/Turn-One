@@ -42,7 +42,7 @@ export function TelemetryOverview() {
     },
     {
       title: "Average Response Time",
-      value: "542 ms",
+      value: "192 ms",
       change: "-12 ms",
       icon: Gauge,
       trend: "improvement",
@@ -50,7 +50,7 @@ export function TelemetryOverview() {
     {
       title: "Sessions Analyzed Today",
       value: dailyStats ? dailyStats.total_sessions.toString() : "Loading...",
-      change: "+3 today",
+      change: dailyStats ? `+${dailyStats.total_sessions} today` : "0 today",
       icon: Activity,
       trend: "neutral",
     },
