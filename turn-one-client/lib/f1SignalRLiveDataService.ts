@@ -41,7 +41,7 @@ export type F1StatusCallback = (status: 'connected' | 'connecting' | 'disconnect
  */
 export class F1SignalRLiveDataService {
   // Connection management
-  private readonly hubUrl = `${API_URL}/hubs/f1livedata`;
+  private readonly hubUrl = `${API_URL}/hubs/f1live`;
   private connection: signalR.HubConnection | null = null;
   private connectionState: 'connected' | 'connecting' | 'disconnected' | 'error' | 'no-session' = 'disconnected';
   private reconnectTimer: NodeJS.Timeout | null = null;
