@@ -31,7 +31,7 @@ public class F1LiveTimingController : ControllerBase
     {
         try
         {
-            var httpClient = _httpClientFactory.CreateClient();
+            var httpClient = _httpClientFactory.CreateClient("F1");
             httpClient.Timeout = TimeSpan.FromSeconds(30);
             AddBrowserHeaders(httpClient);
             
@@ -113,7 +113,7 @@ public class F1LiveTimingController : ControllerBase
     {
         try
         {
-            var httpClient = _httpClientFactory.CreateClient();
+            var httpClient = _httpClientFactory.CreateClient("F1");
             httpClient.Timeout = TimeSpan.FromSeconds(10);
             AddBrowserHeaders(httpClient);
             

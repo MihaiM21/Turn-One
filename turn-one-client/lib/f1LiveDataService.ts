@@ -47,7 +47,7 @@ export type F1StatusCallback = (status: 'connected' | 'connecting' | 'disconnect
 export class F1LiveDataService {
   private readonly signalrUrl = "livetiming.formula1.com/signalr";
   private readonly signalrHub = "Streaming";
-  private readonly proxyUrl = `${API_URL}/f1livetiming`; // Use backend proxy
+  private readonly proxyUrl = `${API_URL}/f1livetiming`; // Used for status checks only
   private readonly retryFreq = 15000;
   private readonly maxRetries = 5;
   
@@ -250,16 +250,16 @@ export class F1LiveDataService {
       this.notifyStatusCallbacks('connecting');
 
       const hub = encodeURIComponent(JSON.stringify([{ name: this.signalrHub }]));
-      
-      // Use backend proxy instead of direct connection
-      const negotiationUrl = `${this.proxyUrl}/negotiate?connectionData=${hub}&clientProtocol=1.5`;
-      
+
+      // Negotiate directly from the browser — the browser's residential IP is not blocked by F1's CDN.
+      // The VPS backend IP is blocked by CloudFront, so routing through the proxy fails.
+      const negotiationUrl = `https://${this.signalrUrl}/negotiate?connectionData=${hub}&clientProtocol=1.5`;
+
       const negotiationResponse = await fetch(negotiationUrl, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
         },
-        credentials: 'include', // Include cookies if needed
       });
 
       if (!negotiationResponse.ok) {

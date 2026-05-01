@@ -61,6 +61,7 @@ public class F1LiveTimingService
             var (connectionToken, cookies) = await NegotiateConnectionAsync();
 
             _clientWebSocket = new ClientWebSocket();
+            _clientWebSocket.Options.Proxy = new System.Net.WebProxy("socks5://127.0.0.1:40000");
             _clientWebSocket.Options.SetRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
             _clientWebSocket.Options.SetRequestHeader("Accept-Language", "en-US,en;q=0.9");
             _clientWebSocket.Options.SetRequestHeader("Referer", "https://www.formula1.com/");
@@ -146,7 +147,7 @@ public class F1LiveTimingService
 
     private async Task<(string connectionToken, string cookies)> NegotiateConnectionAsync()
     {
-        var httpClient = _httpClientFactory.CreateClient();
+        var httpClient = _httpClientFactory.CreateClient("F1");
         AddBrowserHeaders(httpClient);
 
         var hub = Uri.EscapeDataString("[{\"name\":\"Streaming\"}]");

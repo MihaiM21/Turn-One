@@ -216,6 +216,15 @@ builder.Services.AddHostedService<TokenRefillBackgroundService>();
 // Add HttpClient for F1 API proxy
 builder.Services.AddHttpClient();
 
+// Named HttpClient that routes through Cloudflare WARP (socks5://127.0.0.1:40000)
+// Used for all outbound calls to livetiming.formula1.com to bypass VPS IP blocks
+builder.Services.AddHttpClient("F1", client => { })
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        Proxy = new System.Net.WebProxy("socks5://127.0.0.1:40000"),
+        UseProxy = true,
+    });
+
 // Configure JWT authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
