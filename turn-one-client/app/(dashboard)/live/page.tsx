@@ -26,6 +26,8 @@ import { SessionTimer } from '@/components/dashboard/session-timer';
 import { DashboardModuleGrid } from '@/components/dashboard/dashboard-module-grid';
 import { useDashboardLayout } from '@/hooks/useDashboardLayout';
 import { useTeamData } from '@/hooks/useTeamData';
+import { usePageMaintenance } from '@/hooks/usePageMaintenance';
+import { MaintenanceScreen } from '@/components/dashboard/maintenance-screen';
 
 interface LiveSessionData {
   sessionInfo?: {
@@ -109,6 +111,8 @@ export default function LiveDashboard() {
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error' | 'no-session'>('disconnected');
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isManuallyConnected, setIsManuallyConnected] = useState(false);
+
+  const { isDisabled, message, loading: maintenanceLoading } = usePageMaintenance('live');
 
   const {
     modules,
@@ -270,6 +274,9 @@ export default function LiveDashboard() {
         return 'border-blue-500 bg-blue-500/10';
     }
   };
+
+  if (maintenanceLoading) return null; // very brief — avoids flash
+  if (isDisabled) return <MaintenanceScreen slug="live" message={message} />;
 
   return (
     <div className="flex flex-col min-h-screen">

@@ -10,6 +10,8 @@ import { SimLapPanel } from "@/components/dashboard/simracing/sim-lap-panel";
 import { SimSessionStatusCard } from "@/components/dashboard/simracing/sim-session-status-card";
 import { SimConnectionBanner } from "@/components/dashboard/simracing/sim-connection-banner";
 import { Activity } from "lucide-react";
+import { usePageMaintenance } from "@/hooks/usePageMaintenance";
+import { MaintenanceScreen } from "@/components/dashboard/maintenance-screen";
 
 export default function SimracingLiveDashboard() {
     const [status, setStatus] = useState<ConnectionStatus>("disconnected");
@@ -17,6 +19,8 @@ export default function SimracingLiveDashboard() {
     const [graphics, setGraphics] = useState<SimGraphics | null>(null);
     const [staticInfo, setStaticInfo] = useState<SimStatic | null>(null);
     const [isActive, setIsActive] = useState(false);
+
+    const { isDisabled, message, loading: maintenanceLoading } = usePageMaintenance('simracing');
 
     useEffect(() => {
         const handleStatus = (s: ConnectionStatus) => setStatus(s);
@@ -50,6 +54,9 @@ export default function SimracingLiveDashboard() {
             : isActive
             ? { color: "bg-green-500", label: "Live" }
             : { color: "bg-blue-400 animate-pulse", label: "Idle" };
+
+    if (maintenanceLoading) return null;
+    if (isDisabled) return <MaintenanceScreen slug="simracing" message={message} />;
 
     return (
         <div className="relative w-full min-h-screen p-6 bg-gradient-to-br from-black via-red-950/20 to-black font-sans text-white">

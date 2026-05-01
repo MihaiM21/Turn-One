@@ -13,10 +13,12 @@ namespace API.Controllers;
 public class AdminController : ControllerBase
 {
     private readonly IAdminService _adminService;
+    private readonly IPageStatusService _pageStatusService;
 
-    public AdminController(IAdminService adminService)
+    public AdminController(IAdminService adminService, IPageStatusService pageStatusService)
     {
         _adminService = adminService;
+        _pageStatusService = pageStatusService;
     }
 
     [HttpGet("users")]
@@ -191,6 +193,93 @@ public class AdminController : ControllerBase
             return StatusCode(500, new { message = "Failed to retrieve online users", error = ex.Message });
         }
     }
+
+    // ── Page Maintenance Endpoints ─────────────────────────────────────────
+
+    /// <summary>Returns maintenance status for all managed pages. Admin only.</summary>
+    [HttpGet("page-status")]
+    public async Task<ActionResult> GetAllPageStatuses()
+    {
+        try
+        {
+            var statuses = await _pageStatusService.GetAllPageStatusesAsync();
+            return Ok(statuses.Select(MapPageStatus));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to retrieve page statuses", error = ex.Message });
+        }
+    }
+
+    /// <summary>Updates the maintenance status for a page. Admin only.</summary>
+    [HttpPut("page-status/{slug}")]
+    public async Task<ActionResult> SetPageStatus(string slug, [FromBody] SetPageStatusRequest request)
+    {
+        try
+        {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            string username = "admin";
+            if (currentUserId != null)
+            {
+                var user = await _adminService.GetUserByIdAsync(Guid.Parse(currentUserId));
+                username = user?.Username ?? "admin";
+            }
+
+            var status = await _pageStatusService.SetPageStatusAsync(
+                slug,
+                request.IsDisabled,
+                request.MaintenanceMessage,
+                username);
+
+            return Ok(MapPageStatus(status));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to update page status", error = ex.Message });
+        }
+    }
+
+    private static object MapPageStatus(Domain.Entities.PageStatus s) => new
+    {
+        pageSlug = s.PageSlug,
+        isDisabled = s.IsDisabled,
+        maintenanceMessage = s.MaintenanceMessage,
+        updatedAt = s.UpdatedAt,
+        updatedByUsername = s.UpdatedByUsername,
+    };
+}
+
+/// <summary>Public endpoint — no ADMIN role required, exposes no sensitive data.</summary>
+[ApiController]
+[Route("api/pages")]
+public class PageStatusPublicController : ControllerBase
+{
+    private readonly IPageStatusService _pageStatusService;
+
+    public PageStatusPublicController(IPageStatusService pageStatusService)
+    {
+        _pageStatusService = pageStatusService;
+    }
+
+    /// <summary>Returns the maintenance status for a single page. No auth required.</summary>
+    [HttpGet("{slug}")]
+    public async Task<ActionResult> GetPageStatus(string slug)
+    {
+        try
+        {
+            var status = await _pageStatusService.GetPageStatusAsync(slug);
+            return Ok(new
+            {
+                pageSlug = status.PageSlug,
+                isDisabled = status.IsDisabled,
+                maintenanceMessage = status.MaintenanceMessage,
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to retrieve page status", error = ex.Message });
+        }
+    }
 }
 
 public class UpdatePlanRequest
@@ -202,3 +291,9 @@ public class UpdateRoleRequest
 {
     public Role Role { get; set; }
 }
+
+public class SetPageStatusRequest
+{
+    public bool IsDisabled { get; set; }
+    public string? MaintenanceMessage { get; set; }
+}

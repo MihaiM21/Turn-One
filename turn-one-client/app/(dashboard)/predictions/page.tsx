@@ -6,18 +6,24 @@ import { Card, CardContent } from '@/components/ui/card';
 import { DashboardHeader } from "@/components/dashboard/live dashboard/dashboard-header";
 import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links";
 import { Trophy, ArrowRight } from 'lucide-react';
+import { usePageMaintenance } from '@/hooks/usePageMaintenance';
+import { MaintenanceScreen } from '@/components/dashboard/maintenance-screen';
 
 export default function PredictionsPage() {
   const router = useRouter();
+  const { isDisabled, message, loading: maintenanceLoading } = usePageMaintenance('predictions');
 
   useEffect(() => {
-    // Redirect to games page with my-predictions tab after a short delay
+    if (maintenanceLoading || isDisabled) return; // don't redirect if in maintenance
     const timer = setTimeout(() => {
       router.push('/games?tab=my-predictions');
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [router]);
+  }, [router, maintenanceLoading, isDisabled]);
+
+  if (maintenanceLoading) return null;
+  if (isDisabled) return <MaintenanceScreen slug="predictions" message={message} />;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background/95 via-background to-background/98">

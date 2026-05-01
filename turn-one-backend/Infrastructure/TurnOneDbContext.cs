@@ -27,6 +27,9 @@ public class TurnOneDbContext : DbContext
     public DbSet<TelemetrySession> TelemetrySessions { get; set; } = null!;
     public DbSet<TelemetryLap> TelemetryLaps { get; set; } = null!;
 
+    // Page maintenance
+    public DbSet<PageStatus> PageStatuses { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>(entity =>
@@ -150,6 +153,17 @@ public class TurnOneDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => new { e.SessionId, e.LapNumber }).IsUnique();
+        });
+
+        modelBuilder.Entity<PageStatus>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.PageSlug).IsRequired();
+            entity.Property(e => e.IsDisabled).IsRequired().HasDefaultValue(false);
+            entity.Property(e => e.MaintenanceMessage).IsRequired(false);
+            entity.Property(e => e.UpdatedAt).IsRequired();
+            entity.Property(e => e.UpdatedByUsername).IsRequired(false);
+            entity.HasIndex(e => e.PageSlug).IsUnique();
         });
     }
 }

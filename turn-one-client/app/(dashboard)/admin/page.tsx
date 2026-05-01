@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Search, Users, Crown, Shield, TrendingUp, Download, Filter, MoreHorizontal, Calendar, Activity, AlertCircle, RefreshCw, Mail, CheckCircle2, XCircle, Trash2, UserPlus, Zap, Send, FileText, Plus, Trophy, Brain, Bell, Loader2, Image as ImageIcon, ArrowRight, Coins, type LucideIcon } from 'lucide-react';
+import { Search, Users, Crown, Shield, TrendingUp, Download, Filter, MoreHorizontal, Calendar, Activity, AlertCircle, RefreshCw, Mail, CheckCircle2, XCircle, Trash2, UserPlus, Zap, Send, FileText, Plus, Trophy, Brain, Bell, Loader2, Image as ImageIcon, ArrowRight, Coins, Wrench, type LucideIcon } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -50,6 +50,7 @@ import { useRouter } from 'next/navigation';
 import * as adminService from '@/lib/adminService';
 import * as userService from '@/lib/userService';
 import { OnlineUsersWidget } from '@/components/dashboard/online-users-widget';
+import type { PageStatusData } from '@/lib/adminService';
 
 interface User {
   id: string;
@@ -167,6 +168,10 @@ export default function AdminDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [activeTab, setActiveTab] = useState('all');
+  const [pageStatuses, setPageStatuses] = useState<PageStatusData[]>([]);
+  const [pageMessages, setPageMessages] = useState<Record<string, string>>({});
+  const [pageStatusSaving, setPageStatusSaving] = useState<Record<string, boolean>>({});
+  const [pageStatusesLoading, setPageStatusesLoading] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -174,6 +179,7 @@ export default function AdminDashboard() {
     checkAdminAccess();
     fetchUsers();
     fetchCurrentUser();
+    loadPageStatuses();
   }, []);
 
   const checkAdminAccess = async () => {
@@ -419,6 +425,40 @@ export default function AdminDashboard() {
     setEditType(null);
     setEmailSubject('');
     setEmailMessage('');
+  };
+
+  const loadPageStatuses = async () => {
+    setPageStatusesLoading(true);
+    const statuses = await adminService.getAllPageStatuses();
+    setPageStatuses(statuses);
+    // Prime the message input state from whatever is stored
+    const msgs: Record<string, string> = {};
+    statuses.forEach(s => { msgs[s.pageSlug] = s.maintenanceMessage ?? ''; });
+    setPageMessages(msgs);
+    setPageStatusesLoading(false);
+  };
+
+  const handlePageStatusToggle = async (slug: string, currentlyDisabled: boolean) => {
+    setPageStatusSaving(prev => ({ ...prev, [slug]: true }));
+    const result = await adminService.setPageStatus(
+      slug,
+      !currentlyDisabled,
+      pageMessages[slug] ?? '',
+    );
+    setPageStatusSaving(prev => ({ ...prev, [slug]: false }));
+
+    if (result.success && result.data) {
+      // Optimistic update
+      setPageStatuses(prev =>
+        prev.map(s => s.pageSlug === slug ? { ...s, isDisabled: result.data!.isDisabled } : s)
+      );
+      toast({
+        title: result.data.isDisabled ? '🔴 Page Disabled' : '🟢 Page Enabled',
+        description: `/${slug} is now ${result.data.isDisabled ? 'under maintenance' : 'online'}.`,
+      });
+    } else {
+      toast({ title: 'Error', description: result.error ?? 'Failed to update page status', variant: 'destructive' });
+    }
   };
 
   if (loading) {
@@ -685,6 +725,85 @@ export default function AdminDashboard() {
               );
             })}
           </div>
+        </div>
+
+        {/* Page Controls */}
+        <div className="mb-3">
+          <h2 className="text-sm font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
+            <Wrench className="h-4 w-4 text-red-400" />
+            Page Controls
+          </h2>
+          <Card className="border-red-500/20 bg-gradient-to-br from-card to-red-500/5">
+            <CardContent className="p-3">
+              <div className="space-y-2">
+                {pageStatusesLoading ? (
+                  <div className="flex items-center justify-center gap-2 py-4 text-xs text-muted-foreground">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Loading page statuses...
+                  </div>
+                ) : pageStatuses.length === 0 ? (
+                  <div className="flex flex-col items-center gap-2 py-4">
+                    <p className="text-xs text-muted-foreground">Could not load page statuses.</p>
+                    <button onClick={loadPageStatuses} className="text-xs text-primary underline">Retry</button>
+                  </div>
+                ) : null}
+                {pageStatuses.map((ps) => (
+                  <div
+                    key={ps.pageSlug}
+                    className={`flex flex-col sm:flex-row sm:items-center gap-2 rounded-lg border p-3 transition-colors ${
+                      ps.isDisabled
+                        ? 'border-red-500/30 bg-red-500/5'
+                        : 'border-border/40 bg-muted/20'
+                    }`}
+                  >
+                    {/* Left: slug + status badge */}
+                    <div className="flex items-center gap-2 min-w-[140px]">
+                      <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${ps.isDisabled ? 'bg-red-500' : 'bg-green-500'}`} />
+                      <span className="text-sm font-mono font-semibold text-foreground">/{ps.pageSlug}</span>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                        ps.isDisabled
+                          ? 'bg-red-500/15 text-red-400'
+                          : 'bg-green-500/15 text-green-400'
+                      }`}>
+                        {ps.isDisabled ? 'Maintenance' : 'Online'}
+                      </span>
+                    </div>
+
+                    {/* Middle: message input */}
+                    <Input
+                      placeholder="Maintenance message (optional)..."
+                      value={pageMessages[ps.pageSlug] ?? ''}
+                      onChange={(e) =>
+                        setPageMessages(prev => ({ ...prev, [ps.pageSlug]: e.target.value }))
+                      }
+                      className="flex-1 h-8 text-xs"
+                    />
+
+                    {/* Right: toggle button */}
+                    <Button
+                      size="sm"
+                      variant={ps.isDisabled ? 'outline' : 'destructive'}
+                      className={`shrink-0 h-8 text-xs font-semibold transition-all ${
+                        ps.isDisabled
+                          ? 'border-green-500/40 text-green-400 hover:bg-green-500/10'
+                          : ''
+                      }`}
+                      disabled={pageStatusSaving[ps.pageSlug]}
+                      onClick={() => handlePageStatusToggle(ps.pageSlug, ps.isDisabled)}
+                    >
+                      {pageStatusSaving[ps.pageSlug] ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : ps.isDisabled ? (
+                        '↑ Re-enable'
+                      ) : (
+                        '↓ Disable'
+                      )}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Secondary Stats */}

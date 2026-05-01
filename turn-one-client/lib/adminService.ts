@@ -226,3 +226,84 @@ export const fetchOnlineUsers = async () => {
         return { success: false, error: 'Failed to fetch online users', count: 0, users: [] };
     }
 };
+
+// ── Page Maintenance ───────────────────────────────────────────────────────
+
+export interface PageStatusData {
+    pageSlug: string;
+    isDisabled: boolean;
+    maintenanceMessage?: string;
+}
+
+/** Public — no token required. Used by client pages to check their own status. */
+export const getPageStatus = async (slug: string): Promise<PageStatusData | null> => {
+    try {
+        const response = await fetch(`${API_URL}/pages/${slug}`);
+        if (!response.ok) return null;
+        return response.json();
+    } catch (error) {
+        console.error('Error fetching page status:', error);
+        return null;
+    }
+};
+
+/** Admin-only — fetches all managed page statuses. */
+export const getAllPageStatuses = async (): Promise<PageStatusData[]> => {
+    const token = getToken();
+    if (!token) {
+        console.warn('[PageStatus] No token, skipping fetch');
+        return [];
+    }
+
+    try {
+        const url = `${API_URL}/admin/page-status`;
+        console.log('[PageStatus] Fetching', url);
+        const response = await fetch(url, {
+            headers: { 'Authorization': token },
+        });
+        console.log('[PageStatus] Response status:', response.status);
+        if (!response.ok) {
+            const text = await response.text();
+            console.error('[PageStatus] Error response:', text);
+            return [];
+        }
+        const data = await response.json();
+        console.log('[PageStatus] Data:', data);
+        return data;
+    } catch (error) {
+        console.error('[PageStatus] Fetch failed:', error);
+        return [];
+    }
+};
+
+
+/** Admin-only — enables or disables a page with an optional maintenance message. */
+export const setPageStatus = async (
+    slug: string,
+    isDisabled: boolean,
+    maintenanceMessage: string,
+): Promise<{ success: boolean; data?: PageStatusData; error?: string }> => {
+    const token = getToken();
+    if (!token) return { success: false, error: 'No token found' };
+
+    try {
+        const response = await fetch(`${API_URL}/admin/page-status/${slug}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token,
+            },
+            body: JSON.stringify({ isDisabled, maintenanceMessage }),
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, data };
+        } else {
+            return { success: false, error: 'Failed to update page status' };
+        }
+    } catch (error) {
+        console.error('Error setting page status:', error);
+        return { success: false, error: 'Failed to update page status' };
+    }
+};
