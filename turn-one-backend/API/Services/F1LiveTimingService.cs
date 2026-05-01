@@ -58,7 +58,10 @@ public class F1LiveTimingService
 
             // Step 2: Establish WebSocket connection
             _clientWebSocket = new ClientWebSocket();
-            _clientWebSocket.Options.SetRequestHeader("User-Agent", "Turn-One-F1-Client/1.0");
+            _clientWebSocket.Options.SetRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
+            _clientWebSocket.Options.SetRequestHeader("Accept-Language", "en-US,en;q=0.9");
+            _clientWebSocket.Options.SetRequestHeader("Referer", "https://www.formula1.com/");
+            _clientWebSocket.Options.SetRequestHeader("Origin", "https://www.formula1.com");
             _clientWebSocket.Options.SetRequestHeader("Cookie", cookies);
 
             var hub = Uri.EscapeDataString("[{\"name\":\"Streaming\"}]");
@@ -113,10 +116,19 @@ public class F1LiveTimingService
         _logger.LogInformation("F1 live timing service stopped");
     }
 
+    private static void AddBrowserHeaders(HttpClient httpClient)
+    {
+        httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
+        httpClient.DefaultRequestHeaders.Add("Accept", "application/json, text/plain, */*");
+        httpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
+        httpClient.DefaultRequestHeaders.Add("Referer", "https://www.formula1.com/");
+        httpClient.DefaultRequestHeaders.Add("Origin", "https://www.formula1.com");
+    }
+
     private async Task<(string connectionToken, string cookies)> NegotiateConnectionAsync()
     {
         var httpClient = _httpClientFactory.CreateClient();
-        httpClient.DefaultRequestHeaders.Add("User-Agent", "Turn-One-F1-Client/1.0");
+        AddBrowserHeaders(httpClient);
 
         var hub = Uri.EscapeDataString("[{\"name\":\"Streaming\"}]");
         var negotiationUrl = $"https://livetiming.formula1.com/signalr/negotiate?connectionData={hub}&clientProtocol=1.5";

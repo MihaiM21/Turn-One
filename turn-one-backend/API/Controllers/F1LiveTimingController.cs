@@ -17,14 +17,23 @@ public class F1LiveTimingController : ControllerBase
         _logger = logger;
     }
 
+    private static void AddBrowserHeaders(HttpClient httpClient)
+    {
+        httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
+        httpClient.DefaultRequestHeaders.Add("Accept", "application/json, text/plain, */*");
+        httpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
+        httpClient.DefaultRequestHeaders.Add("Referer", "https://www.formula1.com/");
+        httpClient.DefaultRequestHeaders.Add("Origin", "https://www.formula1.com");
+    }
+
     [HttpGet("negotiate")]
     public async Task<IActionResult> ProxyNegotiate([FromQuery] string connectionData, [FromQuery] string clientProtocol = "1.5")
     {
         try
         {
             var httpClient = _httpClientFactory.CreateClient();
-            httpClient.DefaultRequestHeaders.Add("User-Agent", "Turn-One-F1-Client/1.0");
-            httpClient.Timeout = TimeSpan.FromSeconds(30); // Longer timeout
+            httpClient.Timeout = TimeSpan.FromSeconds(30);
+            AddBrowserHeaders(httpClient);
             
             var negotiationUrl = $"https://livetiming.formula1.com/signalr/negotiate?connectionData={connectionData}&clientProtocol={clientProtocol}";
             
@@ -106,7 +115,7 @@ public class F1LiveTimingController : ControllerBase
         {
             var httpClient = _httpClientFactory.CreateClient();
             httpClient.Timeout = TimeSpan.FromSeconds(10);
-            httpClient.DefaultRequestHeaders.Add("User-Agent", "Turn-One-F1-Client/1.0");
+            AddBrowserHeaders(httpClient);
             
             // Try to access F1 live timing to check if there's an active session
             var hub = Uri.EscapeDataString(JsonSerializer.Serialize(new[] { new { name = "Streaming" } }));
