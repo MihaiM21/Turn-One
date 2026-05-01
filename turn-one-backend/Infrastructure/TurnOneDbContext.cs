@@ -21,6 +21,11 @@ public class TurnOneDbContext : DbContext
     public DbSet<Media> Media { get; set; } = null!;
     public DbSet<Notification> Notifications { get; set; } = null!;
     public DbSet<UserNotification> UserNotifications { get; set; } = null!;
+    
+    // Simracing telemetry entities
+    public DbSet<SimUser> SimUsers { get; set; } = null!;
+    public DbSet<TelemetrySession> TelemetrySessions { get; set; } = null!;
+    public DbSet<TelemetryLap> TelemetryLaps { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -123,6 +128,28 @@ public class TurnOneDbContext : DbContext
             entity.Property(e => e.UploadedAt).IsRequired();
             entity.HasIndex(e => e.FileName);
             entity.HasIndex(e => e.UploadedAt);
+        });
+
+        modelBuilder.Entity<SimUser>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.User).WithOne().HasForeignKey<SimUser>(e => e.UserId);
+            entity.HasIndex(e => e.UserId).IsUnique();
+        });
+
+        modelBuilder.Entity<TelemetrySession>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId);
+            entity.HasMany(e => e.Laps).WithOne(l => l.Session).HasForeignKey(l => l.SessionId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.StartedAt);
+        });
+
+        modelBuilder.Entity<TelemetryLap>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.SessionId, e.LapNumber }).IsUnique();
         });
     }
 }
