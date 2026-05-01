@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { LiveTimingGrid } from '@/components/dashboard/live-timing-grid';
 import { getF1LiveDataService, type F1DataCallback, type F1StatusCallback } from '@/lib/f1LiveDataService';
 import { F1DataMapper, type MappedF1Data } from '@/lib/f1DataMapper';
+import { getPageStatus, type PageStatus } from '@/lib/pageStatusService';
 import { 
   Clock, 
   Activity, 
@@ -109,6 +110,8 @@ export default function LiveDashboard() {
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error' | 'no-session'>('disconnected');
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isManuallyConnected, setIsManuallyConnected] = useState(false);
+  const [pageStatus, setPageStatus] = useState<PageStatus | null>(null);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(true);
 
   const {
     modules,
@@ -177,6 +180,15 @@ export default function LiveDashboard() {
       f1Service.removeStatusCallback(handleF1Status);
     };
   }, [f1Service, handleF1Data, handleF1Status]);
+
+  useEffect(() => {
+    const fetchStatus = async () => {
+      const status = await getPageStatus('/live');
+      setPageStatus(status);
+      setIsLoadingStatus(false);
+    };
+    fetchStatus();
+  }, []);
 
   const handleManualConnect = () => {
     setIsManuallyConnected(true);
@@ -270,6 +282,37 @@ export default function LiveDashboard() {
         return 'border-blue-500 bg-blue-500/10';
     }
   };
+
+  if (isLoadingStatus) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (pageStatus?.isClosed) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <DashboardHeader />
+        <div className="container mx-auto px-4 py-16 flex items-center justify-center flex-1">
+          <Card className="max-w-md w-full border-primary/20">
+            <CardContent className="flex flex-col items-center justify-center py-12 gap-6 text-center">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <AlertTriangle className="w-8 h-8 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold">Page Temporarily Closed</h2>
+                <p className="text-muted-foreground whitespace-pre-wrap">
+                  {pageStatus.maintenanceMessage || 'This page is currently under maintenance. Please check back later.'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">

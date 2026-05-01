@@ -594,6 +594,15 @@ export default function AdminDashboard() {
       iconClass: 'bg-orange-500/10 text-orange-400',
       hoverClass: 'group-hover:text-orange-400',
     },
+    {
+      href: '/admin/pages',
+      label: 'Pages',
+      icon: FileText,
+      borderClass: 'border-red-500/25',
+      bgClass: 'from-card to-red-500/5',
+      iconClass: 'bg-red-500/10 text-red-400',
+      hoverClass: 'group-hover:text-red-400',
+    },
   ];
 
   return (

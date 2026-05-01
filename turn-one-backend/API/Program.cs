@@ -177,6 +177,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IPageStatusService, PageStatusService>();
 builder.Services.AddSingleton<IVersionService, VersionService>();
 builder.Services.AddScoped<ILevelSystemService, LevelSystemService>();
 builder.Services.AddScoped<IDailyGiftService, DailyGiftService>();

@@ -21,6 +21,7 @@ public class TurnOneDbContext : DbContext
     public DbSet<Media> Media { get; set; } = null!;
     public DbSet<Notification> Notifications { get; set; } = null!;
     public DbSet<UserNotification> UserNotifications { get; set; } = null!;
+    public DbSet<PageStatus> PageStatuses { get; set; } = null!;
     
     // Simracing telemetry entities
     public DbSet<SimUser> SimUsers { get; set; } = null!;
@@ -128,6 +129,13 @@ public class TurnOneDbContext : DbContext
             entity.Property(e => e.UploadedAt).IsRequired();
             entity.HasIndex(e => e.FileName);
             entity.HasIndex(e => e.UploadedAt);
+        });
+
+        modelBuilder.Entity<PageStatus>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.PageName).IsRequired();
+            entity.HasIndex(e => e.PageName).IsUnique();
         });
 
         modelBuilder.Entity<SimUser>(entity =>
