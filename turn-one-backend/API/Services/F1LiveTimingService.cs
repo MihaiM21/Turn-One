@@ -27,11 +27,14 @@ public class F1LiveTimingService
     // Event for when data is received (keeping for backward compatibility)
     public event Action<string>? OnDataReceived;
 
+    private readonly string _f1BaseUrl;
+
     public F1LiveTimingService(ILogger<F1LiveTimingService> logger, IHttpClientFactory httpClientFactory, IHubContext<F1LiveDataHub> hubContext)
     {
         _logger = logger;
         _httpClientFactory = httpClientFactory;
         _hubContext = hubContext;
+        _f1BaseUrl = Environment.GetEnvironmentVariable("F1_PROXY_URL") ?? "https://livetiming.formula1.com";
         
         // Set up data storage path in the app directory
         var appDataPath = Path.Combine(AppContext.BaseDirectory, "Data", "F1LiveData");
@@ -61,9 +64,6 @@ public class F1LiveTimingService
             var (connectionToken, cookies) = await NegotiateConnectionAsync();
 
             _clientWebSocket = new ClientWebSocket();
-            var warpProxy = Environment.GetEnvironmentVariable("F1_WARP_PROXY");
-            if (warpProxy != null)
-                _clientWebSocket.Options.Proxy = new System.Net.WebProxy(warpProxy);
             _clientWebSocket.Options.SetRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
             _clientWebSocket.Options.SetRequestHeader("Accept-Language", "en-US,en;q=0.9");
             _clientWebSocket.Options.SetRequestHeader("Referer", "https://www.formula1.com/");
@@ -71,7 +71,8 @@ public class F1LiveTimingService
             _clientWebSocket.Options.SetRequestHeader("Cookie", cookies);
 
             var hub = Uri.EscapeDataString("[{\"name\":\"Streaming\"}]");
-            var wsUrl = $"wss://livetiming.formula1.com/signalr/connect?clientProtocol=1.5&transport=webSockets&connectionToken={Uri.EscapeDataString(connectionToken)}&connectionData={hub}";
+            var wsBase = _f1BaseUrl.Replace("https://", "wss://").Replace("http://", "ws://");
+            var wsUrl = $"{wsBase}/signalr/connect?clientProtocol=1.5&transport=webSockets&connectionToken={Uri.EscapeDataString(connectionToken)}&connectionData={hub}";
 
             await _clientWebSocket.ConnectAsync(new Uri(wsUrl), _cancellationTokenSource.Token);
             _isConnected = true;
@@ -153,7 +154,7 @@ public class F1LiveTimingService
         AddBrowserHeaders(httpClient);
 
         var hub = Uri.EscapeDataString("[{\"name\":\"Streaming\"}]");
-        var negotiationUrl = $"https://livetiming.formula1.com/signalr/negotiate?connectionData={hub}&clientProtocol=1.5";
+        var negotiationUrl = $"{_f1BaseUrl}/signalr/negotiate?connectionData={hub}&clientProtocol=1.5";
 
         var response = await httpClient.GetAsync(negotiationUrl);
         response.EnsureSuccessStatusCode();

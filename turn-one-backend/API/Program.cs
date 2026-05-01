@@ -216,16 +216,7 @@ builder.Services.AddHostedService<TokenRefillBackgroundService>();
 // Add HttpClient for F1 API proxy
 builder.Services.AddHttpClient();
 
-// Named HttpClient that routes through Cloudflare WARP proxy.
-// F1_WARP_PROXY env var points to the SOCKS5 proxy on the host (via host.docker.internal).
-// Falls back to direct connection if the var is not set (e.g. local dev).
-var warpProxy = Environment.GetEnvironmentVariable("F1_WARP_PROXY");
-builder.Services.AddHttpClient("F1", client => { })
-    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-    {
-        Proxy = warpProxy != null ? new System.Net.WebProxy(warpProxy) : null,
-        UseProxy = warpProxy != null,
-    });
+builder.Services.AddHttpClient("F1");
 
 // Configure JWT authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

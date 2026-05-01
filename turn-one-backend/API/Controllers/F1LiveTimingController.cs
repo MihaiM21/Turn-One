@@ -11,10 +11,13 @@ public class F1LiveTimingController : ControllerBase
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<F1LiveTimingController> _logger;
 
+    private readonly string _f1BaseUrl;
+
     public F1LiveTimingController(IHttpClientFactory httpClientFactory, ILogger<F1LiveTimingController> logger)
     {
         _httpClientFactory = httpClientFactory;
         _logger = logger;
+        _f1BaseUrl = Environment.GetEnvironmentVariable("F1_PROXY_URL") ?? "https://livetiming.formula1.com";
     }
 
     private static void AddBrowserHeaders(HttpClient httpClient)
@@ -35,7 +38,7 @@ public class F1LiveTimingController : ControllerBase
             httpClient.Timeout = TimeSpan.FromSeconds(30);
             AddBrowserHeaders(httpClient);
             
-            var negotiationUrl = $"https://livetiming.formula1.com/signalr/negotiate?connectionData={connectionData}&clientProtocol={clientProtocol}";
+            var negotiationUrl = $"{_f1BaseUrl}/signalr/negotiate?connectionData={connectionData}&clientProtocol={clientProtocol}";
             
             _logger.LogInformation("Proxying F1 negotiation request to: {Url}", negotiationUrl);
             
@@ -119,7 +122,7 @@ public class F1LiveTimingController : ControllerBase
             
             // Try to access F1 live timing to check if there's an active session
             var hub = Uri.EscapeDataString(JsonSerializer.Serialize(new[] { new { name = "Streaming" } }));
-            var testUrl = $"https://livetiming.formula1.com/signalr/negotiate?connectionData={hub}&clientProtocol=1.5";
+            var testUrl = $"{_f1BaseUrl}/signalr/negotiate?connectionData={hub}&clientProtocol=1.5";
             
             var response = await httpClient.GetAsync(testUrl);
             
