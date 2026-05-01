@@ -291,7 +291,15 @@ var app = builder.Build();
 
 // Start F1 live timing service
 var f1Service = app.Services.GetRequiredService<F1LiveTimingService>();
-await f1Service.StartAsync();
+
+try
+{
+    await f1Service.StartAsync();
+}
+catch (Exception ex)
+{
+    Log.Warning(ex, "F1 live timing service failed to start — app will continue without live data");
+}
 
 // Apply migrations and seed data before the app starts
 try
