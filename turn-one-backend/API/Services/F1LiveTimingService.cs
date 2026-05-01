@@ -61,7 +61,9 @@ public class F1LiveTimingService
             var (connectionToken, cookies) = await NegotiateConnectionAsync();
 
             _clientWebSocket = new ClientWebSocket();
-            _clientWebSocket.Options.Proxy = new System.Net.WebProxy("socks5://127.0.0.1:40000");
+            var warpProxy = Environment.GetEnvironmentVariable("F1_WARP_PROXY");
+            if (warpProxy != null)
+                _clientWebSocket.Options.Proxy = new System.Net.WebProxy(warpProxy);
             _clientWebSocket.Options.SetRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
             _clientWebSocket.Options.SetRequestHeader("Accept-Language", "en-US,en;q=0.9");
             _clientWebSocket.Options.SetRequestHeader("Referer", "https://www.formula1.com/");
