@@ -16,6 +16,7 @@ public class F1LiveTimingService
     private ClientWebSocket? _clientWebSocket;
     private bool _isConnected;
     private CancellationTokenSource? _cancellationTokenSource;
+    private CancellationTokenSource? _retryCts;
     
     // Data persistence
     private readonly string _dataStoragePath;
@@ -43,20 +44,22 @@ public class F1LiveTimingService
 
     public async Task StartAsync()
     {
-        if (_isConnected)
-        {
-            _logger.LogWarning("F1 live timing service is already connected");
-            return;
-        }
+        _retryCts = new CancellationTokenSource();
+        await TryConnectAsync();
+        if (!_isConnected)
+            _ = RetryLoopAsync(_retryCts.Token);
+    }
+
+    private async Task TryConnectAsync()
+    {
+        if (_isConnected) return;
 
         _cancellationTokenSource = new CancellationTokenSource();
 
         try
         {
-            // Step 1: Negotiate connection with F1 servers
             var (connectionToken, cookies) = await NegotiateConnectionAsync();
 
-            // Step 2: Establish WebSocket connection
             _clientWebSocket = new ClientWebSocket();
             _clientWebSocket.Options.SetRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
             _clientWebSocket.Options.SetRequestHeader("Accept-Language", "en-US,en;q=0.9");
@@ -70,10 +73,7 @@ public class F1LiveTimingService
             await _clientWebSocket.ConnectAsync(new Uri(wsUrl), _cancellationTokenSource.Token);
             _isConnected = true;
 
-            // Step 3: Subscribe to F1 live timing feeds
             await SubscribeToFeeds();
-
-            // Step 4: Start listening for messages
             _ = ReceiveMessagesAsync(_cancellationTokenSource.Token);
 
             _logger.LogInformation("F1 live timing service started successfully");
@@ -82,12 +82,31 @@ public class F1LiveTimingService
         {
             _logger.LogError(ex, "Failed to start F1 live timing service");
             await StopAsync();
-            throw;
         }
     }
 
-    public async Task StopAsync()
+    private async Task RetryLoopAsync(CancellationToken ct)
     {
+        // Retry every 5 minutes — F1 timing API is only up during active sessions
+        var retryInterval = TimeSpan.FromMinutes(5);
+        while (!ct.IsCancellationRequested)
+        {
+            try { await Task.Delay(retryInterval, ct); } catch (OperationCanceledException) { return; }
+            if (_isConnected || ct.IsCancellationRequested) continue;
+            _logger.LogInformation("Retrying F1 live timing connection...");
+            await TryConnectAsync();
+        }
+    }
+
+    public async Task StopAsync(bool permanent = false)
+    {
+        if (permanent && _retryCts != null)
+        {
+            _retryCts.Cancel();
+            _retryCts.Dispose();
+            _retryCts = null;
+        }
+
         if (_cancellationTokenSource != null)
         {
             _cancellationTokenSource.Cancel();
@@ -241,6 +260,13 @@ public class F1LiveTimingService
         {
             _logger.LogError(ex, "Error receiving WebSocket messages");
             await StopAsync();
+        }
+
+        // Connection ended — restart retry loop if app is still running
+        if (_retryCts != null && !_retryCts.IsCancellationRequested)
+        {
+            _logger.LogInformation("F1 connection lost, scheduling reconnect...");
+            _ = RetryLoopAsync(_retryCts.Token);
         }
     }
 

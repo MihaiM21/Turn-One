@@ -55,8 +55,8 @@ export class F1SignalRService {
     
     // Use cached URL only if it matches the current hub path (clears stale entries after hub renames)
     const savedUrl = typeof localStorage !== 'undefined' ? localStorage.getItem('successfulSignalRUrl') : null;
-    const hubUrl = savedUrl?.includes('/api/hubs/f1live') ? savedUrl : `${API_URL}/api/hubs/f1live`;
-    if (savedUrl && !savedUrl.includes('/api/hubs/f1live') && typeof localStorage !== 'undefined') {
+    const hubUrl = savedUrl?.includes('/hubs/f1live') ? savedUrl : `${API_URL}/hubs/f1live`;
+    if (savedUrl && !savedUrl.includes('/hubs/f1live') && typeof localStorage !== 'undefined') {
       localStorage.removeItem('successfulSignalRUrl');
     }
     
@@ -201,7 +201,7 @@ export class F1SignalRService {
       // Debug the URL construction in detail
       console.log('Environment URL:', process.env.NEXT_PUBLIC_BACKEND_URL);
       console.log('Base API_URL:', API_URL);
-      console.log(`Full hub URL: ${API_URL}/api/hubs/f1live`);
+      console.log(`Full hub URL: ${API_URL}/hubs/f1live`);
       console.log(`Connection state: ${this.connection.state}`);
       
       // Add useful diagnostics for CORS and connection issues
@@ -211,8 +211,8 @@ export class F1SignalRService {
       let backendAvailable = false;
       const urlsToTry = [
         `${API_URL}/health`,
-        `${API_URL}/api/health`, 
-        `${API_URL}/api/hubs/f1live/negotiate`,
+        `${API_URL}/health`, 
+        `${API_URL}/hubs/f1live/negotiate`,
         `${BACKEND_URL}/health`
       ];
       
@@ -247,7 +247,7 @@ export class F1SignalRService {
         if (connectionSuccess) break;
         
         try {
-          const hubUrl = `${baseUrl}/api/hubs/f1live`;
+          const hubUrl = `${baseUrl}/hubs/f1live`;
           console.log(`Attempting connection to: ${hubUrl}`);
           
           // Update the connection URL
@@ -261,7 +261,7 @@ export class F1SignalRService {
           // Save the successful URL to localStorage for future use
           localStorage.setItem('successfulSignalRUrl', hubUrl);
         } catch (err) {
-          console.error(`Connection failed to ${baseUrl}/api/hubs/f1live:`, err);
+          console.error(`Connection failed to ${baseUrl}/hubs/f1live:`, err);
           
           // Log more details about the error
           if (typeof err === 'object' && err !== null) {

@@ -289,16 +289,14 @@ builder.Services.AddHostedService<TelemetryPersistenceWorker>();
 
 var app = builder.Build();
 
-// Start F1 live timing service (non-fatal — no active session or external API unavailable)
+// Start F1 live timing service — retries every 5 min when no session is active
 var f1Service = app.Services.GetRequiredService<F1LiveTimingService>();
-try
+await f1Service.StartAsync();
+
+app.Lifetime.ApplicationStopping.Register(() =>
 {
-    await f1Service.StartAsync();
-}
-catch (Exception ex)
-{
-    Log.Warning(ex, "F1 live timing service failed to start — app will continue without live data");
-}
+    f1Service.StopAsync(permanent: true).GetAwaiter().GetResult();
+});
 
 // Apply migrations and seed data before the app starts
 try
