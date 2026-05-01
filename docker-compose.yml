@@ -3,7 +3,10 @@ services:
     build:
       context: .
       dockerfile: docker/api/Dockerfile
-    network_mode: host
+    ports:
+      - "${API_PORT:-5271}:5271"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5271
@@ -13,7 +16,7 @@ services:
       - SmtpSettings__Password=${SmtpSettings__Password}
       - APP_BASE_URL=${APP_BASE_URL}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
-      - F1_WARP_PROXY=socks5://127.0.0.1:40000
+      - F1_WARP_PROXY=socks5://host.docker.internal:40000
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5271/health"]
       interval: 30s
