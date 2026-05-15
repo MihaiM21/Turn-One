@@ -287,6 +287,7 @@ builder.Services.AddSingleton<ITelemetryTickRepository, InfluxTickRepository>();
 builder.Services.AddSingleton<TelemetryIngestionService>();
 builder.Services.AddSingleton(System.Threading.Channels.Channel.CreateUnbounded<TickItem>());
 builder.Services.AddHostedService<TelemetryPersistenceWorker>();
+builder.Services.AddHostedService<TelemetrySweeperWorker>();
 
 var app = builder.Build();
 

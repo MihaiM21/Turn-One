@@ -28,7 +28,6 @@ public class TelemetryWebSocketMiddleware
         {
             if (context.WebSockets.IsWebSocketRequest)
             {
-                // Authenticate
                 var authHeader = context.Request.Headers["Authorization"].ToString();
                 if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
                 {
@@ -96,7 +95,7 @@ public class TelemetryWebSocketMiddleware
 
     private async Task HandleWebSocketAsync(WebSocket webSocket, Guid userId, PlanType plan, TelemetryMode mode, TelemetryIngestionService ingestionService)
     {
-        var buffer = new byte[1024 * 64]; 
+        var buffer = new byte[1024 * 64];
         try
         {
             while (webSocket.State == WebSocketState.Open)
@@ -106,17 +105,33 @@ public class TelemetryWebSocketMiddleware
                 if (result.MessageType == WebSocketMessageType.Text)
                 {
                     var messageStr = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    
-                    try 
+
+                    try
                     {
                         using var doc = JsonDocument.Parse(messageStr);
                         var root = doc.RootElement;
 
-                        if (root.TryGetProperty("type", out var typeProp) && root.TryGetProperty("data", out var dataProp))
+                        if (!root.TryGetProperty("type", out var typeProp)) continue;
+                        var msgType = typeProp.GetString() ?? "";
+
+                        // Parse client-supplied sessionId (32-char hex Guid "N" format)
+                        Guid? sessionId = null;
+                        if (root.TryGetProperty("sessionId", out var sidProp) && sidProp.ValueKind == JsonValueKind.String)
                         {
-                            var msgType = typeProp.GetString() ?? "";
-                            await ingestionService.ProcessFrameAsync(userId, plan, mode, msgType, dataProp.Clone());
+                            var sidStr = sidProp.GetString();
+                            if (!string.IsNullOrEmpty(sidStr) && Guid.TryParseExact(sidStr, "N", out var sid))
+                                sessionId = sid;
                         }
+
+                        // Use client timestamp when provided
+                        long clientTs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                        if (root.TryGetProperty("timestamp", out var tsProp) && tsProp.ValueKind == JsonValueKind.Number)
+                            clientTs = tsProp.GetInt64();
+
+                        root.TryGetProperty("data", out var dataProp);
+                        var data = dataProp.ValueKind != JsonValueKind.Undefined ? dataProp.Clone() : default;
+
+                        await ingestionService.ProcessFrameAsync(userId, plan, mode, sessionId, msgType, data, clientTs);
                     }
                     catch (Exception ex)
                     {
@@ -131,11 +146,8 @@ public class TelemetryWebSocketMiddleware
         }
         catch (WebSocketException)
         {
-            // Client disconnected abruptly
+            // Client disconnected abruptly; session stays open for reconnect
         }
-        finally
-        {
-            await ingestionService.EndSessionAsync(userId);
-        }
+        // No EndSessionAsync here — the sweeper closes orphaned sessions after heartbeat timeout
     }
 }

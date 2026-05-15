@@ -17,12 +17,10 @@ public class TelemetrySessionContext
     public TelemetryMode Mode { get; set; }
     public TelemetryVisibility Visibility { get; set; }
     public int LapCount { get; set; }
+    public int BestLapMs { get; set; }
     public int FrameCounter { get; set; }
-    
-    // For tracking lap metrics
     public float MaxSpeedKmh { get; set; }
     public int MaxRpm { get; set; }
-    public int LapStartRealTime { get; set; }
 }
 
 public class TelemetryIngestionService
@@ -32,7 +30,10 @@ public class TelemetryIngestionService
     private readonly Channel<TickItem> _tickChannel;
     private readonly ILogger<TelemetryIngestionService> _logger;
 
+    // Keyed by client-supplied sessionId
     private readonly ConcurrentDictionary<Guid, TelemetrySessionContext> _activeSessions = new();
+    // userId → current active sessionId (for SignalR group routing)
+    private readonly ConcurrentDictionary<Guid, Guid> _userToSession = new();
 
     public TelemetryIngestionService(
         IHubContext<SimTelemetryHub> hubContext,
@@ -46,49 +47,47 @@ public class TelemetryIngestionService
         _logger = logger;
     }
 
-    public async Task ProcessFrameAsync(Guid userId, PlanType plan, TelemetryMode mode, string messageType, JsonElement payload)
+    public async Task ProcessFrameAsync(Guid userId, PlanType plan, TelemetryMode mode, Guid? sessionId, string messageType, JsonElement payload, long clientTs)
     {
-        long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        // Always push to the private user SignalR group
+        await _hubContext.Clients.Group($"telemetry_{userId}").SendAsync("ReceiveTelemetry", messageType, payload, clientTs);
 
-        // 1. ALWAYS push to the private user SignalR group for Live Dashboard
-        var group1 = $"telemetry_{userId}";
-        await _hubContext.Clients.Group(group1).SendAsync("ReceiveTelemetry", messageType, payload, timestamp);
-
-        if (!_activeSessions.TryGetValue(userId, out var context))
+        switch (messageType)
         {
-            if (messageType == "static")
-            {
-                context = await InitializeSessionAsync(userId, plan, mode, payload);
-            }
-            else
-            {
-                // We missed the static frame (e.g. backend restarted mid-race). Create a fallback session.
-                context = await InitializeSessionAsync(userId, plan, mode, null);
-            }
-
-            if (context != null)
-            {
-                _activeSessions[userId] = context;
-            }
-            else 
-            {
+            case "session_start":
+                await HandleSessionStartAsync(userId, plan, mode, sessionId, payload, clientTs);
                 return;
-            }
+
+            case "session_end":
+                await HandleSessionEndAsync(userId, sessionId, payload, clientTs);
+                return;
+
+            case "session_pause":
+                await HandleSessionPauseAsync(sessionId, clientTs);
+                return;
+
+            case "session_resume":
+                await HandleSessionResumeAsync(sessionId, clientTs);
+                return;
+
+            case "client_heartbeat":
+                await HandleHeartbeatAsync(sessionId, payload, clientTs);
+                return;
         }
 
-        // 2. Spectator push
+        // physics / graphics / static frames
+        var context = await GetOrCreateContextAsync(userId, plan, mode, sessionId, messageType, payload);
+        if (context == null) return;
+
+        // Spectator push
         if (context.Visibility == TelemetryVisibility.Public)
-        {
-            var group2 = $"spectate_{context.SessionId}";
-            await _hubContext.Clients.Group(group2).SendAsync("ReceiveTelemetry", messageType, payload, timestamp);
-        }
+            await _hubContext.Clients.Group($"spectate_{context.SessionId}").SendAsync("ReceiveTelemetry", messageType, payload, clientTs);
 
-        // 2. Track logical lap splits
         if (messageType == "graphics")
         {
-            if (payload.TryGetProperty("completedLaps", out var completedLapsProp) && completedLapsProp.ValueKind == JsonValueKind.Number)
+            if (payload.TryGetProperty("completedLaps", out var lapsProp) && lapsProp.ValueKind == JsonValueKind.Number)
             {
-                int currentLaps = completedLapsProp.GetInt32();
+                int currentLaps = lapsProp.GetInt32();
                 if (currentLaps > context.LapCount)
                 {
                     await RecordLapAsync(context, payload);
@@ -97,83 +96,218 @@ public class TelemetryIngestionService
                     context.MaxRpm = 0;
                 }
             }
-            
-            if (payload.TryGetProperty("status", out var statusProp) && statusProp.ValueKind == JsonValueKind.String)
+
+            if (payload.TryGetProperty("status", out var statusProp) && statusProp.GetString() == "AC_OFF")
             {
-                var statusStr = statusProp.GetString();
-                if (statusStr == "AC_OFF")
-                {
-                    await EndSessionAsync(userId);
-                    return; // session ended
-                }
+                var now = DateTimeOffset.UtcNow.DateTime;
+                await EndSessionInternalAsync(context, now, context.LapCount, context.BestLapMs);
+                return;
             }
         }
         else if (messageType == "physics")
         {
             if (payload.TryGetProperty("speedKmh", out var speedProp) && speedProp.ValueKind == JsonValueKind.Number)
-            {
                 context.MaxSpeedKmh = Math.Max(context.MaxSpeedKmh, speedProp.GetSingle());
-            }
+
             if (payload.TryGetProperty("rpms", out var rpmProp) && rpmProp.ValueKind == JsonValueKind.Number)
-            {
                 context.MaxRpm = Math.Max(context.MaxRpm, rpmProp.GetInt32());
-            }
         }
 
-        // 3. Persistence mapping
+        // Tick persistence
         if (mode == TelemetryMode.Normal)
         {
             context.FrameCounter++;
-            // Downsample physics to ~10Hz (Assuming 100hz input, send every 10th frame)
             if (messageType != "physics" || context.FrameCounter % 10 == 0)
             {
                 var record = new TickRecord
                 {
                     SessionId = context.SessionId,
-                    Timestamp = DateTime.UtcNow,
+                    Timestamp = DateTimeOffset.FromUnixTimeMilliseconds(clientTs).UtcDateTime,
                     MessageType = messageType,
                     Payload = payload
                 };
-                
                 await _tickChannel.Writer.WriteAsync(new TickItem { Plan = plan, Record = record });
             }
         }
     }
 
-    private async Task<TelemetrySessionContext?> InitializeSessionAsync(Guid userId, PlanType plan, TelemetryMode mode, JsonElement? staticPayload)
+    // Called by the sweeper to close stale sessions
+    public async Task SweepSessionAsync(Guid sessionId)
     {
+        if (_activeSessions.TryRemove(sessionId, out var context))
+        {
+            _userToSession.TryRemove(context.UserId, out _);
+            await EndSessionInternalAsync(context, DateTime.UtcNow, context.LapCount, context.BestLapMs);
+        }
+    }
+
+    private async Task HandleSessionStartAsync(Guid userId, PlanType plan, TelemetryMode mode, Guid? sessionId, JsonElement payload, long clientTs)
+    {
+        if (sessionId == null)
+        {
+            _logger.LogWarning("session_start received with no sessionId from user {UserId}", userId);
+            return;
+        }
+
+        string car = payload.TryGetProperty("carModel", out var cProp) ? (cProp.GetString() ?? "") : "";
+        string track = payload.TryGetProperty("track", out var tProp) ? (tProp.GetString() ?? "") : "";
+        string driver = payload.TryGetProperty("driver", out var dProp) ? (dProp.GetString() ?? "") : "";
+        string sessionType = payload.TryGetProperty("sessionType", out var stProp) ? (stProp.GetString() ?? "AC_UNKNOWN") : "AC_UNKNOWN";
+        var startedAt = payload.TryGetProperty("startedAt", out var saProp) && saProp.ValueKind == JsonValueKind.Number
+            ? DateTimeOffset.FromUnixTimeMilliseconds(saProp.GetInt64()).UtcDateTime
+            : DateTimeOffset.FromUnixTimeMilliseconds(clientTs).UtcDateTime;
+
         try
         {
-            string car = "Unknown Car";
-            string track = "Unknown Track";
-            string driver = "Player";
-
-            if (staticPayload.HasValue)
-            {
-                car = staticPayload.Value.TryGetProperty("carModel", out var cProp) ? (cProp.GetString() ?? "Unknown Car") : "Unknown Car";
-                track = staticPayload.Value.TryGetProperty("track", out var tProp) ? (tProp.GetString() ?? "Unknown Track") : "Unknown Track";
-                driver = staticPayload.Value.TryGetProperty("playerName", out var dProp) ? (dProp.GetString() ?? "Player") : "Player";
-            }
-            
             using var scope = _scopeFactory.CreateScope();
-            var sessionService = scope.ServiceProvider.GetRequiredService<ITelemetrySessionService>();
+            var svc = scope.ServiceProvider.GetRequiredService<ITelemetrySessionService>();
+            var session = await svc.StartOrUpsertSessionAsync(sessionId.Value, userId, plan, car, track, driver, sessionType, mode, startedAt);
 
-            var session = await sessionService.StartSessionAsync(userId, plan, car, track, driver, "LIVE", mode);
-
-            return new TelemetrySessionContext
+            // Always (re-)register in-memory context on session_start
+            var context = new TelemetrySessionContext
             {
-                SessionId = session.Id,
+                SessionId = sessionId.Value,
                 UserId = userId,
                 Plan = plan,
                 Mode = mode,
-                Visibility = TelemetryVisibility.Private,
-                LapCount = 0,
+                Visibility = session.Visibility,
+                LapCount = session.LapCount,
+                BestLapMs = session.BestLapMs,
                 FrameCounter = 0
             };
+
+            _activeSessions[sessionId.Value] = context;
+            _userToSession[userId] = sessionId.Value;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to initialize telemetry session");
+            _logger.LogError(ex, "Failed to handle session_start for session {SessionId}", sessionId);
+        }
+    }
+
+    private async Task HandleSessionEndAsync(Guid userId, Guid? sessionId, JsonElement payload, long clientTs)
+    {
+        var endedAt = payload.TryGetProperty("endedAt", out var eaProp) && eaProp.ValueKind == JsonValueKind.Number
+            ? DateTimeOffset.FromUnixTimeMilliseconds(eaProp.GetInt64()).UtcDateTime
+            : DateTimeOffset.FromUnixTimeMilliseconds(clientTs).UtcDateTime;
+
+        int completedLaps = payload.TryGetProperty("completedLaps", out var clProp) ? clProp.GetInt32() : 0;
+        int bestLapMs = payload.TryGetProperty("bestLapMs", out var blProp) ? blProp.GetInt32() : 0;
+
+        if (sessionId.HasValue && _activeSessions.TryRemove(sessionId.Value, out var ctx))
+        {
+            _userToSession.TryRemove(userId, out _);
+            await EndSessionInternalAsync(ctx, endedAt, completedLaps, bestLapMs);
+        }
+        else if (sessionId.HasValue)
+        {
+            // Session may have been ended by sweeper; still persist final stats
+            try
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var svc = scope.ServiceProvider.GetRequiredService<ITelemetrySessionService>();
+                await svc.EndSessionAsync(sessionId.Value, endedAt, completedLaps, bestLapMs);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to persist session_end for {SessionId}", sessionId);
+            }
+        }
+
+        if (sessionId.HasValue)
+            await _hubContext.Clients.Group($"telemetry_{userId}").SendAsync("SessionEnded", sessionId.Value);
+    }
+
+    private async Task HandleSessionPauseAsync(Guid? sessionId, long clientTs)
+    {
+        if (sessionId == null) return;
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var svc = scope.ServiceProvider.GetRequiredService<ITelemetrySessionService>();
+            await svc.SetSessionStatusAsync(sessionId.Value, TelemetrySessionStatus.Paused);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to handle session_pause for {SessionId}", sessionId);
+        }
+    }
+
+    private async Task HandleSessionResumeAsync(Guid? sessionId, long clientTs)
+    {
+        if (sessionId == null) return;
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var svc = scope.ServiceProvider.GetRequiredService<ITelemetrySessionService>();
+            await svc.SetSessionStatusAsync(sessionId.Value, TelemetrySessionStatus.Active);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to handle session_resume for {SessionId}", sessionId);
+        }
+    }
+
+    private async Task HandleHeartbeatAsync(Guid? sessionId, JsonElement payload, long clientTs)
+    {
+        if (sessionId == null) return;
+        string? clientVersion = payload.TryGetProperty("clientVersion", out var cvProp) ? cvProp.GetString() : null;
+        var at = DateTimeOffset.FromUnixTimeMilliseconds(clientTs).UtcDateTime;
+
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var svc = scope.ServiceProvider.GetRequiredService<ITelemetrySessionService>();
+            await svc.TouchHeartbeatAsync(sessionId.Value, clientVersion, at);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to handle client_heartbeat for {SessionId}", sessionId);
+        }
+    }
+
+    private async Task<TelemetrySessionContext?> GetOrCreateContextAsync(Guid userId, PlanType plan, TelemetryMode mode, Guid? sessionId, string messageType, JsonElement payload)
+    {
+        // Fast path: already tracking this session
+        if (sessionId.HasValue && _activeSessions.TryGetValue(sessionId.Value, out var ctx))
+            return ctx;
+
+        // Fallback: create a session from a static frame (older clients or packet-loss scenario)
+        var effectiveId = sessionId ?? Guid.NewGuid();
+
+        string car = "", track = "", driver = "", sessionType = "LIVE";
+        if (messageType == "static")
+        {
+            car = payload.TryGetProperty("carModel", out var c) ? (c.GetString() ?? "") : "";
+            track = payload.TryGetProperty("track", out var t) ? (t.GetString() ?? "") : "";
+            driver = payload.TryGetProperty("playerName", out var d) ? (d.GetString() ?? "") : "";
+        }
+
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var svc = scope.ServiceProvider.GetRequiredService<ITelemetrySessionService>();
+            var session = await svc.StartOrUpsertSessionAsync(effectiveId, userId, plan, car, track, driver, sessionType, mode, DateTime.UtcNow);
+
+            var context = new TelemetrySessionContext
+            {
+                SessionId = effectiveId,
+                UserId = userId,
+                Plan = plan,
+                Mode = mode,
+                Visibility = session.Visibility,
+                LapCount = session.LapCount,
+                BestLapMs = session.BestLapMs,
+                FrameCounter = 0
+            };
+
+            _activeSessions[effectiveId] = context;
+            _userToSession[userId] = effectiveId;
+            return context;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create fallback session for user {UserId}", userId);
             return null;
         }
     }
@@ -182,8 +316,15 @@ public class TelemetryIngestionService
     {
         try
         {
-            int? lastTime = graphicsPayload.GetProperty("iLastTime").GetInt32();
+            int? lastTime = graphicsPayload.TryGetProperty("iLastTime", out var lt) ? lt.GetInt32() : null;
             if (lastTime == 2147483647) lastTime = null;
+
+            if (lastTime.HasValue && lastTime.Value > 0)
+            {
+                context.BestLapMs = context.BestLapMs == 0
+                    ? lastTime.Value
+                    : Math.Min(context.BestLapMs, lastTime.Value);
+            }
 
             var lap = new TelemetryLap
             {
@@ -196,13 +337,11 @@ public class TelemetryIngestionService
             };
 
             using var scope = _scopeFactory.CreateScope();
-            var sessionService = scope.ServiceProvider.GetRequiredService<ITelemetrySessionService>();
-            await sessionService.RecordLapAsync(lap);
-            
-            // Increment SimUser stats
-            // Approximate distance per lap based on track length if we had it, but simplified here
-            double distanceKm = 5.0; // dummy value
-            await sessionService.UpdateSimUserStatsAsync(context.UserId, distanceKm, (lastTime ?? 0) / 1000, context.MaxSpeedKmh);
+            var svc = scope.ServiceProvider.GetRequiredService<ITelemetrySessionService>();
+            await svc.RecordLapAsync(lap);
+
+            double distanceKm = 5.0;
+            await svc.UpdateSimUserStatsAsync(context.UserId, distanceKm, (lastTime ?? 0) / 1000, context.MaxSpeedKmh);
         }
         catch (Exception ex)
         {
@@ -210,15 +349,18 @@ public class TelemetryIngestionService
         }
     }
 
-    public async Task EndSessionAsync(Guid userId)
+    private async Task EndSessionInternalAsync(TelemetrySessionContext context, DateTime endedAt, int completedLaps, int bestLapMs)
     {
-        if (_activeSessions.TryRemove(userId, out var context))
+        try
         {
             using var scope = _scopeFactory.CreateScope();
-            var sessionService = scope.ServiceProvider.GetRequiredService<ITelemetrySessionService>();
-            await sessionService.EndSessionAsync(context.SessionId);
-            
-            await _hubContext.Clients.Group($"telemetry_{userId}").SendAsync("SessionEnded", context.SessionId);
+            var svc = scope.ServiceProvider.GetRequiredService<ITelemetrySessionService>();
+            await svc.EndSessionAsync(context.SessionId, endedAt, completedLaps, bestLapMs);
+            await _hubContext.Clients.Group($"telemetry_{context.UserId}").SendAsync("SessionEnded", context.SessionId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to end session {SessionId}", context.SessionId);
         }
     }
 }

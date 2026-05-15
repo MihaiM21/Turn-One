@@ -15,9 +15,30 @@ public class TelemetrySessionService : ITelemetrySessionService
         _context = context;
     }
 
-    public async Task<TelemetrySession> StartSessionAsync(Guid userId, PlanType plan, string car, string track, string driver, string sessionType, TelemetryMode mode)
+    public async Task<TelemetrySession> StartOrUpsertSessionAsync(
+        Guid sessionId, Guid userId, PlanType plan,
+        string car, string track, string driver,
+        string sessionType, TelemetryMode mode,
+        DateTime startedAt)
     {
-        // Enforce Plan Limits
+        var existing = await _context.TelemetrySessions.FindAsync(sessionId);
+
+        if (existing != null)
+        {
+            // Upsert — only overwrite fields that are populated (late-static pattern)
+            if (!string.IsNullOrEmpty(car)) existing.CarModel = car;
+            if (!string.IsNullOrEmpty(track)) existing.Track = track;
+            if (!string.IsNullOrEmpty(driver)) existing.DriverName = driver;
+            if (!string.IsNullOrEmpty(sessionType)) existing.SessionType = sessionType;
+            existing.Status = TelemetrySessionStatus.Active;
+            existing.IsActive = true;
+            existing.EndedAt = null;
+            existing.LastSeenAt = startedAt;
+            await _context.SaveChangesAsync();
+            return existing;
+        }
+
+        // Enforce plan-based session limit (active sessions only)
         int sessionLimit = plan switch
         {
             PlanType.BASIC => 1,
@@ -31,15 +52,15 @@ public class TelemetrySessionService : ITelemetrySessionService
             .OrderByDescending(s => s.StartedAt)
             .ToListAsync();
 
-        // If at or above limit, delete oldest
         if (userSessions.Count >= sessionLimit)
         {
-            var sessionsToDelete = userSessions.Skip(sessionLimit - 1).ToList();
-            _context.TelemetrySessions.RemoveRange(sessionsToDelete);
+            var toDelete = userSessions.Skip(sessionLimit - 1).ToList();
+            _context.TelemetrySessions.RemoveRange(toDelete);
         }
 
         var newSession = new TelemetrySession
         {
+            Id = sessionId,
             UserId = userId,
             CarModel = car,
             Track = track,
@@ -47,13 +68,14 @@ public class TelemetrySessionService : ITelemetrySessionService
             SessionType = sessionType,
             Mode = mode,
             Visibility = TelemetryVisibility.Private,
+            Status = TelemetrySessionStatus.Active,
             IsActive = true,
-            StartedAt = DateTime.UtcNow
+            StartedAt = startedAt,
+            LastSeenAt = startedAt
         };
 
         _context.TelemetrySessions.Add(newSession);
 
-        // Ensure SimUser exists
         var simUser = await _context.SimUsers.FirstOrDefaultAsync(u => u.UserId == userId);
         if (simUser == null)
         {
@@ -70,15 +92,49 @@ public class TelemetrySessionService : ITelemetrySessionService
         return newSession;
     }
 
-    public async Task EndSessionAsync(Guid sessionId)
+    public async Task EndSessionAsync(Guid sessionId, DateTime endedAt, int completedLaps, int bestLapMs)
     {
         var session = await _context.TelemetrySessions.FindAsync(sessionId);
         if (session != null)
         {
+            session.Status = TelemetrySessionStatus.Ended;
             session.IsActive = false;
-            session.EndedAt = DateTime.UtcNow;
+            session.EndedAt = endedAt;
+            if (completedLaps > 0) session.LapCount = completedLaps;
+            if (bestLapMs > 0) session.BestLapMs = bestLapMs;
             await _context.SaveChangesAsync();
         }
+    }
+
+    public async Task SetSessionStatusAsync(Guid sessionId, TelemetrySessionStatus status)
+    {
+        var session = await _context.TelemetrySessions.FindAsync(sessionId);
+        if (session != null)
+        {
+            session.Status = status;
+            session.IsActive = status != TelemetrySessionStatus.Ended;
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task TouchHeartbeatAsync(Guid sessionId, string? clientVersion, DateTime at)
+    {
+        var session = await _context.TelemetrySessions.FindAsync(sessionId);
+        if (session != null)
+        {
+            session.LastSeenAt = at;
+            if (!string.IsNullOrEmpty(clientVersion)) session.ClientVersion = clientVersion;
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task<List<TelemetrySession>> GetSessionsLastSeenBeforeAsync(DateTime cutoff)
+    {
+        return await _context.TelemetrySessions
+            .Where(s => s.Status != TelemetrySessionStatus.Ended
+                     && s.LastSeenAt != null
+                     && s.LastSeenAt < cutoff)
+            .ToListAsync();
     }
 
     public async Task<TelemetrySession?> GetActiveSessionAsync(Guid userId)
@@ -94,70 +150,25 @@ public class TelemetrySessionService : ITelemetrySessionService
         return await _context.TelemetrySessions
             .Where(s => s.UserId == userId)
             .OrderByDescending(s => s.StartedAt)
-            .Select(s => new TelemetrySessionDto
-            {
-                Id = s.Id,
-                UserId = s.UserId,
-                Username = s.User.Username,
-                CarModel = s.CarModel,
-                Track = s.Track,
-                DriverName = s.DriverName,
-                SessionType = s.SessionType,
-                Mode = s.Mode,
-                Visibility = s.Visibility,
-                IsActive = s.IsActive,
-                LapCount = s.LapCount,
-                StartedAt = s.StartedAt,
-                EndedAt = s.EndedAt
-            })
+            .Select(s => MapToDto(s))
             .ToListAsync();
     }
 
     public async Task<List<TelemetrySessionDto>> GetPublicLiveSessionsAsync()
     {
-         return await _context.TelemetrySessions
+        return await _context.TelemetrySessions
             .Where(s => s.Visibility == TelemetryVisibility.Public && s.IsActive)
             .OrderByDescending(s => s.StartedAt)
-            .Select(s => new TelemetrySessionDto
-            {
-                Id = s.Id,
-                UserId = s.UserId,
-                Username = s.User.Username,
-                CarModel = s.CarModel,
-                Track = s.Track,
-                DriverName = s.DriverName,
-                SessionType = s.SessionType,
-                Mode = s.Mode,
-                Visibility = s.Visibility,
-                IsActive = s.IsActive,
-                LapCount = s.LapCount,
-                StartedAt = s.StartedAt,
-                EndedAt = s.EndedAt
-            })
+            .Select(s => MapToDto(s))
             .ToListAsync();
     }
 
     public async Task<List<TelemetrySessionDto>> GetPublicSessionsAsync()
     {
-         return await _context.TelemetrySessions
+        return await _context.TelemetrySessions
             .Where(s => s.Visibility == TelemetryVisibility.Public)
             .OrderByDescending(s => s.StartedAt)
-            .Select(s => new TelemetrySessionDto
-            {
-                Id = s.Id,
-                UserId = s.UserId,
-                Username = s.User.Username,
-                CarModel = s.CarModel,
-                Track = s.Track,
-                DriverName = s.DriverName,
-                SessionType = s.SessionType,
-                Mode = s.Mode,
-                Visibility = s.Visibility,
-                IsActive = s.IsActive,
-                LapCount = s.LapCount,
-                StartedAt = s.StartedAt,
-                EndedAt = s.EndedAt
-            })
+            .Select(s => MapToDto(s))
             .ToListAsync();
     }
 
@@ -181,10 +192,14 @@ public class TelemetrySessionService : ITelemetrySessionService
             SessionType = session.SessionType,
             Mode = session.Mode,
             Visibility = session.Visibility,
+            Status = session.Status,
             IsActive = session.IsActive,
             LapCount = session.LapCount,
+            BestLapMs = session.BestLapMs,
+            ClientVersion = session.ClientVersion,
             StartedAt = session.StartedAt,
-            EndedAt = session.EndedAt
+            EndedAt = session.EndedAt,
+            LastSeenAt = session.LastSeenAt
         };
     }
 
@@ -200,24 +215,30 @@ public class TelemetrySessionService : ITelemetrySessionService
 
     public async Task DeleteSessionAsync(Guid sessionId, Guid userId)
     {
-         var session = await _context.TelemetrySessions.FirstOrDefaultAsync(s => s.Id == sessionId && s.UserId == userId);
-         if (session != null)
-         {
-             _context.TelemetrySessions.Remove(session);
-             await _context.SaveChangesAsync();
-         }
+        var session = await _context.TelemetrySessions.FirstOrDefaultAsync(s => s.Id == sessionId && s.UserId == userId);
+        if (session != null)
+        {
+            _context.TelemetrySessions.Remove(session);
+            await _context.SaveChangesAsync();
+        }
     }
 
     public async Task RecordLapAsync(TelemetryLap lap)
     {
         _context.TelemetryLaps.Add(lap);
-        
+
         var session = await _context.TelemetrySessions.FindAsync(lap.SessionId);
         if (session != null)
         {
             session.LapCount = Math.Max(session.LapCount, lap.LapNumber);
+            if (lap.LapTimeMs.HasValue && lap.LapTimeMs.Value > 0)
+            {
+                session.BestLapMs = session.BestLapMs == 0
+                    ? lap.LapTimeMs.Value
+                    : Math.Min(session.BestLapMs, lap.LapTimeMs.Value);
+            }
         }
-        
+
         await _context.SaveChangesAsync();
     }
 
@@ -237,13 +258,30 @@ public class TelemetrySessionService : ITelemetrySessionService
         {
             simUser.TotalDistanceKm += distanceKm;
             simUser.TotalPlayTimeSeconds += playTimeSeconds;
-            if (highestSpeedKmh > simUser.HighestSpeedKmh)
-            {
-                simUser.HighestSpeedKmh = highestSpeedKmh;
-            }
-            // Laps are aggregated via RecordLapAsync or we can just ++ here
+            if (highestSpeedKmh > simUser.HighestSpeedKmh) simUser.HighestSpeedKmh = highestSpeedKmh;
             simUser.TotalLaps++;
             await _context.SaveChangesAsync();
         }
     }
+
+    private static TelemetrySessionDto MapToDto(TelemetrySession s) => new()
+    {
+        Id = s.Id,
+        UserId = s.UserId,
+        Username = s.User.Username,
+        CarModel = s.CarModel,
+        Track = s.Track,
+        DriverName = s.DriverName,
+        SessionType = s.SessionType,
+        Mode = s.Mode,
+        Visibility = s.Visibility,
+        Status = s.Status,
+        IsActive = s.IsActive,
+        LapCount = s.LapCount,
+        BestLapMs = s.BestLapMs,
+        ClientVersion = s.ClientVersion,
+        StartedAt = s.StartedAt,
+        EndedAt = s.EndedAt,
+        LastSeenAt = s.LastSeenAt
+    };
 }

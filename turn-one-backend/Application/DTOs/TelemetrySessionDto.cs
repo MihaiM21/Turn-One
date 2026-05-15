@@ -13,9 +13,12 @@ public class TelemetrySessionDto
     public string SessionType { get; set; } = "";
     public TelemetryMode Mode { get; set; }
     public TelemetryVisibility Visibility { get; set; }
+    public TelemetrySessionStatus Status { get; set; }
     public bool IsActive { get; set; }
     public int LapCount { get; set; }
+    public int BestLapMs { get; set; }
+    public string? ClientVersion { get; set; }
     public DateTime StartedAt { get; set; }
     public DateTime? EndedAt { get; set; }
-    public int? BestLapMs { get; set; }
+    public DateTime? LastSeenAt { get; set; }
 }
