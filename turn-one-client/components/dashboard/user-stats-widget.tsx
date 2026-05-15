@@ -83,24 +83,30 @@ export function UserStatsWidget() {
   const progressPercentage = (userProfile.experience / xpToNextLevel) * 100;
 
   return (
-    <Card className="border-border/40 bg-card/40 backdrop-blur-sm">
-      <CardHeader className="pb-0.5 pt-5">
-        <CardTitle className="text-base">Your Progress</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3 pt-0">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center">
-            <div className="mr-2.5 rounded-full bg-primary/10 p-1.5">
-              <TrendingUp className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm font-medium leading-tight">Level {userProfile.level}</p>
-              <p className="text-xs text-muted-foreground">{userProfile.experience} / {xpToNextLevel} XP</p>
-            </div>
+    <Card className="group h-full border-border/40 bg-card/40 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30">
+      <CardHeader className="pb-1 pt-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              Your progress
+            </p>
+            <CardTitle className="mt-0.5 text-base font-semibold">Level {userProfile.level}</CardTitle>
           </div>
-          <div className="text-sm font-medium">{Math.round(progressPercentage)}%</div>
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
+            <TrendingUp className="h-4 w-4 text-primary" />
+          </span>
         </div>
-        <Progress value={progressPercentage} className="h-1.5" />
+      </CardHeader>
+      <CardContent className="space-y-2 pt-0">
+        <div className="flex items-baseline justify-between">
+          <p className="text-xs text-muted-foreground tabular-nums">
+            {userProfile.experience} / {xpToNextLevel} XP
+          </p>
+          <p className="text-sm font-semibold text-primary tabular-nums">
+            {Math.round(progressPercentage)}%
+          </p>
+        </div>
+        <Progress value={progressPercentage} className="h-2" />
 
         {/* <div className="flex items-center pt-2">
           <div className="mr-3 p-2 rounded-full bg-yellow-500/10">
