@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { checkDailyGiftStatus, claimDailyGift } from '@/lib/dailyGiftService';
 import { useToast } from '@/hooks/use-toast';
 import { getAuthToken } from '@/lib/auth-utils';
+import { notifyBalanceChanged } from '@/lib/balance-events';
 import { Button } from '@/components/ui/button';
 import { Gift, Check, Loader2, AlertTriangle } from 'lucide-react';
 
@@ -49,6 +50,7 @@ export function DailyGiftWidget({ onGiftClaimed }: DailyGiftWidgetProps) {
     try {
       const result = await claimDailyGift(authToken);
       if (result.success) {
+        notifyBalanceChanged();
         toast({
           title: '🎁 Daily Gift Claimed!',
           description: `You received ${result.coins} coins and ${result.experience} XP!`,

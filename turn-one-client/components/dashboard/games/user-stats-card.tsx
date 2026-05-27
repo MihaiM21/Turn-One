@@ -1,167 +1,145 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { 
-  TrendingUp, 
-  Target, 
-  Coins, 
-  Trophy, 
-  Flame,
-  Activity,
-  Award,
-  Star
-} from 'lucide-react';
+import { Coins, Target, Trophy, Flame, Activity, Award, TrendingUp } from 'lucide-react';
 import { UserStats } from '@/types/game-types';
 
 interface UserStatsCardProps {
   stats: UserStats;
 }
 
+function SectionHeader({ label, title }: { label: string; title: string }) {
+  return (
+    <div className="border-b border-zinc-800 px-5 py-3">
+      <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{label}</p>
+      <p className="mt-0.5 font-bold text-sm">{title}</p>
+    </div>
+  );
+}
+
+function Row({
+  label,
+  value,
+  valueClassName,
+}: {
+  label: string;
+  value: string | number;
+  valueClassName?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between px-5 py-2.5">
+      <span className="text-[11px] uppercase tracking-wider text-zinc-500">{label}</span>
+      <span className={`font-mono text-sm font-bold tabular-nums ${valueClassName ?? 'text-zinc-200'}`}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
 export function UserStatsCard({ stats }: UserStatsCardProps) {
-  const experienceToNextLevel = 1000; // Example: 1000 XP per level
-  const currentLevelProgress = (stats.experience % experienceToNextLevel) / experienceToNextLevel * 100;
+  const experienceToNextLevel = 1000;
+  const currentLevelXp = stats.experience % experienceToNextLevel;
+  const currentLevelProgress = (currentLevelXp / experienceToNextLevel) * 100;
+
+  const activity =
+    stats.totalPredictions > 50
+      ? 'Very active'
+      : stats.totalPredictions > 20
+        ? 'Active'
+        : stats.totalPredictions > 5
+          ? 'Moderate'
+          : 'Beginner';
+
+  const skill =
+    stats.accuracyPercentage >= 75
+      ? 'Expert'
+      : stats.accuracyPercentage >= 60
+        ? 'Advanced'
+        : stats.accuracyPercentage >= 45
+          ? 'Intermediate'
+          : 'Learning';
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {/* Coins & Level */}
-      <Card className="border-primary/10 bg-gradient-to-br from-yellow-500/5 to-orange-500/5 backdrop-blur-md border-yellow-500/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Coins className="w-5 h-5 text-yellow-500" />
-            Coins & Level
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Total Coins</span>
-              <span className="text-2xl font-bold text-yellow-500">{stats.totalCoins.toLocaleString()}</span>
-            </div>
-            <div className="grid grid-cols-2 gap-4 text-xs mt-4">
-              <div className="p-3 rounded-lg bg-background/50">
-                <p className="text-muted-foreground mb-1">Earned</p>
-                <p className="font-semibold text-green-500">+{stats.totalCoinsEarned.toLocaleString()}</p>
-              </div>
-              <div className="p-3 rounded-lg bg-background/50">
-                <p className="text-muted-foreground mb-1">Spent</p>
-                <p className="font-semibold text-red-500">-{stats.totalCoinsSpent.toLocaleString()}</p>
-              </div>
-            </div>
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <section className="border border-zinc-800 bg-zinc-950">
+        <SectionHeader label="Coins & level" title="Economy" />
+        <ul className="divide-y divide-zinc-800/60">
+          <Row label="Total coins" value={stats.totalCoins.toLocaleString()} valueClassName="text-yellow-400" />
+          <Row label="Earned" value={`+${stats.totalCoinsEarned.toLocaleString()}`} valueClassName="text-green-400" />
+          <Row label="Spent" value={`-${stats.totalCoinsSpent.toLocaleString()}`} valueClassName="text-red-400" />
+        </ul>
+        <div className="space-y-2 border-t border-zinc-800/60 px-5 py-4">
+          <div className="flex items-center justify-between text-[11px] uppercase tracking-wider">
+            <span className="flex items-center gap-1.5 text-zinc-500">
+              <Trophy className="h-3.5 w-3.5 text-primary" /> Level
+            </span>
+            <span className="font-mono tabular-nums text-zinc-200">{stats.level}</span>
           </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Level</span>
-              <Badge variant="outline" className="bg-primary/10 border-primary/30">
-                <Star className="w-3 h-3 mr-1" />
-                Level {stats.level}
-              </Badge>
-            </div>
-            <Progress value={currentLevelProgress} className="h-2" />
-            <p className="text-xs text-muted-foreground mt-2">
-              {stats.experience % experienceToNextLevel} / {experienceToNextLevel} XP to next level
-            </p>
+          <div className="relative h-1 w-full bg-zinc-800">
+            <div
+              style={{ width: `${currentLevelProgress}%` }}
+              className="absolute inset-y-0 left-0 bg-primary transition-all duration-700"
+            />
           </div>
-        </CardContent>
-      </Card>
+          <p className="font-mono text-[10px] tabular-nums text-zinc-500">
+            {currentLevelXp} / {experienceToNextLevel} XP to next level
+          </p>
+        </div>
+      </section>
 
-      {/* Predictions Stats */}
-      <Card className="border-primary/10 bg-gradient-to-br from-blue-500/5 to-purple-500/5 backdrop-blur-md border-blue-500/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Target className="w-5 h-5 text-blue-500" />
-            Prediction Stats
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="text-center p-6 rounded-lg bg-background/50 border border-border/50">
-            <div className="text-4xl font-bold text-blue-500 mb-2">
-              {stats.accuracyPercentage.toFixed(1)}%
-            </div>
-            <p className="text-sm text-muted-foreground">Overall Accuracy</p>
-          </div>
+      <section className="border border-zinc-800 bg-zinc-950">
+        <SectionHeader label="Predictions" title="Performance" />
+        <div className="border-b border-zinc-800/60 px-5 py-5">
+          <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Overall accuracy</p>
+          <p className="mt-1 font-mono text-4xl font-black tabular-nums leading-none text-primary">
+            {stats.accuracyPercentage.toFixed(1)}
+            <span className="text-xl text-zinc-500">%</span>
+          </p>
+        </div>
+        <ul className="divide-y divide-zinc-800/60">
+          <Row label="Total" value={stats.totalPredictions} />
+          <Row label="Correct" value={stats.correctPredictions} valueClassName="text-green-400" />
+          <li className="flex items-center justify-between px-5 py-2.5">
+            <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-zinc-500">
+              <Flame className="h-3.5 w-3.5 text-orange-400" /> Current streak
+            </span>
+            <span className="font-mono text-sm font-bold tabular-nums text-orange-400">
+              {stats.currentStreak}
+            </span>
+          </li>
+        </ul>
+      </section>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 rounded-lg bg-background/50 text-center">
-              <p className="text-2xl font-bold mb-1">{stats.totalPredictions}</p>
-              <p className="text-xs text-muted-foreground">Total</p>
-            </div>
-            <div className="p-4 rounded-lg bg-background/50 text-center">
-              <p className="text-2xl font-bold mb-1 text-green-500">{stats.correctPredictions}</p>
-              <p className="text-xs text-muted-foreground">Correct</p>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between p-4 rounded-lg bg-orange-500/5 border border-orange-500/20">
-            <div className="flex items-center gap-2">
-              <Flame className="w-5 h-5 text-orange-500" />
-              <span className="text-sm font-medium">Current Streak</span>
-            </div>
-            <Badge variant="outline" className="bg-orange-500/10 border-orange-500/30 text-orange-500">
-              {stats.currentStreak} wins
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Rankings & Achievements */}
-      <Card className="border-primary/10 bg-gradient-to-br from-purple-500/5 to-pink-500/5 backdrop-blur-md border-purple-500/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Trophy className="w-5 h-5 text-purple-500" />
-            Rankings
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="text-center p-6 rounded-lg bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20">
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <Trophy className="w-8 h-8 text-yellow-500" />
-            </div>
-            <div className="text-4xl font-bold mb-2">
-              #{stats.globalRank || '--'}
-            </div>
-            <p className="text-sm text-muted-foreground">Global Rank</p>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
-              <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-primary" />
-                <span className="text-sm">Activity Level</span>
-              </div>
-              <Badge variant="outline" className="bg-primary/10">
-                {stats.totalPredictions > 50 ? 'Very Active' : 
-                 stats.totalPredictions > 20 ? 'Active' : 
-                 stats.totalPredictions > 5 ? 'Moderate' : 'Beginner'}
-              </Badge>
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
-              <div className="flex items-center gap-2">
-                <Award className="w-4 h-4 text-primary" />
-                <span className="text-sm">Skill Level</span>
-              </div>
-              <Badge variant="outline" className="bg-primary/10">
-                {stats.accuracyPercentage >= 75 ? 'Expert' :
-                 stats.accuracyPercentage >= 60 ? 'Advanced' :
-                 stats.accuracyPercentage >= 45 ? 'Intermediate' : 'Learning'}
-              </Badge>
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-primary" />
-                <span className="text-sm">Earnings</span>
-              </div>
-              <Badge variant="outline" className="bg-green-500/10 border-green-500/30 text-green-500">
-                +{stats.totalCoinsEarned.toLocaleString()}
-              </Badge>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <section className="border border-zinc-800 bg-zinc-950">
+        <SectionHeader label="Standing" title="Rankings" />
+        <div className="border-b border-zinc-800/60 px-5 py-5">
+          <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Global rank</p>
+          <p className="mt-1 font-mono text-4xl font-black tabular-nums leading-none text-foreground">
+            #{stats.globalRank || '--'}
+          </p>
+        </div>
+        <ul className="divide-y divide-zinc-800/60">
+          <li className="flex items-center justify-between px-5 py-2.5">
+            <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-zinc-500">
+              <Activity className="h-3.5 w-3.5 text-primary" /> Activity
+            </span>
+            <span className="text-sm font-medium text-zinc-200">{activity}</span>
+          </li>
+          <li className="flex items-center justify-between px-5 py-2.5">
+            <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-zinc-500">
+              <Award className="h-3.5 w-3.5 text-primary" /> Skill
+            </span>
+            <span className="text-sm font-medium text-zinc-200">{skill}</span>
+          </li>
+          <li className="flex items-center justify-between px-5 py-2.5">
+            <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-zinc-500">
+              <TrendingUp className="h-3.5 w-3.5 text-green-400" /> Earnings
+            </span>
+            <span className="font-mono text-sm font-bold tabular-nums text-green-400">
+              +{stats.totalCoinsEarned.toLocaleString()}
+            </span>
+          </li>
+        </ul>
+      </section>
     </div>
   );
 }

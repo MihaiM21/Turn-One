@@ -50,6 +50,8 @@ import { useRouter } from 'next/navigation';
 import * as adminService from '@/lib/adminService';
 import * as userService from '@/lib/userService';
 import { OnlineUsersWidget } from '@/components/dashboard/online-users-widget';
+import { DashboardHeader } from '@/components/dashboard/live dashboard/dashboard-header';
+import { PageHeader } from '@/components/dashboard/page-header';
 import type { PageStatusData } from '@/lib/adminService';
 
 interface User {
@@ -463,11 +465,14 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-lg font-medium text-muted-foreground">Loading admin dashboard...</p>
-        </div>
+      <div className="min-h-screen bg-black">
+        <DashboardHeader />
+        <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+          <div className="flex items-center justify-center border border-zinc-800 bg-zinc-950 px-5 py-12 text-sm text-zinc-500">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Loading admin dashboard...
+          </div>
+        </main>
       </div>
     );
   }
@@ -547,45 +552,37 @@ export default function AdminDashboard() {
     value: string | number;
     helper: string;
     icon: LucideIcon;
-    wrapperClass: string;
-    iconClass: string;
-    valueClass: string;
+    iconColor: string;
+    valueColor?: string;
   }> = [
     {
       label: 'Total Users',
       value: totalUsers,
       helper: `${recentUsers} new this week`,
       icon: Users,
-      wrapperClass: 'border-primary/25 bg-gradient-to-br from-card to-primary/5',
-      iconClass: 'bg-primary/10 text-primary',
-      valueClass: 'from-primary to-accent',
+      iconColor: 'text-primary',
     },
     {
       label: 'Admin Users',
       value: adminCount,
       helper: `${totalUsers > 0 ? ((adminCount / totalUsers) * 100).toFixed(1) : 0}% of users`,
       icon: Shield,
-      wrapperClass: 'border-accent/25 bg-gradient-to-br from-card to-accent/5',
-      iconClass: 'bg-accent/10 text-accent',
-      valueClass: 'from-accent to-accent/70',
+      iconColor: 'text-primary',
     },
     {
       label: 'Total Tokens',
       value: totalTokens.toLocaleString(),
       helper: `Avg ${totalUsers ? Math.round(totalTokens / totalUsers).toLocaleString() : 0} per user`,
       icon: TrendingUp,
-      wrapperClass: 'border-primary/25 bg-gradient-to-br from-card to-primary/5',
-      iconClass: 'bg-primary/10 text-primary',
-      valueClass: 'from-primary to-primary/70',
+      iconColor: 'text-primary',
     },
     {
       label: 'Active (7d)',
       value: activeUsers,
       helper: `${totalUsers > 0 ? ((activeUsers / totalUsers) * 100).toFixed(1) : 0}% activity`,
       icon: Activity,
-      wrapperClass: 'border-green-500/25 bg-gradient-to-br from-card to-green-500/5',
-      iconClass: 'bg-green-500/10 text-green-500',
-      valueClass: 'from-green-500 to-green-400',
+      iconColor: 'text-green-400',
+      valueColor: 'text-green-400',
     },
   ];
 
@@ -593,139 +590,88 @@ export default function AdminDashboard() {
     href: string;
     label: string;
     icon: LucideIcon;
-    borderClass: string;
-    bgClass: string;
-    iconClass: string;
-    hoverClass: string;
+    iconColor: string;
   }> = [
-    {
-      href: '/admin/media',
-      label: 'Media',
-      icon: ImageIcon,
-      borderClass: 'border-cyan-500/25',
-      bgClass: 'from-card to-cyan-500/5',
-      iconClass: 'bg-cyan-500/10 text-cyan-400',
-      hoverClass: 'group-hover:text-cyan-400',
-    },
-    {
-      href: '/admin/predictions',
-      label: 'Predictions',
-      icon: Trophy,
-      borderClass: 'border-yellow-500/25',
-      bgClass: 'from-card to-yellow-500/5',
-      iconClass: 'bg-yellow-500/10 text-yellow-400',
-      hoverClass: 'group-hover:text-yellow-400',
-    },
-    {
-      href: '/admin/trivia',
-      label: 'Trivia',
-      icon: Brain,
-      borderClass: 'border-purple-500/25',
-      bgClass: 'from-card to-purple-500/5',
-      iconClass: 'bg-purple-500/10 text-purple-400',
-      hoverClass: 'group-hover:text-purple-400',
-    },
-    {
-      href: '/admin/notifications',
-      label: 'Notifications',
-      icon: Bell,
-      borderClass: 'border-orange-500/25',
-      bgClass: 'from-card to-orange-500/5',
-      iconClass: 'bg-orange-500/10 text-orange-400',
-      hoverClass: 'group-hover:text-orange-400',
-    },
+    { href: '/admin/media', label: 'Media', icon: ImageIcon, iconColor: 'text-cyan-400' },
+    { href: '/admin/predictions', label: 'Predictions', icon: Trophy, iconColor: 'text-yellow-400' },
+    { href: '/admin/trivia', label: 'Trivia', icon: Brain, iconColor: 'text-purple-400' },
+    { href: '/admin/notifications', label: 'Notifications', icon: Bell, iconColor: 'text-orange-400' },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-red-950/20 to-black">
-      <div className="container mx-auto px-3 py-4 md:px-4 md:py-5">
-        {/* Header Section */}
-        <div className="mb-3">
-          <div className="modern-gradient rounded-xl p-3 md:p-4 shadow-md border border-primary/20 hover:border-primary/35 transition-all duration-200">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center">
-                  <Shield className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h1 className="text-xl md:text-2xl font-semibold bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">Admin Dashboard</h1>
-                  <p className="text-sm text-muted-foreground">Manage users, plans, and system administration</p>
-                </div>
-              </div>
+    <div className="min-h-screen bg-black">
+      <DashboardHeader />
+      <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6 space-y-4">
+        <PageHeader
+          label="Admin"
+          title="Dashboard"
+          description="Manage users, plans and system administration."
+          stats={[
+            { icon: Users, label: 'Users', value: totalUsers, iconClassName: 'text-primary' },
+            { icon: Shield, label: 'Admins', value: adminCount, iconClassName: 'text-primary' },
+            { icon: Activity, label: 'Active 7d', value: activeUsers, iconClassName: 'text-green-400' },
+          ]}
+          actions={
+            <div className="flex items-center gap-3">
+              <OnlineUsersWidget />
               {currentUser && (
-                <div className="flex items-center gap-3">
-                  <OnlineUsersWidget />
-                  <div className="flex items-center space-x-2">
-                    <div className="h-8 w-8 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm glow-effect">
-                      {currentUser.username.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm text-foreground">{currentUser.username}</p>
-                    </div>
+                <div className="flex items-center gap-2 border border-zinc-800 bg-zinc-950 px-2.5 py-1.5">
+                  <div className="flex h-6 w-6 items-center justify-center bg-primary/10 text-[11px] font-bold text-primary">
+                    {currentUser.username.charAt(0).toUpperCase()}
                   </div>
+                  <span className="text-xs font-medium">{currentUser.username}</span>
                 </div>
               )}
             </div>
-          </div>
+          }
+        />
+
+        {/* Overview stats */}
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {primaryStats.map((stat) => {
+            const StatIcon = stat.icon;
+            return (
+              <div key={stat.label} className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{stat.label}</p>
+                    <p className={`mt-1 font-mono text-2xl font-black tabular-nums leading-none ${stat.valueColor ?? ''}`}>
+                      {stat.value}
+                    </p>
+                  </div>
+                  <StatIcon className={`h-4 w-4 shrink-0 ${stat.iconColor}`} />
+                </div>
+                <p className="mt-2 truncate text-[11px] text-zinc-500">{stat.helper}</p>
+              </div>
+            );
+          })}
         </div>
 
-        {/* Compact Overview */}
-        <Card className="mb-2.5 border-transparent bg-transparent">
-          <CardContent className="p-0">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5">
-              {primaryStats.map((stat) => {
-                const StatIcon = stat.icon;
-                return (
-                  <div
-                    key={stat.label}
-                    className={`rounded-lg border ${stat.wrapperClass} px-2.5 py-2 transition-colors hover:border-primary/45`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-medium text-muted-foreground truncate">{stat.label}</p>
-                        <p className={`text-lg md:text-xl font-bold bg-gradient-to-r ${stat.valueClass} bg-clip-text text-transparent`}>
-                          {stat.value}
-                        </p>
-                      </div>
-                      <div className={`h-6 w-6 rounded-md flex items-center justify-center ${stat.iconClass}`}>
-                        <StatIcon className="h-3.5 w-3.5" />
-                      </div>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground truncate">{stat.helper}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions Strip */}
-        <div className="mb-3">
-          <h2 className="text-sm font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
-            <Zap className="h-4 w-4 text-primary" />
-            Quick Actions
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1.5">
-            {quickActionItems.map((action) => {
+        {/* Quick actions */}
+        <section className="border border-zinc-800 bg-zinc-950">
+          <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-3">
+            <Zap className="h-3.5 w-3.5 text-primary" />
+            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Quick actions</p>
+          </div>
+          <div className="grid grid-cols-2 divide-zinc-800 md:grid-cols-4">
+            {quickActionItems.map((action, idx) => {
               const ActionIcon = action.icon;
               return (
-                <Link key={action.href} href={action.href} className="group">
-                  <div
-                    className={`h-full rounded-lg border ${action.borderClass} bg-gradient-to-br ${action.bgClass} px-2 py-2 transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5`}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <div className={`h-6 w-6 rounded-md flex items-center justify-center shrink-0 ${action.iconClass}`}>
-                        <ActionIcon className="h-3.5 w-3.5" />
-                      </div>
-                      <span className="text-xs font-medium text-foreground truncate">{action.label}</span>
-                      <ArrowRight className={`ml-auto h-3 w-3 text-muted-foreground transition-all group-hover:translate-x-0.5 ${action.hoverClass}`} />
-                    </div>
-                  </div>
+                <Link
+                  key={action.href}
+                  href={action.href}
+                  className={`group flex items-center gap-3 px-5 py-3 transition-colors hover:bg-zinc-900/60 ${
+                    idx > 0 ? 'border-zinc-800 md:border-l' : ''
+                  } ${idx >= 2 ? 'border-t md:border-t-0' : ''}`}
+                >
+                  <ActionIcon className={`h-4 w-4 shrink-0 ${action.iconColor}`} />
+                  <span className="flex-1 truncate text-sm font-medium">{action.label}</span>
+                  <ArrowRight className="h-3.5 w-3.5 text-zinc-600 transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
                 </Link>
               );
             })}
           </div>
-        </div>
+        </section>
 
         {/* Page Controls */}
         <div className="mb-3">
@@ -1341,7 +1287,7 @@ export default function AdminDashboard() {
             )}
           </CardContent>
         </Card>
-      </div>
+      </main>
 
       {/* Edit Dialogs */}
       <Dialog open={editType === 'tokens'} onOpenChange={(open) => !open && setEditType(null)}>

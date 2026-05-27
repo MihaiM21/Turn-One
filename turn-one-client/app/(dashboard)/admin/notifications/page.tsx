@@ -30,6 +30,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { getAuthToken } from '@/lib/auth-utils';
+import { DashboardHeader } from '@/components/dashboard/live dashboard/dashboard-header';
+import { PageHeader } from '@/components/dashboard/page-header';
 
 interface Notification {
   id: string;
@@ -270,119 +272,101 @@ export default function AdminNotificationsPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-lg font-medium text-muted-foreground">Loading notifications...</p>
-        </div>
+      <div className="min-h-screen bg-black">
+        <DashboardHeader />
+        <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+          <div className="flex items-center justify-center border border-zinc-800 bg-zinc-950 px-5 py-12 text-sm text-zinc-500">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Loading notifications...
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-orange-950/20 to-black">
-      <div className="container mx-auto p-6 max-w-7xl">
+    <div className="min-h-screen bg-black">
+      <DashboardHeader />
+      <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6 space-y-4">
+        <Link
+          href="/admin"
+          className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-zinc-500 transition-colors hover:text-primary"
+        >
+          <ArrowLeft className="h-3 w-3" />
+          Back to admin
+        </Link>
 
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Link href="/admin">
-              <Button variant="ghost" size="sm" className="gap-2 hover:bg-primary/10">
-                <ArrowLeft className="w-4 h-4" />
-                Back to Admin
-              </Button>
-            </Link>
-          </div>
-          <div className="modern-gradient rounded-2xl p-8 shadow-xl border border-orange-500/20 hover:border-orange-500/40 transition-all duration-300">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div className="flex items-center gap-4">
-                <div className="h-14 w-14 bg-orange-500/10 rounded-2xl flex items-center justify-center">
-                  <Megaphone className="h-7 w-7 text-orange-400" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent">
-                    Notification Center
-                  </h1>
-                  <p className="text-muted-foreground mt-1">
-                    Create and broadcast notifications to your users
-                  </p>
-                </div>
-              </div>
-              <Button onClick={handleCreate} className="gap-2 bg-orange-600 hover:bg-orange-700">
-                <Plus className="w-4 h-4" />
-                New Notification
-              </Button>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          label="Admin · Notifications"
+          title="Notification center"
+          description="Create and broadcast notifications to your users."
+          actions={
+            <Button
+              onClick={handleCreate}
+              size="sm"
+              className="rounded-sm bg-primary text-xs font-semibold uppercase tracking-wider text-white hover:bg-primary/90"
+            >
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              New notification
+            </Button>
+          }
+        />
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="border-orange-500/20 hover:border-orange-500/40 transition-all duration-300 hover:shadow-lg bg-gradient-to-br from-card to-orange-500/5">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Total Sent</p>
-                  <p className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent">
-                    {notifications.length}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {stats.allUsers} broadcast &bull; {stats.targeted} targeted
-                  </p>
-                </div>
-                <div className="h-12 w-12 bg-orange-500/10 rounded-full flex items-center justify-center">
-                  <Bell className="h-6 w-6 text-orange-400" />
-                </div>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Total sent</p>
+                <p className="mt-1 font-mono text-2xl font-black tabular-nums leading-none text-orange-400">
+                  {notifications.length}
+                </p>
               </div>
-            </CardContent>
-          </Card>
+              <Bell className="h-4 w-4 shrink-0 text-orange-400" />
+            </div>
+            <p className="mt-2 text-[11px] text-zinc-500">
+              <span className="font-mono tabular-nums">{stats.allUsers}</span> broadcast ·{' '}
+              <span className="font-mono tabular-nums">{stats.targeted}</span> targeted
+            </p>
+          </div>
 
-          <Card className="border-blue-500/20 hover:border-blue-500/40 transition-all duration-300 hover:shadow-lg bg-gradient-to-br from-card to-blue-500/5">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Info</p>
-                  <p className="text-3xl font-bold text-blue-400">{stats.info}</p>
-                  <p className="text-xs text-muted-foreground mt-1">informational</p>
-                </div>
-                <div className="h-12 w-12 bg-blue-500/10 rounded-full flex items-center justify-center">
-                  <Info className="h-6 w-6 text-blue-400" />
-                </div>
+          <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Info</p>
+                <p className="mt-1 font-mono text-2xl font-black tabular-nums leading-none text-blue-400">{stats.info}</p>
               </div>
-            </CardContent>
-          </Card>
+              <Info className="h-4 w-4 shrink-0 text-blue-400" />
+            </div>
+            <p className="mt-2 text-[11px] text-zinc-500">informational</p>
+          </div>
 
-          <Card className="border-green-500/20 hover:border-green-500/40 transition-all duration-300 hover:shadow-lg bg-gradient-to-br from-card to-green-500/5">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Success</p>
-                  <p className="text-3xl font-bold text-green-400">{stats.success}</p>
-                  <p className="text-xs text-muted-foreground mt-1">positive updates</p>
-                </div>
-                <div className="h-12 w-12 bg-green-500/10 rounded-full flex items-center justify-center">
-                  <CheckCircle2 className="h-6 w-6 text-green-400" />
-                </div>
+          <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Success</p>
+                <p className="mt-1 font-mono text-2xl font-black tabular-nums leading-none text-green-400">{stats.success}</p>
               </div>
-            </CardContent>
-          </Card>
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-green-400" />
+            </div>
+            <p className="mt-2 text-[11px] text-zinc-500">positive updates</p>
+          </div>
 
-          <Card className="border-yellow-500/20 hover:border-yellow-500/40 transition-all duration-300 hover:shadow-lg bg-gradient-to-br from-card to-yellow-500/5">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Warnings &amp; Errors</p>
-                  <p className="text-3xl font-bold text-yellow-400">{stats.warning + stats.error}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {stats.warning} warn &bull; {stats.error} error
-                  </p>
-                </div>
-                <div className="h-12 w-12 bg-yellow-500/10 rounded-full flex items-center justify-center">
-                  <AlertTriangle className="h-6 w-6 text-yellow-400" />
-                </div>
+          <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Warnings & errors</p>
+                <p className="mt-1 font-mono text-2xl font-black tabular-nums leading-none text-yellow-400">
+                  {stats.warning + stats.error}
+                </p>
               </div>
-            </CardContent>
-          </Card>
+              <AlertTriangle className="h-4 w-4 shrink-0 text-yellow-400" />
+            </div>
+            <p className="mt-2 text-[11px] text-zinc-500">
+              <span className="font-mono tabular-nums">{stats.warning}</span> warn ·{' '}
+              <span className="font-mono tabular-nums">{stats.error}</span> error
+            </p>
+          </div>
         </div>
 
         {/* Filters & Search */}
@@ -687,7 +671,7 @@ export default function AdminNotificationsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
+      </main>
     </div>
   );
 }
