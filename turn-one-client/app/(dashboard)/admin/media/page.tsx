@@ -365,47 +365,46 @@ export default function MediaManagementPage() {
         </div>
 
         {/* Search */}
-        <Card className="mb-6 border-border/50">
-          <CardContent className="p-5">
+        <section className="border border-zinc-800 bg-zinc-950">
+          <div className="px-5 py-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
               <Input
                 placeholder="Search by filename or alt text..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="rounded-sm border-zinc-800 bg-zinc-900/60 pl-10"
               />
             </div>
             {searchTerm && (
-              <p className="text-sm text-muted-foreground mt-2">
-                Showing {filteredMedia.length} of {media.length} images
+              <p className="mt-2 text-[11px] text-zinc-500">
+                Showing <span className="font-mono tabular-nums text-zinc-300">{filteredMedia.length}</span> of{' '}
+                <span className="font-mono tabular-nums text-zinc-300">{media.length}</span> images
               </p>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
         {/* Media Grid */}
         {filteredMedia.length === 0 ? (
-          <Card className="border-border/50">
-            <CardContent className="py-16 text-center">
-              <div className="h-16 w-16 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <ImageIcon className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-medium text-foreground mb-2">No images found</h3>
-              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+          <section className="flex flex-col items-center gap-3 border border-zinc-800 bg-zinc-950 px-5 py-16 text-center">
+            <ImageIcon className="h-8 w-8 text-zinc-700" />
+            <div>
+              <p className="font-bold">No images found</p>
+              <p className="mt-0.5 max-w-sm text-xs text-zinc-500">
                 {searchTerm ? 'No images match your search.' : 'Upload your first image to get started.'}
               </p>
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredMedia.map((item) => (
-              <Card key={item.id} className="overflow-hidden border-border/50 hover:border-cyan-500/30 hover:shadow-lg transition-all duration-300 group">
-                <div className="relative aspect-square bg-muted/30 overflow-hidden">
+              <Card key={item.id} className="group overflow-hidden rounded-none border-zinc-800 bg-zinc-950 transition-colors hover:border-zinc-700">
+                <div className="relative aspect-square overflow-hidden bg-zinc-900">
                   <img
                     src={getImageUrl(item)}
                     alt={item.altText || item.originalFileName}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   {/* Overlay on hover */}
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">

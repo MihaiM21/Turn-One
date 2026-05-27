@@ -370,92 +370,85 @@ export default function AdminNotificationsPage() {
         </div>
 
         {/* Filters & Search */}
-        <Card className="mb-6 border-border/50">
-          <CardContent className="p-5">
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search notifications by title or message..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+        <section className="border border-zinc-800 bg-zinc-950">
+          <div className="px-5 py-4 space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+              <Input
+                placeholder="Search notifications by title or message..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="rounded-sm border-zinc-800 bg-zinc-900/60 pl-10"
+              />
             </div>
 
-            <div className="mt-4">
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-5">
-                  <TabsTrigger value="all" className="gap-2">
-                    <Bell className="h-4 w-4" />
-                    All ({notifications.length})
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid h-auto w-full grid-cols-5 rounded-none border border-zinc-800 bg-zinc-950 p-0">
+                {[
+                  { value: 'all', label: 'All', icon: Bell, count: notifications.length },
+                  { value: 'info', label: 'Info', icon: Info, count: stats.info },
+                  { value: 'success', label: 'Success', icon: CheckCircle2, count: stats.success },
+                  { value: 'warning', label: 'Warning', icon: AlertTriangle, count: stats.warning },
+                  { value: 'error', label: 'Error', icon: XCircle, count: stats.error },
+                ].map(({ value, label, icon: TIcon, count }) => (
+                  <TabsTrigger
+                    key={value}
+                    value={value}
+                    className="gap-1.5 rounded-none border-b-2 border-transparent bg-transparent px-3 py-2.5 text-[11px] uppercase tracking-wider text-zinc-400 transition-colors hover:text-zinc-200 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
+                  >
+                    <TIcon className="h-3.5 w-3.5" />
+                    {label} <span className="font-mono tabular-nums text-zinc-500">{count}</span>
                   </TabsTrigger>
-                  <TabsTrigger value="info" className="gap-2">
-                    <Info className="h-4 w-4" />
-                    Info ({stats.info})
-                  </TabsTrigger>
-                  <TabsTrigger value="success" className="gap-2">
-                    <CheckCircle2 className="h-4 w-4" />
-                    Success ({stats.success})
-                  </TabsTrigger>
-                  <TabsTrigger value="warning" className="gap-2">
-                    <AlertTriangle className="h-4 w-4" />
-                    Warning ({stats.warning})
-                  </TabsTrigger>
-                  <TabsTrigger value="error" className="gap-2">
-                    <XCircle className="h-4 w-4" />
-                    Error ({stats.error})
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
+                ))}
+              </TabsList>
+            </Tabs>
 
             {searchTerm && (
-              <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 text-[11px] text-zinc-500">
                 <Filter className="h-3 w-3" />
-                Showing {filteredNotifications.length} of {notifications.length} notifications
-                <Badge variant="secondary" className="text-xs">Search: {searchTerm}</Badge>
+                Showing <span className="font-mono tabular-nums text-zinc-300">{filteredNotifications.length}</span> of{' '}
+                <span className="font-mono tabular-nums text-zinc-300">{notifications.length}</span>
+                <span className="border border-zinc-700 px-1.5 py-0.5 uppercase tracking-wider">Search: {searchTerm}</span>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
         {/* Notifications List */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           {filteredNotifications.length === 0 ? (
-            <Card className="border-border/50">
-              <CardContent className="py-16 text-center">
-                <div className="h-16 w-16 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Bell className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-medium text-foreground mb-2">No notifications found</h3>
-                <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-4">
-                  {searchTerm
-                    ? 'Try adjusting your search terms.'
-                    : 'Send your first notification to get started.'}
+            <section className="flex flex-col items-center gap-3 border border-zinc-800 bg-zinc-950 px-5 py-16 text-center">
+              <Bell className="h-8 w-8 text-zinc-700" />
+              <div>
+                <p className="font-bold">No notifications found</p>
+                <p className="mt-0.5 max-w-sm text-xs text-zinc-500">
+                  {searchTerm ? 'Try adjusting your search terms.' : 'Send your first notification to get started.'}
                 </p>
-                {notifications.length === 0 && (
-                  <Button onClick={handleCreate} className="gap-2">
-                    <Plus className="w-4 h-4" />
-                    Send First Notification
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
+              </div>
+              {notifications.length === 0 && (
+                <Button
+                  onClick={handleCreate}
+                  size="sm"
+                  className="rounded-sm bg-primary text-xs font-semibold uppercase tracking-wider text-white hover:bg-primary/90"
+                >
+                  <Plus className="mr-1.5 h-3.5 w-3.5" />
+                  Send first notification
+                </Button>
+              )}
+            </section>
           ) : (
             filteredNotifications.map((notification) => {
               const colors = typeColors[notification.type] || typeColors.INFO;
               const TypeIcon = getTypeIcon(notification.type);
 
               return (
-                <Card key={notification.id} className={`${colors.border} hover:shadow-lg transition-all duration-300 bg-gradient-to-br ${colors.bg} group`}>
-                  <CardContent className="p-6">
+                <Card key={notification.id} className={`group rounded-none border-zinc-800 bg-zinc-950 transition-colors hover:border-zinc-700 ${colors.border}`}>
+                  <CardContent className="p-5">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 space-y-3">
                         <div className="flex items-start gap-3">
-                          <div className={`flex-shrink-0 h-10 w-10 ${colors.iconColor} rounded-xl flex items-center justify-center mt-0.5`}>
-                            <TypeIcon className={`w-5 h-5 ${colors.text}`} />
+                          <div className={`flex h-9 w-9 shrink-0 items-center justify-center border ${colors.border} ${colors.iconColor}`}>
+                            <TypeIcon className={`h-4 w-4 ${colors.text}`} />
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1.5">

@@ -674,178 +674,124 @@ export default function AdminDashboard() {
         </section>
 
         {/* Page Controls */}
-        <div className="mb-3">
-          <h2 className="text-sm font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
-            <Wrench className="h-4 w-4 text-red-400" />
-            Page Controls
-          </h2>
-          <Card className="border-red-500/20 bg-gradient-to-br from-card to-red-500/5">
-            <CardContent className="p-3">
-              <div className="space-y-2">
-                {pageStatusesLoading ? (
-                  <div className="flex items-center justify-center gap-2 py-4 text-xs text-muted-foreground">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    Loading page statuses...
-                  </div>
-                ) : pageStatuses.length === 0 ? (
-                  <div className="flex flex-col items-center gap-2 py-4">
-                    <p className="text-xs text-muted-foreground">Could not load page statuses.</p>
-                    <button onClick={loadPageStatuses} className="text-xs text-primary underline">Retry</button>
-                  </div>
-                ) : null}
-                {pageStatuses.map((ps) => (
-                  <div
-                    key={ps.pageSlug}
-                    className={`flex flex-col sm:flex-row sm:items-center gap-2 rounded-lg border p-3 transition-colors ${
-                      ps.isDisabled
-                        ? 'border-red-500/30 bg-red-500/5'
-                        : 'border-border/40 bg-muted/20'
+        <section className="border border-zinc-800 bg-zinc-950">
+          <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-3">
+            <Wrench className="h-3.5 w-3.5 text-red-400" />
+            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Page controls</p>
+          </div>
+          <div className="divide-y divide-zinc-800/60">
+            {pageStatusesLoading ? (
+              <div className="flex items-center justify-center gap-2 px-5 py-6 text-xs text-zinc-500">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Loading page statuses...
+              </div>
+            ) : pageStatuses.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 px-5 py-6">
+                <p className="text-xs text-zinc-500">Could not load page statuses.</p>
+                <button onClick={loadPageStatuses} className="text-xs uppercase tracking-wider text-primary hover:underline">Retry</button>
+              </div>
+            ) : null}
+            {pageStatuses.map((ps) => (
+              <div
+                key={ps.pageSlug}
+                className={`flex flex-col gap-2 px-5 py-3 sm:flex-row sm:items-center ${
+                  ps.isDisabled ? 'border-l-2 border-l-red-500' : 'border-l-2 border-l-transparent'
+                }`}
+              >
+                <div className="flex min-w-[160px] items-center gap-2">
+                  <span className={`h-1.5 w-1.5 shrink-0 ${ps.isDisabled ? 'bg-red-500' : 'bg-green-500'}`} />
+                  <span className="font-mono text-sm font-semibold tabular-nums">/{ps.pageSlug}</span>
+                  <span
+                    className={`border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                      ps.isDisabled ? 'border-red-500/40 text-red-400' : 'border-green-500/40 text-green-400'
                     }`}
                   >
-                    {/* Left: slug + status badge */}
-                    <div className="flex items-center gap-2 min-w-[140px]">
-                      <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${ps.isDisabled ? 'bg-red-500' : 'bg-green-500'}`} />
-                      <span className="text-sm font-mono font-semibold text-foreground">/{ps.pageSlug}</span>
-                      <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
-                        ps.isDisabled
-                          ? 'bg-red-500/15 text-red-400'
-                          : 'bg-green-500/15 text-green-400'
-                      }`}>
-                        {ps.isDisabled ? 'Maintenance' : 'Online'}
-                      </span>
-                    </div>
+                    {ps.isDisabled ? 'Maintenance' : 'Online'}
+                  </span>
+                </div>
 
-                    {/* Middle: message input */}
-                    <Input
-                      placeholder="Maintenance message (optional)..."
-                      value={pageMessages[ps.pageSlug] ?? ''}
-                      onChange={(e) =>
-                        setPageMessages(prev => ({ ...prev, [ps.pageSlug]: e.target.value }))
-                      }
-                      className="flex-1 h-8 text-xs"
-                    />
+                <Input
+                  placeholder="Maintenance message (optional)..."
+                  value={pageMessages[ps.pageSlug] ?? ''}
+                  onChange={(e) => setPageMessages((prev) => ({ ...prev, [ps.pageSlug]: e.target.value }))}
+                  className="h-8 flex-1 rounded-sm border-zinc-800 bg-zinc-900/60 text-xs"
+                />
 
-                    {/* Right: toggle button */}
-                    <Button
-                      size="sm"
-                      variant={ps.isDisabled ? 'outline' : 'destructive'}
-                      className={`shrink-0 h-8 text-xs font-semibold transition-all ${
-                        ps.isDisabled
-                          ? 'border-green-500/40 text-green-400 hover:bg-green-500/10'
-                          : ''
-                      }`}
-                      disabled={pageStatusSaving[ps.pageSlug]}
-                      onClick={() => handlePageStatusToggle(ps.pageSlug, ps.isDisabled)}
-                    >
-                      {pageStatusSaving[ps.pageSlug] ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : ps.isDisabled ? (
-                        '↑ Re-enable'
-                      ) : (
-                        '↓ Disable'
-                      )}
-                    </Button>
-                  </div>
-                ))}
+                <Button
+                  size="sm"
+                  variant={ps.isDisabled ? 'outline' : 'destructive'}
+                  className={`h-8 shrink-0 rounded-sm text-[11px] font-semibold uppercase tracking-wider ${
+                    ps.isDisabled ? 'border-green-500/40 bg-transparent text-green-400 hover:bg-green-500/10' : ''
+                  }`}
+                  disabled={pageStatusSaving[ps.pageSlug]}
+                  onClick={() => handlePageStatusToggle(ps.pageSlug, ps.isDisabled)}
+                >
+                  {pageStatusSaving[ps.pageSlug] ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : ps.isDisabled ? (
+                    'Re-enable'
+                  ) : (
+                    'Disable'
+                  )}
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            ))}
+          </div>
+        </section>
 
         {/* Secondary Stats */}
-        <div className="grid grid-cols-3 md:grid-cols-5 gap-2 mb-3">
-          <Card className="border-border/50 hover:border-primary/30 transition-all duration-200 bg-gradient-to-br from-card to-primary/5">
-            <CardContent className="p-2.5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">New (7d)</p>
-                  <p className="text-base md:text-lg font-semibold text-foreground">{recentUsers}</p>
+        <div className="grid grid-cols-3 gap-2 md:grid-cols-5">
+          {[
+            { label: 'New (7d)', value: recentUsers, icon: UserPlus, color: 'text-primary' },
+            { label: 'Creators', value: contentCreatorCount, icon: Crown, color: 'text-accent' },
+            { label: 'Total coins', value: totalCoins.toLocaleString(), icon: Coins, color: 'text-yellow-400' },
+            { label: 'Elite', value: planDistribution.ELITE || 0, icon: Crown, color: 'text-accent' },
+            { label: 'Pro', value: planDistribution.PRO || 0, icon: Crown, color: 'text-primary' },
+          ].map((s) => {
+            const SIcon = s.icon;
+            return (
+              <div key={s.label} className="border border-zinc-800 bg-zinc-950 px-3 py-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{s.label}</p>
+                    <p className={`mt-0.5 font-mono text-base font-black tabular-nums leading-none ${s.color}`}>{s.value}</p>
+                  </div>
+                  <SIcon className={`h-3.5 w-3.5 shrink-0 ${s.color}`} />
                 </div>
-                <UserPlus className="h-3.5 w-3.5 text-primary" />
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/50 hover:border-accent/30 transition-all duration-200 bg-gradient-to-br from-card to-accent/5">
-            <CardContent className="p-2.5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">Creators</p>
-                  <p className="text-base md:text-lg font-semibold text-foreground">{contentCreatorCount}</p>
-                </div>
-                <Crown className="h-3.5 w-3.5 text-accent" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/50 hover:border-yellow-500/30 transition-all duration-200 bg-gradient-to-br from-card to-yellow-500/5">
-            <CardContent className="p-2.5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">Total Coins</p>
-                  <p className="text-base md:text-lg font-semibold text-foreground">{totalCoins.toLocaleString()}</p>
-                </div>
-                <Coins className="h-3.5 w-3.5 text-yellow-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/50 hover:border-accent/30 transition-all duration-200 bg-gradient-to-br from-card to-accent/5">
-            <CardContent className="p-2.5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">Elite</p>
-                  <p className="text-base md:text-lg font-semibold text-foreground">{planDistribution.ELITE || 0}</p>
-                </div>
-                <Crown className="h-3.5 w-3.5 text-accent" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/50 hover:border-primary/30 transition-all duration-200 bg-gradient-to-br from-card to-primary/5">
-            <CardContent className="p-2.5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">Pro</p>
-                  <p className="text-base md:text-lg font-semibold text-foreground">{planDistribution.PRO || 0}</p>
-                </div>
-                <Crown className="h-3.5 w-3.5 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
+            );
+          })}
         </div>
 
         {/* Search and Filters */}
-        <Card className="mb-5 border-border/50">
-          <CardHeader className="pb-3">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-              <div>
-                <CardTitle className="text-lg">User Management</CardTitle>
-                <CardDescription>Search, filter, and manage user accounts</CardDescription>
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => fetchUsers()}
-                  className="hover:scale-[1.02] transition-all duration-200"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={exportUsers}
-                  className="accent-glow hover:scale-[1.02] transition-all duration-200"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export CSV
-                </Button>
-              </div>
+        <section className="border border-zinc-800 bg-zinc-950">
+          <div className="flex flex-col gap-3 border-b border-zinc-800 px-5 py-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Users</p>
+              <p className="mt-0.5 font-bold text-sm">Manage accounts</p>
             </div>
-          </CardHeader>
-          <CardContent>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchUsers()}
+                className="h-8 rounded-sm border-zinc-800 bg-zinc-900/60 text-[11px] uppercase tracking-wider text-zinc-300 hover:border-primary/40 hover:text-primary"
+              >
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                Refresh
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportUsers}
+                className="h-8 rounded-sm border-zinc-800 bg-zinc-900/60 text-[11px] uppercase tracking-wider text-zinc-300 hover:border-primary/40 hover:text-primary"
+              >
+                <Download className="mr-1.5 h-3.5 w-3.5" />
+                Export CSV
+              </Button>
+            </div>
+          </div>
+          <div className="px-5 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-3">
               <div className="relative md:col-span-2">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -935,31 +881,32 @@ export default function AdminDashboard() {
 
             {/* Bulk Actions Bar */}
             {selectedUsers.size > 0 && (
-              <div className="mt-3 p-3 bg-primary/10 rounded-lg border border-primary/20 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <CheckCircle2 className="h-5 w-5 text-primary" />
-                  <span className="font-medium text-foreground">
-                    {selectedUsers.size} user{selectedUsers.size > 1 ? 's' : ''} selected
+              <div className="mt-3 flex items-center justify-between border border-primary/30 bg-primary/5 px-3 py-2.5">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-medium">
+                    <span className="font-mono tabular-nums">{selectedUsers.size}</span> user{selectedUsers.size > 1 ? 's' : ''} selected
                   </span>
                 </div>
                 <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => setSelectedUsers(new Set())}
+                    className="h-8 rounded-sm border-zinc-800 bg-zinc-900/60 text-[11px] uppercase tracking-wider text-zinc-300"
                   >
-                    Clear Selection
+                    Clear
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm">
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete Selected
+                      <Button variant="destructive" size="sm" className="h-8 rounded-sm text-[11px] uppercase tracking-wider">
+                        <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                        Delete
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="rounded-xl border-zinc-800 bg-zinc-950">
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Multiple Users?</AlertDialogTitle>
+                        <AlertDialogTitle>Delete multiple users?</AlertDialogTitle>
                         <AlertDialogDescription>
                           You are about to delete {selectedUsers.size} user(s). This action cannot be undone.
                         </AlertDialogDescription>
@@ -970,7 +917,7 @@ export default function AdminDashboard() {
                           onClick={handleBulkDelete}
                           className="bg-destructive hover:bg-destructive/90"
                         >
-                          Delete All
+                          Delete all
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
@@ -978,22 +925,20 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
         {/* User Management */}
-        <Card className="border-border/50">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg font-semibold">All Users</CardTitle>
-                <CardDescription className="text-muted-foreground">
-                  Page {currentPage} of {totalPages} • {sortedUsers.length} user{sortedUsers.length !== 1 ? 's' : ''} found
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
+        <section className="border border-zinc-800 bg-zinc-950">
+          <div className="border-b border-zinc-800 px-5 py-3">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Directory</p>
+            <p className="mt-0.5 font-bold text-sm">
+              All users <span className="ml-1.5 font-mono text-[11px] font-normal tabular-nums text-zinc-500">
+                · page {currentPage}/{totalPages} · {sortedUsers.length} found
+              </span>
+            </p>
+          </div>
+          <div className="px-5 py-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="all" className="flex items-center gap-1.5 text-xs md:text-sm">
@@ -1033,8 +978,8 @@ export default function AdminDashboard() {
               )}
 
               {paginatedUsers.map((user) => (
-                <div key={user.id} className={`bg-card rounded-xl p-4 border shadow-sm hover:shadow transition-colors duration-200 ${
-                  selectedUsers.has(user.id) ? 'border-primary/50 bg-primary/5' : 'border-border/50 hover:border-primary/30'
+                <div key={user.id} className={`border bg-zinc-950 p-4 transition-colors ${
+                  selectedUsers.has(user.id) ? 'border-primary/50 bg-primary/5' : 'border-zinc-800 hover:border-zinc-700'
                 }`}>
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                     <div className="flex-1">
@@ -1044,7 +989,7 @@ export default function AdminDashboard() {
                           onCheckedChange={() => handleSelectUser(user.id)}
                           id={`user-${user.id}`}
                         />
-                        <div className="h-9 w-9 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground font-bold text-xs shrink-0">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-primary/30 bg-primary/10 text-xs font-bold text-primary">
                           {user.username.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1177,7 +1122,7 @@ export default function AdminDashboard() {
                             </AlertDialogTitle>
                             <AlertDialogDescription className="text-muted-foreground">
                               This action cannot be undone. This will permanently delete the user
-                              account for <span className="font-semibold gradient-text">{user.username}</span> and remove all associated data.
+                              account for <span className="font-semibold text-primary">{user.username}</span> and remove all associated data.
                               <br />
                               <br />
                               <span className="text-sm font-medium">User Details:</span>
@@ -1285,15 +1230,15 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </main>
 
       {/* Edit Dialogs */}
       <Dialog open={editType === 'tokens'} onOpenChange={(open) => !open && setEditType(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl gradient-text">Update User Tokens</DialogTitle>
+            <DialogTitle className="text-xl font-bold tracking-tight">Update User Tokens</DialogTitle>
             <DialogDescription className="text-muted-foreground">
               Change the token count for <span className="font-semibold">{selectedUser?.username}</span>
             </DialogDescription>
@@ -1309,7 +1254,7 @@ export default function AdminDashboard() {
           <DialogFooter>
             <Button
               onClick={() => selectedUser && updateUserTokens(selectedUser.id, newTokens)}
-              className="glow-effect hover:scale-105 transition-all duration-300"
+              className="rounded-sm bg-primary text-xs font-semibold uppercase tracking-wider text-white hover:bg-primary/90"
             >
               Update Tokens
             </Button>
@@ -1320,7 +1265,7 @@ export default function AdminDashboard() {
       <Dialog open={editType === 'coins'} onOpenChange={(open) => !open && setEditType(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl gradient-text">Update User Coins</DialogTitle>
+            <DialogTitle className="text-xl font-bold tracking-tight">Update User Coins</DialogTitle>
             <DialogDescription className="text-muted-foreground">
               Change the coin count for <span className="font-semibold">{selectedUser?.username}</span>
             </DialogDescription>
@@ -1336,7 +1281,7 @@ export default function AdminDashboard() {
           <DialogFooter>
             <Button
               onClick={() => selectedUser && updateUserCoins(selectedUser.id, newCoins)}
-              className="glow-effect hover:scale-105 transition-all duration-300"
+              className="rounded-sm bg-primary text-xs font-semibold uppercase tracking-wider text-white hover:bg-primary/90"
             >
               Update Coins
             </Button>
@@ -1347,7 +1292,7 @@ export default function AdminDashboard() {
       <Dialog open={editType === 'plan'} onOpenChange={(open) => !open && setEditType(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl gradient-text">Update User Plan</DialogTitle>
+            <DialogTitle className="text-xl font-bold tracking-tight">Update User Plan</DialogTitle>
             <DialogDescription className="text-muted-foreground">
               Change the subscription plan for <span className="font-semibold">{selectedUser?.username}</span>
             </DialogDescription>
@@ -1367,7 +1312,7 @@ export default function AdminDashboard() {
           <DialogFooter>
             <Button
               onClick={() => selectedUser && updateUserPlan(selectedUser.id, newPlan)}
-              className="glow-effect hover:scale-105 transition-all duration-300"
+              className="rounded-sm bg-primary text-xs font-semibold uppercase tracking-wider text-white hover:bg-primary/90"
               disabled={!newPlan || newPlan === selectedUser?.plan}
             >
               Update Plan
@@ -1379,7 +1324,7 @@ export default function AdminDashboard() {
       <Dialog open={editType === 'role'} onOpenChange={(open) => !open && setEditType(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl gradient-text">Update User Role</DialogTitle>
+            <DialogTitle className="text-xl font-bold tracking-tight">Update User Role</DialogTitle>
             <DialogDescription className="text-muted-foreground">
               Change the access role for <span className="font-semibold">{selectedUser?.username}</span>
             </DialogDescription>
@@ -1399,7 +1344,7 @@ export default function AdminDashboard() {
           <DialogFooter>
             <Button
               onClick={() => selectedUser && updateUserRole(selectedUser.id, newRole)}
-              className="glow-effect hover:scale-105 transition-all duration-300"
+              className="rounded-sm bg-primary text-xs font-semibold uppercase tracking-wider text-white hover:bg-primary/90"
               disabled={!newRole}
             >
               Update Role
@@ -1412,7 +1357,7 @@ export default function AdminDashboard() {
       <Dialog open={editType === 'email'} onOpenChange={(open) => !open && setEditType(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-xl gradient-text flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold tracking-tight">
               <Mail className="h-5 w-5" />
               Send Email to User
             </DialogTitle>
@@ -1473,7 +1418,7 @@ export default function AdminDashboard() {
             </Button>
             <Button
               onClick={() => selectedUser && sendEmail(selectedUser.id, emailSubject, emailMessage)}
-              className="glow-effect hover:scale-105 transition-all duration-300"
+              className="rounded-sm bg-primary text-xs font-semibold uppercase tracking-wider text-white hover:bg-primary/90"
               disabled={!emailSubject.trim() || !emailMessage.trim()}
             >
               <Send className="h-4 w-4 mr-2" />

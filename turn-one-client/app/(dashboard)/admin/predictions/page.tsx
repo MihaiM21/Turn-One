@@ -382,27 +382,29 @@ export default function AdminPredictionsPage() {
 
           {/* Left: Race List (2 cols) */}
           <div className="lg:col-span-2 space-y-4">
-            <Card className="border-primary/10">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Race Calendar</CardTitle>
-                  <Tabs value={raceTab} onValueChange={(v) => setRaceTab(v as 'pending' | 'all')}>
-                    <TabsList className="h-8">
-                      <TabsTrigger value="pending" className="text-xs px-3 h-7">
-                        Pending ({racesWithPending.length})
-                      </TabsTrigger>
-                      <TabsTrigger value="all" className="text-xs px-3 h-7">
-                        All (24)
-                      </TabsTrigger>
-                    </TabsList>
-                  </Tabs>
+            <Card className="rounded-none border-zinc-800 bg-zinc-950">
+              <div className="flex items-center justify-between gap-3 border-b border-zinc-800 px-5 py-3">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Calendar</p>
+                  <p className="mt-0.5 font-bold text-sm">Race calendar</p>
                 </div>
-                <CardDescription className="text-xs">
-                  {raceTab === 'pending'
-                    ? 'Races with user predictions awaiting validation'
-                    : 'Full 2026 F1 calendar'}
-                </CardDescription>
-              </CardHeader>
+                <Tabs value={raceTab} onValueChange={(v) => setRaceTab(v as 'pending' | 'all')}>
+                  <TabsList className="h-auto rounded-none border border-zinc-800 bg-zinc-950 p-0">
+                    <TabsTrigger
+                      value="pending"
+                      className="rounded-none border-b-2 border-transparent bg-transparent px-3 py-1.5 text-[11px] uppercase tracking-wider text-zinc-400 transition-colors data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
+                    >
+                      Pending <span className="ml-1 font-mono tabular-nums text-zinc-500">{racesWithPending.length}</span>
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="all"
+                      className="rounded-none border-b-2 border-transparent bg-transparent px-3 py-1.5 text-[11px] uppercase tracking-wider text-zinc-400 transition-colors data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
+                    >
+                      All <span className="ml-1 font-mono tabular-nums text-zinc-500">24</span>
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
               <CardContent className="p-0">
                 {loadingPredictions ? (
                   <div className="flex items-center justify-center py-12">
@@ -458,40 +460,44 @@ export default function AdminPredictionsPage() {
           {/* Right: Details + Form (3 cols) */}
           <div className="lg:col-span-3 space-y-4">
             {!selectedRace ? (
-              <Card className="border-dashed border-2 border-muted-foreground/20">
-                <CardContent className="flex flex-col items-center justify-center py-20">
-                  <Target className="w-12 h-12 text-muted-foreground/20 mb-4" />
-                  <p className="text-lg font-medium text-muted-foreground/60">Select a race</p>
-                  <p className="text-sm text-muted-foreground/40 mt-1">Choose a race from the calendar to enter results</p>
+              <Card className="rounded-none border-2 border-dashed border-zinc-800 bg-zinc-950/50">
+                <CardContent className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+                  <Target className="h-10 w-10 text-zinc-700" />
+                  <div>
+                    <p className="font-bold">Select a race</p>
+                    <p className="mt-0.5 text-xs text-zinc-500">Choose a race from the calendar to enter results.</p>
+                  </div>
                 </CardContent>
               </Card>
             ) : (
               <>
                 {/* Race Info Banner */}
-                <Card className="border-primary/10 bg-gradient-to-r from-primary/5 via-transparent to-transparent overflow-hidden">
+                <Card className="overflow-hidden rounded-none border-zinc-800 border-l-4 border-l-primary bg-zinc-950">
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between">
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <Flag className="w-4 h-4 text-primary" />
-                          <span className="text-xs font-mono text-muted-foreground">{selectedRace.raceId}</span>
+                        <div className="mb-1 flex items-center gap-2">
+                          <Flag className="h-3.5 w-3.5 text-primary" />
+                          <span className="font-mono text-[11px] uppercase tracking-wider text-zinc-500">{selectedRace.raceId}</span>
                           {selectedRace.isPast && (
-                            <Badge variant="outline" className="text-[10px] bg-green-500/10 text-green-500 border-green-500/20">
-                              <CheckCircle2 className="w-3 h-3 mr-1" /> Completed
-                            </Badge>
+                            <span className="border border-green-500/40 px-2 py-0.5 text-[10px] uppercase tracking-wider text-green-400">
+                              <CheckCircle2 className="mr-1 inline h-3 w-3" /> Completed
+                            </span>
                           )}
                         </div>
-                        <h2 className="text-xl font-bold">{selectedRace.raceName}</h2>
-                        <p className="text-sm text-muted-foreground">{selectedRace.circuit}, {selectedRace.country}</p>
-                        <p className="text-xs text-muted-foreground/60 mt-1">
-                          {new Date(selectedRace.raceDateTime).toLocaleDateString('en-US', { 
-                            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                        <h2 className="text-xl font-bold tracking-tight">{selectedRace.raceName}</h2>
+                        <p className="text-sm text-zinc-400">{selectedRace.circuit}, {selectedRace.country}</p>
+                        <p className="mt-1 font-mono text-[11px] tabular-nums text-zinc-500">
+                          {new Date(selectedRace.raceDateTime).toLocaleDateString('en-GB', {
+                            weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
                           })}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-3xl font-bold text-primary">{selectedRacePredictions.length}</p>
-                        <p className="text-xs text-muted-foreground">predictions</p>
+                        <p className="font-mono text-3xl font-black tabular-nums leading-none text-primary">
+                          {selectedRacePredictions.length}
+                        </p>
+                        <p className="mt-1 text-[10px] uppercase tracking-[0.25em] text-zinc-500">predictions</p>
                       </div>
                     </div>
                   </CardContent>
@@ -499,7 +505,7 @@ export default function AdminPredictionsPage() {
 
                 {/* Pending Predictions for this race */}
                 {selectedRacePredictions.length > 0 && (
-                  <Card className="border-orange-500/10">
+                  <Card className="rounded-none border-zinc-800 bg-zinc-950">
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-base flex items-center gap-2">
@@ -726,13 +732,14 @@ export default function AdminPredictionsPage() {
 
                 {/* Validation Results */}
                 {validationResult && (
-                  <Card className="border-green-500/20 bg-gradient-to-br from-green-500/5 to-transparent">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-green-500" />
-                        Validation Complete
-                      </CardTitle>
-                    </CardHeader>
+                  <Card className="rounded-none border-zinc-800 border-l-4 border-l-green-500 bg-zinc-950">
+                    <div className="border-b border-zinc-800 px-5 py-3">
+                      <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Validation</p>
+                      <p className="mt-0.5 flex items-center gap-2 font-bold text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-green-400" />
+                        Validation complete
+                      </p>
+                    </div>
                     <CardContent className="space-y-4">
                       {/* Result stats grid */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
