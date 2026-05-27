@@ -1006,14 +1006,14 @@ export function TelemetryPlotGenerator() {
                     <Label htmlFor="round">Round</Label>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        {/* <button
+                        <button
                           type="button"
                           onClick={useLatestRace}
                           className="text-[10px] text-primary hover:underline disabled:opacity-50"
                           disabled={!availableEvents.length}
                         >
                           Use latest race
-                        </button> */}
+                        </button>
                       </TooltipTrigger>
                       <TooltipContent side="top">Jump to the most recent past event</TooltipContent>
                     </Tooltip>
@@ -1045,7 +1045,9 @@ export function TelemetryPlotGenerator() {
                           const identifier = event.official_name || event.name
                           return (
                             <SelectItem key={event.key || index} value={identifier}>
-                              {`${prefix} ${displayName}`}
+                              {/* REMOVED THE NUMBER BCS OF F1 numbers not being correct */}
+                              {/* {`${prefix} ${displayName}`} */}
+                              {`${displayName}`}
                             </SelectItem>
                           )
                         })
