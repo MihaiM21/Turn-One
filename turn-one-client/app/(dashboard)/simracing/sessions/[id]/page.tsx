@@ -1,30 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
-import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
-    Legend,
-} from "recharts";
-import { ArrowLeft, Activity, Clock, Flag, Lock, Globe } from "lucide-react";
+import { ArrowLeft, Activity, Clock, Flag, Lock, Globe, GitCompareArrows } from "lucide-react";
 import Link from "next/link";
-
-interface ChartPoint {
-    timestamp: number;
-    speedKmh: number;
-    rpms: number;
-    gas: number;
-    brake: number;
-    gear: number;
-}
+import {
+    MultiChannelChart,
+    type MultiChannelChartData,
+} from "@/components/dashboard/simracing/charts/multi-channel-chart";
+import { ReplayScrubber } from "@/components/dashboard/simracing/replay-scrubber";
+import {
+    LapMetricsPanel,
+    type LapMetrics,
+} from "@/components/dashboard/simracing/lap-metrics-panel";
+import { LapSelector, type LapSummary } from "@/components/dashboard/simracing/lap-selector";
+import { CoachingPanel } from "@/components/dashboard/simracing/coaching/coaching-panel";
 
 interface SessionDto {
     id: string;
@@ -39,68 +31,97 @@ interface SessionDto {
     endedAt?: string;
 }
 
+interface LapDto {
+    lapNumber: number;
+    lapTimeMs: number | null;
+    isValid: boolean;
+}
+
+function apiBase() {
+    return (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271/api").replace(/\/api\/?$/, "");
+}
+
+function authHeaders(): Record<string, string> {
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export default function SessionDetailPage() {
     const params = useParams();
     const id = params.id as string;
 
     const [session, setSession] = useState<SessionDto | null>(null);
-    const [chartData, setChartData] = useState<ChartPoint[]>([]);
+    const [chartData, setChartData] = useState<MultiChannelChartData>({ channels: [], points: [] });
+    const [laps, setLaps] = useState<LapSummary[]>([]);
+    const [metrics, setMetrics] = useState<LapMetrics[]>([]);
+    const [selectedLap, setSelectedLap] = useState<number | null>(null);
+    const [cursor, setCursor] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [chartLoading, setChartLoading] = useState(false);
 
     useEffect(() => {
         if (!id) return;
+        const url = apiBase();
 
-        const fetchSession = async () => {
+        (async () => {
             try {
-                const token = localStorage.getItem("token");
-                const url = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271/api").replace(/\/api\/?$/, "");
-                const res = await fetch(`${url}/api/telemetry/sessions/${id}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    setSession(data);
+                const [sessionRes, lapsRes, metricsRes] = await Promise.all([
+                    fetch(`${url}/api/telemetry/sessions/${id}`, { headers: authHeaders() }),
+                    fetch(`${url}/api/telemetry/sessions/${id}/laps`, { headers: authHeaders() }),
+                    fetch(`${url}/api/telemetry/sessions/${id}/metrics`, { headers: authHeaders() }),
+                ]);
+                if (sessionRes.ok) setSession(await sessionRes.json());
+                if (lapsRes.ok) {
+                    const data: LapDto[] = await lapsRes.json();
+                    setLaps(
+                        data.map(l => ({
+                            lapNumber: l.lapNumber,
+                            lapTimeMs: l.lapTimeMs,
+                            isValid: l.isValid,
+                        }))
+                    );
                 }
+                if (metricsRes.ok) setMetrics(await metricsRes.json());
             } catch (err) {
-                console.error("Failed to fetch session detail", err);
+                console.error("Failed to fetch session", err);
             } finally {
                 setLoading(false);
             }
-        };
+        })();
+    }, [id]);
 
-        const fetchChart = async () => {
+    const loadChart = useCallback(
+        async (lap: number | null) => {
+            if (!id) return;
+            const url = apiBase();
+            setChartLoading(true);
             try {
-                setChartLoading(true);
-                const token = localStorage.getItem("token");
-                const url = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271/api").replace(/\/api\/?$/, "");
-                const res = await fetch(`${url}/api/telemetry/sessions/${id}/chart`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    setChartData(data);
-                }
+                const endpoint =
+                    lap == null
+                        ? `${url}/api/telemetry/sessions/${id}/channels`
+                        : `${url}/api/telemetry/sessions/${id}/laps/${lap}/chart`;
+                const res = await fetch(endpoint, { headers: authHeaders() });
+                if (res.ok) setChartData(await res.json());
             } catch (err) {
-                console.error("Failed to fetch chart details", err);
+                console.error("Failed to load chart", err);
             } finally {
                 setChartLoading(false);
             }
-        };
+        },
+        [id]
+    );
 
-        fetchSession().then(fetchChart);
-    }, [id]);
+    useEffect(() => {
+        loadChart(selectedLap);
+        setCursor(null);
+    }, [selectedLap, loadChart]);
 
     const handleVisibilityUpdate = async (newVis: number) => {
         try {
-            const token = localStorage.getItem("token");
-            const url = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271/api").replace(/\/api\/?$/, "");
+            const url = apiBase();
             await fetch(`${url}/api/telemetry/sessions/${id}/visibility`, {
                 method: "PATCH",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
+                headers: { ...authHeaders(), "Content-Type": "application/json" },
                 body: JSON.stringify(newVis),
             });
             setSession(prev => (prev ? { ...prev, visibility: newVis } : prev));
@@ -108,6 +129,19 @@ export default function SessionDetailPage() {
             alert("Failed to update visibility. Check plan level.");
         }
     };
+
+    const activeMetrics = useMemo(() => {
+        if (selectedLap == null) return null;
+        return metrics.find(m => m.lapNumber === selectedLap) ?? null;
+    }, [selectedLap, metrics]);
+
+    const { minTs, maxTs } = useMemo(() => {
+        if (!chartData.points.length) return { minTs: 0, maxTs: 0 };
+        return {
+            minTs: chartData.points[0].timestamp,
+            maxTs: chartData.points[chartData.points.length - 1].timestamp,
+        };
+    }, [chartData]);
 
     if (loading)
         return (
@@ -124,8 +158,7 @@ export default function SessionDetailPage() {
 
     return (
         <div className="w-full min-h-screen p-6 bg-gradient-to-br from-black via-red-950/20 to-black font-sans text-white">
-            <div className="container mx-auto px-4 py-8 max-w-7xl space-y-8">
-                {/* Header */}
+            <div className="container mx-auto px-4 py-8 max-w-7xl space-y-6">
                 <div>
                     <Link
                         href="/simracing/sessions"
@@ -144,35 +177,43 @@ export default function SessionDetailPage() {
                             <p className="text-muted-foreground ml-8">{session.carModel}</p>
                         </div>
 
-                        {/* Visibility toggle */}
-                        <div className="flex gap-1 items-center bg-black/40 border border-primary/20 p-1 rounded-lg backdrop-blur-md self-start">
-                            <button
-                                onClick={() => handleVisibilityUpdate(0)}
-                                className={`flex items-center gap-1.5 px-3 py-2 text-sm font-bold rounded-md transition-all ${
-                                    session.visibility === 0
-                                        ? "bg-primary/20 text-white border border-primary/40"
-                                        : "text-muted-foreground hover:text-white"
-                                }`}
+                        <div className="flex items-center gap-2">
+                            <Link
+                                href={`/simracing/sessions/${id}/compare`}
+                                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-bold rounded-md bg-black/40 border border-primary/20 hover:border-primary/40 transition-colors"
                             >
-                                <Lock className="w-3.5 h-3.5" />
-                                Private
-                            </button>
-                            <button
-                                onClick={() => handleVisibilityUpdate(1)}
-                                className={`flex items-center gap-1.5 px-3 py-2 text-sm font-bold rounded-md transition-all ${
-                                    session.visibility === 1
-                                        ? "bg-blue-600/30 text-blue-200 border border-blue-500/40"
-                                        : "text-muted-foreground hover:text-white"
-                                }`}
-                            >
-                                <Globe className="w-3.5 h-3.5" />
-                                Public
-                            </button>
+                                <GitCompareArrows className="w-3.5 h-3.5" />
+                                Compare
+                            </Link>
+
+                            <div className="flex gap-1 items-center bg-black/40 border border-primary/20 p-1 rounded-lg backdrop-blur-md">
+                                <button
+                                    onClick={() => handleVisibilityUpdate(0)}
+                                    className={`flex items-center gap-1.5 px-3 py-2 text-sm font-bold rounded-md transition-all ${
+                                        session.visibility === 0
+                                            ? "bg-primary/20 text-white border border-primary/40"
+                                            : "text-muted-foreground hover:text-white"
+                                    }`}
+                                >
+                                    <Lock className="w-3.5 h-3.5" />
+                                    Private
+                                </button>
+                                <button
+                                    onClick={() => handleVisibilityUpdate(1)}
+                                    className={`flex items-center gap-1.5 px-3 py-2 text-sm font-bold rounded-md transition-all ${
+                                        session.visibility === 1
+                                            ? "bg-blue-600/30 text-blue-200 border border-blue-500/40"
+                                            : "text-muted-foreground hover:text-white"
+                                    }`}
+                                >
+                                    <Globe className="w-3.5 h-3.5" />
+                                    Public
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Stat cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <StatCard
                         icon={<Activity className="w-4 h-4" />}
@@ -185,10 +226,7 @@ export default function SessionDetailPage() {
                         label="Started"
                         value={format(new Date(session.startedAt), "MMM d, HH:mm")}
                     />
-                    <StatCard
-                        label="Type"
-                        value={session.sessionType}
-                    />
+                    <StatCard label="Type" value={session.sessionType} />
                     <StatCard
                         icon={<Flag className="w-4 h-4" />}
                         label="Total Laps"
@@ -197,71 +235,51 @@ export default function SessionDetailPage() {
                     />
                 </div>
 
-                {/* Chart */}
+                <Card className="border-primary/20 bg-gradient-to-br from-black/80 to-black/60 shadow-xl backdrop-blur-md">
+                    <CardContent className="p-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-sm font-bold text-white uppercase tracking-widest">Laps</h2>
+                            <span className="text-xs text-muted-foreground font-mono">{laps.length} recorded</span>
+                        </div>
+                        <LapSelector laps={laps} selected={selectedLap} onSelect={setSelectedLap} />
+                    </CardContent>
+                </Card>
+
+                <LapMetricsPanel metrics={activeMetrics} />
+
                 <Card className="border-primary/20 bg-gradient-to-br from-black/80 to-black/60 shadow-xl backdrop-blur-md overflow-hidden">
-                    <CardContent className="p-6">
-                        <h2 className="text-sm font-bold mb-4 text-white uppercase tracking-widest">Speed & RPM Telemetry</h2>
+                    <CardContent className="p-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-sm font-bold text-white uppercase tracking-widest">
+                                Telemetry {selectedLap != null ? `· Lap ${selectedLap}` : "· Full Session"}
+                            </h2>
+                        </div>
+
                         {chartLoading ? (
                             <div className="h-64 flex items-center justify-center text-muted-foreground animate-pulse font-mono text-sm">
                                 Loading telemetry data...
                             </div>
-                        ) : chartData.length === 0 ? (
-                            <div className="h-64 flex flex-col items-center justify-center gap-3 text-muted-foreground font-mono text-sm max-w-md text-center mx-auto">
-                                <Activity className="w-8 h-8 opacity-40" />
-                                <p>No telemetry ticks found. Ensure you complete some movement on track before ending the session.</p>
-                            </div>
                         ) : (
-                            <div className="h-80 w-full mt-4">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-                                        <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.1} vertical={false} stroke="#555" />
-                                        <XAxis
-                                            dataKey="timestamp"
-                                            tickFormatter={t => format(new Date(t), "HH:mm:ss")}
-                                            stroke="#555"
-                                            tick={{ fill: "#888", fontSize: 10 }}
-                                        />
-                                        <YAxis yAxisId="left" stroke="#555" tick={{ fill: "#888", fontSize: 10 }} />
-                                        <YAxis
-                                            yAxisId="right"
-                                            orientation="right"
-                                            stroke="#555"
-                                            tick={{ fill: "#888", fontSize: 10 }}
-                                        />
-                                        <Tooltip
-                                            contentStyle={{
-                                                backgroundColor: "rgba(0,0,0,0.85)",
-                                                borderColor: "#ef4444",
-                                                borderRadius: "8px",
-                                                backdropFilter: "blur(4px)",
-                                            }}
-                                            labelFormatter={t => format(new Date(t), "HH:mm:ss")}
-                                        />
-                                        <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                                        <Line
-                                            yAxisId="left"
-                                            type="monotone"
-                                            dataKey="speedKmh"
-                                            stroke="#ef4444"
-                                            dot={false}
-                                            strokeWidth={2}
-                                            name="Speed (km/h)"
-                                        />
-                                        <Line
-                                            yAxisId="right"
-                                            type="monotone"
-                                            dataKey="rpms"
-                                            stroke="#3b82f6"
-                                            dot={false}
-                                            strokeWidth={2}
-                                            name="RPM"
-                                        />
-                                    </LineChart>
-                                </ResponsiveContainer>
-                            </div>
+                            <>
+                                <MultiChannelChart
+                                    data={chartData}
+                                    cursorTimestamp={cursor}
+                                    onCursorChange={setCursor}
+                                />
+                                {maxTs > minTs ? (
+                                    <ReplayScrubber
+                                        minTimestamp={minTs}
+                                        maxTimestamp={maxTs}
+                                        value={cursor}
+                                        onChange={setCursor}
+                                    />
+                                ) : null}
+                            </>
                         )}
                     </CardContent>
                 </Card>
+
+                <CoachingPanel sessionId={id} lapNumber={selectedLap} />
             </div>
         </div>
     );

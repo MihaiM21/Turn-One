@@ -60,16 +60,28 @@ const data = {
       icon: Gauge,
       items: [
         {
-          title: "Live Telemetry",
+          title: "Dashboard",
           url: "/simracing",
+        },
+        {
+          title: "Live Telemetry",
+          url: "/simracing/live",
         },
         {
           title: "My Sessions",
           url: "/simracing/sessions",
         },
         {
+          title: "AI Coach",
+          url: "/simracing/coach",
+        },
+        {
           title: "Live Streams",
           url: "/simracing/spectate",
+        },
+        {
+          title: "Streamer Mode",
+          url: "/simracing/streamer",
         },
         {
           title: "Leaderboards",

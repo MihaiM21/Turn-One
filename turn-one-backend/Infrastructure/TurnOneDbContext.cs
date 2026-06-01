@@ -26,6 +26,7 @@ public class TurnOneDbContext : DbContext
     public DbSet<SimUser> SimUsers { get; set; } = null!;
     public DbSet<TelemetrySession> TelemetrySessions { get; set; } = null!;
     public DbSet<TelemetryLap> TelemetryLaps { get; set; } = null!;
+    public DbSet<OverlayShareToken> OverlayShareTokens { get; set; } = null!;
 
     // Page maintenance
     public DbSet<PageStatus> PageStatuses { get; set; } = null!;
@@ -153,6 +154,14 @@ public class TurnOneDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => new { e.SessionId, e.LapNumber }).IsUnique();
+        });
+
+        modelBuilder.Entity<OverlayShareToken>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => e.Token).IsUnique();
+            entity.HasIndex(e => e.UserId);
         });
 
         modelBuilder.Entity<PageStatus>(entity =>

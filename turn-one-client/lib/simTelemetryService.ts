@@ -62,13 +62,14 @@ class SimTelemetryService {
     private graphicsListeners: Set<(data: SimGraphics) => void> = new Set();
     private staticListeners: Set<(data: SimStatic) => void> = new Set();
     private sessionEndedListeners: Set<(sessionId: string) => void> = new Set();
+    private viewerCountListeners: Set<(sessionId: string, count: number) => void> = new Set();
 
-    public async connect(spectateSessionId?: string) {
+    public async connect(spectateSessionId?: string, overrideAccessToken?: string) {
         if (this.connection) return;
 
         const backendUrlStr = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271/api";
         const backendUrl = backendUrlStr.replace(/\/api\/?$/, "");
-        const token = localStorage.getItem("token");
+        const token = overrideAccessToken ?? localStorage.getItem("token");
 
         this.connection = new signalR.HubConnectionBuilder()
             .withUrl(`${backendUrl}/api/hubs/simtelemetry`, {
@@ -95,6 +96,10 @@ class SimTelemetryService {
 
         this.connection.on("SessionEnded", (sessionId: string) => {
             this.sessionEndedListeners.forEach(listener => listener(sessionId));
+        });
+
+        this.connection.on("ViewerCountChanged", (sessionId: string, count: number) => {
+            this.viewerCountListeners.forEach(listener => listener(sessionId, count));
         });
 
         this.notifyStatus("connecting");
@@ -142,6 +147,20 @@ class SimTelemetryService {
 
     public onStatic(callback: (data: SimStatic) => void) { this.staticListeners.add(callback); }
     public offStatic(callback: (data: SimStatic) => void) { this.staticListeners.delete(callback); }
+
+    public onViewerCount(callback: (sessionId: string, count: number) => void) { this.viewerCountListeners.add(callback); }
+    public offViewerCount(callback: (sessionId: string, count: number) => void) { this.viewerCountListeners.delete(callback); }
+
+    public async getViewerCount(sessionId: string): Promise<number> {
+        if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) return 0;
+        try { return await this.connection.invoke<number>("GetViewerCount", sessionId); }
+        catch { return 0; }
+    }
+
+    public async subscribeOwnerById(): Promise<void> {
+        if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) return;
+        await this.connection.invoke("SubscribeToOwnTelemetry");
+    }
 
     // Private Notifiers
     private notifyStatus(status: ConnectionStatus) { this.statusListeners.forEach(cb => cb(status)); }
