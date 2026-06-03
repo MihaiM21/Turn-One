@@ -1,18 +1,16 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { DailyGiftCard } from '@/components/dashboard/daily-gift-card';
-import { UserLevelProgress } from '@/components/dashboard/user-level-progress';
-import { UserStatsWidget } from '@/components/dashboard/user-stats-widget';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Gift, Trophy, Coins, TrendingUp, Clock3, RefreshCw } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Coins, Star, TrendingUp, Gift, Clock3, Loader2 } from 'lucide-react';
+import { DashboardHeader } from '@/components/dashboard/live dashboard/dashboard-header';
+import { PageHeader } from '@/components/dashboard/page-header';
+import { DailyGiftWidget } from '@/components/dashboard/daily-gift-widget';
 import { ExploreMoreLinks } from '@/components/dashboard/explore-more-links';
 import { getAuthToken } from '@/lib/auth-utils';
 import { fetchUserProfile } from '@/lib/userService';
 import { getLevelProgress, type LevelProgress } from '@/lib/levelSystemService';
 import { checkDailyGiftStatus } from '@/lib/dailyGiftService';
+import { useBalanceRefresh } from '@/lib/balance-events';
 
 interface RewardsProfile {
   coins: number;
@@ -22,25 +20,43 @@ interface RewardsProfile {
   lastDailyGiftDate?: string | null;
 }
 
-export default function DailyRewards() {
+function SectionHeader({ label, title }: { label: string; title: string }) {
+  return (
+    <div className="border-b border-zinc-800 px-5 py-3">
+      <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{label}</p>
+      <p className="mt-0.5 font-bold text-sm">{title}</p>
+    </div>
+  );
+}
+
+function formatLastClaim(value?: string | null) {
+  if (!value) return 'No claim recorded yet';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return 'Unknown';
+  return parsed.toLocaleString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+export default function RewardsPage() {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [profile, setProfile] = useState<RewardsProfile | null>(null);
   const [levelProgress, setLevelProgress] = useState<LevelProgress | null>(null);
   const [isLoadingSummary, setIsLoadingSummary] = useState(false);
   const [summaryError, setSummaryError] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const loadLiveRewardsData = useCallback(async (token: string) => {
     setIsLoadingSummary(true);
     setSummaryError(false);
-
     try {
       const [profileData, progressData, giftStatus] = await Promise.all([
         fetchUserProfile(token),
         getLevelProgress(token),
         checkDailyGiftStatus(token),
       ]);
-
       setProfile({
         coins: profileData.coins ?? 0,
         level: profileData.level ?? 1,
@@ -60,171 +76,171 @@ export default function DailyRewards() {
   useEffect(() => {
     const token = getAuthToken();
     setAuthToken(token);
+    if (token) loadLiveRewardsData(token);
+  }, [loadLiveRewardsData]);
 
-    if (token) {
-      loadLiveRewardsData(token);
-    }
-  }, [loadLiveRewardsData, refreshKey]);
+  const refresh = useCallback(() => {
+    if (authToken) loadLiveRewardsData(authToken);
+  }, [authToken, loadLiveRewardsData]);
 
-  const refreshAllWidgets = () => {
-    setRefreshKey((current) => current + 1);
-  };
+  useBalanceRefresh(refresh);
 
-  const formatLastClaim = (value?: string | null) => {
-    if (!value) return 'No claim recorded yet';
+  const xpRemaining = levelProgress
+    ? Math.max(levelProgress.experienceRequired - levelProgress.currentExperience, 0)
+    : 0;
+  const xpProgressPct = levelProgress
+    ? Math.min(100, Math.round((levelProgress.currentExperience / levelProgress.experienceRequired) * 100))
+    : 0;
 
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) return 'Unknown';
+  return (
+    <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6 space-y-4">
+      <PageHeader
+        label="Rewards"
+        title="Daily rewards & level"
+        description="Claim your gift, track XP and watch your coin balance grow."
+        stats={[
+          { icon: Coins, label: 'Coins', value: (profile?.coins ?? 0).toLocaleString(), iconClassName: 'text-yellow-400' },
+          { icon: Star, label: 'Level', value: levelProgress?.currentLevel ?? profile?.level ?? 1, iconClassName: 'text-purple-400' },
+          { icon: TrendingUp, label: 'XP', value: `${xpProgressPct}%`, iconClassName: 'text-primary' },
+        ]}
+      />
 
-    return parsed.toLocaleString();
-  };
-
-  const levelFormulaPreview = profile ? 100 * profile.level + 100 : null;
-
-  const handleGiftClaimed = () => {
-    refreshAllWidgets();
-  };
-
-  const renderLiveSummary = () => {
-    if (isLoadingSummary) {
-      return (
-        <Card>
-          <CardContent className="py-8 text-center text-sm text-muted-foreground">
-            <div className="inline-flex items-center gap-2">
-              <RefreshCw className="h-4 w-4 animate-spin" />
-              Loading live rewards data...
-            </div>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    if (!profile || !levelProgress || summaryError) {
-      return (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Live Rewards Summary</CardTitle>
-            <CardDescription>Could not load live reward data.</CardDescription>
-          </CardHeader>
-          <CardContent>
+      {!authToken ? (
+        <section className="flex flex-col items-center gap-3 border border-zinc-800 bg-zinc-950 px-5 py-12 text-center">
+          <Gift className="h-8 w-8 text-zinc-700" />
+          <div>
+            <p className="font-bold">Please log in</p>
+            <p className="mt-0.5 text-xs text-zinc-500">
+              Log in to view your rewards and level progress.
+            </p>
+          </div>
+        </section>
+      ) : isLoadingSummary && !profile ? (
+        <div className="flex items-center justify-center border border-zinc-800 bg-zinc-950 px-5 py-12 text-sm text-zinc-500">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Loading rewards data...
+        </div>
+      ) : summaryError || !profile || !levelProgress ? (
+        <section className="border border-zinc-800 bg-zinc-950">
+          <SectionHeader label="Error" title="Could not load rewards" />
+          <div className="px-5 py-5">
             <button
               type="button"
-              onClick={refreshAllWidgets}
-              className="text-sm font-medium text-primary hover:underline"
+              onClick={refresh}
+              className="rounded-sm border border-zinc-800 bg-zinc-900/60 px-3 py-1.5 text-xs uppercase tracking-wider text-zinc-300 transition-colors hover:border-primary/40 hover:text-primary"
             >
               Retry
             </button>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    return (
-      <Card>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-lg border p-4">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Coins</p>
-              <p className="mt-1 text-2xl font-semibold">{profile.coins}</p>
-            </div>
-            <div className="rounded-lg border p-4">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Current Level</p>
-              <p className="mt-1 text-2xl font-semibold">{levelProgress.currentLevel}</p>
-            </div>
-            <div className="rounded-lg border p-4">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">XP Progress</p>
-              <p className="mt-1 text-2xl font-semibold">
-                {levelProgress.currentExperience}/{levelProgress.experienceRequired}
-              </p>
-            </div>
-            <div className="rounded-lg border p-4">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Daily Gift</p>
-              <div className="mt-2">
-                <Badge variant={profile.canClaimDailyGift ? 'default' : 'secondary'}>
-                  {profile.canClaimDailyGift ? 'Available now' : 'Already claimed today'}
-                </Badge>
+          </div>
+        </section>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[3fr_2fr]">
+            {/* Level progress panel */}
+            <section className="border border-zinc-800 border-l-4 border-l-primary bg-zinc-950">
+              <SectionHeader label="Progression" title={`Level ${levelProgress.currentLevel}`} />
+              <div className="space-y-4 px-5 py-5">
+                <div className="flex items-baseline justify-between">
+                  <span className="text-[11px] uppercase tracking-wider text-zinc-500">XP this level</span>
+                  <span className="font-mono text-sm font-bold tabular-nums">
+                    {levelProgress.currentExperience}
+                    <span className="text-zinc-600"> / </span>
+                    {levelProgress.experienceRequired}
+                  </span>
+                </div>
+                <div className="relative h-1 w-full bg-zinc-800">
+                  <div
+                    style={{ width: `${xpProgressPct}%` }}
+                    className="absolute inset-y-0 left-0 bg-primary transition-all duration-700"
+                  />
+                </div>
+                <div className="flex items-center justify-between border-t border-zinc-800/60 pt-3 text-[11px]">
+                  <span className="uppercase tracking-wider text-zinc-500">XP to next level</span>
+                  <span className="font-mono tabular-nums text-zinc-300">{xpRemaining}</span>
+                </div>
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="uppercase tracking-wider text-zinc-500">Formula</span>
+                  <span className="font-mono tabular-nums text-zinc-400">
+                    100 × level + 100 ={' '}
+                    <span className="text-zinc-300">{100 * profile.level + 100}</span>
+                  </span>
+                </div>
               </div>
-            </div>
+            </section>
+
+            {/* Daily gift widget */}
+            <DailyGiftWidget onGiftClaimed={refresh} />
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <div className="rounded-lg border p-4">
-              <h3 className="mb-2 text-sm font-semibold">Current reward rules</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-center gap-2">
-                  <Gift className="h-4 w-4" />
-                  Daily gift gives +50 coins and +25 XP (once per UTC day).
+            <section className="border border-zinc-800 bg-zinc-950">
+              <SectionHeader label="Rules" title="How rewards work" />
+              <ul className="divide-y divide-zinc-800/60 text-sm">
+                <li className="flex items-start gap-3 px-5 py-3">
+                  <Gift className="mt-0.5 h-4 w-4 shrink-0 text-yellow-400" />
+                  <div>
+                    <p className="text-zinc-200">Daily gift</p>
+                    <p className="mt-0.5 text-[11px] text-zinc-500">
+                      +<span className="font-mono tabular-nums text-zinc-300">50</span> coins and{' '}
+                      +<span className="font-mono tabular-nums text-zinc-300">25</span> XP, once per UTC day.
+                    </p>
+                  </div>
                 </li>
-                <li className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
-                  XP required for next level uses 100 x level + 100.
+                <li className="flex items-start gap-3 px-5 py-3">
+                  <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <div>
+                    <p className="text-zinc-200">Level XP</p>
+                    <p className="mt-0.5 text-[11px] text-zinc-500">
+                      Required XP scales as <span className="font-mono tabular-nums text-zinc-300">100 × level + 100</span>.
+                    </p>
+                  </div>
                 </li>
-                <li className="flex items-center gap-2">
-                  <Clock3 className="h-4 w-4" />
-                  Last gift claim: {formatLastClaim(profile.lastDailyGiftDate)}
+                <li className="flex items-start gap-3 px-5 py-3">
+                  <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-zinc-500" />
+                  <div>
+                    <p className="text-zinc-200">Last claim</p>
+                    <p className="mt-0.5 font-mono text-[11px] tabular-nums text-zinc-400">
+                      {formatLastClaim(profile.lastDailyGiftDate)}
+                    </p>
+                  </div>
                 </li>
               </ul>
-            </div>
+            </section>
 
-            <div className="rounded-lg border p-4">
-              <h3 className="mb-2 text-sm font-semibold">Next milestone</h3>
-              <p className="text-sm text-muted-foreground">
-                You are {Math.max(levelProgress.experienceRequired - levelProgress.currentExperience, 0)} XP away from your next level.
-              </p>
-              {levelFormulaPreview !== null && (
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {levelFormulaPreview} XP required.
-                </p>
-              )}
-            </div>
+            <section className="border border-zinc-800 bg-zinc-950">
+              <SectionHeader label="Status" title="Daily gift" />
+              <ul className="divide-y divide-zinc-800/60">
+                <li className="flex items-center justify-between px-5 py-3">
+                  <span className="text-[11px] uppercase tracking-wider text-zinc-500">Availability</span>
+                  <span
+                    className={`border px-2 py-0.5 text-[10px] uppercase tracking-wider ${
+                      profile.canClaimDailyGift
+                        ? 'border-yellow-500/40 text-yellow-400'
+                        : 'border-zinc-700 text-zinc-500'
+                    }`}
+                  >
+                    {profile.canClaimDailyGift ? 'Available now' : 'Claimed today'}
+                  </span>
+                </li>
+                <li className="flex items-center justify-between px-5 py-3">
+                  <span className="text-[11px] uppercase tracking-wider text-zinc-500">Coins balance</span>
+                  <span className="font-mono text-sm font-bold tabular-nums text-yellow-400">
+                    {profile.coins.toLocaleString()}
+                  </span>
+                </li>
+                <li className="flex items-center justify-between px-5 py-3">
+                  <span className="text-[11px] uppercase tracking-wider text-zinc-500">Current XP</span>
+                  <span className="font-mono text-sm font-bold tabular-nums text-zinc-200">
+                    {profile.experience.toLocaleString()}
+                  </span>
+                </li>
+              </ul>
+            </section>
           </div>
-        </CardContent>
-      </Card>
-    );
-  };
-
-  return (
-    <div className="container mx-auto p-4 pb-12">
-      <div className="mb-6 flex items-center">
-        <Trophy className="mr-3 h-8 w-8 text-yellow-500" />
-        <div>
-          <h1 className="text-3xl font-bold">Rewards</h1>
-        </div>
-      </div>
-
-      {authToken ? (
-        <>
-          {renderLiveSummary()}
-
-          <Separator className="my-8" />
-
-          <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2">
-            <UserStatsWidget key={`stats-${refreshKey}`} />
-            <DailyGiftCard
-              key={`gift-${refreshKey}`}
-              authToken={authToken}
-              onGiftClaimed={handleGiftClaimed}
-            />
-          </div>
-
-          <Separator className="my-8" />
-
-
-          
         </>
-      ) : (
-        <Card>
-          <CardContent className="flex items-center justify-center p-12">
-            <div className="text-center">
-              <Gift className="mx-auto mb-4 h-12 w-12 opacity-50" />
-              <h3 className="mb-2 text-xl font-semibold">Please Log In</h3>
-              <p className="text-muted-foreground">Log in to view your rewards and level progress</p>
-            </div>
-          </CardContent>
-        </Card>
       )}
 
       <ExploreMoreLinks currentPage="/rewards" />
-    </div>
+    </main>
   );
 }

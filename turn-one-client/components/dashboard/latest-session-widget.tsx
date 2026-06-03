@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,132 +28,109 @@ export function LatestSessionWidget() {
         setLoading(false);
       }
     }
-
     fetchData();
   }, []);
 
   const getSessionTypeColor = (type: string) => {
     switch (type) {
-      case "qualifying":
-        return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
-      case "race":
-        return "bg-red-500/10 text-red-500 border-red-500/20";
-      default:
-        return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+      case "qualifying": return "border-yellow-500/40 text-yellow-400";
+      case "race": return "border-red-500/40 text-red-400";
+      default: return "border-blue-500/40 text-blue-400";
     }
   };
 
   if (loading) {
     return (
-      <Card className="border-border/40 bg-card/40 backdrop-blur-sm">
-        <CardHeader className="pb-1.5 pt-4">
-          <Skeleton className="h-4 w-28 bg-muted/20" />
-          <Skeleton className="h-3 w-48 bg-muted/20" />
-        </CardHeader>
-        <CardContent className="space-y-2 pt-0">
+      <div className="border border-zinc-800 bg-zinc-950">
+        <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
           <div className="space-y-1.5">
-            <Skeleton className="h-3.5 w-full bg-muted/20" />
-            <Skeleton className="h-3.5 w-full bg-muted/20" />
-            <Skeleton className="h-3.5 w-3/4 bg-muted/20" />
+            <Skeleton className="h-2.5 w-24 bg-zinc-800" />
+            <Skeleton className="h-4 w-40 bg-zinc-800" />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        <div className="divide-y divide-zinc-800/60">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-3 px-5 py-3">
+              <Skeleton className="h-4 w-4 bg-zinc-800" />
+              <Skeleton className="h-3 w-20 bg-zinc-800" />
+              <Skeleton className="ml-auto h-3 w-24 bg-zinc-800" />
+            </div>
+          ))}
+        </div>
+      </div>
     );
   }
 
-  if (error || !sessionData) {
-    return null; // Don't show widget if there's an error
-  }
+  if (error || !sessionData) return null;
 
   return (
-    <Card className="border-border/40 bg-card/40 backdrop-blur-sm transition-all duration-300 hover:border-primary/30">
-      <CardHeader className="pb-2 pt-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="mb-0.5 text-base font-semibold">Latest Session</CardTitle>
-            <CardDescription className="text-xs">Performance highlights</CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="border-primary/30 px-2 py-0 text-[10px] uppercase text-primary">
-              New
-            </Badge>
-            <Button asChild variant="outline" size="sm" className="h-7 px-2.5 text-xs hover:border-primary/30 hover:bg-primary/10">
-              <Link href="/news">
-                View
-                <ArrowRight className="ml-1 h-3.5 w-3.5" />
-              </Link>
-            </Button>
-          </div>
+    <div className="h-full border border-zinc-800 bg-zinc-950 animate-in fade-in duration-500">
+      <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Latest session</p>
+          <p className="mt-0.5 font-bold">Performance Highlights</p>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-2 pt-0">
-        {/* Session Info */}
-        <div className="flex items-center gap-2 border-b border-border/30 pb-1">
-          <Badge variant="outline" className={`${getSessionTypeColor(sessionData.session_type)} px-2 py-0.5 text-[11px] font-medium`}>
+        <div className="flex items-center gap-2">
+          <Badge
+            variant="outline"
+            className={`rounded-none px-2 py-0.5 text-[10px] uppercase tracking-wider ${getSessionTypeColor(sessionData.session_type)}`}
+          >
             {sessionData.session_name}
           </Badge>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Calendar className="h-2.5 w-2.5" />
+          <div className="flex items-center gap-1.5 text-[11px] text-zinc-500">
+            <Calendar className="h-3 w-3" />
             <span className="font-mono">{sessionData.year}</span>
-            <span>•</span>
+            <span className="text-zinc-700">·</span>
             <span>R{sessionData.round}</span>
           </div>
+          <Button asChild variant="ghost" size="sm" className="h-7 rounded-sm px-2 text-xs text-zinc-400 hover:text-primary">
+            <Link href="/news">
+              View <ArrowRight className="ml-1 h-3.5 w-3.5" />
+            </Link>
+          </Button>
         </div>
+      </div>
 
-        {/* Key Stats */}
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {sessionData.qualifying_results && sessionData.qualifying_results.length > 0 && (
-            <div className="rounded-md border border-border/40 bg-background/40 px-2 py-1.5 text-sm">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <Trophy className="h-3.5 w-3.5 flex-shrink-0 text-yellow-500/70" />
-                <span className="truncate font-medium" style={{ color: sessionData.qualifying_results[0].Color }}>
-                  {sessionData.qualifying_results[0].Driver}
-                </span>
-              </div>
-              <div className="mt-0.5 text-xs text-muted-foreground">
-                Lap
-                <span className="ml-1 font-mono text-foreground">
-                  {sessionData.qualifying_results[0].LapTime}
-                </span>
-              </div>
-            </div>
-          )}
+      <div className="divide-y divide-zinc-800/60">
+        {sessionData.qualifying_results && sessionData.qualifying_results.length > 0 && (
+          <div className="flex items-center gap-3 px-5 py-3">
+            <Trophy className="h-4 w-4 shrink-0 text-yellow-500/70" />
+            <span className="w-24 shrink-0 text-[11px] uppercase tracking-wider text-zinc-500">Top qualifier</span>
+            <span className="truncate text-sm font-medium" style={{ color: sessionData.qualifying_results[0].Color }}>
+              {sessionData.qualifying_results[0].Driver}
+            </span>
+            <span className="ml-auto font-mono text-sm tabular-nums text-foreground">
+              {sessionData.qualifying_results[0].LapTime}
+            </span>
+          </div>
+        )}
 
-          {sessionData.top_speed && sessionData.top_speed.length > 0 && (
-            <div className="rounded-md border border-border/40 bg-background/40 px-2 py-1.5 text-sm">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <Gauge className="h-3.5 w-3.5 flex-shrink-0 text-blue-500/70" />
-                <span className="truncate font-medium" style={{ color: sessionData.top_speed[0].Color }}>
-                  {sessionData.top_speed[0].Team}
-                </span>
-              </div>
-              <div className="mt-0.5 text-xs text-muted-foreground">
-                Top speed
-                <span className="ml-1 font-mono text-foreground">
-                  {sessionData.top_speed[0]["Top Speed (km/h)"]} km/h
-                </span>
-              </div>
-            </div>
-          )}
+        {sessionData.top_speed && sessionData.top_speed.length > 0 && (
+          <div className="flex items-center gap-3 px-5 py-3">
+            <Gauge className="h-4 w-4 shrink-0 text-blue-500/70" />
+            <span className="w-24 shrink-0 text-[11px] uppercase tracking-wider text-zinc-500">Top speed</span>
+            <span className="truncate text-sm font-medium" style={{ color: sessionData.top_speed[0].Color }}>
+              {sessionData.top_speed[0].Team}
+            </span>
+            <span className="ml-auto font-mono text-sm tabular-nums text-foreground">
+              {sessionData.top_speed[0]["Top Speed (km/h)"]} km/h
+            </span>
+          </div>
+        )}
 
-          {sessionData.throttle_comparison && sessionData.throttle_comparison.length > 0 && (
-            <div className="rounded-md border border-border/40 bg-background/40 px-2 py-1.5 text-sm sm:col-span-2">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <Zap className="h-3.5 w-3.5 flex-shrink-0 text-green-500/70" />
-                <span className="truncate font-medium" style={{ color: sessionData.throttle_comparison[0].Color }}>
-                  {sessionData.throttle_comparison[0].Driver}
-                </span>
-              </div>
-              <div className="mt-0.5 text-xs text-muted-foreground">
-                Avg throttle
-                <span className="ml-1 font-mono text-foreground">
-                  {sessionData.throttle_comparison[0]["Average Throttle (%)"].toFixed(1)}%
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+        {sessionData.throttle_comparison && sessionData.throttle_comparison.length > 0 && (
+          <div className="flex items-center gap-3 px-5 py-3">
+            <Zap className="h-4 w-4 shrink-0 text-green-500/70" />
+            <span className="w-24 shrink-0 text-[11px] uppercase tracking-wider text-zinc-500">Avg throttle</span>
+            <span className="truncate text-sm font-medium" style={{ color: sessionData.throttle_comparison[0].Color }}>
+              {sessionData.throttle_comparison[0].Driver}
+            </span>
+            <span className="ml-auto font-mono text-sm tabular-nums text-foreground">
+              {sessionData.throttle_comparison[0]["Average Throttle (%)"].toFixed(1)}%
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

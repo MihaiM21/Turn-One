@@ -16,7 +16,7 @@ import { SimBrakesCard } from "@/components/dashboard/simracing/sim-brakes-card"
 import { SimLapPanel } from "@/components/dashboard/simracing/sim-lap-panel";
 import { SimSessionStatusCard } from "@/components/dashboard/simracing/sim-session-status-card";
 import { SimConnectionBanner } from "@/components/dashboard/simracing/sim-connection-banner";
-import { Eye } from "lucide-react";
+import { Eye, Users } from "lucide-react";
 
 export default function SpectateSessionDashboard() {
     const params = useParams();
@@ -27,25 +27,32 @@ export default function SpectateSessionDashboard() {
     const [graphics, setGraphics] = useState<SimGraphics | null>(null);
     const [staticInfo, setStaticInfo] = useState<SimStatic | null>(null);
     const [isActive, setIsActive] = useState(false);
+    const [viewerCount, setViewerCount] = useState<number | null>(null);
 
     useEffect(() => {
         if (!sessionId) return;
 
-        const handleStatus = (s: ConnectionStatus) => setStatus(s);
+        const handleStatus = (s: ConnectionStatus) => {
+            setStatus(s);
+            if (s === "connected") {
+                simTelemetryService.getViewerCount(sessionId).then(setViewerCount);
+            }
+        };
         const handlePhysics = (d: SimPhysics) => setPhysics(d);
         const handleGraphics = (d: SimGraphics) => {
             setGraphics(d);
             setIsActive(d.status !== "AC_OFF");
         };
         const handleStatic = (d: SimStatic) => setStaticInfo(d);
-        const handleSessionEnd = (endSessionId: string) => {
-            if (endSessionId === sessionId) setIsActive(false);
+        const handleViewerCount = (incomingSessionId: string, count: number) => {
+            if (incomingSessionId === sessionId) setViewerCount(count);
         };
 
         simTelemetryService.onStatusChange(handleStatus);
         simTelemetryService.onPhysics(handlePhysics);
         simTelemetryService.onGraphics(handleGraphics);
         simTelemetryService.onStatic(handleStatic);
+        simTelemetryService.onViewerCount(handleViewerCount);
         simTelemetryService.connect(sessionId);
 
         return () => {
@@ -53,6 +60,7 @@ export default function SpectateSessionDashboard() {
             simTelemetryService.offPhysics(handlePhysics);
             simTelemetryService.offGraphics(handleGraphics);
             simTelemetryService.offStatic(handleStatic);
+            simTelemetryService.offViewerCount(handleViewerCount);
             simTelemetryService.disconnect(sessionId);
         };
     }, [sessionId]);
@@ -75,8 +83,16 @@ export default function SpectateSessionDashboard() {
                         <p className="text-muted-foreground text-sm ml-8">Read-only cockpit view</p>
                     </div>
                     <div className="text-right space-y-2">
-                        <div className="inline-block px-3 py-1 bg-black/60 border border-primary/40 text-primary font-bold tracking-widest text-xs rounded-md shadow-[0_0_15px_rgba(220,38,38,0.2)] uppercase">
-                            Spectator View
+                        <div className="flex items-center justify-end gap-2">
+                            <div className="inline-block px-3 py-1 bg-black/60 border border-primary/40 text-primary font-bold tracking-widest text-xs rounded-md shadow-[0_0_15px_rgba(220,38,38,0.2)] uppercase">
+                                Spectator View
+                            </div>
+                            {viewerCount != null ? (
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/60 border border-white/15 text-white text-xs font-bold rounded-md">
+                                    <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                                    {viewerCount}
+                                </div>
+                            ) : null}
                         </div>
                         <p className="text-muted-foreground text-xs">
                             {staticInfo?.carModel || "---"} · {staticInfo?.track || "---"}

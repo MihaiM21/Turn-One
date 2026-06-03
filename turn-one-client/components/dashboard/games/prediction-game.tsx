@@ -1,29 +1,44 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
-import { Badge } from '@/components/ui/badge';
-import { Coins, TrendingUp, CheckCircle2, XCircle, Clock } from 'lucide-react';
-import { predictionService, coinService } from '@/lib/gameService';
+import { Coins } from 'lucide-react';
+import { predictionService } from '@/lib/gameService';
 import { CreatePrediction } from '@/types/game-types';
 import { toast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';
 import { f1_2026_races } from '@/lib/constants/f1_races';
 import { f1_2026_drivers } from '@/lib/constants/f1_2026_drivers_full';
+import { notifyBalanceChanged } from '@/lib/balance-events';
 
 interface PredictionGameProps {
   onPredictionCreated?: () => void;
 }
 
+function SectionHeader({ label, title }: { label: string; title: string }) {
+  return (
+    <div className="border-b border-zinc-800 px-5 py-3">
+      <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{label}</p>
+      <p className="mt-0.5 font-bold text-sm">{title}</p>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{label}</p>
+      {children}
+    </div>
+  );
+}
+
 export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
   const [loading, setLoading] = useState(false);
-  const [loadingPredictions, setLoadingPredictions] = useState(true);
   const [existingPredictions, setExistingPredictions] = useState<string[]>([]);
   const [coinsWagered, setCoinsWagered] = useState(100);
   const [selectedRaceIndex, setSelectedRaceIndex] = useState<number>(-1);
@@ -32,10 +47,9 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
     raceName: '',
     season: '2026',
     coinsWagered: 100,
-    raceDateTime: new Date()
+    raceDateTime: new Date(),
   });
 
-  // Load existing predictions on mount
   useEffect(() => {
     loadExistingPredictions();
   }, []);
@@ -43,59 +57,52 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
   const loadExistingPredictions = async () => {
     try {
       const predictions = await predictionService.getPendingPredictions();
-      const raceIds = predictions.map(p => p.raceId);
-      setExistingPredictions(raceIds);
+      setExistingPredictions(predictions.map((p) => p.raceId));
     } catch (error) {
       console.error('Failed to load predictions:', error);
-    } finally {
-      setLoadingPredictions(false);
     }
   };
 
-  // Get upcoming races (races with race sessions in the future)
   const upcomingRaces = useMemo(() => {
     const now = new Date();
     return f1_2026_races
       .map((race, index) => ({
         ...race,
         index,
-        raceSession: race.sessions.find(s => s.name === 'Race')
+        raceSession: race.sessions.find((s) => s.name === 'Race'),
       }))
-      .filter(race => race.raceSession && new Date(race.raceSession.startTime) > now)
-      .slice(0, 5); // Only show next 5 races
+      .filter((race) => race.raceSession && new Date(race.raceSession.startTime) > now)
+      .slice(0, 5);
   }, []);
 
-  // When a race is selected, update the prediction data
   const handleRaceSelect = (raceIndexStr: string) => {
     const index = parseInt(raceIndexStr);
     setSelectedRaceIndex(index);
     const selectedRace = f1_2026_races[index];
-    const raceSession = selectedRace.sessions.find(s => s.name === 'Race');
-    
+    const raceSession = selectedRace.sessions.find((s) => s.name === 'Race');
+
     if (selectedRace && raceSession) {
       const raceId = `2026-R${index + 1}`;
-      
-      // Check if prediction already exists
       if (existingPredictions.includes(raceId)) {
         toast({
-          title: "Prediction Already Exists",
+          title: 'Prediction Already Exists',
           description: "You've already made a prediction for this race.",
-          variant: "destructive",
+          variant: 'destructive',
           action: (
-            <ToastAction altText="View Prediction" onClick={() => window.location.href = '/predictions'}>
+            <ToastAction altText="View Prediction" onClick={() => (window.location.href = '/predictions')}>
               View Prediction
             </ToastAction>
-          )
+          ),
         });
         setSelectedRaceIndex(-1);
         return;
       }
-      
-      setPrediction(prev => ({
+
+      setPrediction((prev) => ({
         ...prev,
         raceId,
         raceName: selectedRace.grandPrix,
-        raceDateTime: new Date(raceSession.startTime)
+        raceDateTime: new Date(raceSession.startTime),
       }));
     }
   };
@@ -109,28 +116,20 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
       prediction.polePositionDriver,
       prediction.firstRetirementLap,
       prediction.willThereBeASafetyCar,
-      prediction.numberOfDnfs
-    ].filter(p => p !== undefined && p !== null && p !== '').length;
-
-    const multiplier = 1.5 + ((predictionCount - 1) * 0.3);
+      prediction.numberOfDnfs,
+    ].filter((p) => p !== undefined && p !== null && p !== '').length;
+    const multiplier = 1.5 + (predictionCount - 1) * 0.3;
     return Math.floor(coinsWagered * multiplier);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validate race selection
     if (selectedRaceIndex < 0) {
-      toast({
-        title: "Error",
-        description: "Please select a Grand Prix to predict",
-        variant: "destructive"
-      });
+      toast({ title: 'Error', description: 'Please select a Grand Prix to predict', variant: 'destructive' });
       return;
     }
 
     setLoading(true);
-
     try {
       const predictionData: CreatePrediction = {
         raceId: prediction.raceId!,
@@ -145,328 +144,286 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
         willThereBeASafetyCar: prediction.willThereBeASafetyCar,
         numberOfDnfs: prediction.numberOfDnfs,
         coinsWagered,
-        raceDateTime: prediction.raceDateTime!
+        raceDateTime: prediction.raceDateTime!,
       };
 
-      const result = await predictionService.createPrediction(predictionData);
-      
+      await predictionService.createPrediction(predictionData);
+      notifyBalanceChanged();
+
       toast({
-        title: "Prediction Created!",
-        description: `You've wagered ${coinsWagered} coins for ${prediction.raceName}. Good luck!`,
+        title: 'Prediction Created',
+        description: `Wagered ${coinsWagered} coins on ${prediction.raceName}. Good luck.`,
         action: (
-          <ToastAction altText="View All Predictions" onClick={() => window.location.href = '/predictions'}>
-            View All Predictions
+          <ToastAction altText="View All Predictions" onClick={() => (window.location.href = '/predictions')}>
+            View
           </ToastAction>
-        )
+        ),
       });
 
-      // Reset form
       setSelectedRaceIndex(-1);
-      setPrediction({
-        raceId: '',
-        raceName: '',
-        season: '2026',
-        coinsWagered: 100,
-        raceDateTime: new Date()
-      });
+      setPrediction({ raceId: '', raceName: '', season: '2026', coinsWagered: 100, raceDateTime: new Date() });
       setCoinsWagered(100);
-
       onPredictionCreated?.();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create prediction",
-        variant: "destructive"
-      });
+      toast({ title: 'Error', description: error.message || 'Failed to create prediction', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
   const drivers = [...f1_2026_drivers];
+  const selectedRace = selectedRaceIndex >= 0 ? f1_2026_races[selectedRaceIndex] : null;
+  const selectedRaceSession = selectedRace?.sessions.find((s) => s.name === 'Race');
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Prediction Form */}
-      <Card className="lg:col-span-2 border-primary/10 bg-gradient-to-br from-background/95 to-background/90 backdrop-blur-md">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            Make Your Prediction
-          </CardTitle>
-          <CardDescription>
-            Predict race outcomes and earn coins based on accuracy
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Race Selection */}
-            <div className="space-y-4 p-4 rounded-lg bg-primary/5 border border-primary/10">
-              <h3 className="font-semibold text-sm">Select Grand Prix</h3>
-              <Select 
-                value={selectedRaceIndex >= 0 ? selectedRaceIndex.toString() : ''} 
-                onValueChange={handleRaceSelect}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Choose upcoming race..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {upcomingRaces.length === 0 ? (
-                    <SelectItem value="none" disabled>No upcoming races</SelectItem>
-                  ) : (
-                    upcomingRaces.map((race) => {
-                      const raceId = `2026-R${race.index + 1}`;
-                      const hasPrediction = existingPredictions.includes(raceId);
-                      
-                      return (
-                        <SelectItem 
-                          key={race.index} 
-                          value={race.index.toString()}
-                          disabled={hasPrediction}
-                        >
-                          {race.grandPrix} - {race.circuit}
-                          <span className="text-xs text-muted-foreground ml-2">
-                            ({new Date(race.raceSession!.startTime).toLocaleDateString()})
-                            {hasPrediction && ' ✓ Predicted'}
-                          </span>
-                        </SelectItem>
-                      );
-                    })
-                  )}
-                </SelectContent>
-              </Select>
-              {selectedRaceIndex >= 0 && (
-                <div className="text-xs text-muted-foreground space-y-1">
-                  <p><strong>Circuit:</strong> {f1_2026_races[selectedRaceIndex].circuit}</p>
-                  <p><strong>Country:</strong> {f1_2026_races[selectedRaceIndex].country}</p>
-                  <p><strong>Race Date:</strong> {new Date(f1_2026_races[selectedRaceIndex].sessions.find(s => s.name === 'Race')!.startTime).toLocaleString()}</p>
-                  {f1_2026_races[selectedRaceIndex].hasSprint && (
-                    <Badge variant="secondary" className="text-xs">Sprint Weekend</Badge>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Podium Predictions */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-sm flex items-center gap-2">
-                <Badge variant="outline" className="bg-yellow-500/10 border-yellow-500/30">
-                  100 pts
-                </Badge>
-                Podium Predictions
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="p1">1st Place</Label>
-                  <Select value={prediction.podiumP1} onValueChange={(value) => setPrediction({...prediction, podiumP1: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select driver" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {drivers.map(driver => (
-                        <SelectItem key={driver} value={driver}>{driver}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="p2">2nd Place</Label>
-                  <Select value={prediction.podiumP2} onValueChange={(value) => setPrediction({...prediction, podiumP2: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select driver" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {drivers.map(driver => (
-                        <SelectItem key={driver} value={driver}>{driver}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="p3">3rd Place</Label>
-                  <Select value={prediction.podiumP3} onValueChange={(value) => setPrediction({...prediction, podiumP3: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select driver" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {drivers.map(driver => (
-                        <SelectItem key={driver} value={driver}>{driver}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
-            {/* Additional Predictions */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-sm">Additional Predictions (Optional)</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Fastest Lap</Label>
-                  <Select value={prediction.fastestLapDriver} onValueChange={(value) => setPrediction({...prediction, fastestLapDriver: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select driver" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {drivers.map(driver => (
-                        <SelectItem key={driver} value={driver}>{driver}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Pole Position</Label>
-                  <Select value={prediction.polePositionDriver} onValueChange={(value) => setPrediction({...prediction, polePositionDriver: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select driver" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {drivers.map(driver => (
-                        <SelectItem key={driver} value={driver}>{driver}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>First Retirement Lap</Label>
-                  <Input 
-                    type="number" 
-                    placeholder="Lap number" 
-                    min="1"
-                    max="70"
-                    value={prediction.firstRetirementLap || ''}
-                    onChange={(e) => setPrediction({...prediction, firstRetirementLap: parseInt(e.target.value) || undefined})}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Number of DNFs</Label>
-                  <Input 
-                    type="number" 
-                    placeholder="Total DNFs" 
-                    min="0"
-                    max="20"
-                    value={prediction.numberOfDnfs || ''}
-                    onChange={(e) => setPrediction({...prediction, numberOfDnfs: parseInt(e.target.value) || undefined})}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-background/30">
-                <Label htmlFor="safety-car" className="cursor-pointer">
-                  Will there be a Safety Car?
-                </Label>
-                <Switch 
-                  id="safety-car"
-                  checked={prediction.willThereBeASafetyCar || false}
-                  onCheckedChange={(checked) => setPrediction({...prediction, willThereBeASafetyCar: checked})}
-                />
-              </div>
-            </div>
-
-            {/* Wager Amount */}
-            <div className="space-y-4 p-6 rounded-lg border border-primary/20 bg-primary/5">
-              <div className="flex items-center justify-between">
-                <Label>Wager Amount</Label>
-                <div className="flex items-center gap-2">
-                  <Coins className="w-4 h-4 text-yellow-500" />
-                  <span className="font-bold text-lg">{coinsWagered}</span>
-                </div>
-              </div>
-              
-              <Slider
-                value={[coinsWagered]}
-                onValueChange={(values) => setCoinsWagered(values[0])}
-                min={50}
-                max={1000}
-                step={50}
-                className="py-4"
-              />
-
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Potential Payout:</span>
-                <span className="font-bold text-green-500 flex items-center gap-1">
-                  <Coins className="w-4 h-4" />
-                  {calculatePotentialPayout()}
+    <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 lg:grid-cols-[2fr_1fr]">
+      <div className="space-y-3">
+        {/* Race selection */}
+        <section className="border border-zinc-800 bg-zinc-950">
+          <SectionHeader label="Step 1" title="Select Grand Prix" />
+          <div className="space-y-3 px-5 py-4">
+            <Select
+              value={selectedRaceIndex >= 0 ? selectedRaceIndex.toString() : ''}
+              onValueChange={handleRaceSelect}
+            >
+              <SelectTrigger className="rounded-sm border-zinc-800 bg-zinc-900/60">
+                <SelectValue placeholder="Choose upcoming race..." />
+              </SelectTrigger>
+              <SelectContent>
+                {upcomingRaces.length === 0 ? (
+                  <SelectItem value="none" disabled>
+                    No upcoming races
+                  </SelectItem>
+                ) : (
+                  upcomingRaces.map((race) => {
+                    const raceId = `2026-R${race.index + 1}`;
+                    const hasPrediction = existingPredictions.includes(raceId);
+                    return (
+                      <SelectItem key={race.index} value={race.index.toString()} disabled={hasPrediction}>
+                        {race.grandPrix} — {race.circuit}
+                        {hasPrediction && ' ✓'}
+                      </SelectItem>
+                    );
+                  })
+                )}
+              </SelectContent>
+            </Select>
+            {selectedRace && selectedRaceSession && (
+              <div className="grid grid-cols-1 gap-y-1 text-[11px] sm:grid-cols-3">
+                <span className="text-zinc-500">
+                  <span className="uppercase tracking-wider">Circuit</span>
+                  <span className="ml-2 text-zinc-300">{selectedRace.circuit}</span>
+                </span>
+                <span className="text-zinc-500">
+                  <span className="uppercase tracking-wider">Country</span>
+                  <span className="ml-2 text-zinc-300">{selectedRace.country}</span>
+                </span>
+                <span className="text-zinc-500">
+                  <span className="uppercase tracking-wider">Race</span>
+                  <span className="ml-2 font-mono tabular-nums text-zinc-300">
+                    {new Date(selectedRaceSession.startTime).toLocaleString('en-GB', {
+                      day: '2-digit',
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
                 </span>
               </div>
-            </div>
+            )}
+          </div>
+        </section>
 
-            <Button type="submit" className="w-full" size="lg" disabled={loading || selectedRaceIndex < 0}>
-              {loading ? 'Creating Prediction...' : selectedRaceIndex < 0 ? 'Select a Race First' : 'Place Prediction'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+        {/* Podium */}
+        <section className="border border-zinc-800 bg-zinc-950">
+          <SectionHeader label="100 pts each" title="Podium predictions" />
+          <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-3">
+            <Field label="1st place">
+              <Select
+                value={prediction.podiumP1}
+                onValueChange={(value) => setPrediction({ ...prediction, podiumP1: value })}
+              >
+                <SelectTrigger className="rounded-sm border-zinc-800 bg-zinc-900/60">
+                  <SelectValue placeholder="Driver" />
+                </SelectTrigger>
+                <SelectContent>
+                  {drivers.map((d) => (
+                    <SelectItem key={d} value={d}>
+                      {d}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label="2nd place">
+              <Select
+                value={prediction.podiumP2}
+                onValueChange={(value) => setPrediction({ ...prediction, podiumP2: value })}
+              >
+                <SelectTrigger className="rounded-sm border-zinc-800 bg-zinc-900/60">
+                  <SelectValue placeholder="Driver" />
+                </SelectTrigger>
+                <SelectContent>
+                  {drivers.map((d) => (
+                    <SelectItem key={d} value={d}>
+                      {d}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label="3rd place">
+              <Select
+                value={prediction.podiumP3}
+                onValueChange={(value) => setPrediction({ ...prediction, podiumP3: value })}
+              >
+                <SelectTrigger className="rounded-sm border-zinc-800 bg-zinc-900/60">
+                  <SelectValue placeholder="Driver" />
+                </SelectTrigger>
+                <SelectContent>
+                  {drivers.map((d) => (
+                    <SelectItem key={d} value={d}>
+                      {d}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+          </div>
+        </section>
 
-      {/* Info Panel */}
-      <div className="space-y-6">
-        <Card className="border-primary/10 bg-gradient-to-br from-background/95 to-background/90 backdrop-blur-md">
-          <CardHeader>
-            <CardTitle className="text-lg">How It Works</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 text-sm">
-            <div className="space-y-2">
-              <h4 className="font-semibold flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-green-500" />
-                Scoring
-              </h4>
-              <ul className="space-y-1 text-muted-foreground ml-6">
-                <li>• 1st Place: 100 points</li>
-                <li>• 2nd Place: 75 points</li>
-                <li>• 3rd Place: 50 points</li>
-                <li>• Fastest Lap: 60 points</li>
-                <li>• Pole Position: 40 points</li>
-                <li>• Safety Car: 50 points</li>
-              </ul>
+        {/* Optional */}
+        <section className="border border-zinc-800 bg-zinc-950">
+          <SectionHeader label="Optional" title="Additional predictions" />
+          <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-2">
+            <Field label="Fastest lap">
+              <Select
+                value={prediction.fastestLapDriver}
+                onValueChange={(value) => setPrediction({ ...prediction, fastestLapDriver: value })}
+              >
+                <SelectTrigger className="rounded-sm border-zinc-800 bg-zinc-900/60">
+                  <SelectValue placeholder="Driver" />
+                </SelectTrigger>
+                <SelectContent>
+                  {drivers.map((d) => (
+                    <SelectItem key={d} value={d}>
+                      {d}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label="Pole position">
+              <Select
+                value={prediction.polePositionDriver}
+                onValueChange={(value) => setPrediction({ ...prediction, polePositionDriver: value })}
+              >
+                <SelectTrigger className="rounded-sm border-zinc-800 bg-zinc-900/60">
+                  <SelectValue placeholder="Driver" />
+                </SelectTrigger>
+                <SelectContent>
+                  {drivers.map((d) => (
+                    <SelectItem key={d} value={d}>
+                      {d}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label="First retirement lap">
+              <Input
+                type="number"
+                placeholder="Lap number"
+                min="1"
+                max="70"
+                value={prediction.firstRetirementLap || ''}
+                onChange={(e) =>
+                  setPrediction({ ...prediction, firstRetirementLap: parseInt(e.target.value) || undefined })
+                }
+                className="rounded-sm border-zinc-800 bg-zinc-900/60 font-mono tabular-nums"
+              />
+            </Field>
+            <Field label="Number of DNFs">
+              <Input
+                type="number"
+                placeholder="Total DNFs"
+                min="0"
+                max="20"
+                value={prediction.numberOfDnfs || ''}
+                onChange={(e) =>
+                  setPrediction({ ...prediction, numberOfDnfs: parseInt(e.target.value) || undefined })
+                }
+                className="rounded-sm border-zinc-800 bg-zinc-900/60 font-mono tabular-nums"
+              />
+            </Field>
+            <div className="flex items-center justify-between border border-zinc-800 bg-zinc-900/40 px-3 py-2.5 md:col-span-2">
+              <span className="text-sm text-zinc-300">Will there be a safety car?</span>
+              <Switch
+                checked={prediction.willThereBeASafetyCar || false}
+                onCheckedChange={(checked) => setPrediction({ ...prediction, willThereBeASafetyCar: checked })}
+              />
             </div>
-
-            <div className="space-y-2">
-              <h4 className="font-semibold flex items-center gap-2">
-                <Coins className="w-4 h-4 text-yellow-500" />
-                Payouts
-              </h4>
-              <ul className="space-y-1 text-muted-foreground ml-6">
-                <li>• 80%+ accuracy: Full payout</li>
-                <li>• 40-79% accuracy: Partial payout</li>
-                <li>• Below 40%: No payout</li>
-              </ul>
-            </div>
-
-            <div className="space-y-2">
-              <h4 className="font-semibold flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-primary" />
-                Multipliers
-              </h4>
-              <p className="text-muted-foreground ml-6">
-                Each additional prediction increases your potential payout by 30%!
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-primary/10 bg-gradient-to-br from-yellow-500/5 to-orange-500/5 backdrop-blur-md border-yellow-500/20">
-          <CardContent className="p-6">
-            <div className="text-center space-y-3">
-              <Clock className="w-12 h-12 text-yellow-500 mx-auto" />
-              <h4 className="font-bold text-lg">Next Race</h4>
-              <p className="text-sm text-muted-foreground">
-                {upcomingRaces.length > 0 ? upcomingRaces[0].grandPrix : 'No upcoming races'}
-              </p>
-              <Badge variant="outline" className="bg-yellow-500/10 border-yellow-500/30">
-                Predictions close at race start
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
-    </div>
+
+      {/* Sidebar */}
+      <div className="space-y-3">
+        <section className="border border-zinc-800 border-l-4 border-l-primary bg-zinc-950">
+          <SectionHeader label="Step 2" title="Set wager" />
+          <div className="space-y-4 px-5 py-4">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] uppercase tracking-wider text-zinc-500">Wager</span>
+              <span className="flex items-center gap-1.5 font-mono text-lg font-black tabular-nums">
+                <Coins className="h-4 w-4 text-yellow-400" />
+                {coinsWagered}
+              </span>
+            </div>
+            <Slider
+              value={[coinsWagered]}
+              onValueChange={(values) => setCoinsWagered(values[0])}
+              min={50}
+              max={1000}
+              step={50}
+            />
+            <div className="flex items-center justify-between border-t border-zinc-800/60 pt-3">
+              <span className="text-[11px] uppercase tracking-wider text-zinc-500">Potential payout</span>
+              <span className="font-mono text-sm font-bold tabular-nums text-green-400">
+                +{calculatePotentialPayout()}
+              </span>
+            </div>
+            <Button
+              type="submit"
+              className="w-full rounded-sm bg-primary text-xs font-semibold uppercase tracking-wider text-white hover:bg-primary/90"
+              disabled={loading || selectedRaceIndex < 0}
+            >
+              {loading ? 'Submitting...' : selectedRaceIndex < 0 ? 'Select a race' : 'Place prediction'}
+            </Button>
+          </div>
+        </section>
+
+        <section className="border border-zinc-800 bg-zinc-950">
+          <SectionHeader label="How it works" title="Scoring & payout" />
+          <ul className="divide-y divide-zinc-800/60 text-[11px]">
+            {[
+              ['1st place', '100 pts'],
+              ['2nd place', '75 pts'],
+              ['3rd place', '50 pts'],
+              ['Fastest lap', '60 pts'],
+              ['Pole position', '40 pts'],
+              ['Safety car', '50 pts'],
+            ].map(([label, value]) => (
+              <li key={label} className="flex items-center justify-between px-5 py-2">
+                <span className="text-zinc-400">{label}</span>
+                <span className="font-mono tabular-nums text-zinc-300">{value}</span>
+              </li>
+            ))}
+            <li className="px-5 py-2.5 text-[11px] text-zinc-500">
+              Each extra pick raises payout by <span className="font-mono tabular-nums text-zinc-300">30%</span>.
+            </li>
+          </ul>
+        </section>
+      </div>
+    </form>
   );
 }

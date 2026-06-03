@@ -3,13 +3,15 @@
 import type React from "react"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { AuthSplitLayout } from "@/components/auth/auth-split-layout"
+import { OAuthButtons } from "@/components/auth/oauth-buttons"
+import { PasswordInput } from "@/components/auth/password-input"
+import { FeatureList } from "@/components/auth/feature-list"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { ArrowLeft } from "lucide-react"
 import { register } from "@/lib/auth"
 import { RegisterData } from "@/types/auth-types"
 
@@ -34,25 +36,14 @@ export default function SignUpPage() {
     }
 
     try {
-      // Create the registration data object
-      const registerData: RegisterData = {
-        email,
-        username,
-        password,
-        confirmPassword
-      }
-      
+      const registerData: RegisterData = { email, username, password, confirmPassword }
       const response = await register(registerData)
-      
+
       if (response.success) {
-        // For admin users, proceed directly to dashboard
         if (response.emailConfirmed) {
-          // Save the token to local storage
-          localStorage.setItem('token', response.token)
-          // Redirect to dashboard
+          localStorage.setItem("token", response.token)
           router.push("/dashboard")
         } else {
-          // Redirect to check-email page for regular users
           router.push("/auth/check-email")
         }
       } else {
@@ -66,96 +57,123 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-red-950 to-black flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        <div className="mb-6">
-          <Button variant="ghost" asChild className="text-red-200 hover:bg-red-950/20">
-            <Link href="/">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Home
-            </Link>
-          </Button>
+    <AuthSplitLayout
+      left={
+        <div className="space-y-6">
+          <span className="inline-block text-xs font-semibold tracking-[0.2em] text-primary">
+            FREE FOREVER
+          </span>
+          <h1 className="text-4xl xl:text-5xl font-bold leading-[1.1] tracking-tight">
+            Your free account
+            <br />
+            includes everything.
+          </h1>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            No credit card. No trial period. Just sign up and you&apos;re in the race.
+          </p>
+          <FeatureList />
+        </div>
+      }
+    >
+      <div className="space-y-8">
+        <div className="space-y-2">
+          <h2 className="text-3xl font-bold tracking-tight">Create account</h2>
+          <p className="text-sm text-muted-foreground">Join Turn One — it&apos;s completely free</p>
         </div>
 
-        <Card className="border-red-800/20 bg-black/40 backdrop-blur-sm">
-          <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold text-white">Join Turn One</CardTitle>
-            <CardDescription className="text-red-100">Create your F1 telemetry account</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSignUp} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username" className="text-white">
-                  Username
-                </Label>
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="johndoe"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="bg-black/50 border-red-800/30 text-white placeholder:text-red-200/50"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-white">
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="bg-black/50 border-red-800/30 text-white placeholder:text-red-200/50"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-white">
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-black/50 border-red-800/30 text-white"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-white">
-                  Confirm Password
-                </Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="bg-black/50 border-red-800/30 text-white"
-                />
-              </div>
-              {error && <p className="text-sm text-red-400 bg-red-950/20 p-2 rounded">{error}</p>}
-              <Button
-                type="submit"
-                className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold"
-                disabled={isLoading}
-              >
-                {isLoading ? "Creating account..." : "Create Account"}
-              </Button>
-            </form>
-            <div className="mt-6 text-center text-sm text-red-100">
-              Already have an account?{" "}
-              <Link href="/auth/login" className="text-red-400 hover:text-red-300 underline underline-offset-4">
-                Sign in
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+        <OAuthButtons />
+
+        <form onSubmit={handleSignUp} className="space-y-5">
+          <div className="space-y-2">
+            <Label htmlFor="username">Username</Label>
+            <Input
+              id="username"
+              type="text"
+              placeholder="Max Verstappen"
+              required
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="h-11"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email address</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="h-11"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <PasswordInput
+              id="password"
+              placeholder="At least 8 characters"
+              required
+              minLength={8}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="h-11"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm password</Label>
+            <PasswordInput
+              id="confirmPassword"
+              required
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="h-11"
+            />
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            By creating an account you agree to our{" "}
+            <Link href="/terms" className="font-semibold text-foreground hover:underline">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" className="font-semibold text-foreground hover:underline">
+              Privacy Policy
+            </Link>
+            .
+          </p>
+
+          {error && (
+            <p className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md p-2">
+              {error}
+            </p>
+          )}
+
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full h-11 text-sm font-semibold"
+          >
+            {isLoading ? "Creating account..." : "Create free account"}
+          </Button>
+        </form>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Already have an account?{" "}
+          <Link href="/auth/login" className="font-semibold text-primary hover:underline">
+            Sign in
+          </Link>
+        </p>
+
+        <div className="pt-4 border-t border-border">
+          <Button variant="outline" asChild className="w-full h-11">
+            <Link href="/">Continue as guest — no account needed</Link>
+          </Button>
+        </div>
       </div>
-    </div>
+    </AuthSplitLayout>
   )
 }

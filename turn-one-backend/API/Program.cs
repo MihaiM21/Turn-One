@@ -283,10 +283,21 @@ builder.Services.AddAuthorization();
 
 // === SIMRACING TELEMETRY DI ===
 builder.Services.AddScoped<ITelemetrySessionService, TelemetrySessionService>();
+builder.Services.AddScoped<ILapAnalyticsService, LapAnalyticsService>();
+builder.Services.AddScoped<IOverlayTokenService, OverlayTokenService>();
+builder.Services.AddScoped<HeuristicCoachingService>();
+builder.Services.AddScoped<ICoachingService>(sp =>
+{
+    var provider = builder.Configuration["Coaching:Provider"] ?? "Heuristic";
+    return provider.Equals("Stub", StringComparison.OrdinalIgnoreCase)
+        ? new StubLlmCoachingService(sp.GetRequiredService<HeuristicCoachingService>())
+        : sp.GetRequiredService<HeuristicCoachingService>();
+});
 builder.Services.AddSingleton<ITelemetryTickRepository, InfluxTickRepository>();
 builder.Services.AddSingleton<TelemetryIngestionService>();
 builder.Services.AddSingleton(System.Threading.Channels.Channel.CreateUnbounded<TickItem>());
 builder.Services.AddHostedService<TelemetryPersistenceWorker>();
+builder.Services.AddHostedService<TelemetrySweeperWorker>();
 
 var app = builder.Build();
 

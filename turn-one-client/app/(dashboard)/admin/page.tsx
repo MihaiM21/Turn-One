@@ -50,6 +50,8 @@ import { useRouter } from 'next/navigation';
 import * as adminService from '@/lib/adminService';
 import * as userService from '@/lib/userService';
 import { OnlineUsersWidget } from '@/components/dashboard/online-users-widget';
+import { DashboardHeader } from '@/components/dashboard/live dashboard/dashboard-header';
+import { PageHeader } from '@/components/dashboard/page-header';
 import type { PageStatusData } from '@/lib/adminService';
 
 interface User {
@@ -463,11 +465,14 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-lg font-medium text-muted-foreground">Loading admin dashboard...</p>
-        </div>
+      <div className="min-h-screen bg-black">
+        <DashboardHeader />
+        <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+          <div className="flex items-center justify-center border border-zinc-800 bg-zinc-950 px-5 py-12 text-sm text-zinc-500">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Loading admin dashboard...
+          </div>
+        </main>
       </div>
     );
   }
@@ -547,45 +552,37 @@ export default function AdminDashboard() {
     value: string | number;
     helper: string;
     icon: LucideIcon;
-    wrapperClass: string;
-    iconClass: string;
-    valueClass: string;
+    iconColor: string;
+    valueColor?: string;
   }> = [
     {
       label: 'Total Users',
       value: totalUsers,
       helper: `${recentUsers} new this week`,
       icon: Users,
-      wrapperClass: 'border-primary/25 bg-gradient-to-br from-card to-primary/5',
-      iconClass: 'bg-primary/10 text-primary',
-      valueClass: 'from-primary to-accent',
+      iconColor: 'text-primary',
     },
     {
       label: 'Admin Users',
       value: adminCount,
       helper: `${totalUsers > 0 ? ((adminCount / totalUsers) * 100).toFixed(1) : 0}% of users`,
       icon: Shield,
-      wrapperClass: 'border-accent/25 bg-gradient-to-br from-card to-accent/5',
-      iconClass: 'bg-accent/10 text-accent',
-      valueClass: 'from-accent to-accent/70',
+      iconColor: 'text-primary',
     },
     {
       label: 'Total Tokens',
       value: totalTokens.toLocaleString(),
       helper: `Avg ${totalUsers ? Math.round(totalTokens / totalUsers).toLocaleString() : 0} per user`,
       icon: TrendingUp,
-      wrapperClass: 'border-primary/25 bg-gradient-to-br from-card to-primary/5',
-      iconClass: 'bg-primary/10 text-primary',
-      valueClass: 'from-primary to-primary/70',
+      iconColor: 'text-primary',
     },
     {
       label: 'Active (7d)',
       value: activeUsers,
       helper: `${totalUsers > 0 ? ((activeUsers / totalUsers) * 100).toFixed(1) : 0}% activity`,
       icon: Activity,
-      wrapperClass: 'border-green-500/25 bg-gradient-to-br from-card to-green-500/5',
-      iconClass: 'bg-green-500/10 text-green-500',
-      valueClass: 'from-green-500 to-green-400',
+      iconColor: 'text-green-400',
+      valueColor: 'text-green-400',
     },
   ];
 
@@ -593,313 +590,208 @@ export default function AdminDashboard() {
     href: string;
     label: string;
     icon: LucideIcon;
-    borderClass: string;
-    bgClass: string;
-    iconClass: string;
-    hoverClass: string;
+    iconColor: string;
   }> = [
-    {
-      href: '/admin/media',
-      label: 'Media',
-      icon: ImageIcon,
-      borderClass: 'border-cyan-500/25',
-      bgClass: 'from-card to-cyan-500/5',
-      iconClass: 'bg-cyan-500/10 text-cyan-400',
-      hoverClass: 'group-hover:text-cyan-400',
-    },
-    {
-      href: '/admin/predictions',
-      label: 'Predictions',
-      icon: Trophy,
-      borderClass: 'border-yellow-500/25',
-      bgClass: 'from-card to-yellow-500/5',
-      iconClass: 'bg-yellow-500/10 text-yellow-400',
-      hoverClass: 'group-hover:text-yellow-400',
-    },
-    {
-      href: '/admin/trivia',
-      label: 'Trivia',
-      icon: Brain,
-      borderClass: 'border-purple-500/25',
-      bgClass: 'from-card to-purple-500/5',
-      iconClass: 'bg-purple-500/10 text-purple-400',
-      hoverClass: 'group-hover:text-purple-400',
-    },
-    {
-      href: '/admin/notifications',
-      label: 'Notifications',
-      icon: Bell,
-      borderClass: 'border-orange-500/25',
-      bgClass: 'from-card to-orange-500/5',
-      iconClass: 'bg-orange-500/10 text-orange-400',
-      hoverClass: 'group-hover:text-orange-400',
-    },
+    { href: '/admin/media', label: 'Media', icon: ImageIcon, iconColor: 'text-cyan-400' },
+    { href: '/admin/predictions', label: 'Predictions', icon: Trophy, iconColor: 'text-yellow-400' },
+    { href: '/admin/trivia', label: 'Trivia', icon: Brain, iconColor: 'text-purple-400' },
+    { href: '/admin/notifications', label: 'Notifications', icon: Bell, iconColor: 'text-orange-400' },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-red-950/20 to-black">
-      <div className="container mx-auto px-3 py-4 md:px-4 md:py-5">
-        {/* Header Section */}
-        <div className="mb-3">
-          <div className="modern-gradient rounded-xl p-3 md:p-4 shadow-md border border-primary/20 hover:border-primary/35 transition-all duration-200">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center">
-                  <Shield className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h1 className="text-xl md:text-2xl font-semibold bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">Admin Dashboard</h1>
-                  <p className="text-sm text-muted-foreground">Manage users, plans, and system administration</p>
-                </div>
-              </div>
+    <div className="min-h-screen bg-black">
+      <DashboardHeader />
+      <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6 space-y-4">
+        <PageHeader
+          label="Admin"
+          title="Dashboard"
+          description="Manage users, plans and system administration."
+          stats={[
+            { icon: Users, label: 'Users', value: totalUsers, iconClassName: 'text-primary' },
+            { icon: Shield, label: 'Admins', value: adminCount, iconClassName: 'text-primary' },
+            { icon: Activity, label: 'Active 7d', value: activeUsers, iconClassName: 'text-green-400' },
+          ]}
+          actions={
+            <div className="flex items-center gap-3">
+              <OnlineUsersWidget />
               {currentUser && (
-                <div className="flex items-center gap-3">
-                  <OnlineUsersWidget />
-                  <div className="flex items-center space-x-2">
-                    <div className="h-8 w-8 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm glow-effect">
-                      {currentUser.username.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm text-foreground">{currentUser.username}</p>
-                    </div>
+                <div className="flex items-center gap-2 border border-zinc-800 bg-zinc-950 px-2.5 py-1.5">
+                  <div className="flex h-6 w-6 items-center justify-center bg-primary/10 text-[11px] font-bold text-primary">
+                    {currentUser.username.charAt(0).toUpperCase()}
                   </div>
+                  <span className="text-xs font-medium">{currentUser.username}</span>
                 </div>
               )}
             </div>
-          </div>
+          }
+        />
+
+        {/* Overview stats */}
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {primaryStats.map((stat) => {
+            const StatIcon = stat.icon;
+            return (
+              <div key={stat.label} className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{stat.label}</p>
+                    <p className={`mt-1 font-mono text-2xl font-black tabular-nums leading-none ${stat.valueColor ?? ''}`}>
+                      {stat.value}
+                    </p>
+                  </div>
+                  <StatIcon className={`h-4 w-4 shrink-0 ${stat.iconColor}`} />
+                </div>
+                <p className="mt-2 truncate text-[11px] text-zinc-500">{stat.helper}</p>
+              </div>
+            );
+          })}
         </div>
 
-        {/* Compact Overview */}
-        <Card className="mb-2.5 border-transparent bg-transparent">
-          <CardContent className="p-0">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5">
-              {primaryStats.map((stat) => {
-                const StatIcon = stat.icon;
-                return (
-                  <div
-                    key={stat.label}
-                    className={`rounded-lg border ${stat.wrapperClass} px-2.5 py-2 transition-colors hover:border-primary/45`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-medium text-muted-foreground truncate">{stat.label}</p>
-                        <p className={`text-lg md:text-xl font-bold bg-gradient-to-r ${stat.valueClass} bg-clip-text text-transparent`}>
-                          {stat.value}
-                        </p>
-                      </div>
-                      <div className={`h-6 w-6 rounded-md flex items-center justify-center ${stat.iconClass}`}>
-                        <StatIcon className="h-3.5 w-3.5" />
-                      </div>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground truncate">{stat.helper}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions Strip */}
-        <div className="mb-3">
-          <h2 className="text-sm font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
-            <Zap className="h-4 w-4 text-primary" />
-            Quick Actions
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1.5">
-            {quickActionItems.map((action) => {
+        {/* Quick actions */}
+        <section className="border border-zinc-800 bg-zinc-950">
+          <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-3">
+            <Zap className="h-3.5 w-3.5 text-primary" />
+            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Quick actions</p>
+          </div>
+          <div className="grid grid-cols-2 divide-zinc-800 md:grid-cols-4">
+            {quickActionItems.map((action, idx) => {
               const ActionIcon = action.icon;
               return (
-                <Link key={action.href} href={action.href} className="group">
-                  <div
-                    className={`h-full rounded-lg border ${action.borderClass} bg-gradient-to-br ${action.bgClass} px-2 py-2 transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5`}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <div className={`h-6 w-6 rounded-md flex items-center justify-center shrink-0 ${action.iconClass}`}>
-                        <ActionIcon className="h-3.5 w-3.5" />
-                      </div>
-                      <span className="text-xs font-medium text-foreground truncate">{action.label}</span>
-                      <ArrowRight className={`ml-auto h-3 w-3 text-muted-foreground transition-all group-hover:translate-x-0.5 ${action.hoverClass}`} />
-                    </div>
-                  </div>
+                <Link
+                  key={action.href}
+                  href={action.href}
+                  className={`group flex items-center gap-3 px-5 py-3 transition-colors hover:bg-zinc-900/60 ${
+                    idx > 0 ? 'border-zinc-800 md:border-l' : ''
+                  } ${idx >= 2 ? 'border-t md:border-t-0' : ''}`}
+                >
+                  <ActionIcon className={`h-4 w-4 shrink-0 ${action.iconColor}`} />
+                  <span className="flex-1 truncate text-sm font-medium">{action.label}</span>
+                  <ArrowRight className="h-3.5 w-3.5 text-zinc-600 transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
                 </Link>
               );
             })}
           </div>
-        </div>
+        </section>
 
         {/* Page Controls */}
-        <div className="mb-3">
-          <h2 className="text-sm font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
-            <Wrench className="h-4 w-4 text-red-400" />
-            Page Controls
-          </h2>
-          <Card className="border-red-500/20 bg-gradient-to-br from-card to-red-500/5">
-            <CardContent className="p-3">
-              <div className="space-y-2">
-                {pageStatusesLoading ? (
-                  <div className="flex items-center justify-center gap-2 py-4 text-xs text-muted-foreground">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    Loading page statuses...
-                  </div>
-                ) : pageStatuses.length === 0 ? (
-                  <div className="flex flex-col items-center gap-2 py-4">
-                    <p className="text-xs text-muted-foreground">Could not load page statuses.</p>
-                    <button onClick={loadPageStatuses} className="text-xs text-primary underline">Retry</button>
-                  </div>
-                ) : null}
-                {pageStatuses.map((ps) => (
-                  <div
-                    key={ps.pageSlug}
-                    className={`flex flex-col sm:flex-row sm:items-center gap-2 rounded-lg border p-3 transition-colors ${
-                      ps.isDisabled
-                        ? 'border-red-500/30 bg-red-500/5'
-                        : 'border-border/40 bg-muted/20'
+        <section className="border border-zinc-800 bg-zinc-950">
+          <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-3">
+            <Wrench className="h-3.5 w-3.5 text-red-400" />
+            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Page controls</p>
+          </div>
+          <div className="divide-y divide-zinc-800/60">
+            {pageStatusesLoading ? (
+              <div className="flex items-center justify-center gap-2 px-5 py-6 text-xs text-zinc-500">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Loading page statuses...
+              </div>
+            ) : pageStatuses.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 px-5 py-6">
+                <p className="text-xs text-zinc-500">Could not load page statuses.</p>
+                <button onClick={loadPageStatuses} className="text-xs uppercase tracking-wider text-primary hover:underline">Retry</button>
+              </div>
+            ) : null}
+            {pageStatuses.map((ps) => (
+              <div
+                key={ps.pageSlug}
+                className={`flex flex-col gap-2 px-5 py-3 sm:flex-row sm:items-center ${
+                  ps.isDisabled ? 'border-l-2 border-l-red-500' : 'border-l-2 border-l-transparent'
+                }`}
+              >
+                <div className="flex min-w-[160px] items-center gap-2">
+                  <span className={`h-1.5 w-1.5 shrink-0 ${ps.isDisabled ? 'bg-red-500' : 'bg-green-500'}`} />
+                  <span className="font-mono text-sm font-semibold tabular-nums">/{ps.pageSlug}</span>
+                  <span
+                    className={`border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                      ps.isDisabled ? 'border-red-500/40 text-red-400' : 'border-green-500/40 text-green-400'
                     }`}
                   >
-                    {/* Left: slug + status badge */}
-                    <div className="flex items-center gap-2 min-w-[140px]">
-                      <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${ps.isDisabled ? 'bg-red-500' : 'bg-green-500'}`} />
-                      <span className="text-sm font-mono font-semibold text-foreground">/{ps.pageSlug}</span>
-                      <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
-                        ps.isDisabled
-                          ? 'bg-red-500/15 text-red-400'
-                          : 'bg-green-500/15 text-green-400'
-                      }`}>
-                        {ps.isDisabled ? 'Maintenance' : 'Online'}
-                      </span>
-                    </div>
+                    {ps.isDisabled ? 'Maintenance' : 'Online'}
+                  </span>
+                </div>
 
-                    {/* Middle: message input */}
-                    <Input
-                      placeholder="Maintenance message (optional)..."
-                      value={pageMessages[ps.pageSlug] ?? ''}
-                      onChange={(e) =>
-                        setPageMessages(prev => ({ ...prev, [ps.pageSlug]: e.target.value }))
-                      }
-                      className="flex-1 h-8 text-xs"
-                    />
+                <Input
+                  placeholder="Maintenance message (optional)..."
+                  value={pageMessages[ps.pageSlug] ?? ''}
+                  onChange={(e) => setPageMessages((prev) => ({ ...prev, [ps.pageSlug]: e.target.value }))}
+                  className="h-8 flex-1 rounded-sm border-zinc-800 bg-zinc-900/60 text-xs"
+                />
 
-                    {/* Right: toggle button */}
-                    <Button
-                      size="sm"
-                      variant={ps.isDisabled ? 'outline' : 'destructive'}
-                      className={`shrink-0 h-8 text-xs font-semibold transition-all ${
-                        ps.isDisabled
-                          ? 'border-green-500/40 text-green-400 hover:bg-green-500/10'
-                          : ''
-                      }`}
-                      disabled={pageStatusSaving[ps.pageSlug]}
-                      onClick={() => handlePageStatusToggle(ps.pageSlug, ps.isDisabled)}
-                    >
-                      {pageStatusSaving[ps.pageSlug] ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : ps.isDisabled ? (
-                        '↑ Re-enable'
-                      ) : (
-                        '↓ Disable'
-                      )}
-                    </Button>
-                  </div>
-                ))}
+                <Button
+                  size="sm"
+                  variant={ps.isDisabled ? 'outline' : 'destructive'}
+                  className={`h-8 shrink-0 rounded-sm text-[11px] font-semibold uppercase tracking-wider ${
+                    ps.isDisabled ? 'border-green-500/40 bg-transparent text-green-400 hover:bg-green-500/10' : ''
+                  }`}
+                  disabled={pageStatusSaving[ps.pageSlug]}
+                  onClick={() => handlePageStatusToggle(ps.pageSlug, ps.isDisabled)}
+                >
+                  {pageStatusSaving[ps.pageSlug] ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : ps.isDisabled ? (
+                    'Re-enable'
+                  ) : (
+                    'Disable'
+                  )}
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            ))}
+          </div>
+        </section>
 
         {/* Secondary Stats */}
-        <div className="grid grid-cols-3 md:grid-cols-5 gap-2 mb-3">
-          <Card className="border-border/50 hover:border-primary/30 transition-all duration-200 bg-gradient-to-br from-card to-primary/5">
-            <CardContent className="p-2.5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">New (7d)</p>
-                  <p className="text-base md:text-lg font-semibold text-foreground">{recentUsers}</p>
+        <div className="grid grid-cols-3 gap-2 md:grid-cols-5">
+          {[
+            { label: 'New (7d)', value: recentUsers, icon: UserPlus, color: 'text-primary' },
+            { label: 'Creators', value: contentCreatorCount, icon: Crown, color: 'text-accent' },
+            { label: 'Total coins', value: totalCoins.toLocaleString(), icon: Coins, color: 'text-yellow-400' },
+            { label: 'Elite', value: planDistribution.ELITE || 0, icon: Crown, color: 'text-accent' },
+            { label: 'Pro', value: planDistribution.PRO || 0, icon: Crown, color: 'text-primary' },
+          ].map((s) => {
+            const SIcon = s.icon;
+            return (
+              <div key={s.label} className="border border-zinc-800 bg-zinc-950 px-3 py-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{s.label}</p>
+                    <p className={`mt-0.5 font-mono text-base font-black tabular-nums leading-none ${s.color}`}>{s.value}</p>
+                  </div>
+                  <SIcon className={`h-3.5 w-3.5 shrink-0 ${s.color}`} />
                 </div>
-                <UserPlus className="h-3.5 w-3.5 text-primary" />
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/50 hover:border-accent/30 transition-all duration-200 bg-gradient-to-br from-card to-accent/5">
-            <CardContent className="p-2.5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">Creators</p>
-                  <p className="text-base md:text-lg font-semibold text-foreground">{contentCreatorCount}</p>
-                </div>
-                <Crown className="h-3.5 w-3.5 text-accent" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/50 hover:border-yellow-500/30 transition-all duration-200 bg-gradient-to-br from-card to-yellow-500/5">
-            <CardContent className="p-2.5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">Total Coins</p>
-                  <p className="text-base md:text-lg font-semibold text-foreground">{totalCoins.toLocaleString()}</p>
-                </div>
-                <Coins className="h-3.5 w-3.5 text-yellow-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/50 hover:border-accent/30 transition-all duration-200 bg-gradient-to-br from-card to-accent/5">
-            <CardContent className="p-2.5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">Elite</p>
-                  <p className="text-base md:text-lg font-semibold text-foreground">{planDistribution.ELITE || 0}</p>
-                </div>
-                <Crown className="h-3.5 w-3.5 text-accent" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/50 hover:border-primary/30 transition-all duration-200 bg-gradient-to-br from-card to-primary/5">
-            <CardContent className="p-2.5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">Pro</p>
-                  <p className="text-base md:text-lg font-semibold text-foreground">{planDistribution.PRO || 0}</p>
-                </div>
-                <Crown className="h-3.5 w-3.5 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
+            );
+          })}
         </div>
 
         {/* Search and Filters */}
-        <Card className="mb-5 border-border/50">
-          <CardHeader className="pb-3">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-              <div>
-                <CardTitle className="text-lg">User Management</CardTitle>
-                <CardDescription>Search, filter, and manage user accounts</CardDescription>
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => fetchUsers()}
-                  className="hover:scale-[1.02] transition-all duration-200"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={exportUsers}
-                  className="accent-glow hover:scale-[1.02] transition-all duration-200"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export CSV
-                </Button>
-              </div>
+        <section className="border border-zinc-800 bg-zinc-950">
+          <div className="flex flex-col gap-3 border-b border-zinc-800 px-5 py-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Users</p>
+              <p className="mt-0.5 font-bold text-sm">Manage accounts</p>
             </div>
-          </CardHeader>
-          <CardContent>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchUsers()}
+                className="h-8 rounded-sm border-zinc-800 bg-zinc-900/60 text-[11px] uppercase tracking-wider text-zinc-300 hover:border-primary/40 hover:text-primary"
+              >
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                Refresh
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportUsers}
+                className="h-8 rounded-sm border-zinc-800 bg-zinc-900/60 text-[11px] uppercase tracking-wider text-zinc-300 hover:border-primary/40 hover:text-primary"
+              >
+                <Download className="mr-1.5 h-3.5 w-3.5" />
+                Export CSV
+              </Button>
+            </div>
+          </div>
+          <div className="px-5 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-3">
               <div className="relative md:col-span-2">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -989,31 +881,32 @@ export default function AdminDashboard() {
 
             {/* Bulk Actions Bar */}
             {selectedUsers.size > 0 && (
-              <div className="mt-3 p-3 bg-primary/10 rounded-lg border border-primary/20 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <CheckCircle2 className="h-5 w-5 text-primary" />
-                  <span className="font-medium text-foreground">
-                    {selectedUsers.size} user{selectedUsers.size > 1 ? 's' : ''} selected
+              <div className="mt-3 flex items-center justify-between border border-primary/30 bg-primary/5 px-3 py-2.5">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-medium">
+                    <span className="font-mono tabular-nums">{selectedUsers.size}</span> user{selectedUsers.size > 1 ? 's' : ''} selected
                   </span>
                 </div>
                 <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => setSelectedUsers(new Set())}
+                    className="h-8 rounded-sm border-zinc-800 bg-zinc-900/60 text-[11px] uppercase tracking-wider text-zinc-300"
                   >
-                    Clear Selection
+                    Clear
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm">
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete Selected
+                      <Button variant="destructive" size="sm" className="h-8 rounded-sm text-[11px] uppercase tracking-wider">
+                        <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                        Delete
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="rounded-xl border-zinc-800 bg-zinc-950">
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Multiple Users?</AlertDialogTitle>
+                        <AlertDialogTitle>Delete multiple users?</AlertDialogTitle>
                         <AlertDialogDescription>
                           You are about to delete {selectedUsers.size} user(s). This action cannot be undone.
                         </AlertDialogDescription>
@@ -1024,7 +917,7 @@ export default function AdminDashboard() {
                           onClick={handleBulkDelete}
                           className="bg-destructive hover:bg-destructive/90"
                         >
-                          Delete All
+                          Delete all
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
@@ -1032,22 +925,20 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
         {/* User Management */}
-        <Card className="border-border/50">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg font-semibold">All Users</CardTitle>
-                <CardDescription className="text-muted-foreground">
-                  Page {currentPage} of {totalPages} • {sortedUsers.length} user{sortedUsers.length !== 1 ? 's' : ''} found
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
+        <section className="border border-zinc-800 bg-zinc-950">
+          <div className="border-b border-zinc-800 px-5 py-3">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Directory</p>
+            <p className="mt-0.5 font-bold text-sm">
+              All users <span className="ml-1.5 font-mono text-[11px] font-normal tabular-nums text-zinc-500">
+                · page {currentPage}/{totalPages} · {sortedUsers.length} found
+              </span>
+            </p>
+          </div>
+          <div className="px-5 py-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="all" className="flex items-center gap-1.5 text-xs md:text-sm">
@@ -1087,8 +978,8 @@ export default function AdminDashboard() {
               )}
 
               {paginatedUsers.map((user) => (
-                <div key={user.id} className={`bg-card rounded-xl p-4 border shadow-sm hover:shadow transition-colors duration-200 ${
-                  selectedUsers.has(user.id) ? 'border-primary/50 bg-primary/5' : 'border-border/50 hover:border-primary/30'
+                <div key={user.id} className={`border bg-zinc-950 p-4 transition-colors ${
+                  selectedUsers.has(user.id) ? 'border-primary/50 bg-primary/5' : 'border-zinc-800 hover:border-zinc-700'
                 }`}>
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                     <div className="flex-1">
@@ -1098,7 +989,7 @@ export default function AdminDashboard() {
                           onCheckedChange={() => handleSelectUser(user.id)}
                           id={`user-${user.id}`}
                         />
-                        <div className="h-9 w-9 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground font-bold text-xs shrink-0">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-primary/30 bg-primary/10 text-xs font-bold text-primary">
                           {user.username.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1231,7 +1122,7 @@ export default function AdminDashboard() {
                             </AlertDialogTitle>
                             <AlertDialogDescription className="text-muted-foreground">
                               This action cannot be undone. This will permanently delete the user
-                              account for <span className="font-semibold gradient-text">{user.username}</span> and remove all associated data.
+                              account for <span className="font-semibold text-primary">{user.username}</span> and remove all associated data.
                               <br />
                               <br />
                               <span className="text-sm font-medium">User Details:</span>
@@ -1339,15 +1230,15 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </section>
+      </main>
 
       {/* Edit Dialogs */}
       <Dialog open={editType === 'tokens'} onOpenChange={(open) => !open && setEditType(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl gradient-text">Update User Tokens</DialogTitle>
+            <DialogTitle className="text-xl font-bold tracking-tight">Update User Tokens</DialogTitle>
             <DialogDescription className="text-muted-foreground">
               Change the token count for <span className="font-semibold">{selectedUser?.username}</span>
             </DialogDescription>
@@ -1363,7 +1254,7 @@ export default function AdminDashboard() {
           <DialogFooter>
             <Button
               onClick={() => selectedUser && updateUserTokens(selectedUser.id, newTokens)}
-              className="glow-effect hover:scale-105 transition-all duration-300"
+              className="rounded-sm bg-primary text-xs font-semibold uppercase tracking-wider text-white hover:bg-primary/90"
             >
               Update Tokens
             </Button>
@@ -1374,7 +1265,7 @@ export default function AdminDashboard() {
       <Dialog open={editType === 'coins'} onOpenChange={(open) => !open && setEditType(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl gradient-text">Update User Coins</DialogTitle>
+            <DialogTitle className="text-xl font-bold tracking-tight">Update User Coins</DialogTitle>
             <DialogDescription className="text-muted-foreground">
               Change the coin count for <span className="font-semibold">{selectedUser?.username}</span>
             </DialogDescription>
@@ -1390,7 +1281,7 @@ export default function AdminDashboard() {
           <DialogFooter>
             <Button
               onClick={() => selectedUser && updateUserCoins(selectedUser.id, newCoins)}
-              className="glow-effect hover:scale-105 transition-all duration-300"
+              className="rounded-sm bg-primary text-xs font-semibold uppercase tracking-wider text-white hover:bg-primary/90"
             >
               Update Coins
             </Button>
@@ -1401,7 +1292,7 @@ export default function AdminDashboard() {
       <Dialog open={editType === 'plan'} onOpenChange={(open) => !open && setEditType(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl gradient-text">Update User Plan</DialogTitle>
+            <DialogTitle className="text-xl font-bold tracking-tight">Update User Plan</DialogTitle>
             <DialogDescription className="text-muted-foreground">
               Change the subscription plan for <span className="font-semibold">{selectedUser?.username}</span>
             </DialogDescription>
@@ -1421,7 +1312,7 @@ export default function AdminDashboard() {
           <DialogFooter>
             <Button
               onClick={() => selectedUser && updateUserPlan(selectedUser.id, newPlan)}
-              className="glow-effect hover:scale-105 transition-all duration-300"
+              className="rounded-sm bg-primary text-xs font-semibold uppercase tracking-wider text-white hover:bg-primary/90"
               disabled={!newPlan || newPlan === selectedUser?.plan}
             >
               Update Plan
@@ -1433,7 +1324,7 @@ export default function AdminDashboard() {
       <Dialog open={editType === 'role'} onOpenChange={(open) => !open && setEditType(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl gradient-text">Update User Role</DialogTitle>
+            <DialogTitle className="text-xl font-bold tracking-tight">Update User Role</DialogTitle>
             <DialogDescription className="text-muted-foreground">
               Change the access role for <span className="font-semibold">{selectedUser?.username}</span>
             </DialogDescription>
@@ -1453,7 +1344,7 @@ export default function AdminDashboard() {
           <DialogFooter>
             <Button
               onClick={() => selectedUser && updateUserRole(selectedUser.id, newRole)}
-              className="glow-effect hover:scale-105 transition-all duration-300"
+              className="rounded-sm bg-primary text-xs font-semibold uppercase tracking-wider text-white hover:bg-primary/90"
               disabled={!newRole}
             >
               Update Role
@@ -1466,7 +1357,7 @@ export default function AdminDashboard() {
       <Dialog open={editType === 'email'} onOpenChange={(open) => !open && setEditType(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-xl gradient-text flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold tracking-tight">
               <Mail className="h-5 w-5" />
               Send Email to User
             </DialogTitle>
@@ -1527,7 +1418,7 @@ export default function AdminDashboard() {
             </Button>
             <Button
               onClick={() => selectedUser && sendEmail(selectedUser.id, emailSubject, emailMessage)}
-              className="glow-effect hover:scale-105 transition-all duration-300"
+              className="rounded-sm bg-primary text-xs font-semibold uppercase tracking-wider text-white hover:bg-primary/90"
               disabled={!emailSubject.trim() || !emailMessage.trim()}
             >
               <Send className="h-4 w-4 mr-2" />

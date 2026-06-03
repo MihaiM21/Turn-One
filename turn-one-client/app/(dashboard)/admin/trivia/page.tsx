@@ -36,6 +36,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { getAuthToken } from '@/lib/auth-utils';
+import { DashboardHeader } from '@/components/dashboard/live dashboard/dashboard-header';
+import { PageHeader } from '@/components/dashboard/page-header';
 
 interface Trivia {
   id: string;
@@ -284,11 +286,14 @@ export default function AdminTriviaPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-lg font-medium text-muted-foreground">Loading trivia questions...</p>
-        </div>
+      <div className="min-h-screen bg-black">
+        <DashboardHeader />
+        <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+          <div className="flex items-center justify-center border border-zinc-800 bg-zinc-950 px-5 py-12 text-sm text-zinc-500">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Loading trivia questions...
+          </div>
+        </main>
       </div>
     );
   }
@@ -296,170 +301,150 @@ export default function AdminTriviaPage() {
   const pct = getDifficultyPercent();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-purple-950/20 to-black">
-      <div className="container mx-auto p-6 max-w-7xl">
+    <div className="min-h-screen bg-black">
+      <DashboardHeader />
+      <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6 space-y-4">
+        <Link
+          href="/admin"
+          className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-zinc-500 transition-colors hover:text-primary"
+        >
+          <ArrowLeft className="h-3 w-3" />
+          Back to admin
+        </Link>
 
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Link href="/admin">
-              <Button variant="ghost" size="sm" className="gap-2 hover:bg-primary/10">
-                <ArrowLeft className="w-4 h-4" />
-                Back to Admin
-              </Button>
-            </Link>
-          </div>
-          <div className="modern-gradient rounded-2xl p-8 shadow-xl border border-purple-500/20 hover:border-purple-500/40 transition-all duration-300">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div className="flex items-center gap-4">
-                <div className="h-14 w-14 bg-purple-500/10 rounded-2xl flex items-center justify-center">
-                  <Brain className="h-7 w-7 text-purple-400" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                    Trivia Management
-                  </h1>
-                  <p className="text-muted-foreground mt-1">
-                    Create, edit, and manage F1 trivia questions
-                  </p>
-                </div>
-              </div>
-              <Button onClick={handleCreate} className="gap-2 bg-purple-600 hover:bg-purple-700">
-                <Plus className="w-4 h-4" />
-                New Question
-              </Button>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          label="Admin · Trivia"
+          title="Trivia management"
+          description="Create, edit and manage F1 trivia questions."
+          actions={
+            <Button
+              onClick={handleCreate}
+              size="sm"
+              className="rounded-sm bg-primary text-xs font-semibold uppercase tracking-wider text-white hover:bg-primary/90"
+            >
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              New question
+            </Button>
+          }
+        />
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="border-purple-500/20 hover:border-purple-500/40 transition-all duration-300 hover:shadow-lg bg-gradient-to-br from-card to-purple-500/5">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Total Questions</p>
-                  <p className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                    {trivias.length}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {stats.uniqueCategories} categories
-                  </p>
-                </div>
-                <div className="h-12 w-12 bg-purple-500/10 rounded-full flex items-center justify-center">
-                  <HelpCircle className="h-6 w-6 text-purple-400" />
-                </div>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Total questions</p>
+                <p className="mt-1 font-mono text-2xl font-black tabular-nums leading-none text-purple-400">
+                  {trivias.length}
+                </p>
               </div>
-            </CardContent>
-          </Card>
+              <HelpCircle className="h-4 w-4 shrink-0 text-purple-400" />
+            </div>
+            <p className="mt-2 text-[11px] text-zinc-500">
+              <span className="font-mono tabular-nums">{stats.uniqueCategories}</span> categories
+            </p>
+          </div>
 
-          <Card className="border-green-500/20 hover:border-green-500/40 transition-all duration-300 hover:shadow-lg bg-gradient-to-br from-card to-green-500/5">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Easy</p>
-                  <p className="text-3xl font-bold text-green-400">{stats.easy}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {pct.easy.toFixed(0)}% of total
-                  </p>
-                </div>
-                <div className="h-12 w-12 bg-green-500/10 rounded-full flex items-center justify-center">
-                  <CheckCircle2 className="h-6 w-6 text-green-400" />
-                </div>
+          <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Easy</p>
+                <p className="mt-1 font-mono text-2xl font-black tabular-nums leading-none text-green-400">{stats.easy}</p>
               </div>
-            </CardContent>
-          </Card>
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-green-400" />
+            </div>
+            <p className="mt-2 text-[11px] text-zinc-500">{pct.easy.toFixed(0)}% of total</p>
+          </div>
 
-          <Card className="border-yellow-500/20 hover:border-yellow-500/40 transition-all duration-300 hover:shadow-lg bg-gradient-to-br from-card to-yellow-500/5">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Medium</p>
-                  <p className="text-3xl font-bold text-yellow-400">{stats.medium}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {pct.medium.toFixed(0)}% of total
-                  </p>
-                </div>
-                <div className="h-12 w-12 bg-yellow-500/10 rounded-full flex items-center justify-center">
-                  <BarChart3 className="h-6 w-6 text-yellow-400" />
-                </div>
+          <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Medium</p>
+                <p className="mt-1 font-mono text-2xl font-black tabular-nums leading-none text-yellow-400">
+                  {stats.medium}
+                </p>
               </div>
-            </CardContent>
-          </Card>
+              <BarChart3 className="h-4 w-4 shrink-0 text-yellow-400" />
+            </div>
+            <p className="mt-2 text-[11px] text-zinc-500">{pct.medium.toFixed(0)}% of total</p>
+          </div>
 
-          <Card className="border-red-500/20 hover:border-red-500/40 transition-all duration-300 hover:shadow-lg bg-gradient-to-br from-card to-red-500/5">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Hard</p>
-                  <p className="text-3xl font-bold text-red-400">{stats.hard}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {pct.hard.toFixed(0)}% of total
-                  </p>
-                </div>
-                <div className="h-12 w-12 bg-red-500/10 rounded-full flex items-center justify-center">
-                  <Zap className="h-6 w-6 text-red-400" />
-                </div>
+          <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Hard</p>
+                <p className="mt-1 font-mono text-2xl font-black tabular-nums leading-none text-red-400">{stats.hard}</p>
               </div>
-            </CardContent>
-          </Card>
+              <Zap className="h-4 w-4 shrink-0 text-red-400" />
+            </div>
+            <p className="mt-2 text-[11px] text-zinc-500">{pct.hard.toFixed(0)}% of total</p>
+          </div>
         </div>
 
         {/* Difficulty Distribution Bar */}
-        <Card className="mb-8 border-border/50">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium text-muted-foreground">Difficulty Distribution</p>
-              <div className="flex items-center gap-4 text-xs">
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> Easy</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-500" /> Medium</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" /> Hard</span>
-              </div>
+        <section className="border border-zinc-800 bg-zinc-950">
+          <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-3">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Difficulty distribution</p>
+            <div className="flex items-center gap-3 text-[10px] uppercase tracking-wider">
+              <span className="flex items-center gap-1 text-green-400">
+                <span className="h-1.5 w-1.5 bg-green-500" /> Easy
+              </span>
+              <span className="flex items-center gap-1 text-yellow-400">
+                <span className="h-1.5 w-1.5 bg-yellow-500" /> Medium
+              </span>
+              <span className="flex items-center gap-1 text-red-400">
+                <span className="h-1.5 w-1.5 bg-red-500" /> Hard
+              </span>
             </div>
-            <div className="h-4 bg-muted/30 rounded-full overflow-hidden flex">
+          </div>
+          <div className="px-5 py-4">
+            <div className="flex h-2 overflow-hidden bg-zinc-800">
               {pct.easy > 0 && (
-                <div className="bg-green-500 h-full transition-all duration-500" style={{ width: `${pct.easy}%` }} />
+                <div className="h-full bg-green-500 transition-all duration-500" style={{ width: `${pct.easy}%` }} />
               )}
               {pct.medium > 0 && (
-                <div className="bg-yellow-500 h-full transition-all duration-500" style={{ width: `${pct.medium}%` }} />
+                <div className="h-full bg-yellow-500 transition-all duration-500" style={{ width: `${pct.medium}%` }} />
               )}
               {pct.hard > 0 && (
-                <div className="bg-red-500 h-full transition-all duration-500" style={{ width: `${pct.hard}%` }} />
+                <div className="h-full bg-red-500 transition-all duration-500" style={{ width: `${pct.hard}%` }} />
               )}
             </div>
-            <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
-              <span>Total rewards: {stats.totalCoins} coins &bull; {stats.totalXP} XP</span>
-              <span>{trivias.length} questions</span>
+            <div className="mt-3 flex items-center justify-between text-[11px] text-zinc-500">
+              <span>
+                Total rewards: <span className="font-mono tabular-nums text-zinc-300">{stats.totalCoins}</span> coins ·{' '}
+                <span className="font-mono tabular-nums text-zinc-300">{stats.totalXP}</span> XP
+              </span>
+              <span className="font-mono tabular-nums text-zinc-400">{trivias.length} questions</span>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
         {/* Filters & Search */}
-        <Card className="mb-6 border-border/50">
-          <CardContent className="p-5">
-            <div className="flex flex-col lg:flex-row gap-4">
+        <section className="border border-zinc-800 bg-zinc-950">
+          <div className="space-y-4 px-5 py-4">
+            <div className="flex flex-col gap-3 lg:flex-row">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
                 <Input
                   placeholder="Search questions or categories..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="rounded-sm border-zinc-800 bg-zinc-900/60 pl-10"
                 />
               </div>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-full lg:w-[180px]">
+                <SelectTrigger className="rounded-sm border-zinc-800 bg-zinc-900/60 lg:w-[180px]">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ALL">All Categories</SelectItem>
-                  {categories.map(cat => (
+                  {categories.map((cat) => (
                     <SelectItem key={cat} value={cat}>{categoryIcons[cat]} {cat}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
-                <SelectTrigger className="w-full lg:w-[160px]">
+                <SelectTrigger className="rounded-sm border-zinc-800 bg-zinc-900/60 lg:w-[160px]">
                   <SelectValue placeholder="Difficulty" />
                 </SelectTrigger>
                 <SelectContent>
@@ -471,67 +456,67 @@ export default function AdminTriviaPage() {
               </Select>
             </div>
 
-            <div className="mt-4">
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="all" className="gap-2">
-                    <BookOpen className="h-4 w-4" />
-                    All ({trivias.length})
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid h-auto w-full grid-cols-4 rounded-none border border-zinc-800 bg-zinc-950 p-0">
+                {[
+                  { value: 'all', label: 'All', icon: BookOpen, count: trivias.length },
+                  { value: 'easy', label: 'Easy', icon: CheckCircle2, count: stats.easy },
+                  { value: 'medium', label: 'Medium', icon: BarChart3, count: stats.medium },
+                  { value: 'hard', label: 'Hard', icon: Zap, count: stats.hard },
+                ].map(({ value, label, icon: TIcon, count }) => (
+                  <TabsTrigger
+                    key={value}
+                    value={value}
+                    className="gap-1.5 rounded-none border-b-2 border-transparent bg-transparent px-3 py-2.5 text-[11px] uppercase tracking-wider text-zinc-400 transition-colors hover:text-zinc-200 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
+                  >
+                    <TIcon className="h-3.5 w-3.5" />
+                    {label} <span className="font-mono tabular-nums text-zinc-500">{count}</span>
                   </TabsTrigger>
-                  <TabsTrigger value="easy" className="gap-2">
-                    <CheckCircle2 className="h-4 w-4" />
-                    Easy ({stats.easy})
-                  </TabsTrigger>
-                  <TabsTrigger value="medium" className="gap-2">
-                    <BarChart3 className="h-4 w-4" />
-                    Medium ({stats.medium})
-                  </TabsTrigger>
-                  <TabsTrigger value="hard" className="gap-2">
-                    <Zap className="h-4 w-4" />
-                    Hard ({stats.hard})
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
+                ))}
+              </TabsList>
+            </Tabs>
 
             {(searchTerm || categoryFilter !== 'ALL' || difficultyFilter !== 'ALL') && (
-              <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-2 text-[11px] text-zinc-500">
                 <Filter className="h-3 w-3" />
-                Showing {filteredTrivias.length} of {trivias.length} questions
-                {searchTerm && <Badge variant="secondary" className="text-xs">Search: {searchTerm}</Badge>}
-                {categoryFilter !== 'ALL' && <Badge variant="secondary" className="text-xs">Category: {categoryFilter}</Badge>}
-                {difficultyFilter !== 'ALL' && <Badge variant="secondary" className="text-xs">Difficulty: {difficultyFilter}</Badge>}
+                Showing <span className="font-mono tabular-nums text-zinc-300">{filteredTrivias.length}</span> of{' '}
+                <span className="font-mono tabular-nums text-zinc-300">{trivias.length}</span>
+                {searchTerm && <span className="border border-zinc-700 px-1.5 py-0.5 uppercase tracking-wider">Search: {searchTerm}</span>}
+                {categoryFilter !== 'ALL' && <span className="border border-zinc-700 px-1.5 py-0.5 uppercase tracking-wider">Category: {categoryFilter}</span>}
+                {difficultyFilter !== 'ALL' && <span className="border border-zinc-700 px-1.5 py-0.5 uppercase tracking-wider">Difficulty: {difficultyFilter}</span>}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
         {/* Questions List */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           {filteredTrivias.length === 0 ? (
-            <Card className="border-border/50">
-              <CardContent className="py-16 text-center">
-                <div className="h-16 w-16 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Brain className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-medium text-foreground mb-2">No questions found</h3>
-                <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-4">
+            <section className="flex flex-col items-center gap-3 border border-zinc-800 bg-zinc-950 px-5 py-16 text-center">
+              <Brain className="h-8 w-8 text-zinc-700" />
+              <div>
+                <p className="font-bold">No questions found</p>
+                <p className="mt-0.5 max-w-sm text-xs text-zinc-500">
                   {searchTerm || categoryFilter !== 'ALL' || difficultyFilter !== 'ALL'
                     ? 'Try adjusting your search or filter settings.'
                     : 'Create your first trivia question to get started.'}
                 </p>
-                {trivias.length === 0 && (
-                  <Button onClick={handleCreate} className="gap-2">
-                    <Plus className="w-4 h-4" />
-                    Create First Question
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
+              </div>
+              {trivias.length === 0 && (
+                <Button
+                  onClick={handleCreate}
+                  size="sm"
+                  className="rounded-sm bg-primary text-xs font-semibold uppercase tracking-wider text-white hover:bg-primary/90"
+                >
+                  <Plus className="mr-1.5 h-3.5 w-3.5" />
+                  Create first question
+                </Button>
+              )}
+            </section>
           ) : (
             filteredTrivias.map((trivia, index) => (
-              <Card key={trivia.id} className="border-border/50 hover:border-purple-500/30 hover:shadow-lg transition-all duration-300 group">
-                <CardContent className="p-6">
+              <Card key={trivia.id} className="group rounded-none border-zinc-800 bg-zinc-950 transition-colors hover:border-zinc-700">
+                <CardContent className="p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 space-y-3">
                       <div className="flex items-start gap-3">
@@ -771,7 +756,7 @@ export default function AdminTriviaPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
+      </main>
     </div>
   );
 }

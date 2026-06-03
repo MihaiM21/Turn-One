@@ -25,5 +25,11 @@ public class TelemetryLap
     public float AverageThrottle { get; set; }
     public float AverageBrake { get; set; }
     public float FuelUsed { get; set; }
+
+    // Lap analytics (0..100, null if not yet computed)
+    public float? BrakingScore { get; set; }
+    public float? ThrottleScore { get; set; }
+    public float? ConsistencyScore { get; set; }
+
     public DateTime RecordedAt { get; set; } = DateTime.UtcNow;
 }

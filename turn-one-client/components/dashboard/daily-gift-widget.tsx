@@ -4,9 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { checkDailyGiftStatus, claimDailyGift } from '@/lib/dailyGiftService';
 import { useToast } from '@/hooks/use-toast';
 import { getAuthToken } from '@/lib/auth-utils';
+import { notifyBalanceChanged } from '@/lib/balance-events';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Gift, Check, Loader2, AlertTriangle } from 'lucide-react';
 
 interface DailyGiftWidgetProps {
@@ -21,88 +20,50 @@ export function DailyGiftWidget({ onGiftClaimed }: DailyGiftWidgetProps) {
   const [hasError, setHasError] = useState(false);
   const { toast } = useToast();
 
-  // Function to check gift status
   const checkGiftStatus = async (token: string) => {
     setIsChecking(true);
     try {
       const status = await checkDailyGiftStatus(token);
       setCanClaim(status.canClaimDailyGift);
       setHasError(false);
-    } catch (error) {
+    } catch {
       setHasError(true);
       setCanClaim(false);
     } finally {
       setIsChecking(false);
     }
   };
-  
+
   useEffect(() => {
-    // Get token from auth utils
     const token = getAuthToken();
     setAuthToken(token);
-    
-    if (!token) {
-      setIsChecking(false);
-      setHasError(true);
-      return;
-    }
-
-    // Check gift status for this specific user
+    if (!token) { setIsChecking(false); setHasError(true); return; }
     checkGiftStatus(token);
-    
-    // Re-check status when component gains focus (user might switch between accounts in different tabs)
-    const handleFocus = () => {
-      if (token) {
-        checkGiftStatus(token);
-      }
-    };
-    
+    const handleFocus = () => { if (token) checkGiftStatus(token); };
     window.addEventListener('focus', handleFocus);
-    
-    // Cleanup
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   const handleClaimGift = async () => {
     if (!authToken || !canClaim) return;
-
     setIsLoading(true);
     try {
       const result = await claimDailyGift(authToken);
-      
       if (result.success) {
+        notifyBalanceChanged();
         toast({
           title: '🎁 Daily Gift Claimed!',
           description: `You received ${result.coins} coins and ${result.experience} XP!`,
           duration: 5000,
         });
-        
-        // Re-check the gift status with the server to ensure it's properly updated
         await checkGiftStatus(authToken);
-        
-        // Notify parent component if needed
-        if (onGiftClaimed) {
-          onGiftClaimed();
-        }
+        onGiftClaimed?.();
       } else {
-        toast({
-          title: 'Error',
-          description: result.message || 'Failed to claim daily gift',
-          variant: 'destructive',
-        });
-        
-        // Re-check status in case the backend status has changed
+        toast({ title: 'Error', description: result.message || 'Failed to claim daily gift', variant: 'destructive' });
         await checkGiftStatus(authToken);
       }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to claim daily gift',
-        variant: 'destructive',
-      });
-      console.error('Error claiming daily gift:', error);
+    } catch {
+      toast({ title: 'Error', description: 'Failed to claim daily gift', variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -110,120 +71,89 @@ export function DailyGiftWidget({ onGiftClaimed }: DailyGiftWidgetProps) {
 
   if (isChecking) {
     return (
-      <Card className="border-border/40 bg-card/40 backdrop-blur-sm">
-        <CardContent className="flex items-center justify-center p-5 text-sm">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          <span>Checking daily gift status...</span>
-        </CardContent>
-      </Card>
+      <div className="flex h-full min-h-[120px] items-center justify-center border border-zinc-800 bg-zinc-950 px-5 py-6 text-sm text-zinc-500">
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        Checking...
+      </div>
     );
   }
 
-  // If there's no auth token, show a message
   if (!authToken) {
     return (
-      <Card className="border-red-500/30 bg-card/40 backdrop-blur-sm">
-        <CardHeader className="pb-1.5 pt-5">
-          <div className="flex justify-between items-center">
-            <CardTitle className="flex items-center text-base">
-              <AlertTriangle className="mr-2 h-4 w-4 text-red-500" />
-              Auth Required
-            </CardTitle>
-          </div>
-          <CardDescription className="text-xs">
-            Please log in to claim daily gifts
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-1.5 pt-0">
-          <p className="text-xs text-muted-foreground">
-            Log in to receive 50 coins and 25 XP daily!
-          </p>
-        </CardContent>
-      </Card>
+      <div className="border border-zinc-800 bg-zinc-950 px-5 py-5">
+        <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Daily Reward</p>
+        <div className="mt-2 flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 text-zinc-600" />
+          <p className="text-sm font-semibold text-zinc-400">Login to claim</p>
+        </div>
+        <p className="mt-1 text-xs text-zinc-600">50 coins + 25 XP daily</p>
+      </div>
     );
   }
-  
-  // Show error state when API connection fails
+
   if (hasError) {
     return (
-      <Card className="border-red-500/30 bg-card/40 backdrop-blur-sm">
-        <CardHeader className="pb-1.5 pt-5">
-          <div className="flex justify-between items-center">
-            <CardTitle className="flex items-center text-base">
-              <AlertTriangle className="mr-2 h-4 w-4 text-red-500" />
-              Connection Error
-            </CardTitle>
-          </div>
-          <CardDescription className="text-xs">
-            Unable to check gift status
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2 pt-0">
-          <Button
-            onClick={() => window.location.reload()}
-            size="sm"
-            className="h-8 w-full text-xs"
-          >
-            Try Again
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="border border-zinc-800 bg-zinc-950 px-5 py-5">
+        <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Daily Reward</p>
+        <div className="mt-2 flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 text-red-500/70" />
+          <p className="text-sm font-semibold">Connection error</p>
+        </div>
+        <Button
+          onClick={() => window.location.reload()}
+          size="sm"
+          variant="outline"
+          className="mt-3 w-full rounded-sm border-zinc-700 text-xs hover:border-zinc-600"
+        >
+          Retry
+        </Button>
+      </div>
     );
   }
 
   return (
-    <Card className={`border-border/40 bg-card/40 backdrop-blur-sm ${canClaim ? 'border-yellow-500/50' : ''}`}>
-      <CardHeader className="pb-1.5 pt-5">
-        <div className="flex justify-between items-center">
-          <CardTitle className="flex items-center text-base">
-            <Gift className="mr-2 h-4 w-4" />
-            Daily Gift
-          </CardTitle>
-          {canClaim && (
-            <Badge variant="secondary" className="bg-yellow-500/50 px-2 py-0 text-[10px] uppercase text-yellow-200">
-              Available!
-            </Badge>
-          )}
+    <div className={`h-full border border-zinc-800 bg-zinc-950 transition-colors ${
+      canClaim ? 'border-l-4 border-l-yellow-500' : ''
+    }`}>
+      <div className="flex h-full flex-col px-5 py-5">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Daily Reward</p>
+            <p className="mt-0.5 font-bold">{canClaim ? 'Available' : 'Claimed'}</p>
+          </div>
+          <Gift className={`h-5 w-5 ${canClaim ? 'text-yellow-400' : 'text-zinc-700'}`} />
         </div>
-        <CardDescription className="text-xs">
-          {canClaim 
-            ? "Claim your daily 50 coins and 25 XP!" 
-            : "You've already claimed your gift today. Come back tomorrow!"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-2.5 pt-0">
-        <div className="flex justify-center">
+
+        <p className="mt-2 text-xs text-zinc-400">
+          {canClaim ? '50 coins + 25 XP waiting for you' : 'Come back tomorrow for your next reward'}
+        </p>
+
+        <div className="mt-auto space-y-2 pt-4">
           <Button
             onClick={handleClaimGift}
             disabled={isLoading || !canClaim}
             size="sm"
-            className={`h-8 w-full text-xs ${canClaim ? 'bg-yellow-600 hover:bg-yellow-500' : 'bg-muted'}`}
+            className={`w-full rounded-sm text-xs font-semibold ${
+              canClaim
+                ? 'bg-yellow-500 text-black hover:bg-yellow-400'
+                : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+            }`}
           >
             {isLoading ? (
-              <>
-                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                Claiming...
-              </>
+              <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />Claiming...</>
             ) : canClaim ? (
-              <>
-                <Gift className="mr-1.5 h-3.5 w-3.5" />
-                Claim Gift
-              </>
+              <><Gift className="mr-1.5 h-3.5 w-3.5" />Claim Gift</>
             ) : (
-              <>
-                <Check className="mr-1.5 h-3.5 w-3.5" />
-                Claimed
-              </>
+              <><Check className="mr-1.5 h-3.5 w-3.5" />Claimed</>
             )}
           </Button>
+          <div className="text-center">
+            <a href="/rewards" className="text-[11px] text-zinc-600 transition-colors hover:text-zinc-400">
+              View all rewards →
+            </a>
+          </div>
         </div>
-        
-        <div className="pt-0.5 text-center">
-          <a href="/rewards" className="text-xs text-primary hover:underline">
-            View all rewards
-          </a>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

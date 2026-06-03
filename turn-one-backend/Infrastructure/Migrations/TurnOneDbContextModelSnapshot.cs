@@ -237,6 +237,47 @@ namespace Infrastructure.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("Domain.Entities.OverlayShareToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Label")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Scopes")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("OverlayShareTokens");
+                });
+
             modelBuilder.Entity("Domain.Entities.PageStatus", b =>
                 {
                     b.Property<int>("Id")
@@ -396,6 +437,12 @@ namespace Infrastructure.Migrations
                     b.Property<float>("AverageThrottle")
                         .HasColumnType("real");
 
+                    b.Property<float?>("BrakingScore")
+                        .HasColumnType("real");
+
+                    b.Property<float?>("ConsistencyScore")
+                        .HasColumnType("real");
+
                     b.Property<float>("FuelUsed")
                         .HasColumnType("real");
 
@@ -429,6 +476,9 @@ namespace Infrastructure.Migrations
                     b.Property<Guid>("SessionId")
                         .HasColumnType("uuid");
 
+                    b.Property<float?>("ThrottleScore")
+                        .HasColumnType("real");
+
                     b.HasKey("Id");
 
                     b.HasIndex("SessionId", "LapNumber")
@@ -443,10 +493,17 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<int>("BestLapMs")
+                        .HasColumnType("integer");
+
                     b.Property<string>("CarModel")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ClientVersion")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
 
                     b.Property<string>("DriverName")
                         .IsRequired()
@@ -462,6 +519,9 @@ namespace Infrastructure.Migrations
                     b.Property<int>("LapCount")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime?>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("Mode")
                         .HasColumnType("integer");
 
@@ -472,6 +532,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<DateTime>("StartedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Track")
                         .IsRequired()
@@ -751,6 +814,17 @@ namespace Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("Domain.Entities.Prediction", b =>
+                {
+                    b.HasOne("Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Domain.Entities.OverlayShareToken", b =>
                 {
                     b.HasOne("Domain.Entities.User", "User")
                         .WithMany()

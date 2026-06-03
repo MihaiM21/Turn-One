@@ -4,16 +4,11 @@ import * as React from "react"
 import Link from "next/link"
 import {
   BookOpen,
-  Bot,
-  Command,
   ChartNoAxesCombined,
   Frame,
-  Gift,
   LifeBuoy,
   Map,
   PieChart,
-  Send,
-  Settings2,
   Shield,
   SquareTerminal,
   Activity,
@@ -22,7 +17,6 @@ import {
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
 import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
 import {
@@ -59,20 +53,6 @@ const data = {
       title: "Generator",
       url: "/generator",
       icon: ChartNoAxesCombined,
-      // items: [
-      //   {
-      //     title: "Genesis",
-      //     url: "#",
-      //   },
-      //   {
-      //     title: "Explorer",
-      //     url: "#",
-      //   },
-      //   {
-      //     title: "Quantum",
-      //     url: "#",
-      //   },
-      // ],
     },
     {
       title: "Simracing",
@@ -80,16 +60,28 @@ const data = {
       icon: Gauge,
       items: [
         {
-          title: "Live Telemetry",
+          title: "Dashboard",
           url: "/simracing",
+        },
+        {
+          title: "Live Telemetry",
+          url: "/simracing/live",
         },
         {
           title: "My Sessions",
           url: "/simracing/sessions",
         },
         {
+          title: "AI Coach",
+          url: "/simracing/coach",
+        },
+        {
           title: "Live Streams",
           url: "/simracing/spectate",
+        },
+        {
+          title: "Streamer Mode",
+          url: "/simracing/streamer",
         },
         {
           title: "Leaderboards",
@@ -107,10 +99,6 @@ const data = {
           url: "/hub",
         },
         {
-          title: "Predictions",
-          url: "/predictions",
-        },
-        {
           title: "Coin store",
           url: "/store",
         },
@@ -124,48 +112,7 @@ const data = {
       title: "Documentation",
       url: "/docs",
       icon: BookOpen,
-      // items: [
-      //   {
-      //     title: "Introduction",
-      //     url: "#",
-      //   },
-      //   {
-      //     title: "Get Started",
-      //     url: "#",
-      //   },
-      //   {
-      //     title: "Tutorials",
-      //     url: "#",
-      //   },
-      //   {
-      //     title: "Changelog",
-      //     url: "#",
-      //   },
-      // ],
     },
-    // {
-    //   title: "Settings",
-    //   url: "/settings",
-    //   icon: Settings2,
-    //   // items: [
-    //   //   {
-    //   //     title: "General",
-    //   //     url: "#",
-    //   //   },
-    //   //   {
-    //   //     title: "Team",
-    //   //     url: "#",
-    //   //   },
-    //   //   {
-    //   //     title: "Billing",
-    //   //     url: "#",
-    //   //   },
-    //   //   {
-    //   //     title: "Limits",
-    //   //     url: "#",
-    //   //   },
-    //   // ],
-    // },
   ],
   navSecondary: [
     {
@@ -173,11 +120,6 @@ const data = {
       url: "/contact",
       icon: LifeBuoy,
     },
-    // {
-    //   title: "Feedback",
-    //   url: "#",
-    //   icon: Send,
-    // },
   ],
   projects: [
     {

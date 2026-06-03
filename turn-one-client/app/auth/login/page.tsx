@@ -3,13 +3,15 @@
 import type React from "react"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { AuthSplitLayout } from "@/components/auth/auth-split-layout"
+import { OAuthButtons } from "@/components/auth/oauth-buttons"
+import { PasswordInput } from "@/components/auth/password-input"
+import { LiveTimingPreview } from "@/components/auth/live-timing-preview"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { ArrowLeft } from "lucide-react"
 import { login } from "@/lib/auth"
 import type { LoginData } from "@/types/auth-types"
 
@@ -26,18 +28,11 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const loginData: LoginData = {
-        email,
-        password
-      }
-      
+      const loginData: LoginData = { email, password }
       const response = await login(loginData)
-      
+
       if (response.success) {
-        // Save the token to local storage
-        localStorage.setItem('token', response.token)
-        
-        // Redirect to dashboard
+        localStorage.setItem("token", response.token)
         router.push("/dashboard")
       } else {
         throw new Error(response.message || "Login failed")
@@ -50,77 +45,93 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-red-950 to-black flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        <div className="mb-6">
-          <Button variant="ghost" asChild className="text-red-200 hover:bg-red-950/20">
-            <Link href="/">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Home
-            </Link>
-          </Button>
+    <AuthSplitLayout
+      left={
+        <div className="space-y-6">
+          <span className="inline-block text-xs font-semibold tracking-[0.2em] text-primary">
+            LIVE RIGHT NOW
+          </span>
+          <h1 className="text-4xl xl:text-5xl font-bold leading-[1.1] tracking-tight">
+            The race waits
+            <br />
+            for no one.
+          </h1>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            Sign in and get back to the action — your custom layout, saved preferences, and live data streams are ready.
+          </p>
+          <LiveTimingPreview />
+        </div>
+      }
+    >
+      <div className="space-y-8">
+        <div className="space-y-2">
+          <h2 className="text-3xl font-bold tracking-tight">Welcome back</h2>
+          <p className="text-sm text-muted-foreground">Sign in to your Turn One account</p>
         </div>
 
-        <Card className="border-red-800/20 bg-black/40 backdrop-blur-sm">
-          <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold text-white">Turn One Login</CardTitle>
-            <CardDescription className="text-red-100">Access your F1 telemetry dashboard</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-white">
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="bg-black/50 border-red-800/30 text-white placeholder:text-red-200/50"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-white">
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-black/50 border-red-800/30 text-white"
-                />
-                <div className="flex justify-end">
-                  <Link 
-                    href="/auth/forgot-password" 
-                    className="text-xs text-red-400 hover:text-red-300"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-              </div>
-              {error && <p className="text-sm text-red-400 bg-red-950/20 p-2 rounded">{error}</p>}
-              <Button
-                type="submit"
-                className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold"
-                disabled={isLoading}
+        <OAuthButtons />
+
+        <form onSubmit={handleLogin} className="space-y-5">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email address</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="h-11"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              <Link
+                href="/auth/forgot-password"
+                className="text-xs font-semibold text-primary hover:underline"
               >
-                {isLoading ? "Signing in..." : "Sign In"}
-              </Button>
-            </form>
-            <div className="mt-6 text-center text-sm text-red-100">
-              Don&apos;t have an account?{" "}
-              <Link href="/auth/signup" className="text-red-400 hover:text-red-300 underline underline-offset-4">
-                Sign up
+                Forgot password?
               </Link>
             </div>
-          </CardContent>
-        </Card>
+            <PasswordInput
+              id="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="h-11"
+            />
+          </div>
+
+          {error && (
+            <p className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md p-2">
+              {error}
+            </p>
+          )}
+
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full h-11 text-sm font-semibold"
+          >
+            {isLoading ? "Signing in..." : "Sign in"}
+          </Button>
+        </form>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Don&apos;t have an account?{" "}
+          <Link href="/auth/signup" className="font-semibold text-primary hover:underline">
+            Create one free
+          </Link>
+        </p>
+
+        <div className="pt-4 border-t border-border">
+          <Button variant="outline" asChild className="w-full h-11">
+            <Link href="/">Continue as guest — no account needed</Link>
+          </Button>
+        </div>
       </div>
-    </div>
+    </AuthSplitLayout>
   )
 }
