@@ -30,6 +30,7 @@ import {
   HelpCircle,
   Info,
   CalendarClock,
+  Code2,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -847,6 +848,8 @@ export function TelemetryPlotGenerator() {
           </div>
         )}
 
+        
+
         <div className="space-y-5 p-5">
           {/* Plot type picker */}
           <PlotTypePicker
@@ -1368,6 +1371,16 @@ export function TelemetryPlotGenerator() {
           <div className="space-y-4 pt-2">
             <div className="border border-zinc-800 p-4">{renderPlot()}</div>
             <div className="text-sm">{renderStats()}</div>
+          </div>
+          {/* Developer mode coming soon */}
+          <div className="mx-5 mt-4 flex items-start gap-3 border border-blue-500/20 bg-blue-950/10 px-4 py-3">
+            <Code2 className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-blue-300">Developer Mode — coming soon</p>
+              <p className="mt-0.5 text-xs text-zinc-400 leading-relaxed">
+                Bring your own API key and unlock unlimited plot generation, direct endpoint access, and programmatic usage — built for analysts, teams, and developers integrating F1 telemetry into their own tools.
+              </p>
+            </div>
           </div>
         </div>
       </div>
