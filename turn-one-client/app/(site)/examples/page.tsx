@@ -124,7 +124,7 @@ interface ShowcaseSection {
 }
 
 const YEAR = 2025
-const GP = 12
+const GP = "British Grand Prix"
 const SPEED_DISTRIBUTION_DRIVERS = ["VER", "NOR", "HAM"]
 
 export default function ExamplesPage() {
@@ -137,7 +137,7 @@ export default function ExamplesPage() {
   const [speedDistribution, setSpeedDistribution] = useState<SpeedDistributionPoint[] | null>(null)
 
   useEffect(() => {
-    fetchTopSpeeds("", YEAR, GP, "Q").then((data: any) => {
+    fetchTopSpeeds("", YEAR, GP, "Q", "v2").then((data: any) => {
       let processed: TopSpeedData[]
       if (data && typeof data === 'object' && 'Color' in data && 'Team' in data && 'Top Speed (km/h)' in data) {
         const colors = data.Color as Record<string, string>
@@ -157,19 +157,19 @@ export default function ExamplesPage() {
   }, [])
 
   useEffect(() => {
-    fetchSessionResults("", YEAR, GP, "Q").then(setSessionResults).catch(console.error)
+    fetchSessionResults("", YEAR, GP, "Q", "v2").then(setSessionResults).catch(console.error)
   }, [])
 
   useEffect(() => {
-    fetchTrackComparison("", YEAR, GP, "Q", "VER", "NOR").then(setTrackComparison).catch(console.error)
+    fetchTrackComparison("", YEAR, GP, "Q", "VER", "NOR", "v2").then(setTrackComparison).catch(console.error)
   }, [])
 
   useEffect(() => {
-    fetchThrottleBrakeComparison("", YEAR, GP, "Q", "VER", "NOR").then(setThrottleBrake).catch(console.error)
+    fetchThrottleBrakeComparison("", YEAR, GP, "Q", "VER", "NOR", "v2").then(setThrottleBrake).catch(console.error)
   }, [])
 
   useEffect(() => {
-    fetchThrottleAverages("", YEAR, GP, "Q").then((data: any) => {
+    fetchThrottleAverages("", YEAR, GP, "Q", "v2").then((data: any) => {
       const processed: ThrottleAverageData[] = Object.values(data as Record<string, any>)
         .map(item => ({
           driver: item.Driver,
@@ -178,17 +178,50 @@ export default function ExamplesPage() {
         }))
         .sort((a, b) => b.throttle - a.throttle)
       setThrottleAverages(processed)
-    }).catch(console.error) 
+    }).catch(console.error)
   }, [])
 
   useEffect(() => {
-    fetchLaptimeData("", YEAR, GP, "R", "VER").then(setLapTimes).catch(console.error)
+    fetchLaptimeData("", YEAR, GP, "R", "VER", "v2").then((raw: any) => {
+      let rows: any[] = []
+      if (Array.isArray(raw)) {
+        rows = raw
+      } else if (raw && typeof raw === "object") {
+        const keys = Object.keys(raw)
+        if (keys.length > 0) {
+          const indices = Object.keys(raw[keys[0]])
+          rows = indices.map((i) => {
+            const obj: any = {}
+            keys.forEach((k) => { obj[k] = raw[k][i] })
+            return obj
+          })
+        }
+      }
+      const formatSecs = (secs: number) => {
+        const m = Math.floor(secs / 60)
+        const s = (secs % 60).toFixed(3)
+        return `${m}:${s.padStart(6, "0")}`
+      }
+      const normalized: LapTimeData[] = rows.map((row) => {
+        const lapNum = Number(row.LapNumber ?? row.lap_number ?? row.lap_numbers ?? 0)
+        const rawTime = Number(row.LapTime ?? row.lap_time ?? row.lap_times_seconds ?? 0)
+        const secs = rawTime > 1_000_000 ? rawTime / 1_000_000_000 : rawTime
+        return {
+          driver: String(row.Driver ?? row.driver ?? "VER"),
+          lap_numbers: lapNum,
+          lap_times_seconds: secs,
+          lap_times_formatted: row.lap_times_formatted ?? formatSecs(secs),
+          compound: String(row.Compound ?? row.compound ?? "UNKNOWN").toUpperCase(),
+        }
+      }).filter((d) => d.lap_numbers > 0 && d.lap_times_seconds > 0)
+      if (normalized.length > 0) setLapTimes(normalized)
+    }).catch(console.error)
   }, [])
 
   useEffect(() => {
     Promise.all(
       SPEED_DISTRIBUTION_DRIVERS.map((driverCode) =>
-        fetchSpeedDistributionData("", YEAR, GP, "Q", driverCode)
+        fetchSpeedDistributionData("", YEAR, GP, "Q", driverCode, "v2")
       )
     )
       .then((responses) => {

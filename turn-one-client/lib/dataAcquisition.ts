@@ -33,7 +33,7 @@ export const fetchTrackComparison = async (
   driver2: string,
   version: string = 'v1'
 ) => {
-  const endpoint = `track-comparison-2drivers-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}&driver1=${driver1}&driver2=${driver2}`;
+  const endpoint = `track-comparison-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}&d1=${driver1}&d2=${driver2}`;
   return version === 'v2' ? fetchFromExternalAPIv2(endpoint) : fetchFromExternalAPIv1(endpoint);
 }
 
@@ -46,7 +46,7 @@ export const fetchTrackComparisonPlot = async (
   driver2: string,
   version: string = 'v1'
 ) => {
-  const endpoint = `track-comparison-2drivers-plot?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}&driver1=${driver1}&driver2=${driver2}`;
+  const endpoint = `track-comparison-plot?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}&d1=${driver1}&d2=${driver2}`;
   return version === 'v2' ? fetchFromExternalAPIv2Image(endpoint) : fetchFromExternalAPIv1Image(endpoint);
 }
 
@@ -64,12 +64,12 @@ export const fetchThrottleBrakeComparison = async (
   driver2: string,
   version: string = 'v1'
 ) => {
-  const endpoint = `throttleBrake-comparison-2drivers-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}&driver1=${driver1}&driver2=${driver2}`;
+  const endpoint = `throttle-brake-comparison-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}&d1=${driver1}&d2=${driver2}`;
   return version === 'v2' ? fetchFromExternalAPIv2(endpoint) : fetchFromExternalAPIv1(endpoint);
 }
 
 export const fetchLaptimeData = async (token: string, year: number, gp: number | string, session: string, driver: string, version: string = 'v1') => {
-  const endpoint = `laptimes?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}&driver=${driver}`;
+  const endpoint = `laptimes-distribution-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}&driver=${driver}`;
   return version === 'v2' ? fetchFromExternalAPIv2(endpoint) : fetchFromExternalAPIv1(endpoint);
 }
 
