@@ -37,7 +37,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./turn-one-client
-        run: npm ci
+        run: npm ci --no-audit --no-fund
 
       - name: Run ESLint
         working-directory: ./turn-one-client
@@ -159,7 +159,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./turn-one-client
-        run: npm ci
+        run: npm ci --no-audit --no-fund
 
       - name: Cache Next.js build
         uses: actions/cache@v4
@@ -180,6 +180,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-app
+          compression-level: 0
           path: |
             turn-one-client/.next/standalone/
             turn-one-client/.next/static/
