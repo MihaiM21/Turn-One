@@ -54,6 +54,10 @@ if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DATABASE_URL")))
     builder.Configuration["ConnectionStrings:DefaultConnection"] = Environment.GetEnvironmentVariable("DATABASE_URL");
 }
 
+var f1LiveTimingUrlEnv = Environment.GetEnvironmentVariable("F1_LIVETIMING_URL");
+if (!string.IsNullOrEmpty(f1LiveTimingUrlEnv))
+    builder.Configuration["F1:LiveTimingUrl"] = f1LiveTimingUrlEnv;
+
 // Override JWT settings from environment variables if present
 if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("JWT__Key")))
 {
@@ -303,7 +307,6 @@ var app = builder.Build();
 
 // Start F1 live timing service
 var f1Service = app.Services.GetRequiredService<F1LiveTimingService>();
-
 try
 {
     await f1Service.StartAsync();
@@ -408,7 +411,7 @@ app.UseMiddleware<WebSocketMiddleware>();
 app.MapControllers();
 
 // Map SignalR hubs
-app.MapHub<F1LiveDataHub>("/api/hubs/f1live").RequireCors("SignalRCorsPolicy");
+app.MapHub<F1LiveDataHub>("/hubs/f1livedata").RequireCors("SignalRCorsPolicy");
 app.MapHub<SimTelemetryHub>("/api/hubs/simtelemetry").RequireCors("SignalRCorsPolicy");
 
 Log.Information("Turn One API started successfully");

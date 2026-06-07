@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Net.Http;
-using System.Text.Json;
 
 namespace API.Controllers;
 
@@ -10,28 +8,43 @@ public class F1LiveTimingController : ControllerBase
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<F1LiveTimingController> _logger;
+    private readonly string _baseUrl;
 
-    public F1LiveTimingController(IHttpClientFactory httpClientFactory, ILogger<F1LiveTimingController> logger)
+    public F1LiveTimingController(
+        IHttpClientFactory httpClientFactory,
+        ILogger<F1LiveTimingController> logger,
+        IConfiguration configuration)
     {
         _httpClientFactory = httpClientFactory;
         _logger = logger;
+        _baseUrl = (configuration["F1:LiveTimingUrl"]
+            ?? "https://f1-proxy.YOUR-WORKER.workers.dev").TrimEnd('/');
     }
 
     [HttpGet("negotiate")]
-    public async Task<IActionResult> ProxyNegotiate([FromQuery] string connectionData, [FromQuery] string clientProtocol = "1.5")
+    public async Task<IActionResult> ProxyNegotiate()
     {
         try
         {
             var httpClient = _httpClientFactory.CreateClient();
             httpClient.DefaultRequestHeaders.Add("User-Agent", "Turn-One-F1-Client/1.0");
-            httpClient.Timeout = TimeSpan.FromSeconds(30); // Longer timeout
-            
-            var negotiationUrl = $"https://livetiming.formula1.com/signalr/negotiate?connectionData={connectionData}&clientProtocol={clientProtocol}";
-            
-            _logger.LogInformation("Proxying F1 negotiation request to: {Url}", negotiationUrl);
-            
-            var response = await httpClient.GetAsync(negotiationUrl);
-            
+            httpClient.Timeout = TimeSpan.FromSeconds(30);
+
+            var negotiationUrl = $"{_baseUrl}/negotiate?negotiateVersion=1";
+            _logger.LogInformation("Proxying F1 negotiation to {Url}", negotiationUrl);
+
+            HttpResponseMessage response;
+            using (var postReq = new HttpRequestMessage(HttpMethod.Post, negotiationUrl))
+            {
+                postReq.Content = new StringContent(string.Empty);
+                response = await httpClient.SendAsync(postReq);
+                if (response.StatusCode == System.Net.HttpStatusCode.MethodNotAllowed)
+                {
+                    response.Dispose();
+                    response = await httpClient.GetAsync(negotiationUrl);
+                }
+            }
+
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("F1 negotiation failed with status: {StatusCode}", response.StatusCode);
@@ -39,52 +52,17 @@ public class F1LiveTimingController : ControllerBase
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            
-            // Parse and modify the response to extend timeouts
-            try 
-            {
-                var negotiationResponse = JsonSerializer.Deserialize<JsonElement>(content);
-                var modifiedResponse = new Dictionary<string, object>();
-                
-                foreach (var property in negotiationResponse.EnumerateObject())
-                {
-                    if (property.Name == "KeepAliveTimeout")
-                    {
-                        modifiedResponse[property.Name] = 300.0; // 5 minutes instead of default
-                    }
-                    else if (property.Name == "DisconnectTimeout")
-                    {
-                        modifiedResponse[property.Name] = 600.0; // 10 minutes instead of default
-                    }
-                    else if (property.Name == "ConnectionTimeout")
-                    {
-                        modifiedResponse[property.Name] = 1800.0; // 30 minutes instead of default
-                    }
-                    else
-                    {
-                        modifiedResponse[property.Name] = property.Value;
-                    }
-                }
-                
-                content = JsonSerializer.Serialize(modifiedResponse);
-                _logger.LogInformation("Modified F1 negotiation response with extended timeouts");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Could not modify negotiation response, using original");
-            }
-            
-            var cookies = response.Headers.GetValues("Set-Cookie").FirstOrDefault();
-            
-            // Add CORS headers explicitly
+
             Response.Headers["Access-Control-Allow-Origin"] = "http://localhost:3000";
             Response.Headers["Access-Control-Allow-Credentials"] = "true";
-            
-            if (!string.IsNullOrEmpty(cookies))
+
+            if (response.Headers.TryGetValues("Set-Cookie", out var cookieValues))
             {
-                Response.Headers["X-F1-Cookies"] = cookies;
+                var cookies = string.Join("; ", cookieValues);
+                if (!string.IsNullOrEmpty(cookies))
+                    Response.Headers["X-F1-Cookies"] = cookies;
             }
-            
+
             return Content(content, "application/json");
         }
         catch (HttpRequestException ex)
@@ -107,22 +85,28 @@ public class F1LiveTimingController : ControllerBase
             var httpClient = _httpClientFactory.CreateClient();
             httpClient.Timeout = TimeSpan.FromSeconds(10);
             httpClient.DefaultRequestHeaders.Add("User-Agent", "Turn-One-F1-Client/1.0");
-            
-            // Try to access F1 live timing to check if there's an active session
-            var hub = Uri.EscapeDataString(JsonSerializer.Serialize(new[] { new { name = "Streaming" } }));
-            var testUrl = $"https://livetiming.formula1.com/signalr/negotiate?connectionData={hub}&clientProtocol=1.5";
-            
-            var response = await httpClient.GetAsync(testUrl);
-            
-            var status = new
+
+            var testUrl = $"{_baseUrl}/negotiate?negotiateVersion=1";
+
+            HttpResponseMessage response;
+            using (var postReq = new HttpRequestMessage(HttpMethod.Post, testUrl))
+            {
+                postReq.Content = new StringContent(string.Empty);
+                response = await httpClient.SendAsync(postReq);
+                if (response.StatusCode == System.Net.HttpStatusCode.MethodNotAllowed)
+                {
+                    response.Dispose();
+                    response = await httpClient.GetAsync(testUrl);
+                }
+            }
+
+            return Ok(new
             {
                 available = response.IsSuccessStatusCode,
                 statusCode = (int)response.StatusCode,
                 hasActiveSession = response.IsSuccessStatusCode,
                 timestamp = DateTime.UtcNow
-            };
-            
-            return Ok(status);
+            });
         }
         catch (Exception ex)
         {
@@ -142,7 +126,7 @@ public class F1LiveTimingController : ControllerBase
     public IActionResult OptionsNegotiate()
     {
         Response.Headers["Access-Control-Allow-Origin"] = "http://localhost:3000";
-        Response.Headers["Access-Control-Allow-Methods"] = "GET, OPTIONS";
+        Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS";
         Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization";
         Response.Headers["Access-Control-Allow-Credentials"] = "true";
         return Ok();
