@@ -54,9 +54,9 @@ if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DATABASE_URL")))
     builder.Configuration["ConnectionStrings:DefaultConnection"] = Environment.GetEnvironmentVariable("DATABASE_URL");
 }
 
-builder.Configuration["F1:LiveTimingUrl"] =
-    Environment.GetEnvironmentVariable("F1_LIVETIMING_URL")
-    ?? "https://f1-proxy.YOUR-WORKER.workers.dev";
+var f1LiveTimingUrlEnv = Environment.GetEnvironmentVariable("F1_LIVETIMING_URL");
+if (!string.IsNullOrEmpty(f1LiveTimingUrlEnv))
+    builder.Configuration["F1:LiveTimingUrl"] = f1LiveTimingUrlEnv;
 
 // Override JWT settings from environment variables if present
 if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("JWT__Key")))
