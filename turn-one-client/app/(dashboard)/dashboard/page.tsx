@@ -9,6 +9,7 @@ import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links"
 import { WelcomeBanner } from "@/components/dashboard/live dashboard/welcome-banner"
 import { NextRaceHero } from "@/components/dashboard/live dashboard/next-race-hero"
 import { GeneratorCard } from "@/components/dashboard/live dashboard/generator-card"
+import { DashboardStandingsWidget } from "@/components/dashboard/dashboard-standings-widget"
 import { useEffect, useState } from "react"
 import { getAuthToken } from "@/lib/auth-utils"
 
@@ -43,6 +44,8 @@ export default function DashboardPage() {
           <GeneratorCard />
 
           <TelemetryOverview />
+
+          <DashboardStandingsWidget />
 
           <ExploreMoreLinks currentPage="/dashboard" />
         </main>
