@@ -96,11 +96,25 @@ export interface TireStrategy {
   totalLaps: number;
 }
 
+export interface TyreStintEntry {
+  driver: string;
+  team: string;
+  position: number;
+  stint_number: number;
+  compound: string;
+  start_lap: number;
+  end_lap: number;
+  lap_count: number;
+  tyre_life_end: number;
+  color: string;
+}
+
 export interface NewsPageData {
   session: SessionDashboardData | null;
   driverStandings: DriverStanding[] | null;
   constructorStandings: ConstructorStanding[] | null;
   lapDistribution: LapTimeDistributionPoint[] | null;
   tireStrategy: TireStrategy | null;
-  errors: Partial<Record<"session" | "driverStandings" | "constructorStandings" | "lapDistribution" | "tireStrategy", string>>;
+  tyreStintData: TyreStintEntry[] | null;
+  errors: Partial<Record<"session" | "driverStandings" | "constructorStandings" | "lapDistribution" | "tireStrategy" | "tyreStintData", string>>;
 }

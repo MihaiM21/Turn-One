@@ -2,17 +2,32 @@
 
 import { useMemo } from "react";
 import { LapTimeDistributionPoint } from "@/types/news-types";
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 import { LineChart as LineIcon } from "lucide-react";
 
 type Props = {
   data?: LapTimeDistributionPoint[] | null;
 };
 
+const formatLapTime = (secs: number) => {
+  const m = Math.floor(secs / 60);
+  const s = (secs % 60).toFixed(1);
+  return `${m}:${s.padStart(4, "0")}`;
+};
+
 export function LapDistributionChart({ data }: Props) {
   const points = data ?? [];
 
-  const driverColor = useMemo(() => {
+  const driverMeta = useMemo(() => {
     const m = new Map<string, string>();
     for (const p of points) {
       if (!m.has(p.driver)) m.set(p.driver, p.color ?? "#e11d48");
@@ -20,7 +35,32 @@ export function LapDistributionChart({ data }: Props) {
     return m;
   }, [points]);
 
-  const drivers = useMemo(() => Array.from(driverColor.keys()).slice(0, 10), [driverColor]);
+  const drivers = useMemo(() => Array.from(driverMeta.keys()).slice(0, 10), [driverMeta]);
+
+  // Build a lap-indexed table: [{ lap: 1, VER: 83.4, HAM: 84.1, ... }, ...]
+  const chartData = useMemo(() => {
+    if (points.length === 0) return [];
+    const byLap = new Map<number, Record<string, number>>();
+    for (const p of points) {
+      if (!byLap.has(p.lap)) byLap.set(p.lap, { lap: p.lap });
+      byLap.get(p.lap)![p.driver] = p.lapTime;
+    }
+    return Array.from(byLap.values()).sort((a, b) => a.lap - b.lap);
+  }, [points]);
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null;
+    return (
+      <div className="border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs">
+        <p className="mb-1 font-mono text-zinc-400">Lap {label}</p>
+        {payload.map((entry: any) => (
+          <p key={entry.dataKey} style={{ color: entry.color }} className="font-mono">
+            {entry.dataKey}: {formatLapTime(entry.value)}
+          </p>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="border border-zinc-800 bg-zinc-950 animate-in fade-in duration-500">
@@ -33,46 +73,42 @@ export function LapDistributionChart({ data }: Props) {
       </div>
 
       <div className="h-[360px] px-3 py-4">
-        {points.length === 0 ? (
+        {chartData.length === 0 ? (
           <PlaceholderDistribution />
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <ScatterChart margin={{ top: 10, right: 20, bottom: 10, left: 10 }}>
+            <LineChart data={chartData} margin={{ top: 10, right: 20, bottom: 10, left: 10 }}>
               <CartesianGrid stroke="#27272a" strokeDasharray="3 3" />
               <XAxis
-                type="number"
                 dataKey="lap"
-                name="Lap"
                 stroke="#71717a"
                 tick={{ fontFamily: "monospace", fontSize: 11 }}
+                label={{ value: "Lap", position: "insideBottom", offset: -4, fill: "#52525b", fontSize: 10 }}
               />
               <YAxis
-                type="number"
-                dataKey="lapTime"
-                name="Lap time"
                 stroke="#71717a"
                 tick={{ fontFamily: "monospace", fontSize: 11 }}
+                tickFormatter={formatLapTime}
                 domain={["auto", "auto"]}
+                width={52}
               />
-              <Tooltip
-                contentStyle={{ background: "#0a0a0a", border: "1px solid #27272a", fontSize: 12 }}
-                labelStyle={{ color: "#fafafa" }}
+              <Tooltip content={<CustomTooltip />} />
+              <Legend
+                wrapperStyle={{ fontSize: 11, fontFamily: "monospace", paddingTop: 8 }}
               />
               {drivers.map((d) => (
-                <Scatter
+                <Line
                   key={d}
-                  name={d}
-                  data={points.filter((p) => p.driver === d)}
-                  fill={driverColor.get(d)}
-                >
-                  {points
-                    .filter((p) => p.driver === d)
-                    .map((_, idx) => (
-                      <Cell key={idx} fill={driverColor.get(d)} />
-                    ))}
-                </Scatter>
+                  type="monotone"
+                  dataKey={d}
+                  stroke={driverMeta.get(d)}
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 4 }}
+                  connectNulls={false}
+                />
               ))}
-            </ScatterChart>
+            </LineChart>
           </ResponsiveContainer>
         )}
       </div>
@@ -80,7 +116,6 @@ export function LapDistributionChart({ data }: Props) {
   );
 }
 
-// Decorative placeholder used both when data is missing and behind the paywall gate.
 function PlaceholderDistribution() {
   const rows = Array.from({ length: 6 });
   return (

@@ -85,6 +85,17 @@ export const fetchSpeedDistributionData = async (
   return version === 'v2' ? fetchFromExternalAPIv2(endpoint) : fetchFromExternalAPIv1(endpoint);
 }
 
+export const fetchTyreStintData = async (
+  token: string,
+  year: number,
+  gp: number | string,
+  session: string,
+  version: string = 'v2'
+) => {
+  const endpoint = `tyre-stint-usage-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`;
+  return version === 'v2' ? fetchFromExternalAPIv2(endpoint) : fetchFromExternalAPIv1(endpoint);
+}
+
 export const fetchAPIDailyStats = async () => {
   return fetchFromExternalAPI('v1/analytics/daily');
 }

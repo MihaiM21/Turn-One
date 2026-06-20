@@ -31,6 +31,7 @@ import {
   Info,
   CalendarClock,
   Code2,
+  Disc,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -44,6 +45,7 @@ import {
   fetchEventsByYear,
   fetchSessionsByEvent,
   fetchSpeedDistributionData,
+  fetchTyreStintData,
 } from "@/lib/dataAcquisition"
 import {
   TopSpeedData,
@@ -65,7 +67,9 @@ import { TrackComparisonGraph } from "./plots/track-comparison"
 import { SessionResultsGraph } from "./plots/session-results"
 import { ThrottleBrakeComparisonGraph } from "./plots/throttle-brake-comparison"
 import { SpeedDistributionGraph } from "./plots/speed-distribution"
+import { TyreStintGraph } from "./plots/tyre-stint"
 import { SessionResultsData } from "@/types/plot-types"
+import { TyreStintEntry } from "@/types/news-types"
 import { drivers_2025, drivers_2026 } from "@/lib/constants/drivers"
 import { LoadingPlot } from "./loading_plot"
 import { useTokens } from "@/hooks/use-tokens"
@@ -301,6 +305,7 @@ export function TelemetryPlotGenerator() {
     { id: "tire", name: "Tire Temperature", icon: TrendingUp, description: "Tire temperature evolution", isPro: true },
     { id: "gforce", name: "G-Force Analysis", icon: Zap, description: "Lateral and longitudinal forces", isPro: true },
     { id: "drag_downforce", name: "Drag & Downforce", icon: ChartScatter, description: "Drag and downforce analysis", isPro: true },
+    { id: "tyre_stint", name: "Tyre Stint Strategy", icon: Disc, description: "Visualize tyre compounds and pit stop strategy for every driver (Race & Sprint only)", isPro: false },
   ]
 
   const years = ["2025", "2026"]
@@ -322,6 +327,7 @@ export function TelemetryPlotGenerator() {
   const [throttleBrakeData, setThrottleBrakeData] = useState<ThrottleBrakeComparisonData | null>(null)
   const [lapTimeData, setLapTimeData] = useState<LapTimeData[]>([])
   const [speedDistributionData, setSpeedDistributionData] = useState<SpeedDistributionPoint[]>([])
+  const [tyreStintData, setTyreStintData] = useState<TyreStintEntry[]>([])
 
   useEffect(() => {
     return () => {
@@ -618,6 +624,17 @@ export function TelemetryPlotGenerator() {
 
         setSpeedDistributionData(filtered)
         plotGeneratedSuccessfully = true
+      } else if (selectedPlotType === "tyre_stint") {
+        if (selectedSession !== "R" && selectedSession !== "S") {
+          throw new Error("Tyre stint analysis is only available for Race (R) and Sprint (S) sessions. Please select a Race or Sprint session.")
+        }
+        const raw = await fetchTyreStintData(authToken, Number(selectedYear), apiGpVal, apiSessionVal, "v2")
+        const stints = Array.isArray(raw) ? (raw as TyreStintEntry[]) : []
+        if (stints.length === 0) {
+          throw new Error("No tyre stint data returned for the selected session")
+        }
+        setTyreStintData(stints)
+        plotGeneratedSuccessfully = true
       } else {
         await new Promise((resolve) => setTimeout(resolve, 2000))
         plotGeneratedSuccessfully = true
@@ -730,6 +747,8 @@ export function TelemetryPlotGenerator() {
             advancedSettings={advancedSettings}
           />
         )
+      case "tyre_stint":
+        return <TyreStintGraph data={tyreStintData} advancedSettings={advancedSettings} />
       default:
         return null
     }
@@ -773,6 +792,19 @@ export function TelemetryPlotGenerator() {
         { label: "Peak Speed", value: speedDistributionData.length > 0 ? `${Math.max(...speedDistributionData.map((p) => p.speed)).toFixed(1)} km/h` : "-" },
         { label: "Average Speed", value: speedDistributionData.length > 0 ? `${(speedDistributionData.reduce((a, p) => a + p.speed, 0) / speedDistributionData.length).toFixed(1)} km/h` : "-" },
         { label: "Data Points", value: speedDistributionData.length || 0 },
+      ]
+    } else if (selectedPlotType === "tyre_stint" && tyreStintData.length > 0) {
+      const drivers = [...new Set(tyreStintData.map((s) => s.driver))].length
+      const totalLaps = Math.max(...tyreStintData.map((s) => s.end_lap))
+      const compounds = [...new Set(tyreStintData.map((s) => s.compound.toUpperCase()))]
+      const avgStops = tyreStintData.length > 0
+        ? (tyreStintData.reduce((acc, s) => acc + s.stint_number, 0) / drivers / drivers).toFixed(1)
+        : "-"
+      stats = [
+        { label: "Drivers", value: drivers },
+        { label: "Total Laps", value: totalLaps },
+        { label: "Compounds Used", value: compounds.join(", ") },
+        { label: "Avg Pit Stops", value: avgStops },
       ]
     }
 
@@ -985,6 +1017,16 @@ export function TelemetryPlotGenerator() {
               })()}
             </div>
           </div>
+
+          {/* Tyre stint session restriction warning */}
+          {selectedPlotType === "tyre_stint" && selectedSession !== "R" && selectedSession !== "S" && (
+            <div className="flex items-start gap-2 border border-yellow-500/40 bg-yellow-950/20 px-4 py-3 text-sm text-yellow-400">
+              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+              <span>
+                Tyre stint analysis is only available for <strong>Race</strong> and <strong>Sprint</strong> sessions. Please select Race or Sprint above.
+              </span>
+            </div>
+          )}
 
           {/* Plot options card */}
           {showPlotOptions && (

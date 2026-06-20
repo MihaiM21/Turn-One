@@ -14,7 +14,7 @@ import { TopSpeedChart } from "@/components/news/top-speed-chart";
 import { ThrottleChart } from "@/components/news/throttle-chart";
 import { StandingsTable } from "@/components/news/standings-table";
 import { LapDistributionChart } from "@/components/news/lap-distribution-chart";
-import { TireStrategyChart } from "@/components/news/tire-strategy-chart";
+import { TyreStintChart } from "@/components/news/tyre-stint-chart";
 import { GatedPreview } from "@/components/site/gated-preview";
 import { SectionHeader } from "@/components/site/section-header";
 import { PublicCard } from "@/components/site/public-card";
@@ -191,10 +191,10 @@ export default function NewsPage() {
               <LapDistributionChart data={data.lapDistribution ?? undefined} />
             </GatedPreview>
             <GatedPreview
-              teaser="Tire strategy and pit stops for every driver — visualize the race within the race."
+              teaser="Tyre stints and pit stops for every driver — visualize the race strategy within the race."
               cta={{ label: "Unlock free", href: "/auth/signup" }}
             >
-              <TireStrategyChart data={data.tireStrategy ?? undefined} />
+              <TyreStintChart data={data.tyreStintData} />
             </GatedPreview>
           </div>
         </section>
