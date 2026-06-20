@@ -25,7 +25,6 @@ export function MainNav({ variant = "homepage" }: MainNavProps) {
 
   const navItems: Array<{ href: string; label: string; badge?: string }> = [
     { href: "/home", label: "Home" },
-    { href: "/about", label: "About" },
     { href: "/features", label: "Features" },
     { href: "/examples", label: "Examples" },
     // { href: "/games", label: "Games" },

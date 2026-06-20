@@ -9,12 +9,17 @@ import { getLatestSessionDataClient } from "@/lib/newsService";
 import { Trophy, Gauge, Zap, ArrowRight, Calendar } from "lucide-react";
 import Link from "next/link";
 
-export function LatestSessionWidget() {
-  const [sessionData, setSessionData] = useState<SessionDashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
+type LatestSessionWidgetProps = {
+  previewData?: SessionDashboardData;
+};
+
+export function LatestSessionWidget({ previewData }: LatestSessionWidgetProps = {}) {
+  const [sessionData, setSessionData] = useState<SessionDashboardData | null>(previewData ?? null);
+  const [loading, setLoading] = useState(!previewData);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (previewData) return;
     async function fetchData() {
       try {
         setLoading(true);
@@ -29,7 +34,7 @@ export function LatestSessionWidget() {
       }
     }
     fetchData();
-  }, []);
+  }, [previewData]);
 
   const getSessionTypeColor = (type: string) => {
     switch (type) {
