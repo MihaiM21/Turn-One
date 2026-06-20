@@ -1,4 +1,5 @@
 import { MainFooter } from '@/components/footer/main-footer';
+import { StickySignupBar } from '@/components/site/sticky-signup-bar';
 import { Suspense } from "react"
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
@@ -7,6 +8,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       <div className="site-pages">
         {children}
         <MainFooter />
+        <StickySignupBar />
       </div>
     </Suspense>
   );

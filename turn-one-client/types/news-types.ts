@@ -39,3 +39,68 @@ export interface SessionDashboardData {
 }
 
 export type SessionType = "qualifying" | "race" | "practice";
+
+// -----------------------------------------------------------------
+// Extended news page data (Phase B)
+// -----------------------------------------------------------------
+
+export interface DriverStanding {
+  position: number;
+  driver: string;
+  code?: string;
+  team: string;
+  points?: number;
+  wins?: number;
+  color?: string;
+}
+
+export interface ConstructorStanding {
+  position: number;
+  team: string;
+  points?: number;
+  wins?: number;
+  color?: string;
+}
+
+export interface LapTimeDistributionPoint {
+  driver: string;
+  team?: string;
+  color?: string;
+  lap: number;
+  lapTime: number; // seconds
+  compound?: string;
+}
+
+export type TireCompound = "soft" | "medium" | "hard" | "intermediate" | "wet" | string;
+
+export interface DriverStint {
+  driver: string;
+  team?: string;
+  color?: string;
+  startLap: number;
+  endLap: number;
+  compound: TireCompound;
+  isFresh?: boolean;
+}
+
+export interface PitStop {
+  driver: string;
+  lap: number;
+  durationSeconds?: number;
+  color?: string;
+}
+
+export interface TireStrategy {
+  stints: DriverStint[];
+  pitStops: PitStop[];
+  totalLaps: number;
+}
+
+export interface NewsPageData {
+  session: SessionDashboardData | null;
+  driverStandings: DriverStanding[] | null;
+  constructorStandings: ConstructorStanding[] | null;
+  lapDistribution: LapTimeDistributionPoint[] | null;
+  tireStrategy: TireStrategy | null;
+  errors: Partial<Record<"session" | "driverStandings" | "constructorStandings" | "lapDistribution" | "tireStrategy", string>>;
+}

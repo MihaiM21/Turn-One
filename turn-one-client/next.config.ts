@@ -91,6 +91,17 @@ const nextConfig: NextConfig = {
         destination: '/contact',
         permanent: false,
       },
+      // Public page consolidation: services merged into features, about merged into home
+      {
+        source: '/services',
+        destination: '/features#services-platform',
+        permanent: true,
+      },
+      {
+        source: '/about',
+        destination: '/home#about',
+        permanent: true,
+      },
     ];
   },
   
