@@ -30,7 +30,7 @@ export function DashboardStandingsWidget() {
         <StandingsPanel title="Drivers" loading={loading}>
           {(drivers ?? []).slice(0, 10).map((d) => (
             <StandingRow
-              key={d.driver_code ?? d.driver}
+              key={d.code ?? d.driver}
               position={d.position}
               primary={d.driver}
               secondary={d.team}
