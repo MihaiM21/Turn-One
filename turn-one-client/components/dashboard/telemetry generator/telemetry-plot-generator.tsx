@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -32,6 +32,8 @@ import {
   CalendarClock,
   Code2,
   Disc,
+  Activity,
+  BarChart2,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -46,6 +48,8 @@ import {
   fetchSessionsByEvent,
   fetchSpeedDistributionData,
   fetchTyreStintData,
+  fetchLapDistributionData,
+  fetchStaticDrivers,
 } from "@/lib/dataAcquisition"
 import {
   TopSpeedData,
@@ -68,8 +72,10 @@ import { SessionResultsGraph } from "./plots/session-results"
 import { ThrottleBrakeComparisonGraph } from "./plots/throttle-brake-comparison"
 import { SpeedDistributionGraph } from "./plots/speed-distribution"
 import { TyreStintGraph } from "./plots/tyre-stint"
+import { LapDistributionGraph } from "./plots/lap-distribution"
+import { LapTimeCandlestickGraph } from "./plots/lap-time-candlestick"
 import { SessionResultsData } from "@/types/plot-types"
-import { TyreStintEntry } from "@/types/news-types"
+import { TyreStintEntry, LapTimeDistributionPoint } from "@/types/news-types"
 import { drivers_2025, drivers_2026 } from "@/lib/constants/drivers"
 import { LoadingPlot } from "./loading_plot"
 import { useTokens } from "@/hooks/use-tokens"
@@ -113,6 +119,7 @@ export function TelemetryPlotGenerator() {
   const persisted = typeof window !== "undefined" ? readPersisted() : {}
 
   const [selectedPlotType, setSelectedPlotType] = useState(persisted.plotType ?? "topspeeds")
+  const [lapDistSelectedDrivers, setLapDistSelectedDrivers] = useState<string[]>(["VER"])
   const [selectedDriver, setSelectedDriver] = useState("VER")
   const [selectedDriver1, setSelectedDriver1] = useState("VER")
   const [selectedDriver2, setSelectedDriver2] = useState("HAM")
@@ -306,6 +313,8 @@ export function TelemetryPlotGenerator() {
     { id: "gforce", name: "G-Force Analysis", icon: Zap, description: "Lateral and longitudinal forces", isPro: true },
     { id: "drag_downforce", name: "Drag & Downforce", icon: ChartScatter, description: "Drag and downforce analysis", isPro: true },
     { id: "tyre_stint", name: "Tyre Stint Strategy", icon: Disc, description: "Visualize tyre compounds and pit stop strategy for every driver (Race & Sprint only)", isPro: false },
+    { id: "lap_distribution", name: "Lap Distribution", icon: Activity, description: "Lap-by-lap time evolution for up to 3 drivers", isPro: false },
+    { id: "lap_distribution_candlestick", name: "Lap Time Box Plot", icon: BarChart2, description: "Box-and-whisker distribution of lap times per driver", isPro: false },
   ]
 
   const years = ["2025", "2026"]
@@ -314,7 +323,8 @@ export function TelemetryPlotGenerator() {
   const usesOneDriver = selectedPlotType === "laptime"
   const usesSpeedDrivers = selectedPlotType === "speed_distribution"
   const usesTopSpeedType = selectedPlotType === "topspeeds"
-  const showPlotOptions = usesTwoDrivers || usesOneDriver || usesSpeedDrivers || usesTopSpeedType
+  const usesLapDistDrivers = selectedPlotType === "lap_distribution" || selectedPlotType === "lap_distribution_candlestick"
+  const showPlotOptions = usesTwoDrivers || usesOneDriver || usesSpeedDrivers || usesTopSpeedType || usesLapDistDrivers
 
   const [topSpeedsData, setTopSpeedsData] = useState<TopSpeedData[]>([])
   const [speedDomain, setSpeedDomain] = useState<[number, number]>([320, 335])
@@ -328,6 +338,12 @@ export function TelemetryPlotGenerator() {
   const [lapTimeData, setLapTimeData] = useState<LapTimeData[]>([])
   const [speedDistributionData, setSpeedDistributionData] = useState<SpeedDistributionPoint[]>([])
   const [tyreStintData, setTyreStintData] = useState<TyreStintEntry[]>([])
+  const [lapDistAllData, setLapDistAllData] = useState<LapTimeDistributionPoint[]>([])
+
+  const lapDistributionData = useMemo(
+    () => lapDistAllData.filter((p) => lapDistSelectedDrivers.includes(p.driver)),
+    [lapDistAllData, lapDistSelectedDrivers]
+  )
 
   useEffect(() => {
     return () => {
@@ -635,6 +651,26 @@ export function TelemetryPlotGenerator() {
         }
         setTyreStintData(stints)
         plotGeneratedSuccessfully = true
+      } else if (selectedPlotType === "lap_distribution" || selectedPlotType === "lap_distribution_candlestick") {
+        if (lapDistSelectedDrivers.length === 0) {
+          throw new Error("Select at least one driver for lap distribution")
+        }
+        const [colorResult, ...driverResults] = await Promise.allSettled([
+          fetchStaticDrivers(),
+          ...drivers.map((code) =>
+            fetchLapDistributionData(authToken ?? "", Number(selectedYear), apiGpVal, selectedSession, code, "v2")
+          ),
+        ])
+        const colorMap: Map<string, string> =
+          colorResult.status === "fulfilled" ? (colorResult.value as Map<string, string>) : new Map()
+        const allData: LapTimeDistributionPoint[] = driverResults.flatMap((r) =>
+          r.status === "fulfilled" ? (r.value as LapTimeDistributionPoint[]) : []
+        ).map((r) => ({ ...r, color: colorMap.get(r.driver) || r.color }))
+        if (allData.length === 0) {
+          throw new Error("No lap distribution data returned for this session")
+        }
+        setLapDistAllData(allData)
+        plotGeneratedSuccessfully = true
       } else {
         await new Promise((resolve) => setTimeout(resolve, 2000))
         plotGeneratedSuccessfully = true
@@ -749,6 +785,10 @@ export function TelemetryPlotGenerator() {
         )
       case "tyre_stint":
         return <TyreStintGraph data={tyreStintData} advancedSettings={advancedSettings} />
+      case "lap_distribution":
+        return <LapDistributionGraph data={lapDistributionData} advancedSettings={advancedSettings} />
+      case "lap_distribution_candlestick":
+        return <LapTimeCandlestickGraph data={lapDistributionData} advancedSettings={advancedSettings} />
       default:
         return null
     }
@@ -805,6 +845,28 @@ export function TelemetryPlotGenerator() {
         { label: "Total Laps", value: totalLaps },
         { label: "Compounds Used", value: compounds.join(", ") },
         { label: "Avg Pit Stops", value: avgStops },
+      ]
+    } else if (
+      (selectedPlotType === "lap_distribution" || selectedPlotType === "lap_distribution_candlestick") &&
+      lapDistributionData.length > 0
+    ) {
+      const lapDrivers = [...new Set(lapDistributionData.map((p) => p.driver))]
+      const allTimes = lapDistributionData.map((p) => p.lapTime)
+      const sortedTimes = [...allTimes].sort((a, b) => a - b)
+      const fastestTime = sortedTimes[0]
+      const medianTime = sortedTimes[Math.floor(sortedTimes.length / 2)]
+      const fastestDriver = lapDistributionData.find((p) => p.lapTime === fastestTime)?.driver ?? "-"
+      const totalLaps = [...new Set(lapDistributionData.map((p) => p.lap))].length
+      const fmtStat = (secs: number) => {
+        const m = Math.floor(secs / 60)
+        const s = (secs % 60).toFixed(3)
+        return `${m}:${s.padStart(6, "0")}`
+      }
+      stats = [
+        { label: "Drivers", value: lapDrivers.length },
+        { label: "Fastest Lap", value: fmtStat(fastestTime), sub: fastestDriver },
+        { label: "Median Lap", value: fmtStat(medianTime) },
+        { label: "Total Laps", value: totalLaps },
       ]
     }
 
@@ -1142,6 +1204,54 @@ export function TelemetryPlotGenerator() {
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+                  </div>
+                )}
+
+                {usesLapDistDrivers && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm">Drivers ({lapDistSelectedDrivers.length} selected)</Label>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setLapDistSelectedDrivers([...drivers])}
+                          className="text-[10px] uppercase tracking-wider text-primary hover:underline"
+                        >
+                          Select all
+                        </button>
+                        <span className="text-zinc-700">·</span>
+                        <button
+                          type="button"
+                          onClick={() => setLapDistSelectedDrivers([])}
+                          className="text-[10px] uppercase tracking-wider text-zinc-500 hover:text-foreground hover:underline"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5">
+                      {drivers.map((driver) => {
+                        const checked = lapDistSelectedDrivers.includes(driver)
+                        return (
+                          <button
+                            key={driver}
+                            type="button"
+                            onClick={() =>
+                              setLapDistSelectedDrivers((prev) =>
+                                checked ? prev.filter((d) => d !== driver) : [...prev, driver]
+                              )
+                            }
+                            className={`px-2 py-1.5 text-xs font-mono font-semibold border transition-colors ${
+                              checked
+                                ? "border-primary/60 bg-primary/10 text-primary"
+                                : "border-zinc-800 bg-zinc-900/60 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300"
+                            }`}
+                          >
+                            {driver}
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
                 )}

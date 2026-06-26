@@ -73,6 +73,58 @@ export const fetchLaptimeData = async (token: string, year: number, gp: number |
   return version === 'v2' ? fetchFromExternalAPIv2(endpoint) : fetchFromExternalAPIv1(endpoint);
 }
 
+export const fetchLapDistributionData = async (
+  token: string,
+  year: number,
+  gp: number | string,
+  session: string,
+  driver: string,
+  version: string = 'v2'
+): Promise<import('@/types/news-types').LapTimeDistributionPoint[]> => {
+  const endpoint = `laptimes-distribution-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}&driver=${encodeURIComponent(driver)}`;
+  const raw = version === 'v2' ? await fetchFromExternalAPIv2(endpoint) : await fetchFromExternalAPIv1(endpoint);
+
+  let rows: Record<string, unknown>[] = [];
+  if (Array.isArray(raw)) {
+    rows = raw as Record<string, unknown>[];
+  } else if (raw && typeof raw === 'object') {
+    const obj = raw as Record<string, unknown>;
+    if (Array.isArray(obj.data)) {
+      rows = obj.data as Record<string, unknown>[];
+    } else if (Array.isArray(obj.points)) {
+      rows = obj.points as Record<string, unknown>[];
+    } else {
+      const keys = Object.keys(obj);
+      if (keys.length > 0) {
+        const firstVal = obj[keys[0]];
+        if (firstVal && typeof firstVal === 'object' && !Array.isArray(firstVal)) {
+          const indices = Object.keys(firstVal as Record<string, unknown>);
+          rows = indices.map((i) => {
+            const row: Record<string, unknown> = {};
+            keys.forEach((k) => { row[k] = (obj[k] as Record<string, unknown>)[i]; });
+            return row;
+          });
+        }
+      }
+    }
+  }
+
+  return rows
+    .map((row) => {
+      const lap = Number(row.LapNumber ?? row.lap_number ?? row.lap_numbers ?? 0);
+      const rawTime = Number(row.LapTime ?? row.lap_time ?? row.lap_times_seconds ?? 0);
+      const lapTime = rawTime > 1_000_000 ? rawTime / 1_000_000_000 : rawTime;
+      return {
+        driver: String(row.Driver ?? row.driver ?? driver),
+        lap,
+        lapTime,
+        compound: String(row.Compound ?? row.compound ?? 'UNKNOWN').toUpperCase(),
+        color: undefined as string | undefined,
+      };
+    })
+    .filter((d) => d.lap > 0 && d.lapTime > 0);
+};
+
 export const fetchSpeedDistributionData = async (
   token: string,
   year: number,
@@ -94,6 +146,12 @@ export const fetchTyreStintData = async (
 ) => {
   const endpoint = `tyre-stint-usage-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`;
   return version === 'v2' ? fetchFromExternalAPIv2(endpoint) : fetchFromExternalAPIv1(endpoint);
+}
+
+export const fetchStaticDrivers = async (): Promise<Map<string, string>> => {
+  const raw = await fetchFromExternalAPI('static/drivers') as { drivers?: Array<{ code: string; color?: string }> };
+  const list = raw?.drivers ?? [];
+  return new Map(list.map((d) => [d.code, d.color ?? '']));
 }
 
 export const fetchAPIDailyStats = async () => {
