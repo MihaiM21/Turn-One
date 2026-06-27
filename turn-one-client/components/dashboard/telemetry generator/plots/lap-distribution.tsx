@@ -107,6 +107,10 @@ export function LapDistributionGraph({ data, advancedSettings }: LapDistribution
     )
   }
 
+  const s = settings.textScale ?? 1
+  const tickFontSize = Math.round(11 * s)
+  const yAxisWidth   = Math.round(58  * s)
+
   return (
     <div style={{ height: `${settings.chartHeight}px` }}>
       <ResponsiveContainer width="100%" height="100%">
@@ -115,19 +119,19 @@ export function LapDistributionGraph({ data, advancedSettings }: LapDistribution
           <XAxis
             dataKey="lap"
             stroke="#9CA3AF"
-            tick={{ fontFamily: 'monospace', fontSize: 11 }}
-            label={{ value: 'Lap', position: 'insideBottom', offset: -10, fill: '#52525b', fontSize: 10 }}
+            tick={{ fontFamily: 'monospace', fontSize: tickFontSize }}
+            label={{ value: 'Lap', position: 'insideBottom', offset: -10, fill: '#52525b', fontSize: Math.round(10 * s) }}
           />
           <YAxis
             stroke="#9CA3AF"
-            tick={{ fontFamily: 'monospace', fontSize: 11 }}
+            tick={{ fontFamily: 'monospace', fontSize: tickFontSize }}
             tickFormatter={formatLapTime}
             domain={['auto', 'auto']}
-            width={58}
+            width={yAxisWidth}
           />
           <Tooltip content={<CustomTooltip />} />
           {settings.showLegend && (
-            <Legend wrapperStyle={{ fontSize: 11, fontFamily: 'monospace' }} />
+            <Legend wrapperStyle={{ fontSize: tickFontSize, fontFamily: 'monospace' }} />
           )}
           {drivers.map((d) => (
             <Line

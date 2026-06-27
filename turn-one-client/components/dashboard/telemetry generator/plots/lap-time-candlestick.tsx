@@ -170,6 +170,10 @@ export function LapTimeCandlestickGraph({ data, advancedSettings }: LapTimeCandl
     )
   }
 
+  const s = settings.textScale ?? 1
+  const tickFontSize = Math.round(11 * s)
+  const yAxisWidth   = Math.round(62  * s)
+
   return (
     <div style={{ height: `${settings.chartHeight}px` }}>
       <ResponsiveContainer width="100%" height="100%">
@@ -177,14 +181,14 @@ export function LapTimeCandlestickGraph({ data, advancedSettings }: LapTimeCandl
           {settings.showGrid && (
             <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
           )}
-          <XAxis dataKey="driver" stroke="#52525b" tick={{ fontSize: 11, fontFamily: 'monospace' }} />
+          <XAxis dataKey="driver" stroke="#52525b" tick={{ fontSize: tickFontSize, fontFamily: 'monospace' }} />
           <YAxis
             stroke="#52525b"
             tickFormatter={formatLapTime}
             domain={yDomain}
             allowDataOverflow
-            width={62}
-            tick={{ fontFamily: 'monospace', fontSize: 11 }}
+            width={yAxisWidth}
+            tick={{ fontFamily: 'monospace', fontSize: tickFontSize }}
           />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
           <Bar

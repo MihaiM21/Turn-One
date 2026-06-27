@@ -114,12 +114,14 @@ export function SpeedDistributionGraph({ data, selectedDrivers, advancedSettings
             type="number"
             domain={['dataMin', 'dataMax']}
             stroke="#9CA3AF"
+            tick={{ fontSize: Math.round(11 * (settings.textScale ?? 1)) }}
             tickFormatter={(value) => `${Number(value).toFixed(1)}s`}
           />
           <YAxis
             stroke="#9CA3AF"
+            tick={{ fontSize: Math.round(11 * (settings.textScale ?? 1)) }}
             tickFormatter={(value) => `${Number(value).toFixed(0)}`}
-            label={{ value: 'Speed (km/h)', angle: -90, position: 'insideLeft', fill: '#9CA3AF' }}
+            label={{ value: 'Speed (km/h)', angle: -90, position: 'insideLeft', fill: '#9CA3AF', style: { fontSize: Math.round(11 * (settings.textScale ?? 1)) } }}
           />
           <Tooltip
             content={({ active, label }) => {

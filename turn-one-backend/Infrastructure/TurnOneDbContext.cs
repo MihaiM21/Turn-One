@@ -31,6 +31,9 @@ public class TurnOneDbContext : DbContext
     // Page maintenance
     public DbSet<PageStatus> PageStatuses { get; set; } = null!;
 
+    // Admin: chart export presets
+    public DbSet<ExportPreset> ExportPresets { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>(entity =>
@@ -173,6 +176,20 @@ public class TurnOneDbContext : DbContext
             entity.Property(e => e.UpdatedAt).IsRequired();
             entity.Property(e => e.UpdatedByUsername).IsRequired(false);
             entity.HasIndex(e => e.PageSlug).IsUnique();
+        });
+
+        modelBuilder.Entity<ExportPreset>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired();
+            entity.Property(e => e.SessionType).IsRequired();
+            entity.Property(e => e.ChartKeys).IsRequired();
+            entity.Property(e => e.OutputSizes).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
+            entity.HasOne(e => e.CreatedBy).WithMany().HasForeignKey(e => e.CreatedByUserId);
+            entity.HasIndex(e => e.SessionType);
+            entity.HasIndex(e => e.UpdatedAt);
         });
     }
 }

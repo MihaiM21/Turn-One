@@ -49,12 +49,22 @@ export function TyreStintGraph({ data, advancedSettings }: TyreStintGraphProps) 
   const lapTicks = Array.from({ length: Math.floor(totalLaps / 10) + 1 }, (_, i) => i * 10);
   const usedCompounds = [...new Set(data.map((s) => s.compound.toUpperCase()))];
 
+  const numDrivers = sortedDrivers.length;
+  // Calculate row height to fill the full chartHeight so export images have no blank space.
+  const PADDING = 32;       // p-4 top + bottom
+  const HEADER = settings.showGrid ? 28 : 0;
+  const LEGEND = settings.showLegend ? 52 : 0;
+  const GAP = 6;            // space-y-1.5 between rows
+  const availableForRows = settings.chartHeight - PADDING - HEADER - LEGEND - GAP * Math.max(0, numDrivers - 1);
+  const rowHeight = Math.max(20, Math.floor(availableForRows / numDrivers));
+  const labelFontSize = Math.max(8, Math.min(13, Math.floor(rowHeight * 0.45)));
+
   return (
-    <div style={{ height: `${settings.chartHeight}px`, overflowY: "auto" }}>
-      <div className="min-h-full p-4 space-y-1.5">
+    <div style={{ height: `${settings.chartHeight}px`, overflow: "hidden" }}>
+      <div className="p-4" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
         {/* Lap axis */}
         {settings.showGrid && (
-          <div className="relative h-5 ml-[100px] mr-[44px] mb-1">
+          <div className="relative ml-[100px] mr-[44px] mb-1 shrink-0" style={{ height: HEADER - 4 }}>
             {lapTicks.map((lap) => (
               <div
                 key={lap}
@@ -64,79 +74,96 @@ export function TyreStintGraph({ data, advancedSettings }: TyreStintGraphProps) 
                 {lap > 0 ? lap : ""}
               </div>
             ))}
-            {settings.showGrid &&
-              lapTicks.filter((l) => l > 0).map((lap) => (
-                <div
-                  key={`tick-${lap}`}
-                  className="absolute top-3 bottom-0 w-px bg-zinc-800"
-                  style={{ left: `${(lap / totalLaps) * 100}%` }}
-                />
-              ))}
+            {lapTicks.filter((l) => l > 0).map((lap) => (
+              <div
+                key={`tick-${lap}`}
+                className="absolute bottom-0 w-px bg-zinc-800"
+                style={{ left: `${(lap / totalLaps) * 100}%`, top: 14 }}
+              />
+            ))}
           </div>
         )}
 
-        {sortedDrivers.map(([driver, stints]) => {
-          const position = stints[0]?.position;
-          const color = stints[0]?.color;
-          const stops = stints.length - 1;
+        {/* Driver rows — flex column with even spacing */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: GAP,
+            flex: 1,
+            minHeight: 0,
+          }}
+        >
+          {sortedDrivers.map(([driver, stints]) => {
+            const position = stints[0]?.position;
+            const color = stints[0]?.color;
+            const stops = stints.length - 1;
 
-          return (
-            <div key={driver} className="flex items-center gap-2">
-              <div className="w-[36px] text-right font-mono text-xs text-zinc-500 tabular-nums shrink-0">
-                P{position}
-              </div>
-              <div
-                className="w-[56px] shrink-0 truncate text-xs font-semibold"
-                style={{ color }}
-              >
-                {driver}
-              </div>
-              <div className="relative h-6 flex-1 bg-zinc-900">
-                {stints.map((s, i) => {
-                  const startPct = ((s.start_lap - 1) / totalLaps) * 100;
-                  const widthPct = (s.lap_count / totalLaps) * 100;
-                  const bgColor = COMPOUND_COLORS[s.compound.toUpperCase()] ?? s.color ?? "#71717a";
-                  return (
+            return (
+              <div key={driver} style={{ display: "flex", alignItems: "center", gap: 8, height: rowHeight }}>
+                <div
+                  className="text-right font-mono text-zinc-500 tabular-nums shrink-0"
+                  style={{ width: 36, fontSize: labelFontSize }}
+                >
+                  P{position}
+                </div>
+                <div
+                  className="shrink-0 truncate font-semibold"
+                  style={{ width: 56, color, fontSize: labelFontSize }}
+                >
+                  {driver}
+                </div>
+                <div className="relative flex-1 bg-zinc-900" style={{ height: "100%" }}>
+                  {stints.map((s, i) => {
+                    const startPct = ((s.start_lap - 1) / totalLaps) * 100;
+                    const widthPct = (s.lap_count / totalLaps) * 100;
+                    const bgColor = COMPOUND_COLORS[s.compound.toUpperCase()] ?? s.color ?? "#71717a";
+                    return (
+                      <div
+                        key={i}
+                        className="absolute inset-y-0 flex items-center justify-center font-bold text-black hover:opacity-80 transition-opacity"
+                        style={{
+                          left: `${startPct}%`,
+                          width: `${widthPct}%`,
+                          backgroundColor: bgColor,
+                          fontSize: labelFontSize,
+                        }}
+                        title={`${s.compound} · L${s.start_lap}–${s.end_lap} · ${s.lap_count} laps · Tyre age at end: ${s.tyre_life_end}`}
+                      >
+                        {widthPct > 4 && settings.showDataLabels
+                          ? s.compound.charAt(0).toUpperCase()
+                          : ""}
+                      </div>
+                    );
+                  })}
+                  {/* Pit stop dividers */}
+                  {stints.slice(0, -1).map((s, i) => (
                     <div
-                      key={i}
-                      className="absolute inset-y-0 flex items-center justify-center text-[10px] font-bold text-black hover:opacity-80 transition-opacity"
-                      style={{
-                        left: `${startPct}%`,
-                        width: `${widthPct}%`,
-                        backgroundColor: bgColor,
-                      }}
-                      title={`${s.compound} · L${s.start_lap}–${s.end_lap} · ${s.lap_count} laps · Tyre age at end: ${s.tyre_life_end}`}
-                    >
-                      {widthPct > 4 && settings.showDataLabels
-                        ? s.compound.charAt(0).toUpperCase()
-                        : ""}
-                    </div>
-                  );
-                })}
-                {/* Pit stop dividers */}
-                {stints.slice(0, -1).map((s, i) => (
-                  <div
-                    key={`pit-${i}`}
-                    className="absolute inset-y-0 w-0.5 bg-zinc-600 z-10"
-                    style={{ left: `${(s.end_lap / totalLaps) * 100}%` }}
-                    title={`Pit stop after lap ${s.end_lap}`}
-                  />
-                ))}
+                      key={`pit-${i}`}
+                      className="absolute inset-y-0 w-0.5 bg-zinc-600 z-10"
+                      style={{ left: `${(s.end_lap / totalLaps) * 100}%` }}
+                      title={`Pit stop after lap ${s.end_lap}`}
+                    />
+                  ))}
+                </div>
+                <div
+                  className="text-right font-mono text-zinc-400 tabular-nums shrink-0"
+                  style={{ width: 36, fontSize: labelFontSize }}
+                >
+                  {stops}x
+                </div>
               </div>
-              <div className="w-[36px] text-right font-mono text-xs text-zinc-400 tabular-nums shrink-0">
-                {stops}x
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
 
         {settings.showLegend && (
-          <div className="flex flex-wrap items-center gap-4 pt-4 mt-2 border-t border-zinc-800 ml-[100px]">
+          <div className="flex flex-wrap items-center gap-4 border-t border-zinc-800 ml-[100px] shrink-0" style={{ paddingTop: 10, marginTop: 6 }}>
             {usedCompounds.map((compound) => (
               <div key={compound} className="flex items-center gap-1.5">
                 <span
-                  className="h-3 w-3 inline-block shrink-0"
-                  style={{ backgroundColor: COMPOUND_COLORS[compound] ?? "#71717a" }}
+                  className="inline-block shrink-0"
+                  style={{ width: 12, height: 12, backgroundColor: COMPOUND_COLORS[compound] ?? "#71717a" }}
                 />
                 <span className="text-xs text-zinc-400">
                   {compound.charAt(0) + compound.slice(1).toLowerCase()}
@@ -144,7 +171,7 @@ export function TyreStintGraph({ data, advancedSettings }: TyreStintGraphProps) 
               </div>
             ))}
             <div className="flex items-center gap-1.5">
-              <span className="h-3 w-0.5 inline-block bg-zinc-600" />
+              <span className="inline-block bg-zinc-600" style={{ width: 2, height: 12 }} />
               <span className="text-xs text-zinc-400">Pit stop</span>
             </div>
           </div>

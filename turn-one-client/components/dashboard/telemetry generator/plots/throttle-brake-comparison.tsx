@@ -222,20 +222,20 @@ export function ThrottleBrakeComparisonGraph({ data, height = 700, advancedSetti
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={sortedData} margin={{ top: 20, right: 40, left: 40, bottom: 10 }}>
                 {settings.showGrid && <CartesianGrid strokeDasharray="2 2" stroke="#374151" opacity={0.3} />}
-                <XAxis 
-                  dataKey="distance" 
+                <XAxis
+                  dataKey="distance"
                   stroke="#6B7280"
-                  tick={{ fontSize: 12, fill: '#6B7280' }}
+                  tick={{ fontSize: Math.round(12 * (settings.textScale ?? 1)), fill: '#6B7280' }}
                   tickFormatter={(value) => `${Math.round(value/100)*100}m`}
                   axisLine={{ stroke: '#6B7280', strokeWidth: 1 }}
                 />
-                <YAxis 
+                <YAxis
                   stroke="#6B7280"
                   domain={[0, 100]}
-                  tick={{ fontSize: 12, fill: '#6B7280' }}
+                  tick={{ fontSize: Math.round(12 * (settings.textScale ?? 1)), fill: '#6B7280' }}
                   tickFormatter={(value) => `${value}%`}
                   axisLine={{ stroke: '#6B7280', strokeWidth: 1 }}
-                  label={{ value: 'Throttle %', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6B7280', fontSize: '12px' } }}
+                  label={{ value: 'Throttle %', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6B7280', fontSize: `${Math.round(12 * (settings.textScale ?? 1))}px` } }}
                 />
                 <Tooltip content={<ThrottleTooltip />} />
                 
@@ -291,21 +291,21 @@ export function ThrottleBrakeComparisonGraph({ data, height = 700, advancedSetti
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={sortedData} margin={{ top: 20, right: 40, left: 40, bottom: 10 }}>
                 {settings.showGrid && <CartesianGrid strokeDasharray="2 2" stroke="#374151" opacity={0.3} />}
-                <XAxis 
-                  dataKey="distance" 
+                <XAxis
+                  dataKey="distance"
                   stroke="#6B7280"
-                  tick={{ fontSize: 12, fill: '#6B7280' }}
+                  tick={{ fontSize: Math.round(12 * (settings.textScale ?? 1)), fill: '#6B7280' }}
                   tickFormatter={(value) => `${Math.round(value/100)*100}m`}
                   axisLine={{ stroke: '#6B7280', strokeWidth: 1 }}
-                  label={{ value: 'Track Distance (m)', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: '#6B7280', fontSize: '12px' } }}
+                  label={{ value: 'Track Distance (m)', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: '#6B7280', fontSize: `${Math.round(12 * (settings.textScale ?? 1))}px` } }}
                 />
-                <YAxis 
+                <YAxis
                   stroke="#6B7280"
                   domain={[0, 1]}
-                  tick={{ fontSize: 12, fill: '#6B7280' }}
+                  tick={{ fontSize: Math.round(12 * (settings.textScale ?? 1)), fill: '#6B7280' }}
                   tickFormatter={(value) => value === 1 ? 'ON' : 'OFF'}
                   axisLine={{ stroke: '#6B7280', strokeWidth: 1 }}
-                  label={{ value: 'Brake Status', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6B7280', fontSize: '12px' } }}
+                  label={{ value: 'Brake Status', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6B7280', fontSize: `${Math.round(12 * (settings.textScale ?? 1))}px` } }}
                 />
                 <Tooltip content={<BrakeTooltip />} />
                 

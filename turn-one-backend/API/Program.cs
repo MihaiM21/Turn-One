@@ -193,6 +193,7 @@ builder.Services.AddScoped<IPredictionService, PredictionService>();
 builder.Services.AddScoped<ITriviaService, TriviaService>();
 builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IExportPresetService, ExportPresetService>();
 builder.Services.AddScoped<IEmailService, EmailService>(sp =>
 {
     var config = builder.Configuration.GetSection("SmtpSettings");
