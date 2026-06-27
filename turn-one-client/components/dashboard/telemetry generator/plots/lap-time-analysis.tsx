@@ -160,19 +160,19 @@ export function LapTimeAnalysisGraph({ lapTimeData, advancedSettings }: { lapTim
                 label={{ value: 'Lap Number', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: '#9CA3AF' } }}
                 className={settings.animateChart ? "animate-in slide-in-from-bottom-2 duration-1000 delay-300" : ""}
               />
-              <YAxis 
+              <YAxis
                 stroke="#9CA3AF"
-                width={68}
+                width={Math.round(68 * (settings.textScale ?? 1))}
                 tickCount={6}
+                tick={{ fontSize: Math.round(11 * (settings.textScale ?? 1)) }}
                 domain={['dataMin - 0.5', 'dataMax + 0.5']}
                 tickFormatter={(value: number) => {
-                  // Handle both seconds (~89) and microseconds (~89_000_000) from the API
                   const secs = value > 1000 ? value / 1_000_000 : value
                   const m = Math.floor(secs / 60)
                   const s = (secs % 60).toFixed(1)
                   return `${m}:${s.padStart(4, '0')}`
                 }}
-                label={{ value: 'Lap Time', angle: -90, position: 'insideLeft', offset: 15, style: { textAnchor: 'middle', fill: '#9CA3AF', fontSize: 11 } }}
+                label={{ value: 'Lap Time', angle: -90, position: 'insideLeft', offset: 15, style: { textAnchor: 'middle', fill: '#9CA3AF', fontSize: Math.round(11 * (settings.textScale ?? 1)) } }}
                 className={settings.animateChart ? "animate-in slide-in-from-left-2 duration-1000 delay-300" : ""}
               />
               <Tooltip content={<CustomTooltip />} />

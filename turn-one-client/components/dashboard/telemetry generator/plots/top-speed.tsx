@@ -30,18 +30,24 @@ export function TopSpeedGraph({ data, speedDomain, height = 400, advancedSetting
     )
   }
 
+  const s = settings.textScale ?? 1
+  const tickFontSize = Math.round(14 * s)
+  const yAxisWidth   = Math.round(120 * s)
+  const marginRight  = Math.round(100 * s)
+  const labelFontSz  = `${Math.round(12 * s)}px`
+
   return (
     <div style={{ height: `${settings.chartHeight}px` }}>
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} layout="vertical" margin={{ right: 60 }}>
+        <BarChart data={data} layout="vertical" margin={{ right: marginRight }}>
           {settings.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />}
-          <XAxis type="number" domain={speedDomain} stroke="#9CA3AF" />
-          <YAxis 
-            dataKey="team" 
-            type="category" 
-            stroke="#F9FAFB" 
-            width={120}
-            tick={{ fontSize: 14 }}
+          <XAxis type="number" domain={speedDomain} stroke="#9CA3AF" tick={{ fontSize: tickFontSize }} />
+          <YAxis
+            dataKey="team"
+            type="category"
+            stroke="#F9FAFB"
+            width={yAxisWidth}
+            tick={{ fontSize: tickFontSize }}
             tickFormatter={(value) => `${value}`}
           />
           <Tooltip
@@ -66,20 +72,16 @@ export function TopSpeedGraph({ data, speedDomain, height = 400, advancedSetting
               <Cell key={index} fill={entry.color} />
             ))}
             {settings.showDataLabels && (
-              <LabelList 
-                dataKey="speed" 
+              <LabelList
+                dataKey="speed"
                 position="right"
-                style={{ 
-                  fill: "#F9FAFB", 
-                  fontSize: "12px", 
-                  fontWeight: "600" 
-                }}
+                style={{ fill: "#F9FAFB", fontSize: labelFontSz, fontWeight: "600" }}
                 formatter={(value: any) => `${Number(value).toFixed(0)} km/h`}
               />
             )}
           </Bar>
         </BarChart>
-      </ResponsiveContainer>      
+      </ResponsiveContainer>
     </div>
   )
 }

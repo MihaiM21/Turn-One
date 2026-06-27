@@ -11,6 +11,8 @@
     chartHeight: number;
     lineThickness: number;
     showDataLabels: boolean;
+    /** Multiplier applied to all font sizes / axis widths / margins in exported images. Defaults to 1 (preview). */
+    textScale?: number;
   }
 
   export interface ThrottleAverageData {

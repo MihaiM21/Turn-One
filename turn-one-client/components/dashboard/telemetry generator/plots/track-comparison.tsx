@@ -33,13 +33,16 @@ export function TrackComparisonGraph({ data, height = 700, width = 700, advanced
     );
   }
 
-  // Calculate bounds for the track to fit in the viewBox
-  const xCoords = data.telemetry.map(point => point.x);
-  const yCoords = data.telemetry.map(point => point.y);
-  const minX = Math.min(...xCoords);
-  const maxX = Math.max(...xCoords);
-  const minY = Math.min(...yCoords);
-  const maxY = Math.max(...yCoords);
+  // Calculate bounds for the track to fit in the viewBox.
+  // Use a reduce instead of Math.min(...arr): spreading thousands of telemetry
+  // points as call arguments can blow the call stack (RangeError).
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const point of data.telemetry) {
+    if (point.x < minX) minX = point.x;
+    if (point.x > maxX) maxX = point.x;
+    if (point.y < minY) minY = point.y;
+    if (point.y > maxY) maxY = point.y;
+  }
   
   // Calculate track dimensions
   const trackWidth = maxX - minX;
@@ -112,7 +115,10 @@ export function TrackComparisonGraph({ data, height = 700, width = 700, advanced
       {/* Title */}
       <div className="text-center mb-4">
         <h3 className="text-lg font-semibold text-foreground">
-          {data.driver1} vs {data.driver2} - {data.session_info.year} {data.session_info.event_name} {data.session_info.session_name}
+          {data.driver1} vs {data.driver2}
+          {data.session_info
+            ? ` - ${data.session_info.year} ${data.session_info.event_name} ${data.session_info.session_name}`
+            : ""}
         </h3>
       </div>
       
