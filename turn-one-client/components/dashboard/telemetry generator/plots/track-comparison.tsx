@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { TrackComparisonData, AdvancedPlotSettings } from '@/types/plot-types';
 
 interface TrackComparisonGraphProps {
@@ -11,6 +11,20 @@ interface TrackComparisonGraphProps {
 }
 
 export function TrackComparisonGraph({ data, height = 700, width = 700, advancedSettings }: TrackComparisonGraphProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerWidth, setContainerWidth] = useState(width)
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const obs = new ResizeObserver(entries => {
+      const w = entries[0]?.contentRect.width
+      if (w && w > 0) setContainerWidth(w)
+    })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
   // Use advanced settings or defaults
   const settings = advancedSettings || {
     showGrid: true,
@@ -57,25 +71,30 @@ export function TrackComparisonGraph({ data, height = 700, width = 700, advanced
     );
   }
   
+  // Reserve vertical space for title, legend, and description (~80px total)
+  const CHROME_HEIGHT = 80
+  const svgWidth = containerWidth
+  const svgHeight = Math.max(height - CHROME_HEIGHT, 200)
+
   // Dynamic padding based on container size (minimum 20px, maximum 8% of container)
-  const dynamicPadding = Math.min(Math.max(width * 0.03, 20), width * 0.08);
-  
+  const dynamicPadding = Math.min(Math.max(svgWidth * 0.03, 20), svgWidth * 0.08);
+
   // Available space after padding
-  const availableWidth = width - (dynamicPadding * 2);
-  const availableHeight = height - (dynamicPadding * 2);
-  
+  const availableWidth = svgWidth - (dynamicPadding * 2);
+  const availableHeight = svgHeight - (dynamicPadding * 2);
+
   // Calculate scale to maximize usage of available space while maintaining aspect ratio
   const scaleX = availableWidth / trackWidth;
   const scaleY = availableHeight / trackHeight;
   const scale = Math.min(scaleX, scaleY);
-  
+
   // Calculate actual scaled dimensions
   const scaledTrackWidth = trackWidth * scale;
   const scaledTrackHeight = trackHeight * scale;
-  
+
   // Center the track in the available space
-  const offsetX = (width - scaledTrackWidth) / 2;
-  const offsetY = (height - scaledTrackHeight) / 2;
+  const offsetX = (svgWidth - scaledTrackWidth) / 2;
+  const offsetY = (svgHeight - scaledTrackHeight) / 2;
   
   // Calculate stroke width based on scale and settings (thicker lines for smaller tracks)
   const baseStrokeWidth = Math.max(2, Math.min(8, scale * 0.01));
@@ -111,9 +130,9 @@ export function TrackComparisonGraph({ data, height = 700, width = 700, advanced
   }
 
   return (
-    <div className="w-1/2 h-1/2 flex flex-col mx-auto">
+    <div ref={containerRef} className="w-full flex flex-col">
       {/* Title */}
-      <div className="text-center mb-4">
+      <div className="text-center mb-2">
         <h3 className="text-lg font-semibold text-foreground">
           {data.driver1} vs {data.driver2}
           {data.session_info
@@ -121,19 +140,18 @@ export function TrackComparisonGraph({ data, height = 700, width = 700, advanced
             : ""}
         </h3>
       </div>
-      
-      {/* SVG Track */}
-      <div className="flex-1 flex justify-center items-center min-h-0">
+
+      {/* SVG Track — fills remaining height */}
+      <div style={{ height: `${svgHeight}px` }}>
         <svg
           width="100%"
           height="100%"
-          viewBox={`0 0 ${width} ${height}`}
-          className="border border-border rounded-lg bg-card max-w-full max-h-full"
-          preserveAspectRatio="xMidYMid meet"
+          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+          className="border border-border rounded-lg bg-card"
         >
           {/* Background */}
-          <rect width={width} height={height} fill="transparent" />
-          
+          <rect width={svgWidth} height={svgHeight} fill="transparent" />
+
           {/* Track segments */}
           <g>
             {segments}

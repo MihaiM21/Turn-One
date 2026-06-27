@@ -1,351 +1,200 @@
-'use client';
+'use client'
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import { ThrottleBrakeComparisonData, AdvancedPlotSettings } from '@/types/plot-types'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend } from 'recharts'
+import type { ThrottleBrakeComparisonData, AdvancedPlotSettings } from '@/types/plot-types'
 
-interface ThrottleBrakeComparisonGraphProps {
+interface Props {
   data: ThrottleBrakeComparisonData
   height?: number
   advancedSettings?: AdvancedPlotSettings
 }
 
-export function ThrottleBrakeComparisonGraph({ data, height = 700, advancedSettings }: ThrottleBrakeComparisonGraphProps) {
-  // Use advanced settings or defaults
-  const settings = advancedSettings || {
+export function ThrottleBrakeComparisonGraph({ data, advancedSettings }: Props) {
+  const settings: AdvancedPlotSettings = advancedSettings ?? {
     showGrid: true,
     showLegend: true,
     animateChart: true,
     chartHeight: 700,
     lineThickness: 2,
-    showDataLabels: false
+    showDataLabels: false,
   }
 
-  if (!data || !data.telemetry || data.telemetry.length === 0) {
+  const totalHeight = settings.chartHeight ?? 700
+  const textScale = settings.textScale ?? 1
+  const fontSize = Math.round(12 * textScale)
+
+  if (!data?.telemetry?.length) {
     return (
       <div className="flex items-center justify-center h-[400px] text-muted-foreground">
-        No throttle & brake comparison data available
+        No throttle &amp; brake comparison data available
       </div>
     )
   }
 
-  // Sort and prepare data for continuous lines
   const sortedTelemetry = [...data.telemetry].sort((a, b) => a.distance - b.distance)
-  
-  // Create separate arrays for each driver to ensure continuity
-  const driver1Data = sortedTelemetry.filter(p => p.driver === data.driver1)
-  const driver2Data = sortedTelemetry.filter(p => p.driver === data.driver2)
-  
-  // Create a unified distance array with all unique distances
-  const allDistances = Array.from(new Set([
-    ...driver1Data.map(p => Math.round(p.distance * 10) / 10), // Round to 1 decimal
-    ...driver2Data.map(p => Math.round(p.distance * 10) / 10)
-  ])).sort((a, b) => a - b)
-  
-  // Interpolate data for missing points to ensure continuous lines
-  const interpolateValue = (data: any[], distance: number, valueKey: 'throttle' | 'brake') => {
-    const point = data.find(p => Math.abs(Math.round(p.distance * 10) / 10 - distance) < 0.1)
-    if (point) return point[valueKey]
-    
-    // Find surrounding points for interpolation
-    const before = data.filter(p => p.distance < distance).pop()
-    const after = data.find(p => p.distance > distance)
-    
+  const d1Data = sortedTelemetry.filter(p => p.driver === data.driver1)
+  const d2Data = sortedTelemetry.filter(p => p.driver === data.driver2)
+
+  const allDistances = Array.from(
+    new Set([
+      ...d1Data.map(p => Math.round(p.distance * 10) / 10),
+      ...d2Data.map(p => Math.round(p.distance * 10) / 10),
+    ])
+  ).sort((a, b) => a - b)
+
+  const interpolate = (
+    arr: { distance: number; throttle: number; brake: number }[],
+    dist: number,
+    key: 'throttle' | 'brake'
+  ): number | null => {
+    if (!arr.length) return null
+    // Never extrapolate outside the driver's actual data range
+    if (dist < arr[0].distance - 1 || dist > arr[arr.length - 1].distance + 1) return null
+    const pt = arr.find(p => Math.abs(Math.round(p.distance * 10) / 10 - dist) < 0.1)
+    if (pt) return pt[key]
+    const before = arr.filter(p => p.distance < dist).pop()
+    const after = arr.find(p => p.distance > dist)
     if (before && after) {
-      const ratio = (distance - before.distance) / (after.distance - before.distance)
-      return before[valueKey] + ratio * (after[valueKey] - before[valueKey])
+      const ratio = (dist - before.distance) / (after.distance - before.distance)
+      return before[key] + ratio * (after[key] - before[key])
     }
-    
-    return before ? before[valueKey] : (after ? after[valueKey] : null)
+    return null
   }
-  
-  // Create chart data with interpolated values
-  const sortedData = allDistances.map(distance => ({
+
+  const raw = allDistances.map(distance => ({
     distance,
-    [`${data.driver1}_throttle`]: interpolateValue(driver1Data, distance, 'throttle'),
-    [`${data.driver1}_brake`]: interpolateValue(driver1Data, distance, 'brake'),
-    [`${data.driver2}_throttle`]: interpolateValue(driver2Data, distance, 'throttle'),
-    [`${data.driver2}_brake`]: interpolateValue(driver2Data, distance, 'brake'),
+    [`${data.driver1}_throttle`]: interpolate(d1Data, distance, 'throttle'),
+    [`${data.driver1}_brake`]: interpolate(d1Data, distance, 'brake'),
+    [`${data.driver2}_throttle`]: interpolate(d2Data, distance, 'throttle'),
+    [`${data.driver2}_brake`]: interpolate(d2Data, distance, 'brake'),
   }))
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
-          <p className="text-foreground font-medium mb-2">{`Distance: ${label}m`}</p>
-          {payload.map((entry: any, index: number) => {
-            const isThrottle = entry.dataKey.includes('throttle')
-            const isBrake = entry.dataKey.includes('brake')
-            const driver = entry.dataKey.split('_')[0]
-            const value = entry.value
-            
-            let displayValue = ''
-            if (isThrottle) {
-              displayValue = `${value?.toFixed(1) || 0}%`
-            } else if (isBrake) {
-              displayValue = value === 1 ? 'ON' : 'OFF'
-            }
-            
-            return (
-              <p key={index} style={{ color: entry.color }} className="text-sm">
-                {`${driver} ${isThrottle ? 'Throttle' : 'Brake'}: ${displayValue}`}
-              </p>
-            )
-          })}
-        </div>
-      )
+  // Trim leading and trailing entries where both drivers have no data,
+  // so the x-axis domain is bounded by actual telemetry.
+  let firstValid = 0
+  for (let i = 0; i < raw.length; i++) {
+    if (raw[i][`${data.driver1}_throttle`] != null || raw[i][`${data.driver2}_throttle`] != null) {
+      firstValid = i
+      break
     }
-    return null
   }
+  let lastValid = raw.length - 1
+  for (let i = raw.length - 1; i >= 0; i--) {
+    if (raw[i][`${data.driver1}_throttle`] != null || raw[i][`${data.driver2}_throttle`] != null) {
+      lastValid = i
+      break
+    }
+  }
+  const chartData = raw.slice(firstValid, lastValid + 1)
+  const axisDomain: [number, number] = [
+    chartData[0]?.distance ?? 0,
+    chartData[chartData.length - 1]?.distance ?? 0,
+  ]
 
-  const ThrottleTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-background border border-border rounded-lg p-4 shadow-xl backdrop-blur-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-            <p className="text-foreground font-semibold text-sm">{`${Math.round(label)}m`}</p>
-          </div>
-          <div className="space-y-2">
-            {payload.map((entry: any, index: number) => {
-              const driver = entry.dataKey.split('_')[0]
-              const value = entry.value
-              
-              return (
-                <div key={index} className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full border border-white" 
-                      style={{ backgroundColor: entry.color }}
-                    />
-                    <span className="text-sm font-medium">{driver}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-sm font-bold text-green-600 dark:text-green-400">
-                      {value?.toFixed(1) || 0}%
-                    </span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )
-    }
-    return null
-  }
+  // Fit both charts + chrome within totalHeight
+  // Chrome: legend row ~44px + two section headers ~60px + spacing ~20px = 124px
+  const CHROME = 124
+  const subHeight = Math.max(Math.floor((totalHeight - CHROME) / 2), 150)
 
-  const BrakeTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-background border border-border rounded-lg p-4 shadow-xl backdrop-blur-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-2 h-2 rounded-full bg-red-500"></div>
-            <p className="text-foreground font-semibold text-sm">{`${Math.round(label)}m`}</p>
-          </div>
-          <div className="space-y-2">
-            {payload.map((entry: any, index: number) => {
-              const driver = entry.dataKey.split('_')[0]
-              const value = entry.value
-              
-              return (
-                <div key={index} className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full border border-white" 
-                      style={{ backgroundColor: entry.color }}
-                    />
-                    <span className="text-sm font-medium">{driver}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className={`px-2 py-1 rounded text-xs font-bold ${
-                      value === 1 
-                        ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' 
-                        : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                    }`}>
-                      {value === 1 ? 'ON' : 'OFF'}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )
-    }
-    return null
-  }
+  const gridColor = '#374151'
+  const axisColor = '#6B7280'
+  const axisStyle = { fontSize, fill: axisColor }
+  // left margin must accommodate the rotated Y-axis label at any textScale
+  const leftMargin = Math.round(40 + 20 * textScale)
+  const rightMargin = Math.round(40 + 20 * textScale)
+  const margin = { top: 8, right: rightMargin, left: leftMargin, bottom: 6 }
 
   return (
-    <div>
-      {/* Header with improved styling */}
-      <div className="mb-4 space-y-3">
-        {/* Driver Legend with enhanced visibility */}
-        <div className="flex items-center gap-6 bg-muted/50 p-3 rounded-lg">
-          <div className="flex items-center gap-3">
-            <div 
-              className="w-4 h-4 rounded-full border-2 border-white shadow-sm" 
-              style={{ backgroundColor: data.driver1_color }}
-            />
-            <span className="text-sm font-medium text-foreground">{data.driver1}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div 
-              className="w-4 h-4 rounded-full border-2 border-white shadow-sm" 
-              style={{ backgroundColor: data.driver2_color }}
-            />
-            <span className="text-sm font-medium text-foreground">{data.driver2}</span>
-          </div>
-          <div className="ml-auto flex items-center gap-4 text-xs text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-0.5 bg-current"></div>
-              <span>Throttle</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-0.5 bg-current" style={{ borderTop: '2px dashed currentColor', backgroundColor: 'transparent' }}></div>
-              <span>Brake</span>
-            </div>
-          </div>
+    <div style={{ height: `${totalHeight}px`, display: 'flex', flexDirection: 'column' }}>
+      {/* Legend row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '8px', padding: '0 4px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: data.driver1_color }} />
+          <span style={{ fontSize, color: '#e4e4e7', fontWeight: 500 }}>{data.driver1}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: data.driver2_color }} />
+          <span style={{ fontSize, color: '#e4e4e7', fontWeight: 500 }}>{data.driver2}</span>
+        </div>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '16px', fontSize: Math.round(10 * textScale), color: axisColor }}>
+          <span>—&nbsp;Throttle</span>
+          <span>- - &nbsp;Brake</span>
         </div>
       </div>
-      
-      {/* Throttle Chart with enhanced design */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-3 h-3 rounded-full bg-green-500"></div>
-          <h3 className="text-base font-medium text-foreground">Throttle Application</h3>
-          <div className="text-xs text-muted-foreground bg-green-50 dark:bg-green-950 px-2 py-1 rounded">
-            0-100%
-          </div>
+
+      {/* Throttle chart */}
+      <div style={{ flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#22c55e' }} />
+          <span style={{ fontSize, color: '#e4e4e7', fontWeight: 500 }}>Throttle Application</span>
+          <span style={{ fontSize: Math.round(10 * textScale), color: axisColor, backgroundColor: 'rgba(34,197,94,0.1)', padding: '1px 6px', borderRadius: 3 }}>0-100%</span>
         </div>
-        <div className="bg-background/50 p-3 rounded-lg border">
-          <div style={{ height: `${settings.chartHeight / 2}px`, width: '100%' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={sortedData} margin={{ top: 20, right: 40, left: 40, bottom: 10 }}>
-                {settings.showGrid && <CartesianGrid strokeDasharray="2 2" stroke="#374151" opacity={0.3} />}
-                <XAxis
-                  dataKey="distance"
-                  stroke="#6B7280"
-                  tick={{ fontSize: Math.round(12 * (settings.textScale ?? 1)), fill: '#6B7280' }}
-                  tickFormatter={(value) => `${Math.round(value/100)*100}m`}
-                  axisLine={{ stroke: '#6B7280', strokeWidth: 1 }}
-                />
-                <YAxis
-                  stroke="#6B7280"
-                  domain={[0, 100]}
-                  tick={{ fontSize: Math.round(12 * (settings.textScale ?? 1)), fill: '#6B7280' }}
-                  tickFormatter={(value) => `${value}%`}
-                  axisLine={{ stroke: '#6B7280', strokeWidth: 1 }}
-                  label={{ value: 'Throttle %', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6B7280', fontSize: `${Math.round(12 * (settings.textScale ?? 1))}px` } }}
-                />
-                <Tooltip content={<ThrottleTooltip />} />
-                
-                <Line
-                  type="monotone"
-                  dataKey={`${data.driver1}_throttle`}
-                  stroke={data.driver1_color}
-                  strokeWidth={settings.lineThickness}
-                  dot={false}
-                  connectNulls={true}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  name={`${data.driver1}`}
-                  isAnimationActive={settings.animateChart}
-                />
-                
-                <Line
-                  type="monotone"
-                  dataKey={`${data.driver2}_throttle`}
-                  stroke={data.driver2_color}
-                  strokeWidth={settings.lineThickness}
-                  dot={false}
-                  connectNulls={true}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  name={`${data.driver2}`}
-                  isAnimationActive={settings.animateChart}
-                />
-                
-                {settings.showLegend && (
-                  <Legend 
-                    wrapperStyle={{ paddingTop: '15px', fontSize: '13px' }}
-                    iconType="line"
-                  />
-                )}
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+        <div style={{ height: `${subHeight}px` }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={margin}>
+              {settings.showGrid && <CartesianGrid strokeDasharray="2 2" stroke={gridColor} opacity={0.3} />}
+              <XAxis
+                type="number"
+                dataKey="distance"
+                domain={axisDomain}
+                tickCount={10}
+                stroke={axisColor}
+                tick={axisStyle}
+                tickFormatter={v => `${Math.round(v / 100) * 100}m`}
+                axisLine={{ stroke: axisColor, strokeWidth: 1 }}
+              />
+              <YAxis
+                stroke={axisColor}
+                domain={[0, 100]}
+                tick={axisStyle}
+                tickFormatter={v => `${v}%`}
+                axisLine={{ stroke: axisColor, strokeWidth: 1 }}
+                label={{ value: 'Throttle %', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: axisColor, fontSize } }}
+              />
+              <Line type="monotone" dataKey={`${data.driver1}_throttle`} stroke={data.driver1_color} strokeWidth={settings.lineThickness} dot={false} connectNulls name={data.driver1} isAnimationActive={settings.animateChart} />
+              <Line type="monotone" dataKey={`${data.driver2}_throttle`} stroke={data.driver2_color} strokeWidth={settings.lineThickness} dot={false} connectNulls name={data.driver2} isAnimationActive={settings.animateChart} />
+              {settings.showLegend && <Legend wrapperStyle={{ fontSize: `${Math.round(11 * textScale)}px` }} iconType="line" />}
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </div>
-      
-      {/* Brake Chart with enhanced design */}
-      <div className="mb-4">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-3 h-3 rounded-full bg-red-500"></div>
-          <h3 className="text-base font-medium text-foreground">Brake Application</h3>
-          <div className="text-xs text-muted-foreground bg-red-50 dark:bg-red-950 px-2 py-1 rounded">
-            ON / OFF
-          </div>
+
+      {/* Brake chart */}
+      <div style={{ flexShrink: 0, marginTop: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#ef4444' }} />
+          <span style={{ fontSize, color: '#e4e4e7', fontWeight: 500 }}>Brake Application</span>
+          <span style={{ fontSize: Math.round(10 * textScale), color: axisColor, backgroundColor: 'rgba(239,68,68,0.1)', padding: '1px 6px', borderRadius: 3 }}>ON / OFF</span>
         </div>
-        <div className="bg-background/50 p-3 rounded-lg border">
-          <div style={{ height: `${settings.chartHeight / 2}px`, width: '100%' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={sortedData} margin={{ top: 20, right: 40, left: 40, bottom: 10 }}>
-                {settings.showGrid && <CartesianGrid strokeDasharray="2 2" stroke="#374151" opacity={0.3} />}
-                <XAxis
-                  dataKey="distance"
-                  stroke="#6B7280"
-                  tick={{ fontSize: Math.round(12 * (settings.textScale ?? 1)), fill: '#6B7280' }}
-                  tickFormatter={(value) => `${Math.round(value/100)*100}m`}
-                  axisLine={{ stroke: '#6B7280', strokeWidth: 1 }}
-                  label={{ value: 'Track Distance (m)', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: '#6B7280', fontSize: `${Math.round(12 * (settings.textScale ?? 1))}px` } }}
-                />
-                <YAxis
-                  stroke="#6B7280"
-                  domain={[0, 1]}
-                  tick={{ fontSize: Math.round(12 * (settings.textScale ?? 1)), fill: '#6B7280' }}
-                  tickFormatter={(value) => value === 1 ? 'ON' : 'OFF'}
-                  axisLine={{ stroke: '#6B7280', strokeWidth: 1 }}
-                  label={{ value: 'Brake Status', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6B7280', fontSize: `${Math.round(12 * (settings.textScale ?? 1))}px` } }}
-                />
-                <Tooltip content={<BrakeTooltip />} />
-                
-                <Line
-                  type="stepAfter"
-                  dataKey={`${data.driver1}_brake`}
-                  stroke={data.driver1_color}
-                  strokeWidth={settings.lineThickness}
-                  strokeDasharray="10,5"
-                  dot={false}
-                  connectNulls={true}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  name={`${data.driver1}`}
-                  isAnimationActive={settings.animateChart}
-                />
-                
-                <Line
-                  type="stepAfter"
-                  dataKey={`${data.driver2}_brake`}
-                  stroke={data.driver2_color}
-                  strokeWidth={settings.lineThickness}
-                  strokeDasharray="10,5"
-                  dot={false}
-                  connectNulls={true}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  name={`${data.driver2}`}
-                  isAnimationActive={settings.animateChart}
-                />
-                
-                {settings.showLegend && (
-                  <Legend 
-                    wrapperStyle={{ paddingTop: '15px', fontSize: '13px' }}
-                    iconType="line"
-                  />
-                )}
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+        <div style={{ height: `${subHeight}px` }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ ...margin, bottom: 24 }}>
+              {settings.showGrid && <CartesianGrid strokeDasharray="2 2" stroke={gridColor} opacity={0.3} />}
+              <XAxis
+                type="number"
+                dataKey="distance"
+                domain={axisDomain}
+                tickCount={10}
+                stroke={axisColor}
+                tick={axisStyle}
+                tickFormatter={v => `${Math.round(v / 100) * 100}m`}
+                axisLine={{ stroke: axisColor, strokeWidth: 1 }}
+                label={{ value: 'Track Distance (m)', position: 'insideBottom', offset: -8, style: { textAnchor: 'middle', fill: axisColor, fontSize } }}
+              />
+              <YAxis
+                stroke={axisColor}
+                domain={[0, 1]}
+                ticks={[0, 1]}
+                tick={axisStyle}
+                tickFormatter={v => (v === 1 ? 'ON' : 'OFF')}
+                axisLine={{ stroke: axisColor, strokeWidth: 1 }}
+                label={{ value: 'Brake Status', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: axisColor, fontSize } }}
+              />
+              <Line type="stepAfter" dataKey={`${data.driver1}_brake`} stroke={data.driver1_color} strokeWidth={settings.lineThickness} strokeDasharray="10,5" dot={false} connectNulls name={data.driver1} isAnimationActive={settings.animateChart} />
+              <Line type="stepAfter" dataKey={`${data.driver2}_brake`} stroke={data.driver2_color} strokeWidth={settings.lineThickness} strokeDasharray="10,5" dot={false} connectNulls name={data.driver2} isAnimationActive={settings.animateChart} />
+              {settings.showLegend && <Legend wrapperStyle={{ fontSize: `${Math.round(11 * textScale)}px` }} iconType="line" />}
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>

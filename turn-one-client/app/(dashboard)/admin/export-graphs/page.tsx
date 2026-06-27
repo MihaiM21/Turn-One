@@ -339,6 +339,7 @@ export default function ExportGraphsPage() {
       lineThickness: sizeDef.lineThickness,
       showDataLabels: true,
       textScale: sizeDef.textScale,
+      animateChart: false,
     }
 
     setRenderJob({ chartKey, size, settings: exportPlotSettings, data: fetchedData })
@@ -396,7 +397,12 @@ export default function ExportGraphsPage() {
           total: totalCharts,
         })
         try {
-          dataByChart.set(key, await chart.fetch(ctx))
+          // Reuse preview data for the focused chart so the export matches what the user saw
+          if (key === focusedChartKey && previewFetched && previewData !== null) {
+            dataByChart.set(key, previewData)
+          } else {
+            dataByChart.set(key, await chart.fetch(ctx))
+          }
         } catch (e) {
           console.warn(`Fetch failed for ${key}`, e)
           dataByChart.set(key, null)
@@ -425,16 +431,21 @@ export default function ExportGraphsPage() {
       const sessionTag = sanitizeFilenamePart(sessionCode)
       let jobsDone = 0
 
+      const buildFilename = (key: string, size: OutputSizeKey) => {
+        const chart = CHART_BY_KEY.get(key)
+        const driverTag = chart?.driverRequirement === "pair"
+          ? `_${sanitizeFilenamePart(driver1)}_vs_${sanitizeFilenamePart(driver2)}`
+          : ""
+        return `${eventTag}_${sessionTag}_${sanitizeFilenamePart(key)}${driverTag}_${size}.png`
+      }
+
       if (!isBulk) {
         const key = validKeys[0]
         const size = selectedSizes[0]
         const chart = CHART_BY_KEY.get(key)!
         setExportProgress({ phase: "rendering", label: chart.shortTitle, current: 1, total: 1 })
         const blob = await exportOne(key, size, dataByChart.get(key))
-        triggerDownload(
-          blob,
-          `${eventTag}_${sessionTag}_${sanitizeFilenamePart(key)}_${size}.png`
-        )
+        triggerDownload(blob, buildFilename(key, size))
         toast({ title: "Image downloaded" })
       } else {
         const zip = new JSZip()
@@ -449,10 +460,7 @@ export default function ExportGraphsPage() {
               total: totalJobs,
             })
             const blob = await exportOne(key, size, dataByChart.get(key))
-            zip.file(
-              `${eventTag}_${sessionTag}_${sanitizeFilenamePart(key)}_${size}.png`,
-              blob
-            )
+            zip.file(buildFilename(key, size), blob)
           }
         }
         const zipBlob = await zip.generateAsync({ type: "blob" })
