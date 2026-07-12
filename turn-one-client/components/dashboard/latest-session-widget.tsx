@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SessionDashboardData } from "@/types/news-types";
-import { getLatestSessionDataClient } from "@/lib/newsService";
-import { Trophy, Gauge, Zap, ArrowRight, Calendar } from "lucide-react";
+import { SessionDashboardData, SessionFetchStatus } from "@/types/news-types";
+import { getLatestSessionDataClient, classifySessionFetchError } from "@/lib/newsService";
+import { Trophy, Gauge, Zap, ArrowRight, Calendar, RefreshCw, Clock, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 
 type LatestSessionWidgetProps = {
@@ -16,25 +16,37 @@ type LatestSessionWidgetProps = {
 export function LatestSessionWidget({ previewData }: LatestSessionWidgetProps = {}) {
   const [sessionData, setSessionData] = useState<SessionDashboardData | null>(previewData ?? null);
   const [loading, setLoading] = useState(!previewData);
-  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [status, setStatus] = useState<SessionFetchStatus | null>(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const data = await getLatestSessionDataClient();
+      setSessionData(data);
+      setStatus(null);
+    } catch (err) {
+      setStatus(classifySessionFetchError(err));
+      console.error(err);
+    }
+  }, []);
 
   useEffect(() => {
     if (previewData) return;
-    async function fetchData() {
-      try {
-        setLoading(true);
-        const data = await getLatestSessionDataClient();
-        setSessionData(data);
-        setError(null);
-      } catch (err) {
-        setError("Failed to load session data");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+    (async () => {
+      setLoading(true);
+      await fetchData();
+      setLoading(false);
+    })();
+  }, [previewData, fetchData]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchData();
+    } finally {
+      setRefreshing(false);
     }
-    fetchData();
-  }, [previewData]);
+  };
 
   const getSessionTypeColor = (type: string) => {
     switch (type) {
@@ -66,7 +78,43 @@ export function LatestSessionWidget({ previewData }: LatestSessionWidgetProps = 
     );
   }
 
-  if (error || !sessionData) return null;
+  if (!sessionData) {
+    const isNotReady = status?.kind === "not_ready";
+    return (
+      <div className="h-full border border-zinc-800 bg-zinc-950">
+        <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Latest session</p>
+            <p className="mt-0.5 font-bold">Performance Highlights</p>
+          </div>
+        </div>
+        <div className="flex flex-col items-start gap-3 px-5 py-4">
+          <div className="flex items-center gap-2 text-xs text-zinc-400">
+            {isNotReady ? (
+              <Clock className="h-3.5 w-3.5 shrink-0 text-primary" />
+            ) : (
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-primary" />
+            )}
+            <span>
+              {isNotReady
+                ? "Latest session data is still processing — check back shortly."
+                : "Couldn't load the latest session data."}
+            </span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 rounded-sm px-2 text-xs text-zinc-400 hover:text-primary"
+            onClick={handleRefresh}
+            disabled={refreshing}
+          >
+            <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+            {refreshing ? "Refreshing..." : "Refresh"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full border border-zinc-800 bg-zinc-950 animate-in fade-in duration-500">

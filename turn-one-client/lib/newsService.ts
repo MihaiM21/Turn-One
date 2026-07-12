@@ -6,8 +6,9 @@ import {
   TireStrategy,
   TyreStintEntry,
   NewsPageData,
+  SessionFetchStatus,
 } from "@/types/news-types";
-import { fetchFromExternalAPI } from "@/lib/data-fetcher";
+import { fetchFromExternalAPI, ExternalApiError } from "@/lib/data-fetcher";
 
 export async function getLatestSessionData(): Promise<SessionDashboardData> {
   return fetchFromExternalAPI(`v2/dashboard`);
@@ -15,6 +16,16 @@ export async function getLatestSessionData(): Promise<SessionDashboardData> {
 
 export async function getLatestSessionDataClient(): Promise<SessionDashboardData> {
   return fetchFromExternalAPI(`v2/dashboard`);
+}
+
+// Classifies a session-fetch failure so UI can distinguish "the data pipeline
+// just hasn't published this session yet" (transient, worth a friendly
+// message + retry) from a genuine error (network failure, unexpected 5xx).
+export function classifySessionFetchError(e: unknown): SessionFetchStatus {
+  if (e instanceof ExternalApiError && e.code === "data_not_available") {
+    return { kind: "not_ready", retryAfterSeconds: e.retryAfterSeconds };
+  }
+  return { kind: "error", message: e instanceof Error ? e.message : String(e) };
 }
 
 // -----------------------------------------------------------------
@@ -202,12 +213,14 @@ export async function getTyreStintData(
 
 export async function getNewsPageData(): Promise<NewsPageData> {
   const errors: NewsPageData["errors"] = {};
+  let sessionStatus: SessionFetchStatus | undefined;
 
   // Phase 1: fetch session + standings in parallel — both needed before we can
   // build the driver list for the lap-distribution fan-out.
   const [session, standingsSettled] = await Promise.all([
     getLatestSessionDataClient().catch((e) => {
       errors.session = e instanceof Error ? e.message : String(e);
+      sessionStatus = classifySessionFetchError(e);
       return null;
     }),
     getSeasonStandings().then((v) => ({ status: "fulfilled" as const, value: v })).catch((e) => ({
@@ -281,5 +294,6 @@ export async function getNewsPageData(): Promise<NewsPageData> {
     tireStrategy,
     tyreStintData,
     errors,
+    sessionStatus,
   };
 }

@@ -109,6 +109,13 @@ export interface TyreStintEntry {
   color: string;
 }
 
+// Distinguishes "the upstream data pipeline hasn't published this session yet"
+// (transient — will resolve on its own, worth a friendly message + retry) from
+// a genuine fetch failure (network error, unexpected 5xx, etc).
+export type SessionFetchStatus =
+  | { kind: "not_ready"; retryAfterSeconds?: number }
+  | { kind: "error"; message: string };
+
 export interface NewsPageData {
   session: SessionDashboardData | null;
   driverStandings: DriverStanding[] | null;
@@ -117,4 +124,5 @@ export interface NewsPageData {
   tireStrategy: TireStrategy | null;
   tyreStintData: TyreStintEntry[] | null;
   errors: Partial<Record<"session" | "driverStandings" | "constructorStandings" | "lapDistribution" | "tireStrategy" | "tyreStintData", string>>;
+  sessionStatus?: SessionFetchStatus;
 }
