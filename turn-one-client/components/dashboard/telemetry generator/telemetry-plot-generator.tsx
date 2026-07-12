@@ -34,6 +34,7 @@ import {
   Disc,
   Activity,
   BarChart2,
+  RefreshCw,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -167,55 +168,100 @@ export function TelemetryPlotGenerator() {
     }
   }, [selectedPlotType, selectedYear, selectedEventName, selectedSession])
 
-  // Pick the most recent past event by date when available, fall back to first event
+  // The events list has no date fields of its own (pre-season testing and
+  // Grands Prix are indistinguishable by date), so "most recent" has to be
+  // resolved from each event's own sessions, which do carry start_date.
+  const isTestingEvent = (e: any) =>
+    `${e.name ?? ""} ${e.official_name ?? ""}`.toLowerCase().includes("test")
+
+  // Fallback used only if session lookups fail entirely (e.g. offline):
+  // skip testing events and just take the first remaining event.
   const pickDefaultEvent = (events: any[]) => {
     if (!events.length) return null
+    const races = events.filter((e) => !isTestingEvent(e))
+    return (races.length ? races : events)[0]
+  }
+
+  const resolveLatestEvent = async (events: any[], year: string) => {
+    if (!events.length) return null
+    const races = events.filter((e) => !isTestingEvent(e))
+    if (!races.length) return pickDefaultEvent(events)
+
     const now = Date.now()
-    const withDates = events
-      .map((e) => {
-        const raw = e.start_date || e.date || e.event_date || e.session_date
-        const t = raw ? new Date(raw).getTime() : NaN
-        return { e, t }
+    const results = await Promise.allSettled(
+      races.map((e) => fetchSessionsByEvent(Number(year), e.name))
+    )
+
+    const withDates = races
+      .map((e, i) => {
+        const result = results[i]
+        if (result.status !== "fulfilled") return null
+        const sessions = result.value?.sessions || []
+        const times = sessions
+          .map((s: any) => {
+            const raw = s.start_date || s.date || s.session_date
+            return raw ? new Date(raw).getTime() : NaN
+          })
+          .filter((t: number) => Number.isFinite(t))
+        if (times.length === 0) return null
+        return { e, start: Math.min(...times) }
       })
-      .filter((x) => Number.isFinite(x.t)) as { e: any; t: number }[]
-    const past = withDates.filter((x) => x.t <= now)
+      .filter((x): x is { e: any; start: number } => x !== null)
+
+    if (withDates.length === 0) return pickDefaultEvent(events)
+
+    const past = withDates.filter((x) => x.start <= now)
     if (past.length) {
-      past.sort((a, b) => b.t - a.t)
+      past.sort((a, b) => b.start - a.start)
       return past[0].e
     }
-    if (withDates.length) {
-      withDates.sort((a, b) => a.t - b.t)
-      return withDates[0].e
+    withDates.sort((a, b) => a.start - b.start)
+    return withDates[0].e
+  }
+
+  const loadEvents = async (year: string, preserveSelection = true) => {
+    const data = await fetchEventsByYear(Number(year))
+    const events = data.events || []
+    setAvailableEvents(events)
+
+    if (events.length > 0) {
+      const stillValid =
+        preserveSelection &&
+        events.some((e: any) => (e.official_name || e.name) === selectedEventName)
+      if (!stillValid) {
+        const defaultEvent = await resolveLatestEvent(events, year)
+        if (defaultEvent) {
+          setSelectedEventName(defaultEvent.official_name || defaultEvent.name)
+          setSelectedGp(defaultEvent.key ? defaultEvent.key.toString() : "1")
+        }
+      }
     }
-    return events.find((e: any) => e.name?.includes("Australia")) || events[0]
+    return events
   }
 
   useEffect(() => {
     if (selectedYear) {
-      fetchEventsByYear(Number(selectedYear))
-        .then((data) => {
-          const events = data.events || []
-          setAvailableEvents(events)
-
-          if (events.length > 0) {
-            const defaultEvent = pickDefaultEvent(events)
-            if (defaultEvent) {
-              setSelectedEventName(defaultEvent.official_name || defaultEvent.name)
-              setSelectedGp(defaultEvent.key ? defaultEvent.key.toString() : "1")
-            }
-          }
-        })
-        .catch(console.error)
+      loadEvents(selectedYear, false).catch(console.error)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedYear])
 
-  const useLatestRace = () => {
+  const [isResolvingLatestRace, setIsResolvingLatestRace] = useState(false)
+
+  const useLatestRace = async () => {
     if (!availableEvents.length) return
-    const defaultEvent = pickDefaultEvent(availableEvents)
-    if (defaultEvent) {
-      setSelectedEventName(defaultEvent.official_name || defaultEvent.name)
-      setSelectedGp(defaultEvent.key ? defaultEvent.key.toString() : "1")
+    setIsResolvingLatestRace(true)
+    try {
+      const defaultEvent = await resolveLatestEvent(availableEvents, selectedYear)
+      if (defaultEvent) {
+        setSelectedEventName(defaultEvent.official_name || defaultEvent.name)
+        setSelectedGp(defaultEvent.key ? defaultEvent.key.toString() : "1")
+      }
+    } catch (error) {
+      console.error("Error resolving latest race:", error)
+      toast.error("Failed to find the latest race")
+    } finally {
+      setIsResolvingLatestRace(false)
     }
   }
 
@@ -247,40 +293,59 @@ export function TelemetryPlotGenerator() {
     { name: "Race", type: "Race", number: null },
   ]
 
+  const loadSessions = async (year: string, eventName: string, events: any[]) => {
+    const event = events.find((e) => (e.official_name || e.name) === eventName)
+    const apiEventName = event ? event.name : eventName
+
+    try {
+      const data = await fetchSessionsByEvent(Number(year), apiEventName)
+      const sessions = data.sessions || []
+      const resolved = sessions.length > 0 ? sessions : defaultSessions
+      setAvailableSessions(resolved)
+
+      if (resolved.length > 0) {
+        const currentValid = resolved.find(
+          (s: any) => getSessionCode(s.name, s.type, s.number) === selectedSession
+        )
+        if (!currentValid) {
+          const defaultSession =
+            resolved.find((s: any) => s.type === "Practice" && s.number === 1) || resolved[0]
+          setSelectedSession(getSessionCode(defaultSession.name, defaultSession.type, defaultSession.number))
+        }
+      }
+    } catch {
+      setAvailableSessions(defaultSessions)
+      const currentValid = defaultSessions.find(
+        (s) => getSessionCode(s.name, s.type, s.number) === selectedSession
+      )
+      if (!currentValid) {
+        setSelectedSession("FP1")
+      }
+    }
+  }
+
   useEffect(() => {
     if (selectedYear && selectedEventName) {
-      const event = availableEvents.find((e) => (e.official_name || e.name) === selectedEventName)
-      const apiEventName = event ? event.name : selectedEventName
-
-      fetchSessionsByEvent(Number(selectedYear), apiEventName)
-        .then((data) => {
-          const sessions = data.sessions || []
-          const resolved = sessions.length > 0 ? sessions : defaultSessions
-          setAvailableSessions(resolved)
-
-          if (resolved.length > 0) {
-            const currentValid = resolved.find(
-              (s: any) => getSessionCode(s.name, s.type, s.number) === selectedSession
-            )
-            if (!currentValid) {
-              const defaultSession =
-                resolved.find((s: any) => s.type === "Practice" && s.number === 1) || resolved[0]
-              setSelectedSession(getSessionCode(defaultSession.name, defaultSession.type, defaultSession.number))
-            }
-          }
-        })
-        .catch(() => {
-          setAvailableSessions(defaultSessions)
-          const currentValid = defaultSessions.find(
-            (s) => getSessionCode(s.name, s.type, s.number) === selectedSession
-          )
-          if (!currentValid) {
-            setSelectedSession("FP1")
-          }
-        })
+      loadSessions(selectedYear, selectedEventName, availableEvents)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedYear, selectedEventName, availableEvents])
+
+  const [isRefreshingSessions, setIsRefreshingSessions] = useState(false)
+
+  const handleRefreshSessions = async () => {
+    setIsRefreshingSessions(true)
+    try {
+      const events = await loadEvents(selectedYear, true)
+      await loadSessions(selectedYear, selectedEventName, events)
+      toast.success("Sessions refreshed")
+    } catch (error) {
+      console.error("Error refreshing sessions:", error)
+      toast.error("Failed to refresh sessions")
+    } finally {
+      setIsRefreshingSessions(false)
+    }
+  }
 
   // Advanced settings state
   const [showGrid, setShowGrid] = useState(true)
@@ -954,12 +1019,29 @@ export function TelemetryPlotGenerator() {
 
           {/* Race & session card */}
           <div data-tour="raceSession" className="border border-zinc-800">
-            <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-3">
-              <CalendarClock className="h-4 w-4 text-primary" />
-              <div>
-                <p className="text-sm font-medium leading-none">Race &amp; session</p>
-                <p className="mt-0.5 text-xs text-zinc-500">Pick the season, Grand Prix, and session.</p>
+            <div className="flex items-center justify-between gap-2 border-b border-zinc-800 px-5 py-3">
+              <div className="flex items-center gap-2">
+                <CalendarClock className="h-4 w-4 text-primary" />
+                <div>
+                  <p className="text-sm font-medium leading-none">Race &amp; session</p>
+                  <p className="mt-0.5 text-xs text-zinc-500">Pick the season, Grand Prix, and session.</p>
+                </div>
               </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-zinc-500 hover:text-foreground"
+                    onClick={handleRefreshSessions}
+                    disabled={isRefreshingSessions}
+                    aria-label="Refresh sessions"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isRefreshingSessions ? "animate-spin" : ""}`} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Refresh available Grands Prix &amp; sessions</TooltipContent>
+              </Tooltip>
             </div>
             <div className="space-y-4 px-5 py-4">
               {(() => {
@@ -1005,9 +1087,9 @@ export function TelemetryPlotGenerator() {
                           type="button"
                           onClick={useLatestRace}
                           className="text-[10px] text-primary hover:underline disabled:opacity-50"
-                          disabled={!finishedEvents.length}
+                          disabled={!finishedEvents.length || isResolvingLatestRace}
                         >
-                          Use latest race
+                          {isResolvingLatestRace ? "Finding latest race..." : "Use latest race"}
                         </button>
                       </TooltipTrigger>
                       <TooltipContent side="top">Jump to the most recent past event</TooltipContent>
