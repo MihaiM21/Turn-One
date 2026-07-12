@@ -14,6 +14,26 @@ const parseErrorMessage = async (response: Response, fallback: string) => {
   return text || fallback;
 };
 
+// Like parseErrorMessage, but preserves the full structured error body (e.g.
+// { error: "data_not_available", detail, retry_after_seconds }) instead of
+// flattening it to a single string, so the client can distinguish transient
+// "not ready yet" states from real failures.
+const parseErrorBody = async (response: Response, fallback: string) => {
+  const contentType = getContentType(response);
+
+  if (contentType.includes('application/json')) {
+    const errorData = await response.json().catch(() => ({}));
+    if (errorData && typeof errorData === 'object' && Object.keys(errorData).length > 0) {
+      return errorData as Record<string, unknown>;
+    }
+  } else {
+    const text = await response.text().catch(() => '');
+    if (text) return { error: text };
+  }
+
+  return { error: fallback };
+};
+
 const buildProxyResponseHeaders = (response: Response) => {
   const proxiedHeaders = new Headers();
   const contentType = response.headers.get('content-type');
@@ -88,15 +108,16 @@ export async function GET(
     // Check if the API request was successful
     if (!response.ok) {
       console.error(`[External API Proxy] API request failed with status ${response.status}`);
-      
-      // Try to get error details from the API response
-      const errorMessage = await parseErrorMessage(
+
+      // Try to get error details from the API response, preserving the full
+      // structured body (e.g. retry_after_seconds) rather than flattening it.
+      const errorBody = await parseErrorBody(
         response,
         `External API request failed with status ${response.status}`
       );
 
       return NextResponse.json(
-        { error: errorMessage },
+        errorBody,
         { status: response.status }
       );
     }

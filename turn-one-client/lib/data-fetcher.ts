@@ -2,6 +2,25 @@
 
 import { getAuthToken } from './auth-utils';
 
+// Typed error for failed external API calls. Preserves the HTTP status and the
+// structured error body (when the upstream API returns one) so callers can
+// distinguish transient states — e.g. "data not published yet" (503 +
+// code "data_not_available") — from genuine failures, instead of matching on
+// a flattened error message string.
+export class ExternalApiError extends Error {
+  status: number;
+  code?: string;
+  retryAfterSeconds?: number;
+
+  constructor(message: string, status: number, code?: string, retryAfterSeconds?: number) {
+    super(message);
+    this.name = 'ExternalApiError';
+    this.status = status;
+    this.code = code;
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+}
+
 // Base URL for the API - use consistent URL format
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.t1f1.com/api';
 // External API Base URL - routes through secure proxy (never exposes API key to browser)
@@ -71,20 +90,21 @@ export const fetchFromExternalAPI = async (endpoint: string, options: RequestIni
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(
+      const message =
+        errorData.detail ||
         errorData.error ||
         errorData.message ||
-        `External API request failed with status ${response.status}`
-      );
+        `External API request failed with status ${response.status}`;
+      throw new ExternalApiError(message, response.status, errorData.error, errorData.retry_after_seconds);
     }
 
     const data = await response.json();
 
     // Catch 200 OK responses that are actually errors
     if (data && typeof data === 'object' && !Array.isArray(data)) {
-      if (data.error) throw new Error(data.error);
-      if (data.detail && typeof data.detail === 'string') throw new Error(data.detail);
-      if (data.message && typeof data.message === 'string' && data.message.toLowerCase().includes('error')) throw new Error(data.message);
+      if (data.error) throw new ExternalApiError(data.detail || data.error, response.status, data.error, data.retry_after_seconds);
+      if (data.detail && typeof data.detail === 'string') throw new ExternalApiError(data.detail, response.status);
+      if (data.message && typeof data.message === 'string' && data.message.toLowerCase().includes('error')) throw new ExternalApiError(data.message, response.status);
     }
 
     return data;

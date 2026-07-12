@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Trophy, Gauge, Zap, Calendar, Flag, ArrowLeft, Home } from "lucide-react";
+import { Trophy, Gauge, Zap, Calendar, Flag, ArrowLeft, Home, RefreshCw, Clock, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { NewsPageData } from "@/types/news-types";
@@ -52,6 +52,7 @@ const sessionName = (type: string) => {
 export default function NewsPage() {
   const [data, setData] = useState<NewsPageData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,24 +69,70 @@ export default function NewsPage() {
     };
   }, []);
 
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const result = await getNewsPageData();
+      setData(result);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
   if (loading) return <Loading message="Loading session data..." />;
 
   if (!data?.session) {
+    const status = data?.sessionStatus;
+    const isNotReady = status?.kind === "not_ready";
+
     return (
       <div className="min-h-screen bg-black">
         <MainNav variant="homepage" />
         <div className="flex items-center justify-center min-h-[80vh]">
           <PublicCard className="max-w-md p-6">
-            <p className="text-sm font-bold uppercase tracking-tight text-primary">No data</p>
-            <p className="mt-2 text-sm text-zinc-400">
-              Failed to load the latest session. Please try again later.
-            </p>
-            <Button asChild variant="outline" className="mt-4 w-full rounded-none border-zinc-700">
-              <Link href="/">
-                <Home className="mr-2 h-4 w-4" />
-                Back to home
-              </Link>
-            </Button>
+            {isNotReady ? (
+              <>
+                <div className="flex items-center gap-2 text-primary">
+                  <Clock className="h-4 w-4" />
+                  <p className="text-sm font-bold uppercase tracking-tight">Data on the way</p>
+                </div>
+                <p className="mt-2 text-sm text-zinc-400">
+                  This session just finished — timing data is still being processed upstream.
+                  This usually takes a few minutes. It&apos;s not an error on our end, just a
+                  quick wait.
+                  {status.retryAfterSeconds
+                    ? ` Try checking back in about ${Math.round(status.retryAfterSeconds / 60)} min.`
+                    : ""}
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 text-primary">
+                  <AlertTriangle className="h-4 w-4" />
+                  <p className="text-sm font-bold uppercase tracking-tight">No data</p>
+                </div>
+                <p className="mt-2 text-sm text-zinc-400">
+                  Failed to load the latest session. Please try again.
+                </p>
+              </>
+            )}
+            <div className="mt-4 flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 rounded-none border-zinc-700"
+                onClick={handleRefresh}
+                disabled={refreshing}
+              >
+                <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+                {refreshing ? "Refreshing..." : "Refresh"}
+              </Button>
+              <Button asChild variant="ghost" className="flex-1 rounded-none">
+                <Link href="/">
+                  <Home className="mr-2 h-4 w-4" />
+                  Back home
+                </Link>
+              </Button>
+            </div>
           </PublicCard>
         </div>
       </div>
