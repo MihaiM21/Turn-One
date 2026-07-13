@@ -109,6 +109,35 @@ export const consumeToken = async (token: string) => {
   });
 }
 
+export interface TelemetryRequestLogPayload {
+  plotType: string;
+  year: number;
+  eventName: string;
+  session: string;
+  drivers?: string;
+  durationMs: number;
+  success: boolean;
+  tokensUsed: number;
+  errorMessage?: string;
+}
+
+/**
+ * Records a telemetry plot-generation attempt for admin usage analytics.
+ * Fire-and-forget: never throws, so a logging failure can't break plot generation.
+ */
+export const logTelemetryRequest = async (token: string, payload: TelemetryRequestLogPayload) => {
+  try {
+    await fetchWithAuth('telemetry-usage/log', token, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  } catch (err) {
+    // Swallow — logging is best-effort and must not affect the user.
+    console.warn('Failed to log telemetry request:', err);
+  }
+}
+
 export const consumeTokens = async (token: string, amount: number) => {
   return fetchWithAuth('subscription/consume-tokens', token, {
     method: 'POST',

@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Application.DTOs;
 using Application.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
@@ -14,11 +15,16 @@ public class AdminController : ControllerBase
 {
     private readonly IAdminService _adminService;
     private readonly IPageStatusService _pageStatusService;
+    private readonly ITelemetryUsageService _telemetryUsageService;
 
-    public AdminController(IAdminService adminService, IPageStatusService pageStatusService)
+    public AdminController(
+        IAdminService adminService,
+        IPageStatusService pageStatusService,
+        ITelemetryUsageService telemetryUsageService)
     {
         _adminService = adminService;
         _pageStatusService = pageStatusService;
+        _telemetryUsageService = telemetryUsageService;
     }
 
     [HttpGet("users")]
@@ -192,6 +198,139 @@ public class AdminController : ControllerBase
         {
             return StatusCode(500, new { message = "Failed to retrieve online users", error = ex.Message });
         }
+    }
+
+    // ── Telemetry Token-Usage / Request Log ────────────────────────────────
+
+    /// <summary>Token-usage time series (tokens spent on plot generation) over a range.</summary>
+    [HttpGet("telemetry-usage/series")]
+    public async Task<ActionResult> GetTelemetryUsageSeries(
+        [FromQuery] Guid? userId,
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to,
+        [FromQuery] string bucket = "day")
+    {
+        try
+        {
+            var (fromUtc, toUtc) = ResolveRange(from, to);
+            var series = await _telemetryUsageService.GetUsageSeriesAsync(userId, fromUtc, toUtc, bucket);
+            return Ok(series);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to retrieve usage series", error = ex.Message });
+        }
+    }
+
+    /// <summary>Paginated list of individual telemetry generation requests.</summary>
+    [HttpGet("telemetry-usage/requests")]
+    public async Task<ActionResult> GetTelemetryRequests(
+        [FromQuery] Guid? userId,
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 25,
+        [FromQuery] string? search = null)
+    {
+        try
+        {
+            var result = await _telemetryUsageService.GetRequestsAsync(userId, from, to, page, pageSize, search);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to retrieve telemetry requests", error = ex.Message });
+        }
+    }
+
+    /// <summary>Aggregate summary (totals, averages, top plot types / users) over a range.</summary>
+    [HttpGet("telemetry-usage/summary")]
+    public async Task<ActionResult> GetTelemetryUsageSummary(
+        [FromQuery] Guid? userId,
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to)
+    {
+        try
+        {
+            var (fromUtc, toUtc) = ResolveRange(from, to);
+            var summary = await _telemetryUsageService.GetSummaryAsync(userId, fromUtc, toUtc);
+            return Ok(summary);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to retrieve usage summary", error = ex.Message });
+        }
+    }
+
+    /// <summary>Deletes a single telemetry request log row.</summary>
+    [HttpDelete("telemetry-usage/requests/{id:guid}")]
+    public async Task<ActionResult> DeleteTelemetryRequest(Guid id)
+    {
+        try
+        {
+            var deleted = await _telemetryUsageService.DeleteRequestAsync(id);
+            if (!deleted) return NotFound(new { message = "Request not found" });
+            return Ok(new { message = "Request deleted" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to delete request", error = ex.Message });
+        }
+    }
+
+    /// <summary>Bulk-deletes request rows, optionally by user and/or older than a cutoff.</summary>
+    [HttpDelete("telemetry-usage/requests")]
+    public async Task<ActionResult> DeleteTelemetryRequests(
+        [FromQuery] Guid? userId,
+        [FromQuery] DateTime? olderThan)
+    {
+        try
+        {
+            var count = await _telemetryUsageService.DeleteRequestsAsync(userId, olderThan);
+            return Ok(new { message = $"Deleted {count} requests", count });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to delete requests", error = ex.Message });
+        }
+    }
+
+    /// <summary>Returns the automatic log-retention configuration.</summary>
+    [HttpGet("telemetry-usage/settings")]
+    public async Task<ActionResult> GetTelemetryLogSettings()
+    {
+        try
+        {
+            var settings = await _telemetryUsageService.GetSettingsAsync();
+            return Ok(settings);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to retrieve settings", error = ex.Message });
+        }
+    }
+
+    /// <summary>Updates the automatic log-retention configuration.</summary>
+    [HttpPut("telemetry-usage/settings")]
+    public async Task<ActionResult> UpdateTelemetryLogSettings([FromBody] UpdateTelemetryLogSettingsDto request)
+    {
+        try
+        {
+            var settings = await _telemetryUsageService.UpdateSettingsAsync(request.RetentionDays, request.AutoDeleteEnabled);
+            return Ok(settings);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to update settings", error = ex.Message });
+        }
+    }
+
+    /// <summary>Defaults an open-ended range to the last 30 days and treats bounds as UTC.</summary>
+    private static (DateTime from, DateTime to) ResolveRange(DateTime? from, DateTime? to)
+    {
+        var toUtc = to ?? DateTime.UtcNow;
+        var fromUtc = from ?? toUtc.AddDays(-30);
+        return (fromUtc, toUtc);
     }
 
     // ── Page Maintenance Endpoints ─────────────────────────────────────────

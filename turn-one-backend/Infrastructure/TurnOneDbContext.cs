@@ -28,6 +28,10 @@ public class TurnOneDbContext : DbContext
     public DbSet<TelemetryLap> TelemetryLaps { get; set; } = null!;
     public DbSet<OverlayShareToken> OverlayShareTokens { get; set; } = null!;
 
+    // Telemetry token-usage / request log
+    public DbSet<TelemetryGenerationRequest> TelemetryGenerationRequests { get; set; } = null!;
+    public DbSet<TelemetryLogSettings> TelemetryLogSettings { get; set; } = null!;
+
     // Page maintenance
     public DbSet<PageStatus> PageStatuses { get; set; } = null!;
 
@@ -165,6 +169,27 @@ public class TurnOneDbContext : DbContext
             entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(e => e.Token).IsUnique();
             entity.HasIndex(e => e.UserId);
+        });
+
+        modelBuilder.Entity<TelemetryGenerationRequest>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.PlotType).IsRequired();
+            entity.Property(e => e.EventName).IsRequired();
+            entity.Property(e => e.Session).IsRequired();
+            entity.Property(e => e.Drivers).IsRequired(false);
+            entity.Property(e => e.ErrorMessage).IsRequired(false);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.CreatedAt);
+        });
+
+        modelBuilder.Entity<TelemetryLogSettings>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.RetentionDays).IsRequired().HasDefaultValue(90);
+            entity.Property(e => e.AutoDeleteEnabled).IsRequired().HasDefaultValue(true);
+            entity.Property(e => e.UpdatedAt).IsRequired();
         });
 
         modelBuilder.Entity<PageStatus>(entity =>

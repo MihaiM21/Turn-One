@@ -304,6 +304,10 @@ builder.Services.AddSingleton(System.Threading.Channels.Channel.CreateUnbounded<
 builder.Services.AddHostedService<TelemetryPersistenceWorker>();
 builder.Services.AddHostedService<TelemetrySweeperWorker>();
 
+// Telemetry token-usage / request log
+builder.Services.AddScoped<ITelemetryUsageService, TelemetryUsageService>();
+builder.Services.AddHostedService<TelemetryLogRetentionBackgroundService>();
+
 var app = builder.Build();
 
 // Start F1 live timing service
