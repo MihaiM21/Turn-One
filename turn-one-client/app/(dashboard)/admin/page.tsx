@@ -597,6 +597,7 @@ export default function AdminDashboard() {
     { href: '/admin/trivia', label: 'Trivia', icon: Brain, iconColor: 'text-purple-400' },
     { href: '/admin/notifications', label: 'Notifications', icon: Bell, iconColor: 'text-orange-400' },
     { href: '/admin/export-graphs', label: 'Export Graphs', icon: Download, iconColor: 'text-pink-400' },
+    { href: '/admin/usage', label: 'Token Usage', icon: Zap, iconColor: 'text-yellow-400' },
   ];
 
   return (

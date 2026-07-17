@@ -5,11 +5,13 @@ import { loadEnvConfig } from '@next/env'
 import { fetchFromExternalAPI, fetchFromExternalAPIv1, fetchFromExternalAPIv1Image, fetchFromExternalAPIv2, fetchFromExternalAPIv2Image } from './data-fetcher';
 
 export const fetchEventsByYear = async (year: number) => {
-  return fetchFromExternalAPIv2(`seasons/${year}/events`);
+  // no-store: event lists change during a live race weekend, so the browser's
+  // HTTP cache must not serve a stale list on refresh (see route.ts proxy cache header).
+  return fetchFromExternalAPIv2(`seasons/${year}/events`, { cache: 'no-store' });
 }
 
 export const fetchSessionsByEvent = async (year: number, eventName: string) => {
-  return fetchFromExternalAPIv2(`seasons/${year}/events/${encodeURIComponent(eventName)}/sessions`);
+  return fetchFromExternalAPIv2(`seasons/${year}/events/${encodeURIComponent(eventName)}/sessions`, { cache: 'no-store' });
 }
 
 

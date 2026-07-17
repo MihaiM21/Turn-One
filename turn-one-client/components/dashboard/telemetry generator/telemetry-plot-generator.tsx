@@ -80,6 +80,7 @@ import { TyreStintEntry, LapTimeDistributionPoint } from "@/types/news-types"
 import { drivers_2025, drivers_2026 } from "@/lib/constants/drivers"
 import { LoadingPlot } from "./loading_plot"
 import { useTokens } from "@/hooks/use-tokens"
+import { logTelemetryRequest } from "@/lib/userService"
 import { useAuth } from "@/components/auth/auth-provider"
 import { gForceData, tireData, speedData } from "@/lib/constants/mockup-data"
 import { PlotTypePicker, type PlotType } from "./plot-type-picker"
@@ -426,6 +427,18 @@ export function TelemetryPlotGenerator() {
     )
   )
 
+  // Resolves the driver code(s) relevant to the currently selected plot type,
+  // as a comma-separated string, for the usage log.
+  const driversForCurrentPlot = (): string | undefined => {
+    let list: string[] = []
+    if (usesOneDriver) list = [selectedDriver]
+    else if (usesTwoDrivers) list = [selectedDriver1, selectedDriver2]
+    else if (usesSpeedDrivers) list = selectedSpeedDrivers
+    else if (usesLapDistDrivers) list = lapDistSelectedDrivers
+    const cleaned = list.filter((d) => d && d !== "none")
+    return cleaned.length > 0 ? cleaned.join(", ") : undefined
+  }
+
   const handleGeneratePlot = async () => {
     if (!isAuthenticated || !authToken) {
       toast.error("Sign in required", {
@@ -458,6 +471,8 @@ export function TelemetryPlotGenerator() {
 
     setIsGenerating(true)
     let plotGeneratedSuccessfully = false
+    let generationError: string | undefined
+    const generationStart = performance.now()
 
     try {
       if (selectedPlotType === "topspeeds") {
@@ -752,12 +767,29 @@ export function TelemetryPlotGenerator() {
     } catch (error) {
       console.error("Error generating plot:", error)
       const message = (error as Error).message || "An unexpected error occurred."
+      generationError = message
       toast.error("Plot generation failed", {
         description: message,
         duration: 8000,
       })
     } finally {
       setIsGenerating(false)
+
+      // Record the attempt (success or failure) for admin usage analytics — fire-and-forget.
+      if (authToken) {
+        const durationMs = Math.round(performance.now() - generationStart)
+        void logTelemetryRequest(authToken, {
+          plotType: selectedPlotType,
+          year: Number(selectedYear),
+          eventName: selectedEventName,
+          session: selectedSession,
+          drivers: driversForCurrentPlot(),
+          durationMs,
+          success: plotGeneratedSuccessfully,
+          tokensUsed: plotGeneratedSuccessfully ? 1 : 0,
+          errorMessage: generationError,
+        })
+      }
     }
   }
 
@@ -1054,7 +1086,7 @@ export function TelemetryPlotGenerator() {
                 const finishedEvents = datedEvents.length > 0 ? datedEvents : availableEvents
                 const finishedSessions = (() => {
                   const filtered = availableSessions.filter((s) => {
-                    const raw = s.date || s.session_date
+                    const raw = s.end_date || s.start_date || s.date || s.session_date
                     if (!raw) return true
                     return new Date(raw).getTime() <= now
                   })

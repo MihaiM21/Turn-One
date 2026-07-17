@@ -227,6 +227,193 @@ export const fetchOnlineUsers = async () => {
     }
 };
 
+// ── Telemetry Token-Usage / Request Log ─────────────────────────────────────
+
+export interface TelemetryUsagePoint {
+    periodStart: string;
+    tokensUsed: number;
+    requestCount: number;
+}
+
+export interface TelemetryRequest {
+    id: string;
+    userId: string;
+    username: string;
+    plotType: string;
+    year: number;
+    eventName: string;
+    session: string;
+    drivers?: string | null;
+    durationMs: number;
+    success: boolean;
+    tokensUsed: number;
+    errorMessage?: string | null;
+    createdAt: string;
+}
+
+export interface TelemetryRequestPage {
+    items: TelemetryRequest[];
+    page: number;
+    pageSize: number;
+    totalCount: number;
+}
+
+export interface TelemetryUsageCount {
+    label: string;
+    count: number;
+}
+
+export interface TelemetryUsageSummary {
+    totalTokensUsed: number;
+    totalRequests: number;
+    successfulRequests: number;
+    failedRequests: number;
+    averageDurationMs: number;
+    topPlotTypes: TelemetryUsageCount[];
+    topUsers: TelemetryUsageCount[];
+}
+
+export interface TelemetryLogSettings {
+    retentionDays: number;
+    autoDeleteEnabled: boolean;
+    updatedAt: string;
+}
+
+const buildQuery = (params: Record<string, string | number | undefined | null>) => {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') q.append(k, String(v));
+    });
+    const s = q.toString();
+    return s ? `?${s}` : '';
+};
+
+export const fetchTelemetryUsageSeries = async (
+    params: { userId?: string; from?: string; to?: string; bucket?: string } = {},
+): Promise<{ success: boolean; data?: TelemetryUsagePoint[]; error?: string }> => {
+    const token = getToken();
+    if (!token) return { success: false, error: 'No token found' };
+    try {
+        const response = await fetch(`${API_URL}/admin/telemetry-usage/series${buildQuery(params)}`, {
+            headers: { 'Authorization': token },
+        });
+        if (!response.ok) return { success: false, error: 'Failed to fetch usage series' };
+        return { success: true, data: await response.json() };
+    } catch (error) {
+        console.error('Error fetching usage series:', error);
+        return { success: false, error: 'Failed to fetch usage series' };
+    }
+};
+
+export const fetchTelemetryRequests = async (
+    params: { userId?: string; from?: string; to?: string; page?: number; pageSize?: number; search?: string } = {},
+): Promise<{ success: boolean; data?: TelemetryRequestPage; error?: string }> => {
+    const token = getToken();
+    if (!token) return { success: false, error: 'No token found' };
+    try {
+        const response = await fetch(`${API_URL}/admin/telemetry-usage/requests${buildQuery(params)}`, {
+            headers: { 'Authorization': token },
+        });
+        if (!response.ok) return { success: false, error: 'Failed to fetch requests' };
+        return { success: true, data: await response.json() };
+    } catch (error) {
+        console.error('Error fetching telemetry requests:', error);
+        return { success: false, error: 'Failed to fetch requests' };
+    }
+};
+
+export const fetchTelemetryUsageSummary = async (
+    params: { userId?: string; from?: string; to?: string } = {},
+): Promise<{ success: boolean; data?: TelemetryUsageSummary; error?: string }> => {
+    const token = getToken();
+    if (!token) return { success: false, error: 'No token found' };
+    try {
+        const response = await fetch(`${API_URL}/admin/telemetry-usage/summary${buildQuery(params)}`, {
+            headers: { 'Authorization': token },
+        });
+        if (!response.ok) return { success: false, error: 'Failed to fetch summary' };
+        return { success: true, data: await response.json() };
+    } catch (error) {
+        console.error('Error fetching usage summary:', error);
+        return { success: false, error: 'Failed to fetch summary' };
+    }
+};
+
+export const deleteTelemetryRequest = async (
+    id: string,
+): Promise<{ success: boolean; error?: string }> => {
+    const token = getToken();
+    if (!token) return { success: false, error: 'No token found' };
+    try {
+        const response = await fetch(`${API_URL}/admin/telemetry-usage/requests/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': token },
+        });
+        if (!response.ok) return { success: false, error: 'Failed to delete request' };
+        return { success: true };
+    } catch (error) {
+        console.error('Error deleting telemetry request:', error);
+        return { success: false, error: 'Failed to delete request' };
+    }
+};
+
+export const bulkDeleteTelemetryRequests = async (
+    params: { userId?: string; olderThan?: string } = {},
+): Promise<{ success: boolean; count?: number; error?: string }> => {
+    const token = getToken();
+    if (!token) return { success: false, error: 'No token found' };
+    try {
+        const response = await fetch(`${API_URL}/admin/telemetry-usage/requests${buildQuery(params)}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': token },
+        });
+        if (!response.ok) return { success: false, error: 'Failed to delete requests' };
+        const data = await response.json();
+        return { success: true, count: data.count };
+    } catch (error) {
+        console.error('Error bulk deleting telemetry requests:', error);
+        return { success: false, error: 'Failed to delete requests' };
+    }
+};
+
+export const fetchTelemetryLogSettings = async (): Promise<{ success: boolean; data?: TelemetryLogSettings; error?: string }> => {
+    const token = getToken();
+    if (!token) return { success: false, error: 'No token found' };
+    try {
+        const response = await fetch(`${API_URL}/admin/telemetry-usage/settings`, {
+            headers: { 'Authorization': token },
+        });
+        if (!response.ok) return { success: false, error: 'Failed to fetch settings' };
+        return { success: true, data: await response.json() };
+    } catch (error) {
+        console.error('Error fetching log settings:', error);
+        return { success: false, error: 'Failed to fetch settings' };
+    }
+};
+
+export const updateTelemetryLogSettings = async (
+    retentionDays: number,
+    autoDeleteEnabled: boolean,
+): Promise<{ success: boolean; data?: TelemetryLogSettings; error?: string }> => {
+    const token = getToken();
+    if (!token) return { success: false, error: 'No token found' };
+    try {
+        const response = await fetch(`${API_URL}/admin/telemetry-usage/settings`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token,
+            },
+            body: JSON.stringify({ retentionDays, autoDeleteEnabled }),
+        });
+        if (!response.ok) return { success: false, error: 'Failed to update settings' };
+        return { success: true, data: await response.json() };
+    } catch (error) {
+        console.error('Error updating log settings:', error);
+        return { success: false, error: 'Failed to update settings' };
+    }
+};
+
 // ── Page Maintenance ───────────────────────────────────────────────────────
 
 export interface PageStatusData {

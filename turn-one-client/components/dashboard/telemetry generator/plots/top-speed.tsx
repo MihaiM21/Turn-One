@@ -47,6 +47,7 @@ export function TopSpeedGraph({ data, speedDomain, height = 400, advancedSetting
             type="category"
             stroke="#F9FAFB"
             width={yAxisWidth}
+            interval={0}
             tick={{ fontSize: tickFontSize }}
             tickFormatter={(value) => `${value}`}
           />
