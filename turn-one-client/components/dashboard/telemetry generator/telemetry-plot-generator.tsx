@@ -1086,7 +1086,7 @@ export function TelemetryPlotGenerator() {
                 const finishedEvents = datedEvents.length > 0 ? datedEvents : availableEvents
                 const finishedSessions = (() => {
                   const filtered = availableSessions.filter((s) => {
-                    const raw = s.date || s.session_date
+                    const raw = s.end_date || s.start_date || s.date || s.session_date
                     if (!raw) return true
                     return new Date(raw).getTime() <= now
                   })
