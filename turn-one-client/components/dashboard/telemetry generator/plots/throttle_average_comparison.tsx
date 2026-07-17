@@ -47,6 +47,7 @@ export function ThrottleAverageGraph({ data, throttleDomain, height = 700, advan
             type="category"
             stroke="#F9FAFB"
             width={yAxisWidth}
+            interval={0}
             tick={{ fontSize: tickFontSize }}
             tickFormatter={(value) => `${value}`}
           />

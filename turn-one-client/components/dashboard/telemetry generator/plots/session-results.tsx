@@ -63,6 +63,7 @@ export function SessionResultsGraph({ data, deltaDomain, height = 700, advancedS
             type="category"
             stroke="#F9FAFB"
             width={yAxisWidth}
+            interval={0}
             tick={{ fontSize: tickFontSize }}
           />
           <Tooltip
