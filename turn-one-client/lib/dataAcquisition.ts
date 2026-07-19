@@ -162,3 +162,123 @@ export const fetchAPIDailyStats = async () => {
 export const fetchAPITotalStats = async () => {
   return fetchFromExternalAPI('v1/analytics/total');
 }
+
+// --- New V2 data endpoints ---
+
+export const fetchPositionChanges = async (year: number, gp: number | string, session: string) => {
+  return fetchFromExternalAPIv2(`position-changes-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`);
+}
+
+export const fetchRaceGaps = async (
+  year: number,
+  gp: number | string,
+  session: string,
+  reference: 'leader' | 'average' = 'leader',
+  drivers?: string[]
+) => {
+  let endpoint = `race-gaps-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}&reference=${reference}`;
+  if (drivers && drivers.length > 0) endpoint += `&drivers=${encodeURIComponent(drivers.join(','))}`;
+  return fetchFromExternalAPIv2(endpoint);
+}
+
+export const fetchTyreDegradation = async (
+  year: number,
+  gp: number | string,
+  session: string,
+  driver?: string,
+  fuelCorrected: boolean = false
+) => {
+  let endpoint = `tyre-degradation-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}&fuel_corrected=${fuelCorrected}`;
+  if (driver) endpoint += `&driver=${encodeURIComponent(driver)}`;
+  return fetchFromExternalAPIv2(endpoint);
+}
+
+export const fetchPitStrategy = async (year: number, gp: number | string, session: string) => {
+  return fetchFromExternalAPIv2(`pit-strategy-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`);
+}
+
+export const fetchSessionWeather = async (year: number, gp: number | string, session: string) => {
+  return fetchFromExternalAPIv2(`session-weather-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`);
+}
+
+export const fetchRacePaceHeatmap = async (year: number, gp: number | string, session: string) => {
+  return fetchFromExternalAPIv2(`race-pace-heatmap-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`);
+}
+
+export const fetchTrackEvolution = async (
+  year: number,
+  gp: number | string,
+  session: string,
+  drivers?: string[]
+) => {
+  let endpoint = `track-evolution-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`;
+  if (drivers && drivers.length > 0) endpoint += `&drivers=${encodeURIComponent(drivers.join(','))}`;
+  return fetchFromExternalAPIv2(endpoint);
+}
+
+export const fetchTheoreticalBest = async (year: number, gp: number | string, session: string = 'Q') => {
+  return fetchFromExternalAPIv2(`theoretical-best-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`);
+}
+
+export const fetchRaceStory = async (year: number, gp: number | string, session: string) => {
+  return fetchFromExternalAPIv2(`race-story-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`);
+}
+
+export const fetchTeammateBattle = async (year: number) => {
+  return fetchFromExternalAPIv2(`seasons/${year}/teammate-battle-data`);
+}
+
+export const fetchFormGuide = async (year: number, window: number = 3, drivers?: string[]) => {
+  let endpoint = `seasons/${year}/form-guide-data?window=${window}`;
+  if (drivers && drivers.length > 0) endpoint += `&drivers=${encodeURIComponent(drivers.join(','))}`;
+  return fetchFromExternalAPIv2(endpoint);
+}
+
+export const fetchSeasonDriverRadar = async (year: number, drivers?: string[]) => {
+  let endpoint = `seasons/${year}/driver-radar-data`;
+  if (drivers && drivers.length > 0) endpoint += `?drivers=${encodeURIComponent(drivers.join(','))}`;
+  return fetchFromExternalAPIv2(endpoint);
+}
+
+// `yearsParam` is the already-formatted string built by the UI: either a span
+// "YYYY-YYYY" or a comma list "YYYY,YYYY,...".
+export const fetchCareerDriverRadar = async (yearsParam: string, drivers?: string[]) => {
+  let endpoint = `career/driver-radar-data?years=${encodeURIComponent(yearsParam)}`;
+  if (drivers && drivers.length > 0) endpoint += `&drivers=${encodeURIComponent(drivers.join(','))}`;
+  return fetchFromExternalAPIv2(endpoint);
+}
+
+export const fetchTrackMap = async (
+  year: number,
+  gp: number | string,
+  session: string,
+  driver: string,
+  colorBy: 'speed' | 'gear' = 'speed'
+) => {
+  return fetchFromExternalAPIv2(
+    `track-map-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}&driver=${encodeURIComponent(driver)}&color_by=${colorBy}`
+  );
+}
+
+export const fetchCornerDuel = async (
+  year: number,
+  gp: number | string,
+  session: string,
+  driver1: string,
+  driver2: string
+) => {
+  return fetchFromExternalAPIv2(
+    `corner-duel-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}&driver1=${encodeURIComponent(driver1)}&driver2=${encodeURIComponent(driver2)}`
+  );
+}
+
+export const fetchSessionDriverRadar = async (
+  year: number,
+  gp: number | string,
+  session: string,
+  drivers?: string[]
+) => {
+  let endpoint = `driver-radar-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`;
+  if (drivers && drivers.length > 0) endpoint += `&drivers=${encodeURIComponent(drivers.join(','))}`;
+  return fetchFromExternalAPIv2(endpoint);
+}

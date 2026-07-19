@@ -21,9 +21,19 @@ export async function getLatestSessionDataClient(): Promise<SessionDashboardData
 // Classifies a session-fetch failure so UI can distinguish "the data pipeline
 // just hasn't published this session yet" (transient, worth a friendly
 // message + retry) from a genuine error (network failure, unexpected 5xx).
+//
+// The upstream stats API doesn't only signal this via the explicit
+// "data_not_available" error code — per its docs, a plain 404 also means
+// "session/data not available" (e.g. session just finished, results not
+// uploaded yet), and a 503 is used for other transient upstream states.
+// Only 400/429/5xx-other are treated as genuine errors.
 export function classifySessionFetchError(e: unknown): SessionFetchStatus {
-  if (e instanceof ExternalApiError && e.code === "data_not_available") {
-    return { kind: "not_ready", retryAfterSeconds: e.retryAfterSeconds };
+  if (e instanceof ExternalApiError) {
+    const isNotReady =
+      e.code === "data_not_available" || e.status === 404 || e.status === 503;
+    if (isNotReady) {
+      return { kind: "not_ready", retryAfterSeconds: e.retryAfterSeconds };
+    }
   }
   return { kind: "error", message: e instanceof Error ? e.message : String(e) };
 }

@@ -7,11 +7,38 @@ interface SpeedDistributionGraphProps {
   data: SpeedDistributionPoint[]
   selectedDrivers: string[]
   advancedSettings?: AdvancedPlotSettings
+  /** Ignore team colors and assign each driver a distinct, easily distinguishable color instead. */
+  useDistinctColors?: boolean
 }
+
+// Colorblind-friendly categorical palette (Okabe-Ito), chosen for max contrast between adjacent entries.
+const DISTINCT_COLOR_PALETTE = ['#0072B2', '#E69F00', '#009E73', '#D55E00', '#CC79A7', '#F0E442', '#56B4E9']
 
 interface DriverSpeedPoint {
   time: number
   speed: number
+}
+
+function hexToRgb(hex: string): [number, number, number] | null {
+  const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  if (!match) return null
+  return [parseInt(match[1], 16), parseInt(match[2], 16), parseInt(match[3], 16)]
+}
+
+function colorsLookAlike(a: string, b: string): boolean {
+  if (a.toLowerCase() === b.toLowerCase()) return true
+
+  const rgbA = hexToRgb(a)
+  const rgbB = hexToRgb(b)
+  if (!rgbA || !rgbB) return false
+
+  const distance = Math.sqrt(
+    (rgbA[0] - rgbB[0]) ** 2 + (rgbA[1] - rgbB[1]) ** 2 + (rgbA[2] - rgbB[2]) ** 2
+  )
+
+  // Teammates are often given slightly different shades of the same team
+  // color (e.g. one lighter/darker red) rather than a byte-identical hex.
+  return distance < 60
 }
 
 function findNearestSpeed(points: DriverSpeedPoint[], targetTime: number): number | null {
@@ -45,7 +72,7 @@ function findNearestSpeed(points: DriverSpeedPoint[], targetTime: number): numbe
     : leftPoint.speed
 }
 
-export function SpeedDistributionGraph({ data, selectedDrivers, advancedSettings }: SpeedDistributionGraphProps) {
+export function SpeedDistributionGraph({ data, selectedDrivers, advancedSettings, useDistinctColors }: SpeedDistributionGraphProps) {
   const settings = advancedSettings || {
     showGrid: true,
     showLegend: true,
@@ -72,7 +99,8 @@ export function SpeedDistributionGraph({ data, selectedDrivers, advancedSettings
     if (!allowedDrivers.includes(point.driver)) continue
 
     if (!colorByDriver.has(point.driver)) {
-      colorByDriver.set(point.driver, point.color || '#F9FAFB')
+      const paletteColor = DISTINCT_COLOR_PALETTE[colorByDriver.size % DISTINCT_COLOR_PALETTE.length]
+      colorByDriver.set(point.driver, useDistinctColors ? paletteColor : point.color || '#F9FAFB')
     }
 
     const roundedTime = Number(point.time.toFixed(3))
@@ -90,6 +118,23 @@ export function SpeedDistributionGraph({ data, selectedDrivers, advancedSettings
 
   const chartData = Array.from(byTime.values()).sort((a, b) => Number(a.time) - Number(b.time))
   const driversInData = allowedDrivers.filter(driver => colorByDriver.has(driver))
+
+  const dashByDriver = new Map<string, string | undefined>()
+  const seenColors: string[] = []
+  for (const driver of driversInData) {
+    const baseColor = colorByDriver.get(driver) || '#F9FAFB'
+    const matchesEarlierDriver = seenColors.some(seenColor => colorsLookAlike(seenColor, baseColor))
+    dashByDriver.set(driver, matchesEarlierDriver ? '12 8' : undefined)
+    seenColors.push(baseColor)
+  }
+
+  // Dashed teammate lines must be drawn last so their dash gaps actually
+  // punch through the same-colored solid line instead of being covered by it.
+  const orderedDrivers = [...driversInData].sort((a, b) => {
+    const aDashed = dashByDriver.get(a) ? 1 : 0
+    const bDashed = dashByDriver.get(b) ? 1 : 0
+    return aDashed - bDashed
+  })
 
   for (const driver of driversInData) {
     const points = pointsByDriver.get(driver) || []
@@ -158,19 +203,25 @@ export function SpeedDistributionGraph({ data, selectedDrivers, advancedSettings
           />
           {settings.showLegend && <Legend />}
 
-          {driversInData.map((driver) => (
-            <Line
-              key={driver}
-              type="monotone"
-              dataKey={driver}
-              name={driver}
-              stroke={colorByDriver.get(driver) || '#F9FAFB'}
-              strokeWidth={settings.lineThickness}
-              dot={false}
-              connectNulls
-              isAnimationActive={settings.animateChart}
-            />
-          ))}
+          {orderedDrivers.map((driver) => {
+            const dash = dashByDriver.get(driver)
+            const color = colorByDriver.get(driver) || '#F9FAFB'
+
+            return (
+              <Line
+                key={driver}
+                type="monotone"
+                dataKey={driver}
+                name={driver}
+                stroke={color}
+                strokeWidth={dash ? settings.lineThickness + 1 : settings.lineThickness}
+                strokeDasharray={dash}
+                dot={false}
+                connectNulls
+                isAnimationActive={settings.animateChart}
+              />
+            )
+          })}
         </LineChart>
       </ResponsiveContainer>
     </div>

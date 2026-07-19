@@ -94,15 +94,20 @@ export async function GET(
     
     console.log(`[External API Proxy] Forwarding request to: ${endpoint}`);
 
-    // Forward the request to the external API with authentication
+    // Forward the request to the external API with authentication.
+    // cache: 'no-store' is deliberate here — Next's fetch Data Cache will
+    // keep serving a stale successful response if a later revalidation
+    // fails/errors, which silently masked "session finished but upstream
+    // hasn't published data yet" errors behind old cached data. Any caching
+    // we want happens transparently via the Cache-Control response header
+    // below instead.
     const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
         'X-API-Key': EXTERNAL_API_KEY,
         'Accept': '*/*',
       },
-      // Optional: Add cache control
-      next: { revalidate: 60 }, // Cache for 60 seconds
+      cache: 'no-store',
     });
 
     // Check if the API request was successful
