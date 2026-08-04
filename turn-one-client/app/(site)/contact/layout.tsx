@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { generateSEO } from '@/lib/seo'
 
+
 export const metadata: Metadata = generateSEO({
   title: 'Contact Us',
   description: 'Get in touch with Turn One for F1 analysis support, custom integrations, and enterprise solutions. Contact our motorsport intelligence experts for live timing and telemetry services.',

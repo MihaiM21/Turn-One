@@ -2,6 +2,7 @@ import { DashboardLayoutClient } from './dashboard-layout-client';
 import { generateSEO } from '@/lib/seo';
 import { Metadata } from 'next';
 
+
 // Default metadata for dashboard - can be overridden by page-specific layouts
 export const metadata: Metadata = generateSEO({
   title: 'Dashboard - Formula 1 Live Timing Platform',

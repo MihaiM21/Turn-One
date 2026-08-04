@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Check if the user is trying to access an admin route
   if (request.nextUrl.pathname.startsWith('/admin')) {
     // For now, we'll rely on client-side checks

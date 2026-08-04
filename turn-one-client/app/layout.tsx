@@ -15,6 +15,7 @@ import { VersionProvider } from "@/components/providers/version-provider";
 import { generateSEO, generateOrganizationSchema, generateWebsiteSchema } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 
+
 // Enhanced SEO metadata for the entire application
 export const metadata: Metadata = generateSEO({
     title: undefined, // Use default full name from config

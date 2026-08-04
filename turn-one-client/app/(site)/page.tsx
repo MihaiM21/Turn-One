@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { generateSEO } from '@/lib/seo';
 import { HomeHub } from '@/components/site/home-hub';
 
+
 export const metadata: Metadata = generateSEO({
   title: 'Turn One — F1 Live Timing, Telemetry & Predictions Hub',
   description: 'Turn One is your entry point into Formula 1: jump straight into live timing, the fan dashboard, race predictions, and the F1 Live feed — all from one place.',

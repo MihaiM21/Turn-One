@@ -8,6 +8,7 @@ import { PublicCard } from "@/components/site/public-card";
 import { CtaRow } from "@/components/site/cta-row";
 import { generateSEO } from "@/lib/seo";
 
+
 export const metadata: Metadata = generateSEO({
   title: "Pricing — Free F1 Telemetry Analysis",
   description:

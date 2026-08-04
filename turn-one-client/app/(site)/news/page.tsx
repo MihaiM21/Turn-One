@@ -15,6 +15,7 @@ import { SectionHeader } from "@/components/site/section-header";
 import { PublicCard } from "@/components/site/public-card";
 import { RefreshButton } from "@/components/news/refresh-button";
 
+
 export const revalidate = 300;
 
 const sessionColor = (type: string) => {

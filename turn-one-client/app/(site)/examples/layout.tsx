@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { generateSEO } from '@/lib/seo';
 
+
 export const metadata: Metadata = generateSEO({
   title: 'Examples - F1 Telemetry & Data Visualization Showcase',
   description: 'See Turn One in action: live telemetry charts, lap time analysis, throttle/brake comparisons, track comparisons, and real-time timing grids built from real Formula 1 data.',

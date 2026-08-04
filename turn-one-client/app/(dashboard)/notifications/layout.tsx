@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { generateSEO } from '@/lib/seo';
 
+
 export const metadata: Metadata = generateSEO({
   title: 'Notifications',
   description: 'Your Turn One notifications.',

@@ -3,6 +3,7 @@ import { DashboardHeader } from "@/components/dashboard/live dashboard/dashboard
 import {TelemetryPlotGenerator} from "@/components/dashboard/telemetry generator/telemetry-plot-generator";
 import {ExploreMoreLinks} from "@/components/dashboard/explore-more-links";
 
+
 export const metadata = getDashboardMetadata('rewards');
 
 export default function RewardsRouteLayout({ children }: { children: React.ReactNode }) {

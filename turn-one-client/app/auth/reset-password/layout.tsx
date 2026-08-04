@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { generateSEO } from '@/lib/seo'
 
+
 export const metadata: Metadata = generateSEO({
   title: 'Reset Password',
   description: 'Reset your Turn One account password.',
