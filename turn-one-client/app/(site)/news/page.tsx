@@ -1,14 +1,9 @@
-"use client";
-
-import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Trophy, Gauge, Zap, Calendar, Flag, ArrowLeft, Home, RefreshCw, Clock, AlertTriangle } from "lucide-react";
+import { Trophy, Gauge, Zap, Calendar, Flag, ArrowLeft, Home, Clock, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { NewsPageData } from "@/types/news-types";
 import { getNewsPageData } from "@/lib/newsService";
 import { MainNav } from "@/components/navigation/main-nav";
-import { Loading } from "@/components/ui/loading";
 import { QualifyingChart } from "@/components/news/qualifying-chart";
 import { TopSpeedChart } from "@/components/news/top-speed-chart";
 import { ThrottleChart } from "@/components/news/throttle-chart";
@@ -18,6 +13,9 @@ import { TyreStintChart } from "@/components/news/tyre-stint-chart";
 import { GatedPreview } from "@/components/site/gated-preview";
 import { SectionHeader } from "@/components/site/section-header";
 import { PublicCard } from "@/components/site/public-card";
+import { RefreshButton } from "@/components/news/refresh-button";
+
+export const revalidate = 300;
 
 const sessionColor = (type: string) => {
   switch (type) {
@@ -49,37 +47,8 @@ const sessionName = (type: string) => {
   return "Session";
 }
 
-export default function NewsPage() {
-  const [data, setData] = useState<NewsPageData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const result = await getNewsPageData();
-        if (!cancelled) setData(result);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      const result = await getNewsPageData();
-      setData(result);
-    } finally {
-      setRefreshing(false);
-    }
-  }, []);
-
-  if (loading) return <Loading message="Loading session data..." />;
+export default async function NewsPage() {
+  const data = await getNewsPageData();
 
   if (!data?.session) {
     const status = data?.sessionStatus;
@@ -117,15 +86,7 @@ export default function NewsPage() {
               </>
             )}
             <div className="mt-4 flex gap-2">
-              <Button
-                variant="outline"
-                className="flex-1 rounded-none border-zinc-700"
-                onClick={handleRefresh}
-                disabled={refreshing}
-              >
-                <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-                {refreshing ? "Refreshing..." : "Refresh"}
-              </Button>
+              <RefreshButton />
               <Button asChild variant="ghost" className="flex-1 rounded-none">
                 <Link href="/">
                   <Home className="mr-2 h-4 w-4" />

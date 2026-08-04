@@ -11,6 +11,9 @@ interface DashboardPageConfig {
   description: string;
   keywords: string[];
   url: string;
+  /** All pages in this registry live behind the auth-gated (dashboard) route
+   * group's ProtectedRoute wrapper, so they default to noindex. */
+  noIndex?: boolean;
 }
 
 export const dashboardPagesMetadata: Record<string, DashboardPageConfig> = {
@@ -27,6 +30,7 @@ export const dashboardPagesMetadata: Record<string, DashboardPageConfig> = {
       'F1 race dashboard',
     ],
     url: '/dashboard',
+    noIndex: true,
   },
   generator: {
     title: 'Telemetry Plot Generator - F1 Data Visualization',
@@ -41,6 +45,7 @@ export const dashboardPagesMetadata: Record<string, DashboardPageConfig> = {
       'racing telemetry tools',
     ],
     url: '/generator',
+    noIndex: true,
   },
   predictions: {
     title: 'F1 Race Predictions - Formula 1 Prediction Game',
@@ -55,6 +60,7 @@ export const dashboardPagesMetadata: Record<string, DashboardPageConfig> = {
       'F1 prediction competition',
     ],
     url: '/predictions',
+    noIndex: true,
   },
   live: {
     title: 'F1 Live Race - Real-Time Formula 1 Timing',
@@ -69,6 +75,7 @@ export const dashboardPagesMetadata: Record<string, DashboardPageConfig> = {
       'F1 live updates',
     ],
     url: '/live',
+    noIndex: true,
   },
   live2: {
     title: 'F1 Live Timing Screen - Advanced Race Tracking',
@@ -82,6 +89,7 @@ export const dashboardPagesMetadata: Record<string, DashboardPageConfig> = {
       'professional F1 timing',
     ],
     url: '/live2',
+    noIndex: true,
   },
   rewards: {
     title: 'F1 Rewards & Leveling - Earn Turn One Coins',
@@ -96,6 +104,7 @@ export const dashboardPagesMetadata: Record<string, DashboardPageConfig> = {
       'racing rewards',
     ],
     url: '/rewards',
+    noIndex: true,
   },
   account: {
     title: 'Account Settings - Manage Your F1 Profile',
@@ -109,6 +118,7 @@ export const dashboardPagesMetadata: Record<string, DashboardPageConfig> = {
       'user dashboard settings',
     ],
     url: '/account',
+    noIndex: true,
   },
   docs: {
     title: 'F1 API Documentation - Turn One Developer Docs',
@@ -123,6 +133,7 @@ export const dashboardPagesMetadata: Record<string, DashboardPageConfig> = {
       'F1 integration',
     ],
     url: '/docs',
+    noIndex: true,
   },
   games: {
     title: 'F1 Game Hub - Predictions, Trivia & Competitions',
@@ -137,6 +148,7 @@ export const dashboardPagesMetadata: Record<string, DashboardPageConfig> = {
       'F1 competitions',
     ],
     url: '/games',
+    noIndex: true,
   },
 };
 
@@ -152,6 +164,7 @@ export function getDashboardMetadata(pageKey: string): Metadata {
       title: 'Turn One Dashboard',
       description: 'Access your Formula 1 dashboard with live timing, telemetry, and race data.',
       url: '/dashboard',
+      noIndex: true,
     });
   }
 
@@ -160,5 +173,6 @@ export function getDashboardMetadata(pageKey: string): Metadata {
     description: config.description,
     keywords: config.keywords,
     url: config.url,
+    noIndex: config.noIndex ?? false,
   });
 }

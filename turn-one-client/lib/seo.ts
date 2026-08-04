@@ -81,7 +81,7 @@ export const SITE_CONFIG = {
   ],
   locale: 'en_US',
   type: 'website',
-  twitter: '@TurnOneOfficial', // Update with actual handle
+  twitter: '@TurnOneOfficial',
   twitterCard: 'summary_large_image',
 }
 
@@ -220,6 +220,16 @@ export function generateSEO({
     // PWA & Mobile
     applicationName: SITE_CONFIG.shortName,
 
+    // Icons & manifest
+    icons: {
+      icon: [
+        { url: '/icons/favicon.svg', type: 'image/svg+xml' },
+        { url: '/icons/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+      ],
+      apple: '/icons/apple-touch-icon.png',
+    },
+    manifest: '/manifest.json',
+
     // Verification tags (add your actual codes)
     verification: {
       google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION || '',
@@ -278,197 +288,3 @@ export function generateWebsiteSchema() {
   }
 }
 
-/**
- * Generate BreadcrumbList structured data
- */
-export function generateBreadcrumbSchema(items: Array<{ name: string; url: string }>) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: items.map((item, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      name: item.name,
-      item: `${SITE_CONFIG.url}${item.url}`,
-    })),
-  }
-}
-
-/**
- * Generate SportsEvent structured data for F1 races
- */
-export function generateRaceEventSchema({
-  name,
-  startDate,
-  endDate,
-  location,
-  description,
-}: {
-  name: string
-  startDate: string
-  endDate: string
-  location: { name: string; address: string; country: string }
-  description?: string
-}) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'SportsEvent',
-    name,
-    description,
-    startDate,
-    endDate,
-    sport: 'Formula 1',
-    location: {
-      '@type': 'Place',
-      name: location.name,
-      address: {
-        '@type': 'PostalAddress',
-        addressCountry: location.country,
-        streetAddress: location.address,
-      },
-    },
-    organizer: {
-      '@type': 'Organization',
-      name: 'FIA Formula One World Championship',
-      url: 'https://www.formula1.com',
-    },
-    competitor: {
-      '@type': 'SportsTeam',
-      name: 'Formula 1 Teams',
-    },
-  }
-}
-
-/**
- * Generate Article structured data for news/blog posts
- */
-export function generateArticleSchema({
-  headline,
-  description,
-  datePublished,
-  dateModified,
-  authorName,
-  imageUrl,
-  url,
-}: {
-  headline: string
-  description: string
-  datePublished: string
-  dateModified?: string
-  authorName: string
-  imageUrl: string
-  url: string
-}) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline,
-    description,
-    image: imageUrl.startsWith('http') ? imageUrl : `${SITE_CONFIG.url}${imageUrl}`,
-    datePublished,
-    dateModified: dateModified || datePublished,
-    author: {
-      '@type': 'Person',
-      name: authorName,
-    },
-    publisher: {
-      '@type': 'Organization',
-      name: SITE_CONFIG.name,
-      logo: {
-        '@type': 'ImageObject',
-        url: `${SITE_CONFIG.url}/logo.png`,
-      },
-    },
-    mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id': url.startsWith('http') ? url : `${SITE_CONFIG.url}${url}`,
-    },
-  }
-}
-
-/**
- * Generate VideoObject structured data
- */
-export function generateVideoSchema({
-  name,
-  description,
-  thumbnailUrl,
-  uploadDate,
-  duration,
-  contentUrl,
-}: {
-  name: string
-  description: string
-  thumbnailUrl: string
-  uploadDate: string
-  duration: string // ISO 8601 format (e.g., "PT1M33S")
-  contentUrl: string
-}) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'VideoObject',
-    name,
-    description,
-    thumbnailUrl,
-    uploadDate,
-    duration,
-    contentUrl,
-    embedUrl: contentUrl,
-  }
-}
-
-/**
- * Generate FAQ structured data
- */
-export function generateFAQSchema(faqs: Array<{ question: string; answer: string }>) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqs.map((faq) => ({
-      '@type': 'Question',
-      name: faq.question,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: faq.answer,
-      },
-    })),
-  }
-}
-
-/**
- * Generate Game structured data
- */
-export function generateGameSchema({
-  name,
-  description,
-  url,
-  imageUrl,
-  genre = 'Sports Game',
-}: {
-  name: string
-  description: string
-  url: string
-  imageUrl: string
-  genre?: string
-}) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'VideoGame',
-    name,
-    description,
-    url: url.startsWith('http') ? url : `${SITE_CONFIG.url}${url}`,
-    image: imageUrl.startsWith('http') ? imageUrl : `${SITE_CONFIG.url}${imageUrl}`,
-    genre,
-    gamePlatform: 'Web Browser',
-    author: {
-      '@type': 'Organization',
-      name: SITE_CONFIG.name,
-    },
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'USD',
-      availability: 'https://schema.org/InStock',
-    },
-  }
-}

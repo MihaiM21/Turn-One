@@ -5,32 +5,13 @@ import { useRouter } from "next/navigation"
 import JSZip from "jszip"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import {
-  TooltipProvider,
-} from "@/components/ui/tooltip"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import {
   Loader2,
   Download,
   Settings,
   AlertTriangle,
-  CalendarClock,
   Users,
-  ChevronDown,
   Plus,
   Check,
   X,
@@ -40,17 +21,22 @@ import {
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import * as adminService from "@/lib/adminService"
-import { fetchEventsByYear, fetchSessionsByEvent } from "@/lib/dataAcquisition"
 import { drivers_2025, drivers_2026 } from "@/lib/constants/drivers"
 import { SITE_CONFIG } from "@/lib/seo"
 import { DashboardHeader } from "@/components/dashboard/live dashboard/dashboard-header"
 import {
-  CHART_BY_KEY,
-  CHART_CATALOG,
-  isChartDataEmpty,
-  type ChartDefinition,
-  type ChartFetchContext,
-} from "@/lib/export/chart-catalog"
+  EXPORTABLE_PLOTS,
+  PLOT_BY_KEY,
+  isPlotDataEmpty,
+  isSessionRestricted,
+  resolvePlotKey,
+} from "@/lib/plots/catalog"
+import {
+  defaultOptionsFor,
+  type PlotDefinition,
+  type PlotFetchContext,
+} from "@/lib/plots/types"
+import { sessionToExportType } from "@/lib/plots/session-utils"
 import { OUTPUT_SIZES, FOOTER_HEIGHT } from "@/lib/export/output-sizes"
 import {
   exportChartAsBlob,
@@ -58,28 +44,25 @@ import {
   triggerDownload,
 } from "@/lib/export/chart-exporter"
 import { createPreset } from "@/lib/export/export-presets"
-import type {
-  ExportPreset,
-  ExportSessionType,
-  OutputSizeKey,
-} from "@/types/export-types"
+import type { ExportPreset, OutputSizeKey } from "@/types/export-types"
 import type { AdvancedPlotSettings } from "@/types/plot-types"
 import { PlotTypePicker, type PlotType } from "@/components/dashboard/telemetry generator/plot-type-picker"
 import { OutputSizePicker } from "@/components/admin/export-graphs/output-size-picker"
 import { OffscreenRenderer } from "@/components/admin/export-graphs/offscreen-renderer"
 import { PresetManagerDialog } from "@/components/admin/export-graphs/preset-manager-dialog"
 import { ChartErrorBoundary } from "@/components/admin/export-graphs/chart-error-boundary"
-
-interface F1Event {
-  name: string
-  official_name?: string
-  key?: number
-}
-interface F1Session {
-  name: string
-  type: string
-  number: number | null
-}
+import { useGeneratorCore } from "@/components/plot-generator/use-generator-core"
+import { RaceSessionPanel } from "@/components/plot-generator/race-session-panel"
+import {
+  ALL_DRIVERS_VALUE,
+  DriverSelectionPanel,
+} from "@/components/plot-generator/driver-selection-panel"
+import { PlotOptionsPanel } from "@/components/plot-generator/plot-options-panel"
+import {
+  AdvancedSettingsPanel,
+  DEFAULT_CHART_SETTINGS,
+  type ChartSettingsState,
+} from "@/components/plot-generator/advanced-settings-panel"
 
 const YEAR_OPTIONS = ["2026", "2025", "2024", "2023"]
 
@@ -88,33 +71,24 @@ function driversForYear(year: number): string[] {
   return drivers_2025
 }
 
-function getSessionCode(name: string, type: string, number: number | null) {
-  const n = name.toLowerCase()
-  const t = type.toLowerCase()
-  if (n.includes("sprint qualifying") || n.includes("sprint shootout")) return "SQ"
-  if (n === "sprint") return "S"
-  if (n === "qualifying") return "Q"
-  if (n === "race") return "R"
-  if (t === "practice") return `FP${number ?? 1}`
-  if (t === "sprint") return "S"
-  if (t === "qualifying") return "Q"
-  if (t === "race") return "R"
-  return name
+// Per-surface option defaults: the admin export page prefers the legacy
+// data-mode track comparison because the image-mode <img> is not export-tuned.
+const ADMIN_OPTION_OVERRIDES: Record<string, Record<string, unknown>> = {
+  track_comparison: { experimental: true },
 }
 
-function sessionToExportType(code: string): ExportSessionType {
-  if (code.startsWith("FP")) return "PRACTICE"
-  if (code === "Q" || code === "SQ") return "QUALIFYING"
-  return "RACE"
-}
+const plotTypes: PlotType[] = EXPORTABLE_PLOTS.map((p) => ({
+  id: p.key,
+  name: p.title,
+  icon: p.icon,
+  description: p.description,
+  isPro: false,
+  category: p.category,
+}))
 
-const DEFAULT_SESSIONS: F1Session[] = [
-  { name: "Practice 1", type: "Practice", number: 1 },
-  { name: "Practice 2", type: "Practice", number: 2 },
-  { name: "Practice 3", type: "Practice", number: 3 },
-  { name: "Qualifying", type: "Qualifying", number: null },
-  { name: "Race", type: "Race", number: null },
-]
+function adminDefaultOptions(def: PlotDefinition): Record<string, unknown> {
+  return { ...defaultOptionsFor(def), ...(ADMIN_OPTION_OVERRIDES[def.key] ?? {}) }
+}
 
 export default function ExportGraphsPage() {
   const router = useRouter()
@@ -123,12 +97,12 @@ export default function ExportGraphsPage() {
   const [accessChecked, setAccessChecked] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
 
-  const [selectedYear, setSelectedYear] = useState<string>(YEAR_OPTIONS[0])
-  const year = Number(selectedYear)
-  const [events, setEvents] = useState<F1Event[]>([])
-  const [eventName, setEventName] = useState<string>("")
-  const [sessions, setSessions] = useState<F1Session[]>(DEFAULT_SESSIONS)
-  const [sessionCode, setSessionCode] = useState<string>("R")
+  const core = useGeneratorCore({
+    initialYear: YEAR_OPTIONS[0],
+    initialSession: "R",
+    defaultSessionPick: "last",
+  })
+  const year = Number(core.selectedYear)
 
   const allDrivers = useMemo(() => driversForYear(year), [year])
   const [driver1, setDriver1] = useState<string>("VER")
@@ -137,18 +111,24 @@ export default function ExportGraphsPage() {
 
   // Currently focused chart (for preview)
   const [focusedChartKey, setFocusedChartKey] = useState<string>("session_results")
+  const focusedChart: PlotDefinition = useMemo(
+    () => PLOT_BY_KEY.get(focusedChartKey) ?? EXPORTABLE_PLOTS[0],
+    [focusedChartKey]
+  )
+  const [optionValues, setOptionValues] = useState<Record<string, unknown>>(() =>
+    adminDefaultOptions(PLOT_BY_KEY.get("session_results") ?? EXPORTABLE_PLOTS[0])
+  )
+
   // Charts queued for export
   const [queuedChartKeys, setQueuedChartKeys] = useState<string[]>([])
   const [selectedSizes, setSelectedSizes] = useState<OutputSizeKey[]>(["ig_square"])
   const [presetDialogOpen, setPresetDialogOpen] = useState(false)
 
   // Advanced chart settings
-  const [showGrid, setShowGrid] = useState(true)
-  const [showLegend, setShowLegend] = useState(true)
-  const [animateChart, setAnimateChart] = useState(true)
-  const [showDataLabels, setShowDataLabels] = useState(true)
-  const [chartHeight, setChartHeight] = useState("700")
-  const [lineThickness, setLineThickness] = useState("2")
+  const [chartSettings, setChartSettings] = useState<ChartSettingsState>({
+    ...DEFAULT_CHART_SETTINGS,
+    showDataLabels: true,
+  })
   const [advancedOpen, setAdvancedOpen] = useState(false)
 
   // Preview data
@@ -170,6 +150,7 @@ export default function ExportGraphsPage() {
     size: OutputSizeKey
     settings: AdvancedPlotSettings
     data: unknown
+    ctx: PlotFetchContext
   }>(null)
   const offscreenRef = useRef<HTMLDivElement | null>(null)
 
@@ -190,85 +171,101 @@ export default function ExportGraphsPage() {
     }
   }, [router])
 
-  // ---- Events ----
+  // Keep driver selections valid when the season roster changes.
   useEffect(() => {
-    fetchEventsByYear(year)
-      .then((d: { events?: F1Event[] }) => {
-        const list = d?.events ?? []
-        setEvents(list)
-        if (list.length && !list.find((e) => (e.official_name || e.name) === eventName)) {
-          setEventName(list[0].official_name || list[0].name)
-        }
-      })
-      .catch(() => setEvents([]))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [year])
-
-  useEffect(() => {
-    if (!allDrivers.includes(driver1)) setDriver1(allDrivers[0] ?? "")
+    if (!allDrivers.includes(driver1) && driver1 !== ALL_DRIVERS_VALUE) setDriver1(allDrivers[0] ?? "")
     if (!allDrivers.includes(driver2)) setDriver2(allDrivers[1] ?? "")
     setMultiDrivers((prev) => prev.filter((d) => allDrivers.includes(d)))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [year])
 
-  // ---- Sessions ----
+  // Reset per-plot inputs whenever the focused chart changes.
   useEffect(() => {
-    if (!eventName) return
-    const evt = events.find((e) => (e.official_name || e.name) === eventName)
-    const apiName = evt ? evt.name : eventName
-    fetchSessionsByEvent(year, apiName)
-      .then((d: { sessions?: F1Session[] }) => {
-        const list = d?.sessions && d.sessions.length ? d.sessions : DEFAULT_SESSIONS
-        setSessions(list)
-        const codes = list.map((s) => getSessionCode(s.name, s.type, s.number))
-        if (!codes.includes(sessionCode)) setSessionCode(codes[codes.length - 1] || "R")
-      })
-      .catch(() => setSessions(DEFAULT_SESSIONS))
+    const def = PLOT_BY_KEY.get(focusedChartKey)
+    if (!def) return
+    setMultiDrivers([])
+    setOptionValues(adminDefaultOptions(def))
+    if (def.driverRequirement.kind === "single-optional") {
+      setDriver1(ALL_DRIVERS_VALUE)
+    } else {
+      setDriver1((prev) => (prev === ALL_DRIVERS_VALUE ? allDrivers[0] ?? "" : prev))
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventName, year])
+  }, [focusedChartKey])
 
-  const sessionType = useMemo(() => sessionToExportType(sessionCode), [sessionCode])
-
-  const focusedChart = useMemo(
-    () => CHART_BY_KEY.get(focusedChartKey) ?? CHART_CATALOG[0],
-    [focusedChartKey]
+  const sessionType = useMemo(
+    () => sessionToExportType(core.selectedSession),
+    [core.selectedSession]
   )
 
-  const focusedSessionCompatible = focusedChart.sessionTypes.includes(sessionType)
+  const scope = focusedChart.scope ?? "session"
 
-  const ctx: ChartFetchContext | null = useMemo(() => {
-    if (!eventName) return null
-    const evt = events.find((e) => (e.official_name || e.name) === eventName)
-    const apiGp = evt ? evt.official_name || evt.name : eventName
-    const sessionObj = sessions.find(
-      (s) => getSessionCode(s.name, s.type, s.number) === sessionCode
-    )
-    const sessionName = sessionObj ? sessionObj.name : sessionCode
+  const sessionWarning = useMemo(() => {
+    if (scope !== "session") return null
+    if (isSessionRestricted(focusedChart, core.selectedSession)) {
+      return (
+        focusedChart.sessionRestrictionNote ??
+        `${focusedChart.title} is not available for the selected session. The preview will likely show no data.`
+      )
+    }
+    if (!focusedChart.sessionTypes.includes(sessionType)) {
+      return `${focusedChart.title} is only available for ${focusedChart.sessionTypes
+        .join(" / ")
+        .toLowerCase()} sessions. The preview will likely show no data.`
+    }
+    return null
+  }, [focusedChart, core.selectedSession, sessionType, scope])
+
+  const optionsForChart = (def: PlotDefinition): Record<string, unknown> =>
+    def.key === focusedChartKey ? optionValues : adminDefaultOptions(def)
+
+  const buildCtx = (def: PlotDefinition): PlotFetchContext | null => {
+    if (!core.selectedEventName && scope === "session") return null
     return {
       year,
-      eventName: apiGp,
-      sessionName,
-      sessionCode,
+      eventName: core.apiEventName,
+      sessionName: core.sessionName,
+      sessionCode: core.selectedSession,
+      allDrivers,
+      driver1: driver1 === ALL_DRIVERS_VALUE ? undefined : driver1,
+      driver2,
+      multiDrivers,
+      options: optionsForChart(def),
+      token: typeof window !== "undefined" ? localStorage.getItem("token") || "" : "",
+    }
+  }
+
+  const ctx: PlotFetchContext | null = useMemo(
+    () => buildCtx(focusedChart),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      core.selectedEventName,
+      core.apiEventName,
+      core.sessionName,
+      core.selectedSession,
+      year,
       allDrivers,
       driver1,
       driver2,
       multiDrivers,
-      token: typeof window !== "undefined" ? localStorage.getItem("token") || "" : "",
-    }
-  }, [events, eventName, year, sessionCode, sessions, allDrivers, driver1, driver2, multiDrivers])
+      optionValues,
+      focusedChart,
+    ]
+  )
 
   // Reset the preview whenever the user switches chart, event, or session.
   useEffect(() => {
     setPreviewData(null)
     setPreviewError(null)
     setPreviewFetched(false)
-  }, [focusedChartKey, eventName, sessionCode])
+  }, [focusedChartKey, core.selectedEventName, core.selectedSession])
 
   // ---- Manual preview fetch ----
   const handlePreview = async () => {
     if (!ctx || !focusedChart) return
-    if (focusedChart.driverRequirement === "pair" && (!driver1 || !driver2 || driver1 === driver2)) {
-      setPreviewError("Pick two different drivers")
+    const validationError = focusedChart.validate?.(ctx)
+    if (validationError) {
+      setPreviewError(validationError)
       setPreviewFetched(true)
       return
     }
@@ -287,14 +284,14 @@ export default function ExportGraphsPage() {
 
   const advancedSettings: AdvancedPlotSettings = useMemo(
     () => ({
-      showGrid,
-      showLegend,
-      animateChart,
-      showDataLabels,
-      chartHeight: parseInt(chartHeight) || 700,
-      lineThickness: parseInt(lineThickness) || 2,
+      showGrid: chartSettings.showGrid,
+      showLegend: chartSettings.showLegend,
+      animateChart: chartSettings.animateChart,
+      showDataLabels: chartSettings.showDataLabels,
+      chartHeight: parseInt(chartSettings.chartHeight) || 700,
+      lineThickness: parseInt(chartSettings.lineThickness) || 2,
     }),
-    [showGrid, showLegend, animateChart, showDataLabels, chartHeight, lineThickness]
+    [chartSettings]
   )
 
   // ---- Queue helpers ----
@@ -320,7 +317,14 @@ export default function ExportGraphsPage() {
   }
 
   const handleApplyPreset = (preset: ExportPreset) => {
-    setQueuedChartKeys(preset.chartKeys.filter((k) => CHART_BY_KEY.has(k)))
+    setQueuedChartKeys(
+      preset.chartKeys
+        .map(resolvePlotKey)
+        .filter((k) => {
+          const def = PLOT_BY_KEY.get(k)
+          return def !== undefined && def.exportable !== false
+        })
+    )
     setSelectedSizes(preset.outputSizes)
     toast({ title: "Preset applied", description: preset.name })
   }
@@ -329,9 +333,10 @@ export default function ExportGraphsPage() {
   const exportOne = async (
     chartKey: string,
     size: OutputSizeKey,
-    fetchedData: unknown
+    fetchedData: unknown,
+    chartCtx: PlotFetchContext
   ): Promise<Blob> => {
-    const chart = CHART_BY_KEY.get(chartKey)!
+    const chart = PLOT_BY_KEY.get(chartKey)!
     const sizeDef = OUTPUT_SIZES[size]
     const exportPlotSettings: AdvancedPlotSettings = {
       ...advancedSettings,
@@ -340,9 +345,10 @@ export default function ExportGraphsPage() {
       showDataLabels: true,
       textScale: sizeDef.textScale,
       animateChart: false,
+      isExport: true,
     }
 
-    setRenderJob({ chartKey, size, settings: exportPlotSettings, data: fetchedData })
+    setRenderJob({ chartKey, size, settings: exportPlotSettings, data: fetchedData, ctx: chartCtx })
     // Three rAFs: (1) React commit, (2) ResizeObserver fires → Recharts re-renders, (3) paint
     await new Promise((r) => requestAnimationFrame(() => r(null)))
     await new Promise((r) => requestAnimationFrame(() => r(null)))
@@ -355,12 +361,9 @@ export default function ExportGraphsPage() {
       node,
       size: sizeDef,
       branding: {
-        eventName:
-          events.find((e) => (e.official_name || e.name) === eventName)?.official_name ||
-          eventName ||
-          "F1",
+        eventName: core.apiEventName || "F1",
         year,
-        sessionLabel: sessionCode,
+        sessionLabel: core.selectedSession,
         siteUrl: SITE_CONFIG.url,
       },
       chartTitle: chart.title,
@@ -386,10 +389,14 @@ export default function ExportGraphsPage() {
     try {
       // Phase 1: fetch data for each selected chart
       const dataByChart = new Map<string, unknown>()
+      const ctxByChart = new Map<string, PlotFetchContext>()
       for (let i = 0; i < chartKeysToExport.length; i++) {
         const key = chartKeysToExport[i]
-        const chart = CHART_BY_KEY.get(key)
+        const chart = PLOT_BY_KEY.get(key)
         if (!chart) continue
+        const chartCtx = buildCtx(chart)
+        if (!chartCtx) continue
+        ctxByChart.set(key, chartCtx)
         setExportProgress({
           phase: "fetching",
           label: chart.shortTitle,
@@ -401,7 +408,7 @@ export default function ExportGraphsPage() {
           if (key === focusedChartKey && previewFetched && previewData !== null) {
             dataByChart.set(key, previewData)
           } else {
-            dataByChart.set(key, await chart.fetch(ctx))
+            dataByChart.set(key, await chart.fetch(chartCtx))
           }
         } catch (e) {
           console.warn(`Fetch failed for ${key}`, e)
@@ -410,9 +417,9 @@ export default function ExportGraphsPage() {
       }
 
       const validKeys = chartKeysToExport.filter((k) => {
-        const chart = CHART_BY_KEY.get(k)
+        const chart = PLOT_BY_KEY.get(k)
         if (!chart) return false
-        return !isChartDataEmpty(chart, dataByChart.get(k))
+        return !isPlotDataEmpty(chart, dataByChart.get(k))
       })
 
       if (!validKeys.length) {
@@ -427,13 +434,13 @@ export default function ExportGraphsPage() {
       // Phase 2: render + capture each chart × size
       const totalJobs = validKeys.length * selectedSizes.length
       const isBulk = totalJobs > 1
-      const eventTag = sanitizeFilenamePart(eventName || "f1")
-      const sessionTag = sanitizeFilenamePart(sessionCode)
+      const eventTag = sanitizeFilenamePart(core.selectedEventName || "f1")
+      const sessionTag = sanitizeFilenamePart(core.selectedSession)
       let jobsDone = 0
 
       const buildFilename = (key: string, size: OutputSizeKey) => {
-        const chart = CHART_BY_KEY.get(key)
-        const driverTag = chart?.driverRequirement === "pair"
+        const chart = PLOT_BY_KEY.get(key)
+        const driverTag = chart?.driverRequirement.kind === "pair"
           ? `_${sanitizeFilenamePart(driver1)}_vs_${sanitizeFilenamePart(driver2)}`
           : ""
         return `${eventTag}_${sessionTag}_${sanitizeFilenamePart(key)}${driverTag}_${size}.png`
@@ -442,16 +449,16 @@ export default function ExportGraphsPage() {
       if (!isBulk) {
         const key = validKeys[0]
         const size = selectedSizes[0]
-        const chart = CHART_BY_KEY.get(key)!
+        const chart = PLOT_BY_KEY.get(key)!
         setExportProgress({ phase: "rendering", label: chart.shortTitle, current: 1, total: 1 })
-        const blob = await exportOne(key, size, dataByChart.get(key))
+        const blob = await exportOne(key, size, dataByChart.get(key), ctxByChart.get(key)!)
         triggerDownload(blob, buildFilename(key, size))
         toast({ title: "Image downloaded" })
       } else {
         const zip = new JSZip()
         for (const key of validKeys) {
           for (const size of selectedSizes) {
-            const chart = CHART_BY_KEY.get(key)!
+            const chart = PLOT_BY_KEY.get(key)!
             jobsDone++
             setExportProgress({
               phase: "rendering",
@@ -459,7 +466,7 @@ export default function ExportGraphsPage() {
               current: jobsDone,
               total: totalJobs,
             })
-            const blob = await exportOne(key, size, dataByChart.get(key))
+            const blob = await exportOne(key, size, dataByChart.get(key), ctxByChart.get(key)!)
             zip.file(buildFilename(key, size), blob)
           }
         }
@@ -495,18 +502,8 @@ export default function ExportGraphsPage() {
   }
   if (!isAdmin) return null
 
-  const plotTypes: PlotType[] = CHART_CATALOG.map((c) => ({
-    id: c.key,
-    name: c.title,
-    icon: c.icon,
-    description: c.description,
-    isPro: false,
-  }))
-
-  const focusedFocusedChart: ChartDefinition = focusedChart
-  const needSingle = focusedFocusedChart.driverRequirement === "single"
-  const needPair = focusedFocusedChart.driverRequirement === "pair"
-  const needMulti = focusedFocusedChart.driverRequirement === "multi"
+  const showPlotOptions =
+    focusedChart.driverRequirement.kind !== "none" || (focusedChart.options?.length ?? 0) > 0
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -519,9 +516,9 @@ export default function ExportGraphsPage() {
               <div className="min-w-0">
                 <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-500">Admin · Export</p>
                 <h2 className="mt-0.5 text-2xl font-bold tracking-tight">
-                  {focusedFocusedChart.title}
+                  {focusedChart.title}
                 </h2>
-                <p className="mt-1 text-sm text-zinc-400">{focusedFocusedChart.description}</p>
+                <p className="mt-1 text-sm text-zinc-400">{focusedChart.description}</p>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant="outline" className="border-primary/50 text-primary bg-primary/10">
@@ -552,79 +549,33 @@ export default function ExportGraphsPage() {
               />
 
               {/* Race & session card */}
-              <div className="border border-zinc-800">
-                <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-3">
-                  <CalendarClock className="h-4 w-4 text-primary" />
-                  <div>
-                    <p className="text-sm font-medium leading-none">Race &amp; session</p>
-                    <p className="mt-0.5 text-xs text-zinc-500">Pick the season, Grand Prix, and session.</p>
-                  </div>
-                </div>
-                <div className="space-y-4 px-5 py-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="year">Year</Label>
-                      <Select value={selectedYear} onValueChange={setSelectedYear}>
-                        <SelectTrigger className="w-full bg-zinc-900/60 border-zinc-800">
-                          <SelectValue placeholder="Select year" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {YEAR_OPTIONS.map((y) => (
-                            <SelectItem key={y} value={y}>{y}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="round">Round</Label>
-                      <Select value={eventName} onValueChange={setEventName} disabled={!events.length}>
-                        <SelectTrigger className="w-full bg-zinc-900/60 border-zinc-800">
-                          <SelectValue placeholder="Select round" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {events.length > 0 ? (
-                            events.map((e, i) => {
-                              const v = e.official_name || e.name
-                              return <SelectItem key={e.key ?? i} value={v}>{v}</SelectItem>
-                            })
-                          ) : (
-                            <SelectItem value="loading" disabled>Loading...</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="session">Session</Label>
-                      <Select value={sessionCode} onValueChange={setSessionCode}>
-                        <SelectTrigger className="w-full bg-zinc-900/60 border-zinc-800">
-                          <SelectValue placeholder="Select session" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {sessions.map((s) => {
-                            const code = getSessionCode(s.name, s.type, s.number)
-                            return <SelectItem key={code} value={code}>{s.name}</SelectItem>
-                          })}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <RaceSessionPanel
+                years={YEAR_OPTIONS}
+                selectedYear={core.selectedYear}
+                onYearChange={core.setSelectedYear}
+                events={core.availableEvents}
+                selectedEventName={core.selectedEventName}
+                onEventChange={core.setSelectedEventName}
+                sessions={core.availableSessions}
+                selectedSession={core.selectedSession}
+                onSessionChange={core.setSelectedSession}
+                scope={scope}
+                onRefresh={core.handleRefreshSessions}
+                isRefreshing={core.isRefreshingSessions}
+                onUseLatestRace={core.useLatestRace}
+                isResolvingLatestRace={core.isResolvingLatestRace}
+              />
 
               {/* Session compatibility warning */}
-              {!focusedSessionCompatible && (
+              {sessionWarning && (
                 <div className="flex items-start gap-2 border border-yellow-500/40 bg-yellow-950/20 px-4 py-3 text-sm text-yellow-400">
                   <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-                  <span>
-                    <strong>{focusedChart.title}</strong> is only available for{" "}
-                    <strong>{focusedChart.sessionTypes.join(" / ").toLowerCase()}</strong> sessions.
-                    The preview will likely show no data.
-                  </span>
+                  <span>{sessionWarning}</span>
                 </div>
               )}
 
               {/* Plot options card */}
-              {(needSingle || needPair || needMulti) && (
+              {showPlotOptions && (
                 <div className="border border-zinc-800">
                   <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-3">
                     <Users className="h-4 w-4 text-primary" />
@@ -634,164 +585,35 @@ export default function ExportGraphsPage() {
                     </div>
                   </div>
                   <div className="space-y-4 px-5 py-4">
-                    {needSingle && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Driver</Label>
-                          <Select value={driver1} onValueChange={setDriver1}>
-                            <SelectTrigger className="w-full bg-zinc-900/60 border-zinc-800">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {allDrivers.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    )}
-                    {needPair && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Driver 1</Label>
-                          <Select value={driver1} onValueChange={setDriver1}>
-                            <SelectTrigger className="w-full bg-zinc-900/60 border-zinc-800"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {allDrivers.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Driver 2</Label>
-                          <Select value={driver2} onValueChange={setDriver2}>
-                            <SelectTrigger className="w-full bg-zinc-900/60 border-zinc-800"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {allDrivers.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    )}
-                    {needMulti && (
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-sm">Drivers ({multiDrivers.length || "all"})</Label>
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => setMultiDrivers([...allDrivers])}
-                              className="text-[10px] uppercase tracking-wider text-primary hover:underline"
-                            >
-                              Select all
-                            </button>
-                            <span className="text-zinc-700">·</span>
-                            <button
-                              type="button"
-                              onClick={() => setMultiDrivers([])}
-                              className="text-[10px] uppercase tracking-wider text-zinc-500 hover:text-foreground hover:underline"
-                            >
-                              Clear
-                            </button>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5">
-                          {allDrivers.map((d) => {
-                            const checked = multiDrivers.includes(d)
-                            return (
-                              <button
-                                key={d}
-                                type="button"
-                                onClick={() =>
-                                  setMultiDrivers((prev) =>
-                                    checked ? prev.filter((x) => x !== d) : [...prev, d]
-                                  )
-                                }
-                                className={`px-2 py-1.5 text-xs font-mono font-semibold border transition-colors ${
-                                  checked
-                                    ? "border-primary/60 bg-primary/10 text-primary"
-                                    : "border-zinc-800 bg-zinc-900/60 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300"
-                                }`}
-                              >
-                                {d}
-                              </button>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    )}
+                    <DriverSelectionPanel
+                      requirement={focusedChart.driverRequirement}
+                      allDrivers={allDrivers}
+                      driver1={driver1}
+                      driver2={driver2}
+                      multiDrivers={multiDrivers}
+                      onDriver1Change={setDriver1}
+                      onDriver2Change={setDriver2}
+                      onMultiDriversChange={setMultiDrivers}
+                    />
+                    <PlotOptionsPanel
+                      options={focusedChart.options ?? []}
+                      values={optionValues}
+                      onChange={(id, value) =>
+                        setOptionValues((prev) => ({ ...prev, [id]: value }))
+                      }
+                    />
                   </div>
                 </div>
               )}
 
               {/* Advanced chart settings */}
-              <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen} className="border border-zinc-800">
-                <CollapsibleTrigger asChild>
-                  <button
-                    type="button"
-                    className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/10 transition-colors"
-                  >
-                    <span className="flex items-center gap-2">
-                      <Settings className="h-4 w-4 text-primary" />
-                      Advanced chart settings
-                    </span>
-                    <ChevronDown
-                      className={`h-4 w-4 transition-transform duration-200 ${advancedOpen ? "rotate-180" : ""}`}
-                    />
-                  </button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="px-4 pb-4 pt-2 space-y-6">
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold">Display Options</h4>
-                    <div className="space-y-3">
-                      {[
-                        { id: "show-grid", label: "Show Grid Lines", help: "Display grid lines on the chart", val: showGrid, set: setShowGrid },
-                        { id: "show-legend", label: "Show Legend", help: "Display chart legend", val: showLegend, set: setShowLegend },
-                        { id: "show-labels", label: "Show Data Labels", help: "Display values on data points", val: showDataLabels, set: setShowDataLabels },
-                        { id: "animate", label: "Animate Chart", help: "Enable chart animations", val: animateChart, set: setAnimateChart },
-                      ].map((row) => (
-                        <div key={row.id} className="flex items-center justify-between">
-                          <div className="space-y-0.5">
-                            <Label htmlFor={row.id}>{row.label}</Label>
-                            <p className="text-xs text-muted-foreground">{row.help}</p>
-                          </div>
-                          <Switch id={row.id} checked={row.val} onCheckedChange={row.set} />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold">Appearance</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="space-y-2">
-                        <Label htmlFor="chart-height">Chart Height (px) — preview only</Label>
-                        <Input
-                          id="chart-height"
-                          type="number"
-                          min="400"
-                          max="1200"
-                          value={chartHeight}
-                          onChange={(e) => setChartHeight(e.target.value)}
-                          className="bg-background/50 border-border/50"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="line-thickness">Line Thickness — preview only</Label>
-                        <Input
-                          id="line-thickness"
-                          type="number"
-                          min="1"
-                          max="5"
-                          value={lineThickness}
-                          onChange={(e) => setLineThickness(e.target.value)}
-                          className="bg-background/50 border-border/50"
-                        />
-                      </div>
-                    </div>
-                    <p className="text-xs text-zinc-500">
-                      On export, chart height &amp; line thickness are auto-tuned per output size.
-                    </p>
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
+              <AdvancedSettingsPanel
+                open={advancedOpen}
+                onOpenChange={setAdvancedOpen}
+                settings={chartSettings}
+                onChange={(patch) => setChartSettings((prev) => ({ ...prev, ...patch }))}
+                appearanceFootnote="On export, chart height & line thickness are auto-tuned per output size."
+              />
 
               {/* Action row — Preview / Add to queue / Export this one now */}
               <div className="flex flex-wrap items-center gap-3">
@@ -836,7 +658,7 @@ export default function ExportGraphsPage() {
                 <div className="flex items-center justify-between">
                   <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-500">Preview</p>
                   <p className="text-xs text-zinc-500">
-                    {eventName || "—"} · {sessionCode}
+                    {core.selectedEventName || "—"} · {core.selectedSession}
                   </p>
                 </div>
                 <div className="border border-zinc-800 p-4 min-h-[700px] bg-black/40">
@@ -857,13 +679,13 @@ export default function ExportGraphsPage() {
                         {/404/.test(previewError) ? "Session not recorded yet" : previewError}
                       </span>
                     </div>
-                  ) : !previewData || isChartDataEmpty(focusedFocusedChart, previewData) ? (
+                  ) : !previewData || isPlotDataEmpty(focusedChart, previewData) ? (
                     <div className="flex h-[700px] items-center justify-center text-sm text-muted-foreground">
                       No data for this session
                     </div>
                   ) : (
-                    <ChartErrorBoundary resetKey={`${focusedChartKey}:${sessionCode}:${eventName}`}>
-                      {focusedFocusedChart.render(previewData, advancedSettings, ctx ?? undefined)}
+                    <ChartErrorBoundary resetKey={`${focusedChartKey}:${core.selectedSession}:${core.selectedEventName}`}>
+                      {focusedChart.render(previewData, advancedSettings, ctx ?? undefined)}
                     </ChartErrorBoundary>
                   )}
                 </div>
@@ -914,7 +736,7 @@ export default function ExportGraphsPage() {
                   ) : (
                     <div className="flex flex-wrap gap-2">
                       {queuedChartKeys.map((k) => {
-                        const c = CHART_BY_KEY.get(k)
+                        const c = PLOT_BY_KEY.get(k)
                         if (!c) return null
                         const Icon = c.icon
                         return (
@@ -1004,7 +826,7 @@ export default function ExportGraphsPage() {
         {renderJob &&
           (() => {
             const sizeDef = OUTPUT_SIZES[renderJob.size]
-            const chart = CHART_BY_KEY.get(renderJob.chartKey)
+            const chart = PLOT_BY_KEY.get(renderJob.chartKey)
             if (!chart) return null
             return (
               <OffscreenRenderer
@@ -1013,7 +835,7 @@ export default function ExportGraphsPage() {
                 height={sizeDef.height - FOOTER_HEIGHT}
               >
                 <ChartErrorBoundary resetKey={`${renderJob.chartKey}:${renderJob.size}`} minHeight={sizeDef.height - FOOTER_HEIGHT}>
-                  {chart.render(renderJob.data, renderJob.settings, ctx ?? undefined)}
+                  {chart.render(renderJob.data, renderJob.settings, renderJob.ctx)}
                 </ChartErrorBoundary>
               </OffscreenRenderer>
             )

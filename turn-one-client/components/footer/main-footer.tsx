@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { BarChart3, Mail, MapPin, Twitter, Youtube, Instagram } from "lucide-react"
 import VersionDisplay from "@/components/ui/version-display"
@@ -18,7 +19,7 @@ export function MainFooter() {
             <Link href="/" className="flex items-center space-x-3 group">
               <div className="relative">
                 <div className="w-10 h-10 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-                  <img src="logo.png" alt="Logo Turn One" />
+                  <Image src="/logo.png" alt="Logo Turn One" width={40} height={40} />
                 </div>
               </div>
               <div className="flex flex-col">

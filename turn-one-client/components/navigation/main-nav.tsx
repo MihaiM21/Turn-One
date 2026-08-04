@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Menu, X, BarChart3 } from "lucide-react"
@@ -67,7 +68,7 @@ export function MainNav({ variant = "homepage" }: MainNavProps) {
             <Link href="/" className="flex items-center space-x-3 group">
               <div className="relative">
                 <div className="mt-1 w-10 h-10 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-                  <img src="logo.png" alt="Logo Turn One"/>
+                  <Image src="/logo.png" alt="Logo Turn One" width={40} height={40} priority />
                 </div>
               </div>
             </Link>
@@ -138,7 +139,7 @@ export function MainNav({ variant = "homepage" }: MainNavProps) {
                 <div className="border-t border-border pt-4 mt-4">
                   <Button asChild variant="outline" className="w-full mb-3 border-primary/40 hover:border-primary hover:bg-primary/10">
                     <Link href={SOCIAL_LINKS.discord} target="_blank" rel="noopener noreferrer" onClick={() => setIsMenuOpen(false)}>
-                      <img src="/discord.svg" alt="Discord" className="h-4 w-4 mr-2" />
+                      <Image src="/discord.svg" alt="Discord" width={16} height={16} className="mr-2" />
                       Join Discord
                     </Link>
                   </Button>

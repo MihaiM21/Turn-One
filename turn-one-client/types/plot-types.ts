@@ -13,6 +13,8 @@
     showDataLabels: boolean;
     /** Multiplier applied to all font sizes / axis widths / margins in exported images. Defaults to 1 (preview). */
     textScale?: number;
+    /** True when rendering into the offscreen export target rather than the live preview. */
+    isExport?: boolean;
   }
 
   export interface ThrottleAverageData {

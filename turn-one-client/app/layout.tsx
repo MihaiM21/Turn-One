@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import type React from "react"
@@ -28,6 +28,12 @@ export const metadata: Metadata = generateSEO({
     ],
 });
 
+export const viewport: Viewport = {
+    width: 'device-width',
+    initialScale: 1,
+    themeColor: '#e10600',
+};
+
 export default function RootLayout({ children, }: {
     children: React.ReactNode
 }) {
@@ -47,10 +53,6 @@ export default function RootLayout({ children, }: {
                     src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9643370480021725"
                     crossOrigin="anonymous"
                 />
-                
-                {/* Preconnect to external domains for performance */}
-                <link rel="preconnect" href="https://fonts.googleapis.com" />
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
                 
                 {/* DNS Prefetch for faster external resource loading */}
                 <link rel="dns-prefetch" href="https://www.formula1.com" />
