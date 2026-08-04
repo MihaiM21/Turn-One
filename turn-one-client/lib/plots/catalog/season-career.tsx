@@ -110,7 +110,6 @@ export const SEASON_CAREER_PLOTS: PlotDefinition[] = [
         label: "Years",
         type: "year-range",
         defaultValue: { mode: "span", start: "2022", end: "2025" } satisfies YearRangeValue,
-      isPro: true,
       },
     ],
     emptyMessage: "No career driver radar data returned",
