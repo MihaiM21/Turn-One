@@ -3,8 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace API.Hubs;
 
-// Temporarily disable authorization for debugging
-// [Authorize]
+[Authorize]
 public class F1LiveDataHub : Hub
 {
     private readonly ILogger<F1LiveDataHub> _logger;
@@ -18,12 +17,12 @@ public class F1LiveDataHub : Hub
     {
         _logger.LogInformation($"Client connected: {Context.ConnectionId}");
         
-        // Log detailed connection information for debugging
+        // Never log the raw header collection here — it carries the caller's
+        // Authorization bearer token straight into the rolling log files.
         var httpContext = Context.GetHttpContext();
         _logger.LogInformation($"Client IP: {httpContext?.Connection?.RemoteIpAddress}");
         _logger.LogInformation($"User: {Context.User?.Identity?.Name ?? "Anonymous"}");
-        _logger.LogInformation($"Headers: {string.Join(", ", httpContext?.Request.Headers.Select(h => $"{h.Key}={h.Value}") ?? Array.Empty<string>())}");
-        
+
         // Add to F1 data group
         await Groups.AddToGroupAsync(Context.ConnectionId, "F1LiveData");
         

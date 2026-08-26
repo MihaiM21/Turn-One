@@ -1,6 +1,7 @@
 using Application.DTOs;
 using Domain.Entities;
 using Infrastructure;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -64,6 +65,8 @@ public class ApiWishlistController : ControllerBase
         }
     }
 
+    // Returns the full subscriber email list, so it must never be public.
+    [Authorize(Roles = "ADMIN")]
     [HttpGet]
     public async Task<IActionResult> GetWishlistSubscribers()
     {
