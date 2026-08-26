@@ -57,6 +57,8 @@ public class TurnOneDbContext : DbContext
             entity.Property(e => e.Tokens).IsRequired().HasDefaultValue(30);
             entity.Property(e => e.LastTokenRefillDate).IsRequired();
 
+            entity.Property(e => e.CreatorTokenAllowance).IsRequired(false);
+
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.LastLogin).IsRequired(false);
 
@@ -174,7 +176,7 @@ public class TurnOneDbContext : DbContext
         modelBuilder.Entity<TelemetryGenerationRequest>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.SetNull);
             entity.Property(e => e.PlotType).IsRequired();
             entity.Property(e => e.EventName).IsRequired();
             entity.Property(e => e.Session).IsRequired();
@@ -216,5 +218,6 @@ public class TurnOneDbContext : DbContext
             entity.HasIndex(e => e.SessionType);
             entity.HasIndex(e => e.UpdatedAt);
         });
+
     }
 }

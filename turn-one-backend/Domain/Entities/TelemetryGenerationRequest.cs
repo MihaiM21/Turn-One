@@ -9,8 +9,10 @@ namespace Domain.Entities
     public class TelemetryGenerationRequest
     {
         public Guid Id { get; set; }
-        public Guid UserId { get; set; }
-        public User User { get; set; } = null!;
+
+        /// <summary>Nullable so the row survives if the user is deleted (see OnDelete: SetNull).</summary>
+        public Guid? UserId { get; set; }
+        public User? User { get; set; }
 
         /// <summary>Plot identifier, e.g. "topspeeds", "throttle_brake", "lap_distribution".</summary>
         public string PlotType { get; set; } = string.Empty;

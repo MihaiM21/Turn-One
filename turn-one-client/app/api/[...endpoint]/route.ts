@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { authorizeProxyRequest } from '@/lib/server/proxy-auth';
 
 const getContentType = (response: Response) => response.headers.get('content-type') || '';
 
@@ -66,9 +67,18 @@ export async function GET(
   { params }: { params: Promise<{ endpoint: string[] }> }
 ) {
   try {
+    // Closes what was previously a fully open, keyed relay to the upstream F1
+    // API: every request must carry either a valid backend JWT or a valid
+    // signed anon cookie (planted by proxy.ts on first visit). This proves a
+    // real client hit the site first.
+    const auth = await authorizeProxyRequest(request);
+    if (auth.mode === 'deny') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     // Await params in Next.js 15+
     const resolvedParams = await params;
-    
+
     // Get the API configuration from environment variables
     const EXTERNAL_API_URL = process.env.F1_API_URL;
     const EXTERNAL_API_KEY = process.env.F1_API_KEY;
@@ -163,9 +173,14 @@ export async function POST(
   { params }: { params: Promise<{ endpoint: string[] }> }
 ) {
   try {
+    const auth = await authorizeProxyRequest(request);
+    if (auth.mode === 'deny') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     // Await params in Next.js 15+
     const resolvedParams = await params;
-    
+
     const EXTERNAL_API_URL = process.env.F1_API_URL;
     const EXTERNAL_API_KEY = process.env.F1_API_KEY;
 

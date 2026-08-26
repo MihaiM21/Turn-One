@@ -53,7 +53,7 @@ namespace Infrastructure.Services
                 var term = search.Trim();
                 var pattern = $"%{term}%";
                 query = query.Where(r =>
-                    EF.Functions.Like(r.User.Username, pattern) ||
+                    (r.User != null && EF.Functions.Like(r.User.Username, pattern)) ||
                     EF.Functions.Like(r.PlotType, pattern) ||
                     EF.Functions.Like(r.EventName, pattern) ||
                     EF.Functions.Like(r.Session, pattern) ||
@@ -70,7 +70,7 @@ namespace Infrastructure.Services
                 {
                     Id = r.Id,
                     UserId = r.UserId,
-                    Username = r.User.Username,
+                    Username = r.User != null ? r.User.Username : "Anonymous",
                     PlotType = r.PlotType,
                     Year = r.Year,
                     EventName = r.EventName,
@@ -125,7 +125,7 @@ namespace Infrastructure.Services
             if (userId.HasValue) query = query.Where(r => r.UserId == userId.Value);
 
             var rows = await query
-                .Select(r => new { r.PlotType, r.TokensUsed, r.Success, r.DurationMs, r.UserId, Username = r.User.Username })
+                .Select(r => new { r.PlotType, r.TokensUsed, r.Success, r.DurationMs, r.UserId, Username = r.User != null ? r.User.Username : "Anonymous" })
                 .ToListAsync();
 
             var summary = new TelemetryUsageSummaryDto
