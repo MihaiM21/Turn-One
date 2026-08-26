@@ -63,8 +63,8 @@ public class SubscriptionService : ISubscriptionService
             throw new InvalidOperationException($"Too soon for token refill. Last refill was {daysSinceLastRefill} days ago, next refill in {refillPeriod - daysSinceLastRefill} days");
         
         // If user has the ammount already, just update the date to prevent abuse of the refill system
-        if(user.Tokens < GetMonthlyTokens(user.Plan)){
-            user.Tokens += GetMonthlyTokens(user.Plan);
+        if(user.Tokens < GetMonthlyTokens(user)){
+            user.Tokens += GetMonthlyTokens(user);
         }
         
         user.LastTokenRefillDate = DateTime.UtcNow;
@@ -84,7 +84,7 @@ public class SubscriptionService : ISubscriptionService
         {
             user.PlanStartDate = DateTime.UtcNow;
             user.PlanEndDate = DateTime.UtcNow.AddMonths(1);
-            user.Tokens += GetMonthlyTokens(user.Plan);
+            user.Tokens += GetMonthlyTokens(user);
             user.LastTokenRefillDate = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -161,13 +161,15 @@ public class SubscriptionService : ISubscriptionService
     /// </summary>
     private const int RefillPeriodDays = 30;
 
-    private static int GetMonthlyTokens(PlanType plan) => plan switch
-    {
-        PlanType.BASIC => 30,
-        PlanType.PRO => 100,
-        PlanType.ELITE => 300,
-        _ => throw new ArgumentOutOfRangeException(nameof(plan))
-    };
+    // Delegates to PlanDetails so refills, admin plan-assignment, and pricing
+    // display share one number instead of three that could silently drift —
+    // this table previously said ELITE=300 while PlanDetails/AdminService said 250.
+    // CreatorTokenAllowance only applies to CONTENT_CREATOR accounts (set via
+    // the existing role assignment, not a separate creator flag).
+    private static int GetMonthlyTokens(User user) =>
+        user.Role == Role.CONTENT_CREATOR && user.CreatorTokenAllowance.HasValue
+            ? user.CreatorTokenAllowance.Value
+            : PlanDetails.GetPlanDetails(user.Plan).MonthlyTokens;
 
     private static int GetPlanTokenBonus(PlanType plan) => plan switch
     {
@@ -179,11 +181,5 @@ public class SubscriptionService : ISubscriptionService
 
     private static int GetRefillPeriod(PlanType _plan) => RefillPeriodDays;
 
-    private static decimal GetTokenDiscount(PlanType plan) => plan switch
-    {
-        PlanType.BASIC => 0.0m,      // No bonus
-        PlanType.PRO => 0.15m,       // 15% bonus
-        PlanType.ELITE => 0.30m,     // 30% bonus
-        _ => throw new ArgumentOutOfRangeException(nameof(plan))
-    };
+    private static decimal GetTokenDiscount(PlanType plan) => PlanDetails.GetPlanDetails(plan).TokenPurchaseDiscount;
 }
