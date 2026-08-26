@@ -43,6 +43,11 @@ export function PitStrategyGraph({ data, advancedSettings }: PitStrategyGraphPro
   const undercuts = data.undercuts ?? []
   const freeChanges = data.free_changes ?? []
 
+  // A busy race can have 30+ stops — forcing every rotated label to render
+  // makes them collide, so thin them out once there are more than ~15.
+  const stopsLabelInterval =
+    stopsChartData.length > 15 ? Math.ceil(stopsChartData.length / 15) - 1 : 0
+
   return (
     <div className="space-y-6">
       <div>
@@ -51,7 +56,7 @@ export function PitStrategyGraph({ data, advancedSettings }: PitStrategyGraphPro
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={stopsChartData} margin={{ top: 10 }}>
               {settings.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#374151" />}
-              <XAxis dataKey="label" stroke="#9CA3AF" tick={{ fontSize: tickFontSize }} angle={-35} textAnchor="end" height={70} interval={0} />
+              <XAxis dataKey="label" stroke="#9CA3AF" tick={{ fontSize: tickFontSize }} angle={-35} textAnchor="end" height={70} interval={stopsLabelInterval} />
               <YAxis stroke="#9CA3AF" tick={{ fontSize: tickFontSize }} tickFormatter={(v) => `${Number(v).toFixed(1)}s`} />
               <Tooltip
                 contentStyle={{ backgroundColor: 'var(--popover)', border: '1px solid #374151', borderRadius: '8px' }}

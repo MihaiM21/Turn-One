@@ -32,6 +32,7 @@ export const SPEED_PACE_PLOTS: PlotDefinition[] = [
     category: CATEGORY,
     sessionTypes: ["RACE", "QUALIFYING", "PRACTICE"],
     driverRequirement: { kind: "none" },
+    shareable: true,
     options: [
       {
         id: "topSpeedType",
@@ -114,6 +115,7 @@ export const SPEED_PACE_PLOTS: PlotDefinition[] = [
     category: CATEGORY,
     sessionTypes: ["RACE", "QUALIFYING", "PRACTICE"],
     driverRequirement: { kind: "none" },
+    shareable: true,
     emptyMessage: "No throttle data returned for the selected session",
     fetch: async ({ token, year, eventName, sessionName }) => {
       const raw = await fetchThrottleAverages(token, year, eventName, sessionName, "v2")

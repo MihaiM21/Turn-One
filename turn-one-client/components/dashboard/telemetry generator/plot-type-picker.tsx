@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
 import type { LucideIcon } from "lucide-react"
 import { ChevronDown, ChevronUp, Search, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { usePlan } from "@/hooks/use-plan"
 
 export type PlotType = {
   id: string
@@ -36,25 +38,26 @@ function matchesQuery(type: PlotType, query: string) {
 function Tile({
   type,
   active,
+  locked,
   onSelect,
 }: {
   type: PlotType
   active: boolean
-  onSelect: (id: string, isPro: boolean) => void
+  locked: boolean
+  onSelect: (id: string, locked: boolean) => void
 }) {
   const Icon = type.icon
   const button = (
     <button
       type="button"
-      onClick={() => onSelect(type.id, type.isPro)}
-      disabled={type.isPro}
+      onClick={() => onSelect(type.id, locked)}
       className={[
-        "relative flex flex-col items-center justify-start gap-1 p-3 rounded-md border text-center transition-all duration-200",
+        "relative flex flex-col items-center justify-start gap-1 p-3 rounded-md border text-center transition-all duration-200 cursor-pointer",
         "min-h-[84px]",
         active
           ? "bg-primary text-primary-foreground border-primary shadow-md"
           : "bg-muted/10 border-border/50 hover:bg-primary/15 hover:border-primary/40",
-        type.isPro ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
+        locked ? "opacity-60" : "",
       ].join(" ")}
     >
       <Icon className="h-5 w-5" />
@@ -74,7 +77,7 @@ function Tile({
     <Tooltip>
       <TooltipTrigger asChild>{button}</TooltipTrigger>
       <TooltipContent side="bottom" className="max-w-[220px] text-center">
-        {type.isPro ? "PRO plan required" : type.description}
+        {locked ? "PRO plan required — upgrade to unlock" : type.description}
       </TooltipContent>
     </Tooltip>
   )
@@ -113,16 +116,26 @@ function SearchBox({
 }
 
 export function PlotTypePicker({ plotTypes, value, onChange }: PlotTypePickerProps) {
+  const router = useRouter()
+  const { atLeast, loading: planLoading } = usePlan()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [query, setQuery] = useState("")
   const [expanded, setExpanded] = useState(false)
   const selected = plotTypes.find((t) => t.id === value) ?? plotTypes[0]
   const SelectedIcon = selected.icon
 
-  const handleSelect = (id: string, isPro: boolean) => {
-    if (isPro) return
-    onChange(id)
+  // Fail closed while the plan is still resolving, so a PRO plot can never be
+  // selected by a BASIC user during the auth round-trip.
+  const canUsePro = !planLoading && atLeast("PRO")
+  const isLocked = (type: PlotType) => type.isPro && !canUsePro
+
+  const handleSelect = (id: string, locked: boolean) => {
     setMobileOpen(false)
+    if (locked) {
+      router.push("/pricing")
+      return
+    }
+    onChange(id)
   }
 
   const isSearching = query.trim().length > 0
@@ -156,7 +169,13 @@ export function PlotTypePicker({ plotTypes, value, onChange }: PlotTypePickerPro
               <SearchBox query={query} onQueryChange={setQuery} className="mb-3" />
               <div className="grid grid-cols-2 gap-2">
                 {filteredTypes.map((type) => (
-                  <Tile key={type.id} type={type} active={type.id === value} onSelect={handleSelect} />
+                  <Tile
+                    key={type.id}
+                    type={type}
+                    active={type.id === value}
+                    locked={isLocked(type)}
+                    onSelect={handleSelect}
+                  />
                 ))}
               </div>
               {filteredTypes.length === 0 && (
@@ -176,7 +195,13 @@ export function PlotTypePicker({ plotTypes, value, onChange }: PlotTypePickerPro
             style={{ maxHeight: expanded || isSearching ? "2000px" : COLLAPSED_MAX_HEIGHT }}
           >
             {filteredTypes.map((type) => (
-              <Tile key={type.id} type={type} active={type.id === value} onSelect={handleSelect} />
+              <Tile
+                key={type.id}
+                type={type}
+                active={type.id === value}
+                locked={isLocked(type)}
+                onSelect={handleSelect}
+              />
             ))}
           </div>
           {!expanded && !isSearching && (

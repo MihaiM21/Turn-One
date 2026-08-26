@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -25,6 +26,8 @@ import { defaultOptionsFor, type PlotDefinition, type PlotFetchContext } from "@
 import { drivers_2025, drivers_2026 } from "@/lib/constants/drivers"
 import { LoadingPlot } from "./loading_plot"
 import { useTokens } from "@/hooks/use-tokens"
+import { usePlotSharing } from "@/hooks/use-plot-sharing"
+import { ShareControls } from "./share-controls"
 import { logTelemetryRequest } from "@/lib/userService"
 import { useAuth } from "@/components/auth/auth-provider"
 import { PlotTypePicker, type PlotType } from "./plot-type-picker"
@@ -98,9 +101,15 @@ type GeneratedPlot = {
 
 export function TelemetryPlotGenerator() {
   const persisted = typeof window !== "undefined" ? readPersisted() : {}
+  const searchParams = useSearchParams()
+  const plotFromUrl = searchParams.get("plot")
 
   const [selectedPlotType, setSelectedPlotType] = useState(
-    persisted.plotType && PLOT_BY_KEY.has(persisted.plotType) ? persisted.plotType : "topspeeds"
+    plotFromUrl && PLOT_BY_KEY.has(plotFromUrl)
+      ? plotFromUrl
+      : persisted.plotType && PLOT_BY_KEY.has(persisted.plotType)
+        ? persisted.plotType
+        : "topspeeds"
   )
   const selectedPlot: PlotDefinition = PLOT_BY_KEY.get(selectedPlotType) ?? PLOT_CATALOG[0]
 
@@ -191,6 +200,17 @@ export function TelemetryPlotGenerator() {
     token: authToken ?? "",
   })
 
+  const advancedSettings: AdvancedPlotSettings = {
+    showGrid: chartSettings.showGrid,
+    showLegend: chartSettings.showLegend,
+    animateChart: chartSettings.animateChart,
+    chartHeight: parseInt(chartSettings.chartHeight) || 700,
+    lineThickness: parseInt(chartSettings.lineThickness) || 2,
+    showDataLabels: chartSettings.showDataLabels,
+  }
+
+  const { captureAt, captureNode } = usePlotSharing()
+
   // Resolves the driver code(s) relevant to the currently selected plot type,
   // as a comma-separated string, for the usage log.
   const driversForCurrentPlot = (): string | undefined => {
@@ -205,7 +225,9 @@ export function TelemetryPlotGenerator() {
   }
 
   const handleGeneratePlot = async () => {
-    if (!isAuthenticated || !authToken) {
+    const def = selectedPlot
+
+    if (!isAuthenticated) {
       toast.error("Sign in required", {
         description: "You need to be logged in to generate telemetry plots.",
       })
@@ -220,7 +242,6 @@ export function TelemetryPlotGenerator() {
       return
     }
 
-    const def = selectedPlot
     const ctx = buildCtx()
 
     setIsGenerating(true)
@@ -246,11 +267,13 @@ export function TelemetryPlotGenerator() {
       setGenerated({ key: def.key, data, ctx })
       plotGeneratedSuccessfully = true
 
-      const tokenDeducted = await deductToken()
-      if (tokenDeducted) {
-        console.log("Token deducted successfully for plot generation")
-      } else {
-        console.warn("Failed to deduct token after successful plot generation")
+      if (isAuthenticated) {
+        const tokenDeducted = await deductToken()
+        if (tokenDeducted) {
+          console.log("Token deducted successfully for plot generation")
+        } else {
+          console.warn("Failed to deduct token after successful plot generation")
+        }
       }
     } catch (error) {
       console.error("Error generating plot:", error)
@@ -279,15 +302,6 @@ export function TelemetryPlotGenerator() {
         })
       }
     }
-  }
-
-  const advancedSettings: AdvancedPlotSettings = {
-    showGrid: chartSettings.showGrid,
-    showLegend: chartSettings.showLegend,
-    animateChart: chartSettings.animateChart,
-    chartHeight: parseInt(chartSettings.chartHeight) || 700,
-    lineThickness: parseInt(chartSettings.lineThickness) || 2,
-    showDataLabels: chartSettings.showDataLabels,
   }
 
   const hasResult = generated !== null && generated.key === selectedPlot.key
@@ -335,6 +349,7 @@ export function TelemetryPlotGenerator() {
 
   const tokenCount = getTokenCount()
   const tokensAvailable = isAuthenticated && hasTokens()
+  const canGenerate = tokensAvailable
 
   const sessionIsRestricted = isSessionRestricted(selectedPlot, core.selectedSession)
   const showPlotOptions =
@@ -495,7 +510,7 @@ export function TelemetryPlotGenerator() {
                 <span>
                   <Button
                     onClick={handleGeneratePlot}
-                    disabled={isGenerating || !tokensAvailable}
+                    disabled={isGenerating || !canGenerate}
                     className="bg-primary hover:bg-primary/90 text-primary-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isGenerating ? (
@@ -514,30 +529,41 @@ export function TelemetryPlotGenerator() {
                     ) : (
                       <>
                         <AlertTriangle className="h-4 w-4 mr-2" />
-                        Need 1 token
+                        {isAuthenticated ? "Need 1 token" : "Sign in required"}
                       </>
                     )}
                   </Button>
                 </span>
               </TooltipTrigger>
-              {!tokensAvailable && (
+              {!canGenerate && (
                 <TooltipContent side="bottom" className="max-w-[240px]">
                   {isAuthenticated
                     ? "You're out of tokens. They refill monthly, or you can buy more from your account settings."
-                    : "Log in to generate plots."}
+                    : "Log in to generate telemetry plots."}
                 </TooltipContent>
               )}
             </Tooltip>
 
-            <Button
-              variant="outline"
-              className="border-zinc-800 bg-transparent hover:bg-zinc-900 transition-colors"
-              onClick={() => toast.info("Export coming soon", { description: "Plot export will be available in a future update." })}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
+            {selectedPlot.shareable && hasResult && generated ? (
+              <ShareControls
+                def={selectedPlot}
+                ctx={generated.ctx}
+                settings={advancedSettings}
+                captureAt={captureAt}
+                data={generated.data}
+              />
+            ) : (
+              <Button
+                variant="outline"
+                className="border-zinc-800 bg-transparent hover:bg-zinc-900 transition-colors"
+                onClick={() => toast.info("Export coming soon", { description: "Plot export will be available in a future update." })}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+            )}
           </div>
+          {captureNode}
 
           {/* Token warning under the button */}
           {isAuthenticated && !hasTokens() && (
@@ -555,6 +581,7 @@ export function TelemetryPlotGenerator() {
             <div className="border border-zinc-800 p-4">{renderPlot()}</div>
             <div className="text-sm">{renderStats()}</div>
           </div>
+
           {/* Developer mode coming soon */}
           <div className="mx-5 mt-4 flex items-start gap-3 border border-blue-500/20 bg-blue-950/10 px-4 py-3">
             <Code2 className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />

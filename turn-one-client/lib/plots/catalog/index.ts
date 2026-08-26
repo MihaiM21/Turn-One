@@ -68,6 +68,16 @@ export const EXPORTABLE_PLOTS: PlotDefinition[] = PLOT_CATALOG.filter(
   (p) => p.exportable !== false
 )
 
+/**
+ * Plots that may be persisted as a permanent /plot/[slug] link (saving, OG
+ * capture, share controls, embeds, SEO pages). Default false — this is the
+ * client-side half of the rollout gate; the backend's
+ * SharePolicy.AllowedPlotKeys allowlist is the real enforcement.
+ */
+export const SHAREABLE_PLOTS: PlotDefinition[] = PLOT_CATALOG.filter(
+  (p) => p.shareable === true
+)
+
 export function plotsForSession(sessionType: ExportSessionType): PlotDefinition[] {
   return PLOT_CATALOG.filter((p) => p.sessionTypes.includes(sessionType))
 }

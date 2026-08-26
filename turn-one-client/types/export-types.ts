@@ -1,6 +1,14 @@
 export type ExportSessionType = "PRACTICE" | "QUALIFYING" | "RACE"
 
-export type OutputSizeKey = "ig_square" | "story" | "x_landscape" | "hires"
+export type OutputSizeKey =
+  | "ig_square"
+  | "story"
+  | "x_landscape"
+  | "hires"
+  | "og"
+  | "social"
+  | "yt_thumb"
+  | "overlay_4k"
 
 export interface OutputSize {
   key: OutputSizeKey
@@ -13,6 +21,8 @@ export interface OutputSize {
   /** Font-size multiplier applied to all chart text in the exported image. */
   textScale: number
   description: string
+  /** True for creator-tier presets that render with a transparent background. */
+  transparent?: boolean
 }
 
 export interface ExportPreset {

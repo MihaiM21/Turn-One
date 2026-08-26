@@ -91,6 +91,15 @@ export interface PlotDefinition {
   options?: PlotOptionDef[]
   /** Default true; false hides the plot from the admin export page until its offscreen capture is verified. */
   exportable?: boolean
+  /**
+   * Default false. Opt-in flag for the shareable-plots feature (permanent
+   * /plot/[slug] URLs, OG capture, share controls, embeds, SEO pages). Mirrors
+   * `exportable` — it exists to gate rollout to a verified subset of plots, not
+   * to describe a permanent capability difference. Widening the rollout is a
+   * one-line change here plus the matching entry in the backend's
+   * SharePolicy.AllowedPlotKeys allowlist (the real enforcement boundary).
+   */
+  shareable?: boolean
   fetch: (ctx: PlotFetchContext) => Promise<unknown>
   render: (data: unknown, settings: AdvancedPlotSettings, ctx?: PlotFetchContext) => ReactNode
   /** Optional empty check — defaults: array length === 0, or null/undefined. */

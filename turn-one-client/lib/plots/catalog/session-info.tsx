@@ -26,6 +26,7 @@ export const SESSION_INFO_PLOTS: PlotDefinition[] = [
     category: CATEGORY,
     sessionTypes: ["RACE", "QUALIFYING"],
     driverRequirement: { kind: "none" },
+    shareable: true,
     emptyMessage: "No session results returned for the selected session",
     fetch: async ({ token, year, eventName, sessionName }) => {
       const raw = await fetchSessionResults(token, year, eventName, sessionName, "v2")
