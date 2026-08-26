@@ -5,6 +5,7 @@ import { BarChart3, Mail, MapPin, Twitter, Youtube, Instagram } from "lucide-rea
 import VersionDisplay from "@/components/ui/version-display"
 import { ObfuscatedEmail } from "@/components/ui/obfuscated-email"
 import { SOCIAL_LINKS } from "@/lib/social-links"
+import { LegalDisclaimer } from "@/components/footer/legal-disclaimer"
 
 export function MainFooter() {
   const currentYear = new Date().getFullYear()
@@ -86,6 +87,7 @@ export function MainFooter() {
                 { href: "/predictions", label: "Predictions" },
                 { href: "/rewards", label: "Rewards & Leveling" },
                 { href: "/live", label: "Live Timing" },
+                { href: "/download", label: "Turn One Link" },
               ].map((link) => (
                 <Link
                   key={link.href}
@@ -143,7 +145,7 @@ export function MainFooter() {
 
       {/* Bottom Bar */}
       <div className="border-t border-border bg-black/50">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-4 py-6 space-y-4">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
               <span>© {currentYear} Turn One. All rights reserved.</span>
@@ -162,6 +164,7 @@ export function MainFooter() {
               </Link>
             </div>
           </div>
+          <LegalDisclaimer variant="minimal" className="text-center md:text-left" />
         </div>
       </div>
     </footer>
