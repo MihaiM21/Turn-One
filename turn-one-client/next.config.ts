@@ -91,15 +91,12 @@ const nextConfig: NextConfig = {
         destination: '/contact',
         permanent: false,
       },
-      // Public page consolidation: services merged into features, about merged into home
+      // Public page consolidation: services merged into features.
+      // /about used to redirect to /home#about; it is now a real page
+      // (see app/(site)/about/page.tsx) so the legal disclaimer has a home.
       {
         source: '/services',
         destination: '/features#services-platform',
-        permanent: true,
-      },
-      {
-        source: '/about',
-        destination: '/home#about',
         permanent: true,
       },
     ];
