@@ -100,6 +100,8 @@ interface SEOProps {
   description?: string
   keywords?: string[]
   image?: string
+  /** MIME type of `image`. Defaults to JPEG (the static OG image set); pass 'image/png' for dynamic OG cards. */
+  imageType?: string
   url?: string
   type?: string
   noIndex?: boolean
@@ -118,6 +120,7 @@ export function generateSEO({
   description = SITE_CONFIG.description,
   keywords = [],
   image = OG_IMAGES.default,
+  imageType = 'image/jpeg',
   url,
   type = 'website',
   noIndex = false,
@@ -178,7 +181,7 @@ export function generateSEO({
           width: 1200,
           height: 630,
           alt: title || SITE_CONFIG.name,
-          type: 'image/jpeg',
+          type: imageType,
         },
       ],
       ...(publishedTime && { publishedTime }),
@@ -285,6 +288,48 @@ export function generateWebsiteSchema() {
       },
       'query-input': 'required name=search_term_string',
     },
+  }
+}
+
+interface SportsEventSchemaProps {
+  name: string
+  url: string
+  eventName: string
+  sessionName: string
+  year: number
+  circuit?: string
+  country?: string
+}
+
+/** JSON-LD SportsEvent for an SEO session page (app/f1/[year]/[event]/[session]). */
+export function generateSportsEventSchema({
+  name,
+  url,
+  eventName,
+  sessionName,
+  year,
+  circuit,
+  country,
+}: SportsEventSchemaProps) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'SportsEvent',
+    name,
+    url: `${SITE_CONFIG.url}${url}`,
+    sport: 'Formula 1',
+    startDate: `${year}`,
+    location: circuit
+      ? {
+          '@type': 'Place',
+          name: circuit,
+          ...(country && { address: { '@type': 'PostalAddress', addressCountry: country } }),
+        }
+      : undefined,
+    superEvent: {
+      '@type': 'SportsEvent',
+      name: `${eventName} ${year}`,
+    },
+    description: `${eventName} ${year} — ${sessionName} results, top speeds, and telemetry on TurnOne.`,
   }
 }
 
