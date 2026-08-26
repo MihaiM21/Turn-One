@@ -5,6 +5,7 @@ import { ObfuscatedEmail } from "@/components/ui/obfuscated-email"
 import { ScrollAnimation } from "@/components/animation/scroll-animation"
 import { Metadata } from "next"
 import { generateSEO } from "@/lib/seo"
+import { LegalDisclaimer } from "@/components/footer/legal-disclaimer"
 
 
 export const metadata: Metadata = generateSEO({
@@ -273,6 +274,9 @@ const sections: Section[] = [
                     referenced in the Service are trademarks of their respective owners and are used nominatively for
                     identification only. No endorsement or affiliation is claimed.
                 </p>
+                <div className="border-l-2 border-red-500/60 pl-4">
+                    <LegalDisclaimer variant="full" className="text-zinc-200" />
+                </div>
                 <p>
                     <span className="text-white font-semibold">Copyright complaints.</span> If you believe that
                     content available through the Service infringes your copyright, please send a notice to{" "}
