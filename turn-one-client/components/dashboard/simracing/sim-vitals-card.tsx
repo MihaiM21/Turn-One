@@ -1,6 +1,7 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Gauge } from "lucide-react";
+import { SectionCard } from "./section-card";
 import { SimPhysics } from "@/lib/simTelemetryService";
 
 interface SimVitalsCardProps {
@@ -30,15 +31,15 @@ export function SimVitalsCard({ physics, maxRpm }: SimVitalsCardProps) {
     };
 
     return (
-        <Card className="bg-black/60 border-primary/20 shadow-xl backdrop-blur-md overflow-hidden">
-            <CardContent className="p-6">
+        <SectionCard label="Vitals" title="Speed & gear" icon={Gauge} className="h-full">
+            <div>
                 {/* LED shift light bar */}
                 <div className={`flex gap-1 mb-5 ${isShiftLight ? "animate-pulse" : ""}`}>
                     {Array.from({ length: LED_COUNT }).map((_, i) => (
                         <div
                             key={i}
-                            className={`flex-1 h-2 rounded-full transition-all duration-75 ${
-                                i < activeLeds ? getLedColor(i) : "bg-primary/10"
+                            className={`h-2 flex-1 transition-all duration-75 ${
+                                i < activeLeds ? getLedColor(i) : "bg-zinc-800"
                             }`}
                         />
                     ))}
@@ -46,21 +47,23 @@ export function SimVitalsCard({ physics, maxRpm }: SimVitalsCardProps) {
 
                 <div className="flex justify-between items-center mb-5">
                     <div className="flex flex-col">
-                        <span className="text-muted-foreground text-xs font-bold tracking-widest uppercase mb-1">Speed</span>
+                        <span className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-500">Speed</span>
                         <div className="flex items-baseline gap-2">
-                            <span className="text-6xl font-black text-white tracking-tighter tabular-nums leading-none">{speed}</span>
-                            <span className="text-lg font-bold text-muted-foreground">km/h</span>
+                            <span className="font-mono text-6xl font-black leading-none tracking-tighter tabular-nums text-white">
+                                {speed}
+                            </span>
+                            <span className="text-lg font-bold text-zinc-500">km/h</span>
                         </div>
                     </div>
                     <div className="flex flex-col items-end">
-                        <span className="text-muted-foreground text-xs font-bold tracking-widest uppercase mb-1">Gear</span>
+                        <span className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-500">Gear</span>
                         <div
-                            className={`flex items-center justify-center w-20 h-24 rounded-xl bg-black/80 border-2 transition-all duration-100 ${
+                            className={`flex h-24 w-20 items-center justify-center border-2 bg-black transition-colors duration-100 ${
                                 isShiftLight
-                                    ? "border-primary shadow-[0_0_30px_rgba(239,68,68,0.6)]"
+                                    ? "border-primary"
                                     : isNearShift
-                                    ? "border-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.25)]"
-                                    : "border-primary/20"
+                                      ? "border-orange-500/50"
+                                      : "border-zinc-800"
                             }`}
                         >
                             <span
@@ -75,24 +78,22 @@ export function SimVitalsCard({ physics, maxRpm }: SimVitalsCardProps) {
                 </div>
 
                 <div className="space-y-2">
-                    <div className="flex justify-between text-xs font-semibold text-muted-foreground">
-                        <span>RPM</span>
-                        <span className="tabular-nums font-mono">{rpm.toLocaleString()} / {maxRpm ? maxRpm.toLocaleString() : "---"}</span>
+                    <div className="flex justify-between text-[11px] font-semibold text-zinc-500">
+                        <span className="uppercase tracking-wider">RPM</span>
+                        <span className="font-mono tabular-nums">
+                            {rpm.toLocaleString()} / {maxRpm ? maxRpm.toLocaleString() : "---"}
+                        </span>
                     </div>
-                    <div className="h-3 w-full bg-black/80 border border-primary/10 rounded-full overflow-hidden">
+                    <div className="h-3 w-full overflow-hidden border border-zinc-800 bg-black">
                         <div
-                            className={`h-full transition-all duration-75 rounded-full ${
-                                isShiftLight
-                                    ? "bg-primary shadow-[0_0_8px_rgba(239,68,68,0.8)]"
-                                    : isNearShift
-                                    ? "bg-orange-500"
-                                    : "bg-primary/60"
+                            className={`h-full transition-all duration-75 ${
+                                isShiftLight ? "bg-primary" : isNearShift ? "bg-orange-500" : "bg-primary/60"
                             }`}
                             style={{ width: `${rpmPct}%` }}
                         />
                     </div>
                 </div>
-            </CardContent>
-        </Card>
+            </div>
+        </SectionCard>
     );
 }

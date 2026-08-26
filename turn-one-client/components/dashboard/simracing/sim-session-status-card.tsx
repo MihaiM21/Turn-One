@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { SectionCard } from "./section-card";
 import { SimGraphics } from "@/lib/simTelemetryService";
 import { Flag, Fuel, CloudRain, Settings2, MapPin } from "lucide-react";
 
@@ -11,14 +11,9 @@ interface SimSessionStatusCardProps {
 
 export function SimSessionStatusCard({ graphics }: SimSessionStatusCardProps) {
     return (
-        <Card className="bg-black/60 border-primary/20 backdrop-blur-md shadow-xl h-full">
-            <CardContent className="p-6 h-full flex flex-col">
-                <span className="text-muted-foreground text-xs font-bold tracking-widest uppercase mb-4 flex items-center gap-2">
-                    <Settings2 className="w-3 h-3" />
-                    Session Status
-                </span>
-
-                <div className="grid grid-cols-2 gap-2.5 flex-1">
+        <SectionCard label="Session" title="Status" icon={Settings2} className="h-full">
+            <div className="flex h-full flex-col">
+                <div className="grid flex-1 grid-cols-2 gap-2.5">
                     <StatusItem icon={<Flag className="w-3 h-3" />} label="Position" value={`P${graphics?.position || "-"}`} />
                     <StatusItem icon={<MapPin className="w-3 h-3" />} label="Laps Done" value={graphics?.completedLaps ?? 0} />
                     <StatusItem icon={<Fuel className="w-3 h-3" />} label="Fuel Est." value={graphics?.fuelEstimatedLaps ? `${graphics.fuelEstimatedLaps.toFixed(1)} laps` : "-"} />
@@ -27,13 +22,13 @@ export function SimSessionStatusCard({ graphics }: SimSessionStatusCardProps) {
                     <StatusItem label="Status" value={graphics?.status?.replace("AC_", "") || "-"} />
                 </div>
 
-                <div className="mt-3 pt-3 border-t border-primary/10 flex justify-between gap-2">
+                <div className="mt-3 flex justify-between gap-2 border-t border-zinc-800 pt-3">
                     <MapSetting label="TC" val={graphics?.tc} />
                     <MapSetting label="ABS" val={graphics?.abs} />
                     <MapSetting label="MAP" val={graphics?.engineMap} />
                 </div>
-            </CardContent>
-        </Card>
+            </div>
+        </SectionCard>
     );
 }
 
@@ -49,8 +44,8 @@ function StatusItem({
     valueClass?: string;
 }) {
     return (
-        <div className="bg-black/40 rounded-lg p-2.5 border border-primary/10 flex flex-col gap-0.5">
-            <span className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1">
+        <div className="flex flex-col gap-0.5 border border-zinc-800 bg-black p-2.5">
+            <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
                 {icon}
                 {label}
             </span>
@@ -61,9 +56,9 @@ function StatusItem({
 
 function MapSetting({ label, val }: { label: string; val?: number }) {
     return (
-        <div className="flex-1 flex flex-col items-center bg-black/80 px-2 py-2 rounded-lg border border-primary/10">
-            <span className="text-[10px] text-muted-foreground font-bold">{label}</span>
-            <span className="text-sm text-white font-black font-mono">{val ?? "-"}</span>
+        <div className="flex flex-1 flex-col items-center border border-zinc-800 bg-black px-2 py-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">{label}</span>
+            <span className="font-mono text-sm font-black text-white">{val ?? "-"}</span>
         </div>
     );
 }

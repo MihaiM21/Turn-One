@@ -52,15 +52,15 @@ export function ReplayScrubber({ minTimestamp, maxTimestamp, value, onChange }: 
     const pct = maxTimestamp > minTimestamp ? ((pos - minTimestamp) / (maxTimestamp - minTimestamp)) * 100 : 0;
 
     return (
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-black/40 border border-primary/20 backdrop-blur-md">
+        <div className="flex items-center gap-3 border border-zinc-800 bg-zinc-950 p-3">
             <button
                 onClick={() => setPlaying(p => !p)}
-                className="flex items-center justify-center w-9 h-9 rounded-md bg-primary/20 border border-primary/40 hover:bg-primary/30 transition-colors"
+                className="flex h-9 w-9 shrink-0 items-center justify-center border border-primary/40 bg-primary/10 text-primary transition-colors hover:bg-primary/20"
                 aria-label={playing ? "Pause" : "Play"}
             >
-                {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
             </button>
-            <span className="font-mono text-xs text-muted-foreground w-20">
+            <span className="w-20 shrink-0 font-mono text-xs tabular-nums text-zinc-500">
                 {format(new Date(pos), "HH:mm:ss")}
             </span>
             <input
@@ -70,12 +70,13 @@ export function ReplayScrubber({ minTimestamp, maxTimestamp, value, onChange }: 
                 value={pos}
                 step={50}
                 onChange={e => onChange(Number(e.target.value))}
-                className="flex-1 accent-primary"
+                aria-label="Replay position"
+                className="h-1.5 flex-1 appearance-none accent-primary"
                 style={{
-                    background: `linear-gradient(to right, rgb(239 68 68 / 0.6) ${pct}%, rgb(255 255 255 / 0.1) ${pct}%)`,
+                    background: `linear-gradient(to right, rgb(220 38 38 / 0.7) ${pct}%, rgb(63 63 70) ${pct}%)`,
                 }}
             />
-            <span className="font-mono text-xs text-muted-foreground w-20 text-right">
+            <span className="w-20 shrink-0 text-right font-mono text-xs tabular-nums text-zinc-500">
                 {format(new Date(maxTimestamp), "HH:mm:ss")}
             </span>
         </div>

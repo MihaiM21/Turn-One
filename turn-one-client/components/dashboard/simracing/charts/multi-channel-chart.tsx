@@ -99,7 +99,7 @@ export function MultiChannelChart({
 
     if (!data.points.length) {
         return (
-            <div className="h-64 flex items-center justify-center text-muted-foreground animate-pulse font-mono text-sm">
+            <div className="flex h-64 items-center justify-center font-mono text-sm text-zinc-600">
                 No telemetry data
             </div>
         );
@@ -124,10 +124,10 @@ export function MultiChannelChart({
                         <button
                             key={c.key}
                             onClick={() => setEnabled(e => ({ ...e, [c.key]: !e[c.key] }))}
-                            className={`px-3 py-1.5 text-xs font-bold rounded-md border transition-all ${
+                            className={`border px-3 py-1.5 text-xs font-bold transition-colors ${
                                 on
-                                    ? "bg-black/60 text-white border-primary/40"
-                                    : "bg-transparent text-muted-foreground border-white/10 hover:text-white"
+                                    ? "border-zinc-700 bg-zinc-900 text-white"
+                                    : "border-zinc-800 bg-transparent text-zinc-600 hover:text-zinc-400"
                             }`}
                             style={on ? { boxShadow: `inset 0 0 0 1px ${c.color}55` } : undefined}
                         >

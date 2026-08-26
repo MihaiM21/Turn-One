@@ -1,136 +1,258 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { formatDistanceToNow, format } from "date-fns";
-import { Clock, Flag, Layers, ChevronRight, Gauge } from "lucide-react";
+import { toast } from "sonner";
+import {
+    Clock,
+    Flag,
+    ChevronRight,
+    Gauge,
+    Trash2,
+    Search,
+    ArrowUpDown,
+    Timer,
+    Download,
+} from "lucide-react";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links";
+import { SectionCard } from "@/components/dashboard/simracing/section-card";
+import {
+    getMySessions,
+    deleteSession as deleteSessionApi,
+    formatLapTime,
+    type SimSession,
+} from "@/lib/simracing/api";
 
-interface SessionDto {
-    id: string;
-    carModel: string;
-    track: string;
-    driverName: string;
-    sessionType: string;
-    mode: number;
-    visibility: number;
-    isActive: boolean;
-    lapCount: number;
-    startedAt: string;
-    endedAt?: string;
-}
+type SortKey = "recent" | "bestLap" | "laps" | "track";
 
 const SESSION_TYPE_COLORS: Record<string, string> = {
-    RACE: "bg-primary/10 text-primary border-primary/30",
-    QUALIFY: "bg-yellow-500/10 text-yellow-400 border-yellow-500/30",
-    PRACTICE: "bg-blue-500/10 text-blue-400 border-blue-500/30",
+    RACE: "border-primary/30 bg-primary/10 text-primary",
+    QUALIFY: "border-yellow-500/30 bg-yellow-500/10 text-yellow-400",
+    PRACTICE: "border-blue-500/30 bg-blue-500/10 text-blue-400",
 };
 
+/** ACC reports types as "AC_PRACTICE" / "AC_RACE"; show the readable half. */
+function shortType(sessionType: string) {
+    return (sessionType || "").replace(/^AC_/, "").toUpperCase() || "SESSION";
+}
+
 export default function MySessionsPage() {
-    const [sessions, setSessions] = useState<SessionDto[]>([]);
+    const [sessions, setSessions] = useState<SimSession[]>([]);
     const [loading, setLoading] = useState(true);
+    const [query, setQuery] = useState("");
+    const [sort, setSort] = useState<SortKey>("recent");
+    const [deleting, setDeleting] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchSessions = async () => {
-            try {
-                const token = localStorage.getItem("token");
-                const url = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271/api").replace(/\/api\/?$/, "");
-                const res = await fetch(`${url}/api/telemetry/sessions/me`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    setSessions(data);
-                }
-            } catch (err) {
+        getMySessions()
+            .then(setSessions)
+            .catch(err => {
                 console.error("Failed to fetch sessions", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchSessions();
+                toast.error("Couldn't load your sessions.");
+            })
+            .finally(() => setLoading(false));
     }, []);
 
+    const visible = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        const filtered = q
+            ? sessions.filter(
+                  s =>
+                      s.track?.toLowerCase().includes(q) ||
+                      s.carModel?.toLowerCase().includes(q) ||
+                      shortType(s.sessionType).toLowerCase().includes(q)
+              )
+            : sessions;
+
+        const sorted = [...filtered];
+        switch (sort) {
+            case "bestLap":
+                // Sessions with no timed lap sink to the bottom rather than sorting as "fastest".
+                sorted.sort((a, b) => (a.bestLapMs || Infinity) - (b.bestLapMs || Infinity));
+                break;
+            case "laps":
+                sorted.sort((a, b) => b.lapCount - a.lapCount);
+                break;
+            case "track":
+                sorted.sort((a, b) => (a.track || "").localeCompare(b.track || ""));
+                break;
+            default:
+                sorted.sort((a, b) => +new Date(b.startedAt) - +new Date(a.startedAt));
+        }
+        return sorted;
+    }, [sessions, query, sort]);
+
+    const totalLaps = useMemo(() => sessions.reduce((sum, s) => sum + s.lapCount, 0), [sessions]);
+    const overallBest = useMemo(() => {
+        const times = sessions.map(s => s.bestLapMs).filter(ms => ms > 0);
+        return times.length ? Math.min(...times) : null;
+    }, [sessions]);
+
+    const handleDelete = async (session: SimSession) => {
+        if (!confirm(`Delete the ${session.track} session and all of its laps? This can't be undone.`)) return;
+
+        setDeleting(session.id);
+        try {
+            await deleteSessionApi(session.id);
+            setSessions(prev => prev.filter(s => s.id !== session.id));
+            toast.success("Session deleted.");
+        } catch {
+            toast.error("Couldn't delete that session.");
+        } finally {
+            setDeleting(null);
+        }
+    };
+
     return (
-        <div className="w-full min-h-screen p-6 bg-gradient-to-br from-black via-red-950/20 to-black font-sans text-white">
-            <div className="container mx-auto px-4 py-8 max-w-7xl">
-                <div className="mb-8">
-                    <div className="flex items-center gap-3 mb-1">
-                        <Layers className="w-5 h-5 text-primary" />
-                        <h1 className="text-3xl font-black italic tracking-tight">MY SESSIONS</h1>
+        <main className="w-full space-y-4 px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+            <PageHeader
+                label="Sim racing"
+                title="My sessions"
+                description="Every stint you've recorded, with lap counts and personal bests."
+                stats={[
+                    { icon: Flag, label: "Sessions", value: sessions.length },
+                    { icon: Timer, label: "Laps", value: totalLaps },
+                    { icon: Gauge, label: "Best lap", value: formatLapTime(overallBest) },
+                ]}
+            />
+
+            {!loading && sessions.length > 0 ? (
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <div className="relative flex-1">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-600" />
+                        <input
+                            value={query}
+                            onChange={e => setQuery(e.target.value)}
+                            placeholder="Filter by track, car or session type"
+                            className="h-9 w-full border border-zinc-800 bg-zinc-950 pl-9 pr-3 text-sm text-white placeholder:text-zinc-600 focus:border-primary/40 focus:outline-none"
+                        />
                     </div>
-                    <p className="text-muted-foreground text-sm ml-8">Your complete racing history</p>
+
+                    <div className="relative">
+                        <ArrowUpDown className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-600" />
+                        <select
+                            value={sort}
+                            onChange={e => setSort(e.target.value as SortKey)}
+                            className="h-9 w-full appearance-none border border-zinc-800 bg-zinc-950 pl-9 pr-8 text-sm text-white focus:border-primary/40 focus:outline-none sm:w-52"
+                        >
+                            <option value="recent">Most recent</option>
+                            <option value="bestLap">Fastest lap</option>
+                            <option value="laps">Most laps</option>
+                            <option value="track">Track name</option>
+                        </select>
+                    </div>
                 </div>
+            ) : null}
 
-                {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="h-52 rounded-xl bg-black/40 border border-primary/10 animate-pulse" />
-                        ))}
-                    </div>
-                ) : sessions.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 border-2 border-primary/20 border-dashed rounded-xl bg-black/40 backdrop-blur-md">
-                        <Gauge className="w-12 h-12 text-muted-foreground/40 mb-4" />
-                        <p className="text-muted-foreground font-medium text-lg mb-2">No sessions recorded yet</p>
-                        <p className="text-sm text-slate-500">Connect the Turn One Link and complete a lap to get started!</p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {sessions.map(s => {
-                            const typeKey = s.sessionType?.toUpperCase() || "";
-                            const typeColor = SESSION_TYPE_COLORS[typeKey] ?? "bg-primary/10 text-primary border-primary/30";
-                            return (
-                                <Card
-                                    key={s.id}
-                                    className="border-primary/20 bg-gradient-to-br from-black/80 to-black/60 shadow-xl backdrop-blur-md hover:border-primary/50 hover:shadow-primary/10 transition-all duration-200 group overflow-hidden"
-                                >
-                                    <CardContent className="p-0">
-                                        <div className="p-5 border-b border-primary/10">
-                                            <div className="flex justify-between items-start mb-1">
-                                                <h3 className="font-bold text-lg text-white leading-tight">{s.track}</h3>
-                                                <span className={`text-[10px] px-2 py-1 rounded border font-black tracking-widest whitespace-nowrap ml-2 ${typeColor}`}>
-                                                    {typeKey || "SESSION"}
-                                                </span>
-                                            </div>
-                                            <p className="text-muted-foreground text-sm truncate">{s.carModel}</p>
-                                        </div>
-
-                                        <div className="px-5 py-4 grid grid-cols-2 gap-3">
-                                            <div className="flex items-center gap-2">
-                                                <Flag className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                                                <div>
-                                                    <div className="text-[10px] text-muted-foreground">Laps</div>
-                                                    <div className="font-mono font-bold text-white text-sm">{s.lapCount}</div>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                                                <div>
-                                                    <div className="text-[10px] text-muted-foreground">When</div>
-                                                    <div className="font-mono text-white text-xs">{formatDistanceToNow(new Date(s.startedAt))} ago</div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="px-5 pb-4 flex items-center justify-between">
-                                            <span className="text-[11px] text-muted-foreground">
-                                                {format(new Date(s.startedAt), "MMM d, yyyy · HH:mm")}
+            {loading ? (
+                <SectionCard loading />
+            ) : sessions.length === 0 ? (
+                <SectionCard
+                    emptyIcon={Gauge}
+                    empty={
+                        <div className="space-y-4">
+                            <div>
+                                <p className="text-sm font-bold text-white">No sessions recorded yet</p>
+                                <p className="mt-1 text-xs text-zinc-500">
+                                    Install Turn One Link, launch ACC and complete a lap — your session shows up here
+                                    automatically.
+                                </p>
+                            </div>
+                            <Link
+                                href="/simracing/download"
+                                className="inline-flex h-9 items-center gap-2 bg-primary px-5 text-xs font-bold uppercase tracking-wide text-primary-foreground transition-colors hover:bg-primary/90"
+                            >
+                                <Download className="h-3.5 w-3.5" />
+                                Get Turn One Link
+                            </Link>
+                        </div>
+                    }
+                />
+            ) : visible.length === 0 ? (
+                <SectionCard emptyIcon={Search} empty={`Nothing matches "${query}".`} />
+            ) : (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {visible.map(s => {
+                        const typeKey = shortType(s.sessionType);
+                        const typeColor = SESSION_TYPE_COLORS[typeKey] ?? "border-zinc-700 bg-zinc-900 text-zinc-400";
+                        return (
+                            <div
+                                key={s.id}
+                                className="group flex flex-col border border-zinc-800 bg-zinc-950 transition-colors hover:border-zinc-700"
+                            >
+                                <div className="flex items-start justify-between gap-2 border-b border-zinc-800 px-5 py-4">
+                                    <div className="min-w-0">
+                                        <h3 className="truncate text-sm font-bold leading-tight text-white">{s.track}</h3>
+                                        <p className="mt-0.5 truncate text-xs text-zinc-500">{s.carModel}</p>
+                                    </div>
+                                    <div className="flex shrink-0 items-center gap-1.5">
+                                        {s.isActive ? (
+                                            <span className="border border-primary/40 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-primary">
+                                                Live
                                             </span>
-                                            <Link
-                                                href={`/simracing/sessions/${s.id}`}
-                                                className="inline-flex items-center gap-1 text-sm font-bold text-primary hover:text-white transition-colors duration-200"
-                                            >
-                                                View Laps <ChevronRight className="w-4 h-4" />
-                                            </Link>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            );
-                        })}
-                    </div>
-                )}
-            </div>
-        </div>
+                                        ) : null}
+                                        <span
+                                            className={`border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest ${typeColor}`}
+                                        >
+                                            {typeKey}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-px bg-zinc-800">
+                                    <div className="bg-zinc-950 px-4 py-3">
+                                        <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Laps</p>
+                                        <p className="mt-1 font-mono text-sm font-bold tabular-nums text-white">
+                                            {s.lapCount}
+                                        </p>
+                                    </div>
+                                    <div className="bg-zinc-950 px-4 py-3">
+                                        <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Best</p>
+                                        <p className="mt-1 font-mono text-sm font-bold tabular-nums text-primary">
+                                            {formatLapTime(s.bestLapMs)}
+                                        </p>
+                                    </div>
+                                    <div className="bg-zinc-950 px-4 py-3">
+                                        <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">When</p>
+                                        <p className="mt-1 font-mono text-xs tabular-nums text-zinc-300">
+                                            {formatDistanceToNow(new Date(s.startedAt))} ago
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="mt-auto flex items-center justify-between gap-2 border-t border-zinc-800 px-5 py-3">
+                                    <span className="flex items-center gap-1.5 text-[11px] text-zinc-500">
+                                        <Clock className="h-3 w-3" />
+                                        {format(new Date(s.startedAt), "MMM d, yyyy · HH:mm")}
+                                    </span>
+
+                                    <div className="flex items-center gap-1">
+                                        <button
+                                            onClick={() => handleDelete(s)}
+                                            disabled={deleting === s.id}
+                                            aria-label={`Delete ${s.track} session`}
+                                            className="inline-flex h-7 w-7 items-center justify-center text-zinc-600 transition-colors hover:text-red-500 disabled:opacity-40"
+                                        >
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                        </button>
+                                        <Link
+                                            href={`/simracing/sessions/${s.id}`}
+                                            className="inline-flex items-center gap-1 text-xs font-bold text-zinc-400 transition-colors hover:text-primary"
+                                        >
+                                            Analyse
+                                            <ChevronRight className="h-3.5 w-3.5" />
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            <ExploreMoreLinks currentPage="/simracing/sessions" />
+        </main>
     );
 }

@@ -1,130 +1,202 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Trophy } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { Trophy, Users, Route, Timer, Zap } from "lucide-react";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links";
+import { SectionCard } from "@/components/dashboard/simracing/section-card";
+import { useAuth } from "@/lib/auth";
+import {
+    getLeaderboards,
+    formatPlayTime,
+    type SimLeaderboardRow,
+} from "@/lib/simracing/api";
 
-interface LeaderboardUser {
-    id: string;
-    username: string;
-    totalDistanceKm: number;
-    totalLaps: number;
-    totalSessions: number;
-    highestSpeedKmh: number;
-    totalPlayTimeSeconds: number;
-}
+type Board = "distance" | "laps" | "speed" | "time";
 
-const RANK_STYLES = [
-    { row: "bg-yellow-500/5 hover:bg-yellow-500/10", rank: "text-yellow-400 font-black", label: "1st" },
-    { row: "bg-slate-400/5 hover:bg-slate-400/10", rank: "text-slate-400 font-black", label: "2nd" },
-    { row: "bg-orange-700/5 hover:bg-orange-700/10", rank: "text-orange-600 font-black", label: "3rd" },
+const BOARDS: { key: Board; label: string; icon: typeof Route; sort: (a: SimLeaderboardRow, b: SimLeaderboardRow) => number }[] = [
+    { key: "distance", label: "Distance", icon: Route, sort: (a, b) => b.totalDistanceKm - a.totalDistanceKm },
+    { key: "laps", label: "Laps", icon: Timer, sort: (a, b) => b.totalLaps - a.totalLaps },
+    { key: "speed", label: "Top speed", icon: Zap, sort: (a, b) => b.highestSpeedKmh - a.highestSpeedKmh },
+    { key: "time", label: "Track time", icon: Users, sort: (a, b) => b.totalPlayTimeSeconds - a.totalPlayTimeSeconds },
 ];
 
-function getRankStyle(idx: number) {
-    return RANK_STYLES[idx] ?? { row: "hover:bg-primary/5", rank: "text-muted-foreground font-mono", label: `${idx + 1}` };
-}
-
-function formatPlayTime(seconds: number) {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    return `${h}h ${m}m`;
-}
+/** Gold / silver / bronze for the podium, plain rows below. */
+const RANK_STYLES = [
+    "text-yellow-400 font-black",
+    "text-zinc-300 font-black",
+    "text-orange-500 font-black",
+];
 
 export default function LeaderboardsPage() {
-    const [users, setUsers] = useState<LeaderboardUser[]>([]);
+    const { user } = useAuth();
+    const [rows, setRows] = useState<SimLeaderboardRow[]>([]);
     const [loading, setLoading] = useState(true);
+    const [board, setBoard] = useState<Board>("distance");
 
     useEffect(() => {
-        const fetchLeaderboards = async () => {
-            try {
-                const url = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271/api").replace(/\/api\/?$/, "");
-                const res = await fetch(`${url}/api/telemetry/leaderboards`);
-                if (res.ok) {
-                    const data = await res.json();
-                    setUsers(data);
-                }
-            } catch (err) {
-                console.error("Failed to fetch leaderboards", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchLeaderboards();
+        getLeaderboards()
+            .then(setRows)
+            .catch(() => toast.error("Couldn't load the leaderboards."))
+            .finally(() => setLoading(false));
     }, []);
 
-    return (
-        <div className="w-full min-h-screen p-6 bg-gradient-to-br from-black via-red-950/20 to-black font-sans text-white">
-            <div className="container mx-auto px-4 py-8 max-w-7xl">
-                <div className="mb-8">
-                    <div className="flex items-center gap-3 mb-1">
-                        <Trophy className="w-5 h-5 text-yellow-400" />
-                        <h1 className="text-3xl font-black italic tracking-tight">GLOBAL LEADERBOARDS</h1>
-                    </div>
-                    <p className="text-muted-foreground text-sm ml-8">Ranked by total distance driven</p>
-                </div>
+    const active = BOARDS.find(b => b.key === board)!;
 
-                <Card className="border-primary/20 bg-gradient-to-br from-black/80 to-black/60 shadow-xl backdrop-blur-md overflow-hidden">
-                    <CardContent className="p-0">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
-                                <thead className="bg-primary/5 text-muted-foreground border-b border-primary/20">
-                                    <tr>
-                                        <th className="p-4 font-semibold w-16 text-center">Rank</th>
-                                        <th className="p-4 font-semibold">Driver</th>
-                                        <th className="p-4 font-semibold text-right">Distance</th>
-                                        <th className="p-4 font-semibold text-right">Laps</th>
-                                        <th className="p-4 font-semibold text-right hidden md:table-cell">Sessions</th>
-                                        <th className="p-4 font-semibold text-right">Top Speed</th>
-                                        <th className="p-4 font-semibold text-right hidden lg:table-cell">Track Time</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-primary/10">
-                                    {loading && (
-                                        <tr>
-                                            <td colSpan={7} className="p-8 text-center text-slate-500 animate-pulse">
-                                                Loading standings...
-                                            </td>
-                                        </tr>
-                                    )}
-                                    {!loading && users.length === 0 && (
-                                        <tr>
-                                            <td colSpan={7} className="p-12 text-center">
-                                                <Trophy className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-                                                <p className="text-muted-foreground">No driver data yet. Be the first on the board!</p>
-                                            </td>
-                                        </tr>
-                                    )}
-                                    {users.map((user, idx) => {
-                                        const s = getRankStyle(idx);
-                                        return (
-                                            <tr key={user.id} className={`transition-colors ${s.row}`}>
-                                                <td className={`p-4 text-center ${s.rank}`}>{s.label}</td>
-                                                <td className="p-4 font-bold text-white">{user.username}</td>
-                                                <td className="p-4 text-right font-mono font-bold text-primary">
-                                                    {user.totalDistanceKm.toFixed(1)}{" "}
-                                                    <span className="text-xs text-muted-foreground">km</span>
-                                                </td>
-                                                <td className="p-4 text-right font-mono">{user.totalLaps}</td>
-                                                <td className="p-4 text-right font-mono text-muted-foreground hidden md:table-cell">
-                                                    {user.totalSessions}
-                                                </td>
-                                                <td className="p-4 text-right font-mono text-orange-400">
-                                                    {Math.round(user.highestSpeedKmh)}{" "}
-                                                    <span className="text-xs text-muted-foreground">km/h</span>
-                                                </td>
-                                                <td className="p-4 text-right font-mono text-muted-foreground hidden lg:table-cell">
-                                                    {formatPlayTime(user.totalPlayTimeSeconds)}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    </CardContent>
-                </Card>
+    const sorted = useMemo(() => [...rows].sort(active.sort), [rows, active]);
+
+    const myRank = useMemo(() => {
+        if (!user?.username) return null;
+        const index = sorted.findIndex(r => r.username === user.username);
+        return index >= 0 ? { index, row: sorted[index] } : null;
+    }, [sorted, user?.username]);
+
+    // Only pin the user's row when it's off the visible podium area.
+    const showPinnedRank = myRank != null && myRank.index >= 10;
+
+    const primaryValue = (row: SimLeaderboardRow) => {
+        switch (board) {
+            case "laps":
+                return row.totalLaps.toLocaleString();
+            case "speed":
+                return `${Math.round(row.highestSpeedKmh)} km/h`;
+            case "time":
+                return formatPlayTime(row.totalPlayTimeSeconds);
+            default:
+                return `${row.totalDistanceKm.toFixed(1)} km`;
+        }
+    };
+
+    return (
+        <main className="w-full space-y-4 px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+            <PageHeader
+                label="Sim racing"
+                title="Global leaderboards"
+                description="Every driver streaming through Turn One Link, ranked."
+                stats={[
+                    { icon: Users, label: "Drivers", value: rows.length },
+                    {
+                        icon: Trophy,
+                        label: "Your rank",
+                        value: myRank ? `#${myRank.index + 1}` : "—",
+                        iconClassName: "text-yellow-400",
+                    },
+                ]}
+            />
+
+            <div className="flex gap-px overflow-x-auto bg-zinc-800 p-px">
+                {BOARDS.map(({ key, label, icon: Icon }) => (
+                    <button
+                        key={key}
+                        onClick={() => setBoard(key)}
+                        aria-pressed={board === key}
+                        className={`inline-flex shrink-0 items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wide transition-colors ${
+                            board === key
+                                ? "bg-primary/15 text-primary"
+                                : "bg-zinc-950 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+                        }`}
+                    >
+                        <Icon className="h-3.5 w-3.5" />
+                        {label}
+                    </button>
+                ))}
             </div>
-        </div>
+
+            <SectionCard
+                label="Standings"
+                title={`Ranked by ${active.label.toLowerCase()}`}
+                icon={Trophy}
+                iconClassName="text-yellow-400"
+                loading={loading}
+                empty={!loading && rows.length === 0 ? "No driver data yet — be the first on the board." : undefined}
+                emptyIcon={Trophy}
+                flush
+                bodyClassName="px-0 py-0"
+            >
+                <div className="overflow-x-auto">
+                    <table className="w-full min-w-[640px] border-collapse text-sm">
+                        <thead>
+                            <tr className="border-b border-zinc-800">
+                                <th className="w-16 px-4 py-3 text-center text-[10px] font-normal uppercase tracking-[0.2em] text-zinc-500">
+                                    Rank
+                                </th>
+                                <th className="px-4 py-3 text-left text-[10px] font-normal uppercase tracking-[0.2em] text-zinc-500">
+                                    Driver
+                                </th>
+                                <th className="px-4 py-3 text-right text-[10px] font-normal uppercase tracking-[0.2em] text-zinc-500">
+                                    {active.label}
+                                </th>
+                                <th className="hidden px-4 py-3 text-right text-[10px] font-normal uppercase tracking-[0.2em] text-zinc-500 md:table-cell">
+                                    Sessions
+                                </th>
+                                <th className="hidden px-4 py-3 text-right text-[10px] font-normal uppercase tracking-[0.2em] text-zinc-500 md:table-cell">
+                                    Laps
+                                </th>
+                                <th className="hidden px-4 py-3 text-right text-[10px] font-normal uppercase tracking-[0.2em] text-zinc-500 lg:table-cell">
+                                    Track time
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {sorted.map((row, i) => {
+                                const isMe = user?.username && row.username === user.username;
+                                return (
+                                    <tr
+                                        key={row.userId}
+                                        className={`border-b border-zinc-800/60 transition-colors hover:bg-zinc-900/60 ${
+                                            isMe ? "bg-primary/5" : ""
+                                        }`}
+                                    >
+                                        <td
+                                            className={`px-4 py-3 text-center font-mono tabular-nums ${
+                                                RANK_STYLES[i] ?? "text-zinc-500"
+                                            }`}
+                                        >
+                                            {i + 1}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <span className={`font-bold ${isMe ? "text-primary" : "text-white"}`}>
+                                                {row.username}
+                                            </span>
+                                            {isMe ? (
+                                                <span className="ml-2 border border-primary/40 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-primary">
+                                                    You
+                                                </span>
+                                            ) : null}
+                                        </td>
+                                        <td className="px-4 py-3 text-right font-mono font-bold tabular-nums text-primary">
+                                            {primaryValue(row)}
+                                        </td>
+                                        <td className="hidden px-4 py-3 text-right font-mono tabular-nums text-zinc-400 md:table-cell">
+                                            {row.totalSessions}
+                                        </td>
+                                        <td className="hidden px-4 py-3 text-right font-mono tabular-nums text-zinc-400 md:table-cell">
+                                            {row.totalLaps}
+                                        </td>
+                                        <td className="hidden px-4 py-3 text-right font-mono tabular-nums text-zinc-400 lg:table-cell">
+                                            {formatPlayTime(row.totalPlayTimeSeconds)}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </SectionCard>
+
+            {showPinnedRank ? (
+                <SectionCard label="Your position" title={`#${myRank.index + 1} of ${sorted.length}`} icon={Trophy}>
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        <span className="font-bold text-white">{myRank.row.username}</span>
+                        <span className="font-mono text-lg font-black tabular-nums text-primary">
+                            {primaryValue(myRank.row)}
+                        </span>
+                    </div>
+                </SectionCard>
+            ) : null}
+
+            <ExploreMoreLinks currentPage="/simracing/leaderboards" />
+        </main>
     );
 }

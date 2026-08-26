@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { ConnectionStatus } from "@/lib/simTelemetryService";
-import { WifiOff, Wifi, MonitorDot } from "lucide-react";
+import { WifiOff, Wifi, MonitorDot, Download } from "lucide-react";
 import { ReactNode } from "react";
 
 interface SimConnectionBannerProps {
@@ -52,17 +53,21 @@ export function SimConnectionBanner({ status, isActive }: SimConnectionBannerPro
 
     return (
         <div
-            className="absolute inset-0 z-50 flex items-center justify-center rounded-xl m-4"
+            className="absolute inset-0 z-50 m-4 flex items-center justify-center"
             style={{ backdropFilter: "blur(8px)", background: "rgba(0,0,0,0.85)" }}
         >
-            <div className={`p-8 rounded-2xl border-2 max-w-md w-full text-center ${cfg.border} ${cfg.bg} shadow-2xl`}>
-                <div className="flex justify-center mb-4">{cfg.icon}</div>
-                <h2 className="text-2xl font-black mb-2 text-white">{cfg.title}</h2>
-                <p className="text-muted-foreground mb-6 leading-relaxed">{cfg.message}</p>
+            <div className={`w-full max-w-md border ${cfg.border} ${cfg.bg} px-8 py-10 text-center`}>
+                <div className="mb-4 flex justify-center">{cfg.icon}</div>
+                <h2 className="mb-2 text-xl font-bold tracking-tight text-white">{cfg.title}</h2>
+                <p className="text-sm leading-relaxed text-zinc-400">{cfg.message}</p>
                 {cfg.showDownload && (
-                    <button className="bg-primary hover:bg-primary/80 text-primary-foreground font-bold py-2.5 px-8 rounded-lg transition-all shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)]">
-                        Download Turn One Link
-                    </button>
+                    <Link
+                        href="/simracing/download"
+                        className="mt-6 inline-flex h-10 items-center gap-2 bg-primary px-6 text-xs font-bold uppercase tracking-wide text-primary-foreground transition-colors hover:bg-primary/90"
+                    >
+                        <Download className="h-4 w-4" />
+                        Get Turn One Link
+                    </Link>
                 )}
             </div>
         </div>
