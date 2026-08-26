@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Search, Users, Crown, Shield, TrendingUp, Download, Filter, MoreHorizontal, Calendar, Activity, AlertCircle, RefreshCw, Mail, CheckCircle2, XCircle, Trash2, UserPlus, Zap, Send, FileText, Plus, Trophy, Brain, Bell, Loader2, Image as ImageIcon, ArrowRight, Coins, Wrench, type LucideIcon } from 'lucide-react';
+import { Search, Users, Crown, Shield, TrendingUp, Download, Filter, MoreHorizontal, Calendar, Activity, AlertCircle, RefreshCw, Mail, CheckCircle2, XCircle, Trash2, UserPlus, Zap, Send, FileText, Plus, Trophy, Brain, Bell, Loader2, Image as ImageIcon, ArrowRight, Coins, Wrench, Sparkles, type LucideIcon } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -65,6 +65,7 @@ interface User {
   createdAt: string;
   lastLogin?: string;
   lastTokenRefillDate?: string;
+  creatorTokenAllowance?: number | null;
 }
 
 interface CurrentUser {
@@ -155,13 +156,14 @@ export default function AdminDashboard() {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [editType, setEditType] = useState<'tokens' | 'coins' | 'plan' | 'role' | 'email' | null>(null);
+  const [editType, setEditType] = useState<'tokens' | 'coins' | 'plan' | 'role' | 'email' | 'creatorAllowance' | null>(null);
   const [newPlan, setNewPlan] = useState<string>('');
   const [emailSubject, setEmailSubject] = useState<string>('');
   const [emailMessage, setEmailMessage] = useState<string>('');
   const [newRole, setNewRole] = useState<string>('');
   const [newTokens, setNewTokens] = useState<number>(0);
   const [newCoins, setNewCoins] = useState<number>(0);
+  const [newCreatorAllowance, setNewCreatorAllowance] = useState<number>(0);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [planFilter, setPlanFilter] = useState<string>('ALL');
@@ -231,6 +233,25 @@ export default function AdminDashboard() {
       toast({
         title: "Success",
         description: "User plan updated successfully.",
+      });
+      fetchUsers();
+      setSelectedUser(null);
+      setEditType(null);
+    } else {
+      toast({
+        title: "Error",
+        description: result.error,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updateUserCreatorAllowance = async (userId: string, tokenAllowance: number) => {
+    const result = await adminService.updateUserCreatorAllowance(userId, tokenAllowance || null);
+    if (result.success) {
+      toast({
+        title: "Success",
+        description: "Creator token allowance updated.",
       });
       fetchUsers();
       setSelectedUser(null);
@@ -1093,6 +1114,16 @@ export default function AdminDashboard() {
                             <Shield className="h-4 w-4 mr-2" />
                             Change Role
                           </DropdownMenuItem>
+                          {getRoleString(user.role) === 'CONTENT_CREATOR' && (
+                            <DropdownMenuItem onClick={() => {
+                              setSelectedUser(user);
+                              setNewCreatorAllowance(user.creatorTokenAllowance ?? 0);
+                              setEditType('creatorAllowance');
+                            }}>
+                              <Sparkles className="h-4 w-4 mr-2" />
+                              Set Creator Token Allowance
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => {
                             setSelectedUser(user);
@@ -1259,6 +1290,33 @@ export default function AdminDashboard() {
               className="rounded-sm bg-primary text-xs font-semibold uppercase tracking-wider text-white hover:bg-primary/90"
             >
               Update Tokens
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editType === 'creatorAllowance'} onOpenChange={(open) => !open && setEditType(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold tracking-tight">Set Creator Token Allowance</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Overrides <span className="font-semibold">{selectedUser?.username}</span>&apos;s monthly token refill while their role is Content Creator. Set to 0 to fall back to their plan&apos;s default.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6">
+            <Input
+              type="number"
+              min={0}
+              value={newCreatorAllowance}
+              onChange={(e) => setNewCreatorAllowance(parseInt(e.target.value, 10) || 0)}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={() => selectedUser && updateUserCreatorAllowance(selectedUser.id, newCreatorAllowance)}
+              className="rounded-sm bg-primary text-xs font-semibold uppercase tracking-wider text-white hover:bg-primary/90"
+            >
+              Update Allowance
             </Button>
           </DialogFooter>
         </DialogContent>

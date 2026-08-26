@@ -75,6 +75,16 @@ namespace Infrastructure.Services
             return true;
         }
 
+        public async Task<bool> SetCreatorTokenAllowanceAsync(Guid userId, int? tokenAllowance)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return false;
+
+            user.CreatorTokenAllowance = tokenAllowance;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<bool> DeleteUserAsync(Guid userId)
         {
             var user = await _context.Users.FindAsync(userId);

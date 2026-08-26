@@ -131,6 +131,27 @@ public class AdminController : ControllerBase
         }
     }
 
+    // Creator identity itself is the existing Role.CONTENT_CREATOR, set via
+    // the "role" endpoint above — this only sets the optional monthly token
+    // override, which takes effect while that role is assigned.
+    [HttpPut("users/{userId:guid}/creator-allowance")]
+    public async Task<ActionResult> SetCreatorTokenAllowance(Guid userId, [FromBody] SetCreatorAllowanceDto dto)
+    {
+        try
+        {
+            var success = await _adminService.SetCreatorTokenAllowanceAsync(userId, dto.TokenAllowance);
+            if (!success)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+            return Ok(new { message = "Creator token allowance updated successfully" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to update creator token allowance", error = ex.Message });
+        }
+    }
+
     [HttpDelete("users/{userId:guid}")]
     public async Task<ActionResult> DeleteUser(Guid userId)
     {
@@ -435,4 +456,10 @@ public class SetPageStatusRequest
 {
     public bool IsDisabled { get; set; }
     public string? MaintenanceMessage { get; set; }
+}
+
+public class SetCreatorAllowanceDto
+{
+    /// <summary>Overrides the plan's monthly token allowance while Role is CONTENT_CREATOR. Null falls back to the plan default.</summary>
+    public int? TokenAllowance { get; set; }
 }
