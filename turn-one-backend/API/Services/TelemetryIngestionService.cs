@@ -21,6 +21,13 @@ public class TelemetrySessionContext
     public int FrameCounter { get; set; }
     public float MaxSpeedKmh { get; set; }
     public int MaxRpm { get; set; }
+
+    /// <summary>
+    /// Validity of the lap currently in progress. ACC reports <c>isValidLap</c> per frame and clears
+    /// it the moment the driver cuts, so it has to be latched across the whole lap and reset at the
+    /// lap boundary — reading it only at the boundary would describe the *next* lap.
+    /// </summary>
+    public bool CurrentLapValid { get; set; } = true;
 }
 
 public class TelemetryIngestionService
@@ -85,6 +92,19 @@ public class TelemetryIngestionService
 
         if (messageType == "graphics")
         {
+            // Latch invalidity for the lap in progress (a cut anywhere in the lap invalidates it).
+            if (payload.TryGetProperty("isValidLap", out var validProp))
+            {
+                var stillValid = validProp.ValueKind switch
+                {
+                    JsonValueKind.Number => validProp.GetInt32() != 0,
+                    JsonValueKind.True => true,
+                    JsonValueKind.False => false,
+                    _ => true
+                };
+                if (!stillValid) context.CurrentLapValid = false;
+            }
+
             if (payload.TryGetProperty("completedLaps", out var lapsProp) && lapsProp.ValueKind == JsonValueKind.Number)
             {
                 int currentLaps = lapsProp.GetInt32();
@@ -94,6 +114,7 @@ public class TelemetryIngestionService
                     context.LapCount = currentLaps;
                     context.MaxSpeedKmh = 0;
                     context.MaxRpm = 0;
+                    context.CurrentLapValid = true;
                 }
             }
 
@@ -319,7 +340,8 @@ public class TelemetryIngestionService
             int? lastTime = graphicsPayload.TryGetProperty("iLastTime", out var lt) ? lt.GetInt32() : null;
             if (lastTime == 2147483647) lastTime = null;
 
-            if (lastTime.HasValue && lastTime.Value > 0)
+            // Only valid laps count towards the session best.
+            if (lastTime.HasValue && lastTime.Value > 0 && context.CurrentLapValid)
             {
                 context.BestLapMs = context.BestLapMs == 0
                     ? lastTime.Value
@@ -331,6 +353,7 @@ public class TelemetryIngestionService
                 SessionId = context.SessionId,
                 LapNumber = context.LapCount + 1,
                 LapTimeMs = lastTime,
+                IsValid = context.CurrentLapValid && lastTime is > 0,
                 MaxSpeedKmh = context.MaxSpeedKmh,
                 MaxRpm = context.MaxRpm,
                 RecordedAt = DateTime.UtcNow

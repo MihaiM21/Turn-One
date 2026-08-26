@@ -60,7 +60,6 @@ public class InfluxTickRepository : ITelemetryTickRepository, IDisposable
                 {
                     foreach (var kvp in dict)
                     {
-                        // Simplistic flattening for the demo (in reality handle nested arrays properly)
                         if (kvp.Value is JsonElement jsonElement)
                         {
                             switch (jsonElement.ValueKind)
@@ -76,6 +75,9 @@ public class InfluxTickRepository : ITelemetryTickRepository, IDisposable
                                     break;
                                 case JsonValueKind.False:
                                     point = point.Field(kvp.Key, false);
+                                    break;
+                                case JsonValueKind.Array:
+                                    point = FlattenArray(point, kvp.Key, jsonElement);
                                     break;
                             }
                         }
@@ -94,6 +96,33 @@ public class InfluxTickRepository : ITelemetryTickRepository, IDisposable
         {
             await _writeApi.WritePointsAsync(points, bucket, _org);
         }
+    }
+
+    /// <summary>
+    /// Expands numeric arrays into suffixed scalar fields so they are queryable: 4-element corner
+    /// arrays become <c>{key}_fl/_fr/_rl/_rr</c> and 3-element vectors become <c>{key}_x/_y/_z</c>.
+    /// Without this, <c>accG_x/_y/_z</c> were declared as channels but never actually written.
+    /// </summary>
+    private static PointData FlattenArray(PointData point, string key, JsonElement array)
+    {
+        var suffixes = array.GetArrayLength() switch
+        {
+            4 when TelemetryChannels.CornerArrayFields.Contains(key) => TelemetryChannels.CornerSuffixes,
+            3 when TelemetryChannels.VectorArrayFields.Contains(key) => TelemetryChannels.AxisSuffixes,
+            _ => null
+        };
+        if (suffixes == null) return point;
+
+        var i = 0;
+        foreach (var element in array.EnumerateArray())
+        {
+            if (i >= suffixes.Count) break;
+            if (element.ValueKind == JsonValueKind.Number)
+                point = point.Field(key + suffixes[i], element.GetDouble());
+            i++;
+        }
+
+        return point;
     }
 
     public async Task<List<ChartPoint>> GetSessionPhysicsChartAsync(PlanType planType, Guid sessionId)
@@ -157,61 +186,80 @@ public class InfluxTickRepository : ITelemetryTickRepository, IDisposable
         DateTime? to = null)
     {
         var bucket = BucketFor(planType);
-        var allowed = TelemetryChannels.AllowedFor(planType);
-        var requested = channels.Where(c => allowed.Contains(c)).Distinct().ToList();
-        if (requested.Count == 0) requested = allowed.Take(2).ToList();
+        var requested = TelemetryChannels.ResolveAllowed(planType, channels);
+        if (requested.Count == 0)
+            requested = TelemetryChannels.ResolveAllowed(planType, TelemetryChannels.AllowedFor(planType).Take(2));
 
-        var window = TelemetryChannels.SampleWindowSeconds(planType);
+        var windowMs = TelemetryChannels.SampleWindowMs(planType, from, to);
         var fromExpr = from.HasValue ? from.Value.ToUniversalTime().ToString("o") : "0";
         var toClause = to.HasValue ? $", stop: {to.Value.ToUniversalTime():o}" : "";
-        var fieldFilter = string.Join(" or ", requested.Select(c => $"r._field == \"{c}\""));
 
-        var query = $@"
-            from(bucket: ""{bucket}"")
-            |> range(start: {fromExpr}{toClause})
-            |> filter(fn: (r) => r.sessionId == ""{sessionId}"" and r.msgType == ""physics"")
-            |> filter(fn: (r) => {fieldFilter})
-            |> aggregateWindow(every: {window}s, fn: mean, createEmpty: false)
-            |> pivot(rowKey:[""_time""], columnKey: [""_field""], valueColumn: ""_value"")
-        ";
+        var result = new MultiChannelChart { Channels = requested.Select(d => d.Key).ToList() };
 
-        var result = new MultiChannelChart { Channels = requested };
+        // One query per (msgType, aggregation) pair: channels live in different message types and
+        // averaging a gear number or a track-spline position across a window produces nonsense.
+        var groups = requested
+            .GroupBy(d => (d.MsgType, d.Agg))
+            .ToList();
 
-        try
+        // timestamp -> channel -> value
+        var merged = new SortedDictionary<long, Dictionary<string, double?>>();
+
+        foreach (var group in groups)
         {
-            var tables = await _client.GetQueryApi().QueryAsync(query, _org);
-            foreach (var record in tables.SelectMany(t => t.Records))
+            var keys = group.Select(d => d.Key).ToList();
+            var fieldFilter = string.Join(" or ", keys.Select(c => $"r._field == \"{c}\""));
+            var fn = group.Key.Agg == ChannelAggregation.Last ? "last" : "mean";
+
+            var query = $@"
+                from(bucket: ""{bucket}"")
+                |> range(start: {fromExpr}{toClause})
+                |> filter(fn: (r) => r.sessionId == ""{sessionId}"" and r.msgType == ""{group.Key.MsgType}"")
+                |> filter(fn: (r) => {fieldFilter})
+                |> aggregateWindow(every: {windowMs}ms, fn: {fn}, createEmpty: false)
+                |> pivot(rowKey:[""_time""], columnKey: [""_field""], valueColumn: ""_value"")
+            ";
+
+            try
             {
-                var time = record.GetTimeInDateTime();
-                if (time == null) continue;
-
-                var point = new MultiChannelPoint
+                var tables = await _client.GetQueryApi().QueryAsync(query, _org);
+                foreach (var record in tables.SelectMany(t => t.Records))
                 {
-                    Timestamp = (long)(time.Value.ToUniversalTime() - DateTime.UnixEpoch).TotalMilliseconds
-                };
+                    var time = record.GetTimeInDateTime();
+                    if (time == null) continue;
 
-                foreach (var channel in requested)
-                {
-                    if (record.Values.TryGetValue(channel, out var raw) && raw != null)
+                    var ts = (long)(time.Value.ToUniversalTime() - DateTime.UnixEpoch).TotalMilliseconds;
+                    if (!merged.TryGetValue(ts, out var row))
                     {
-                        try { point.Values[channel] = Convert.ToDouble(raw); }
-                        catch { point.Values[channel] = null; }
+                        row = new Dictionary<string, double?>();
+                        merged[ts] = row;
                     }
-                    else
+
+                    foreach (var channel in keys)
                     {
-                        point.Values[channel] = null;
+                        if (record.Values.TryGetValue(channel, out var raw) && raw != null)
+                        {
+                            try { row[channel] = Convert.ToDouble(raw); }
+                            catch { row[channel] = null; }
+                        }
                     }
                 }
-
-                result.Points.Add(point);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to query InfluxDB for channels {Channels} ({MsgType})",
+                    string.Join(",", keys), group.Key.MsgType);
             }
         }
-        catch (Exception ex)
+
+        foreach (var (ts, row) in merged)
         {
-            _logger.LogError(ex, "Failed to query InfluxDB for multi-channel chart");
+            var point = new MultiChannelPoint { Timestamp = ts };
+            foreach (var def in requested)
+                point.Values[def.Key] = row.TryGetValue(def.Key, out var v) ? v : null;
+            result.Points.Add(point);
         }
 
-        result.Points = result.Points.OrderBy(p => p.Timestamp).ToList();
         return result;
     }
 
