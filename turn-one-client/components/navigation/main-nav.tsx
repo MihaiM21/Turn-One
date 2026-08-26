@@ -28,6 +28,8 @@ export function MainNav({ variant = "homepage" }: MainNavProps) {
     { href: "/home", label: "Home" },
     { href: "/features", label: "Features" },
     { href: "/examples", label: "Examples" },
+    { href: "/how-it-works", label: "How It Works" },
+    { href: "/download", label: "Download", badge: "New" },
     // { href: "/games", label: "Games" },
     { href: "/api-launch", label: "API" },
     { href: "/news" , label: "News" },

@@ -87,6 +87,10 @@ const data = {
           title: "Leaderboards",
           url: "/simracing/leaderboards",
         },
+        {
+          title: "Get Turn One Link",
+          url: "/simracing/download",
+        },
       ],
     },
     {

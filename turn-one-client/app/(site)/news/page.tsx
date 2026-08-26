@@ -3,6 +3,7 @@ import { Trophy, Gauge, Zap, Calendar, Flag, ArrowLeft, Home, Clock, AlertTriang
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getNewsPageData } from "@/lib/newsService";
+import { serverFetchFromExternalAPI } from "@/lib/newsServerFetch";
 import { MainNav } from "@/components/navigation/main-nav";
 import { QualifyingChart } from "@/components/news/qualifying-chart";
 import { TopSpeedChart } from "@/components/news/top-speed-chart";
@@ -49,7 +50,7 @@ const sessionName = (type: string) => {
 }
 
 export default async function NewsPage() {
-  const data = await getNewsPageData();
+  const data = await getNewsPageData(serverFetchFromExternalAPI);
 
   if (!data?.session) {
     const status = data?.sessionStatus;

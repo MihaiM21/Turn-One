@@ -360,7 +360,8 @@ export default function ExportGraphsPage() {
     const blob = await exportChartAsBlob({
       node,
       size: sizeDef,
-      branding: {
+      branding: "footer",
+      brandingMeta: {
         eventName: core.apiEventName || "F1",
         year,
         sessionLabel: core.selectedSession,

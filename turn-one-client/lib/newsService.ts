@@ -10,12 +10,21 @@ import {
 } from "@/types/news-types";
 import { fetchFromExternalAPI, ExternalApiError } from "@/lib/data-fetcher";
 
-export async function getLatestSessionData(): Promise<SessionDashboardData> {
-  return fetchFromExternalAPI(`v2/dashboard`);
+// Every fetch in this module goes through an injectable fetcher so the same
+// shaping/aggregation logic works both from client components (default:
+// fetchFromExternalAPI, which hits the browser-facing proxy at a relative
+// URL) and from the server-rendered news page (which must pass
+// serverFetchFromExternalAPI instead — see lib/newsServerFetch.ts for why).
+export type ExternalFetcher = (endpoint: string) => Promise<unknown>;
+
+export async function getLatestSessionData(
+  fetcher: ExternalFetcher = fetchFromExternalAPI,
+): Promise<SessionDashboardData> {
+  return fetcher(`v2/dashboard`) as Promise<SessionDashboardData>;
 }
 
 export async function getLatestSessionDataClient(): Promise<SessionDashboardData> {
-  return fetchFromExternalAPI(`v2/dashboard`);
+  return getLatestSessionData();
 }
 
 // Classifies a session-fetch failure so UI can distinguish "the data pipeline
@@ -50,15 +59,17 @@ const toStandingsList = (raw: unknown): Array<Record<string, unknown>> => {
   return [];
 };
 
-export async function getSeasonStandings(): Promise<{
+export async function getSeasonStandings(
+  fetcher: ExternalFetcher = fetchFromExternalAPI,
+): Promise<{
   drivers: DriverStanding[];
   constructors: ConstructorStanding[];
 }> {
   const [rawDrivers, rawConstructors, rawStaticDrivers, rawStaticTeams] = await Promise.all([
-    fetchFromExternalAPI(`v2/standings/drivers`) as Promise<unknown>,
-    fetchFromExternalAPI(`v2/standings/constructors`) as Promise<unknown>,
-    fetchFromExternalAPI(`static/drivers`) as Promise<unknown>,
-    fetchFromExternalAPI(`static/teams`) as Promise<unknown>,
+    fetcher(`v2/standings/drivers`),
+    fetcher(`v2/standings/constructors`),
+    fetcher(`static/drivers`),
+    fetcher(`static/teams`),
   ]);
 
   // Build color lookups from static endpoints
@@ -160,12 +171,13 @@ export async function getLapTimeDistribution(
   round: number,
   session: string,
   drivers: Array<{ code: string; color?: string }>,
+  fetcher: ExternalFetcher = fetchFromExternalAPI,
 ): Promise<LapTimeDistributionPoint[]> {
   if (drivers.length === 0) return [];
 
   const results = await Promise.allSettled(
     drivers.map(({ code, color }) =>
-      fetchFromExternalAPI(
+      fetcher(
         `v2/laptimes-distribution-data?year=${year}&gp=${round}&session=${encodeURIComponent(session)}&driver=${encodeURIComponent(code)}`,
       ).then((raw) => {
         const rows = normalizeToRows(raw);
@@ -210,9 +222,10 @@ export async function getTyreStintData(
   year: number,
   round: number,
   session: string,
+  fetcher: ExternalFetcher = fetchFromExternalAPI,
 ): Promise<TyreStintEntry[]> {
   const query = `year=${year}&gp=${round}&session=${encodeURIComponent(session)}`;
-  const raw = (await fetchFromExternalAPI(`v2/tyre-stint-usage-data?${query}`)) as unknown;
+  const raw = await fetcher(`v2/tyre-stint-usage-data?${query}`);
   if (Array.isArray(raw)) return raw as TyreStintEntry[];
   return [];
 }
@@ -221,19 +234,21 @@ export async function getTyreStintData(
 // Aggregator — resilient to partial failures via Promise.allSettled.
 // -----------------------------------------------------------------
 
-export async function getNewsPageData(): Promise<NewsPageData> {
+export async function getNewsPageData(
+  fetcher: ExternalFetcher = fetchFromExternalAPI,
+): Promise<NewsPageData> {
   const errors: NewsPageData["errors"] = {};
   let sessionStatus: SessionFetchStatus | undefined;
 
   // Phase 1: fetch session + standings in parallel — both needed before we can
   // build the driver list for the lap-distribution fan-out.
   const [session, standingsSettled] = await Promise.all([
-    getLatestSessionDataClient().catch((e) => {
+    getLatestSessionData(fetcher).catch((e) => {
       errors.session = e instanceof Error ? e.message : String(e);
       sessionStatus = classifySessionFetchError(e);
       return null;
     }),
-    getSeasonStandings().then((v) => ({ status: "fulfilled" as const, value: v })).catch((e) => ({
+    getSeasonStandings(fetcher).then((v) => ({ status: "fulfilled" as const, value: v })).catch((e) => ({
       status: "rejected" as const,
       reason: e,
     })),
@@ -276,9 +291,9 @@ export async function getNewsPageData(): Promise<NewsPageData> {
 
   // Phase 2: fan out to per-driver lap distribution + other data.
   const [lapDistResult, tireResult, tyreStintResult] = await Promise.allSettled([
-    getLapTimeDistribution(year, round, sessionName, lapDrivers),
+    getLapTimeDistribution(year, round, sessionName, lapDrivers, fetcher),
     getTireStrategy(year, round),
-    isRaceOrSprint ? getTyreStintData(year, round, sessionName) : Promise.resolve(null),
+    isRaceOrSprint ? getTyreStintData(year, round, sessionName, fetcher) : Promise.resolve(null),
   ]);
 
   const lapDistribution = lapDistResult.status === "fulfilled" ? lapDistResult.value : null;

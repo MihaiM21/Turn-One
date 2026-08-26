@@ -3,7 +3,6 @@ import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import type React from "react"
 import Script from "next/script"
-import { MainFooter } from "@/components/footer/main-footer"
 import { Suspense } from "react"
 import './globals.css'
 import { AuthProvider } from "@/components/auth/auth-provider"

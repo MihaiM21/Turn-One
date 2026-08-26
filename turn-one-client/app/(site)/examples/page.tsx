@@ -16,10 +16,14 @@ import {
 } from "lucide-react";
 import { MainNav } from "@/components/navigation/main-nav";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { PublicHero } from "@/components/site/public-hero";
 import { SectionHeader } from "@/components/site/section-header";
 import { PublicCard } from "@/components/site/public-card";
 import { CtaRow } from "@/components/site/cta-row";
+import { useInView } from "@/hooks/use-in-view";
+import { PLOT_CATALOG } from "@/lib/plots/catalog";
+import { defaultOptionsFor, type PlotDefinition, type PlotFetchContext } from "@/lib/plots/types";
 import { TopSpeedGraph } from "@/components/dashboard/telemetry generator/plots/top-speed";
 import { ThrottleAverageGraph } from "@/components/dashboard/telemetry generator/plots/throttle_average_comparison";
 import { LapTimeAnalysisGraph } from "@/components/dashboard/telemetry generator/plots/lap-time-analysis";
@@ -110,6 +114,68 @@ interface ShowcaseSection {
 const YEAR = 2025;
 const GP = "British Grand Prix";
 const SPEED_DISTRIBUTION_DRIVERS = ["VER", "NOR", "HAM"];
+
+// Catalog keys already shown as full showcase sections above — everything else in
+// PLOT_CATALOG is either a lazy flagship section or a compact library card.
+const SHOWCASED_KEYS = [
+  "topspeeds",
+  "session_results",
+  "track_comparison",
+  "throttle_brake",
+  "speed_distribution",
+  "throttle_average",
+  "laptime",
+];
+const FLAGSHIP_KEYS = ["tyre_degradation", "pit_strategy"];
+
+const RACE_FETCH_CTX: PlotFetchContext = {
+  year: YEAR,
+  eventName: GP,
+  sessionName: "Race",
+  sessionCode: "R",
+  allDrivers: [],
+  options: {},
+  token: "",
+};
+
+const missingPlots = PLOT_CATALOG.filter((p) => !SHOWCASED_KEYS.includes(p.key));
+const flagshipPlots = missingPlots.filter((p) => FLAGSHIP_KEYS.includes(p.key));
+const libraryPlots = missingPlots.filter((p) => !FLAGSHIP_KEYS.includes(p.key));
+const libraryCategories = Array.from(new Set(libraryPlots.map((p) => p.category)));
+
+/** Fetches its plot's data only once it scrolls into view — keeps initial page load light. */
+function LazyPlotShowcase({ def, height = 460 }: { def: PlotDefinition; height?: number }) {
+  const { ref, inView } = useInView<HTMLDivElement>();
+  const [data, setData] = useState<unknown>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    if (!inView || data !== null || failed) return;
+    def.fetch({ ...RACE_FETCH_CTX, options: defaultOptionsFor(def) })
+      .then(setData)
+      .catch((err) => {
+        console.error(err);
+        setFailed(true);
+      });
+  }, [inView, data, failed]);
+
+  return (
+    <div ref={ref}>
+      {failed ? (
+        <div
+          className="flex flex-col items-center justify-center gap-2 border border-zinc-800 bg-zinc-950 text-xs text-zinc-500"
+          style={{ height }}
+        >
+          Couldn&apos;t load this plot right now.
+        </div>
+      ) : data !== null ? (
+        def.render(data, { ...chartSettings, chartHeight: height }, { ...RACE_FETCH_CTX, options: defaultOptionsFor(def) })
+      ) : (
+        <PlotSkeleton height={height} />
+      )}
+    </div>
+  );
+}
 
 export default function ExamplesPage() {
   const [topSpeeds, setTopSpeeds] = useState<TopSpeedData[] | null>(null);
@@ -318,6 +384,19 @@ export default function ExamplesPage() {
       ctaHref: "/live",
       ctaLabel: "Open live dashboard",
     },
+    ...flagshipPlots.map((def, i): ShowcaseSection => ({
+      id: def.key,
+      icon: def.icon,
+      badge: `${def.category} · PRO`,
+      title: def.title,
+      subtitle: "2025 British GP · Race",
+      description: def.description,
+      bullets: ["Full race session data", "Same engine as the generator", "Included on the PRO plan"],
+      chart: <LazyPlotShowcase def={def} />,
+      reversed: i % 2 === 1,
+      ctaHref: `/generator?plot=${def.key}`,
+      ctaLabel: "Try this plot",
+    })),
   ];
 
   return (
@@ -425,6 +504,53 @@ export default function ExamplesPage() {
           );
         })}
 
+        {/* Full plot library */}
+        <section className="border-b border-zinc-800 pb-12">
+          <SectionHeader
+            eyebrow="The full library"
+            title="9+ more plots in the generator"
+            subtitle="Every one of these is live in the generator today — pick one to jump straight in."
+          />
+          <div className="mt-8 space-y-10">
+            {libraryCategories.map((category) => (
+              <div key={category}>
+                <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.25em] text-zinc-500">
+                  {category}
+                </h3>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {libraryPlots
+                    .filter((p) => p.category === category)
+                    .map((p) => {
+                      const CardIcon = p.icon;
+                      return (
+                        <Link key={p.key} href={`/generator?plot=${p.key}`}>
+                          <PublicCard
+                            hover
+                            className="relative flex h-full flex-col gap-3 p-5"
+                          >
+                            {p.isPro && (
+                              <Badge
+                                variant="secondary"
+                                className="accent-glow absolute -top-2 -right-2 h-4 border border-primary/50 bg-primary/90 px-1 py-0 text-[8px] font-bold text-primary-foreground"
+                              >
+                                PRO
+                              </Badge>
+                            )}
+                            <div className="flex h-9 w-9 items-center justify-center border border-zinc-800 bg-zinc-900">
+                              <CardIcon className="h-4 w-4 text-primary" />
+                            </div>
+                            <p className="text-sm font-bold uppercase tracking-tight">{p.title}</p>
+                            <p className="text-xs text-zinc-400">{p.description}</p>
+                          </PublicCard>
+                        </Link>
+                      );
+                    })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* Final CTA */}
         <section className="border border-zinc-800 bg-zinc-950 px-6 py-12 text-center sm:px-12">
           <p className="text-[10px] uppercase tracking-[0.3em] text-primary">Free to start</p>
@@ -442,6 +568,12 @@ export default function ExamplesPage() {
           </div>
           <p className="mt-4 text-xs text-zinc-500">
             <Zap className="mr-1 inline h-3 w-3 text-primary" /> 200 free tokens / month · No credit card · Full access on sign-up
+          </p>
+          <p className="mt-3 text-xs text-zinc-500">
+            New here?{" "}
+            <Link href="/how-it-works" className="text-primary underline underline-offset-4 hover:text-primary/80">
+              See how the generator, predictions and sim racing work
+            </Link>
           </p>
           <Button asChild variant="ghost" size="sm" className="mt-2 hidden">
             <Link href="/generator">
