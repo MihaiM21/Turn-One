@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/components/auth/auth-provider";
 import { planFeatures, type PlanType, type SimRacingPlanFeatures } from "@/lib/plan-features";
 
 const PLAN_ORDER: PlanType[] = ["BASIC", "PRO", "ELITE"];

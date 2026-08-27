@@ -1,6 +1,6 @@
 'use client';
 
-import { getAuthToken } from './auth-utils';
+import { getAuthToken, notifyUnauthorized } from './auth-utils';
 
 // Typed error for failed external API calls. Preserves the HTTP status and the
 // structured error body (when the upstream API returns one) so callers can
@@ -54,6 +54,11 @@ export async function fetchWithAuth<T>(
 
 
     if (!response.ok) {
+      // A 401 means the JWT expired or was revoked. There is no refresh flow,
+      // so hand off to the auth layer to clear the session and redirect
+      // instead of letting every subsequent request fail silently.
+      if (response.status === 401) notifyUnauthorized();
+
       // Try to parse error message from response
       try {
         const errorData = await response.json();

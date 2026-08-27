@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { KeyRound, AlertCircle, CheckCircle } from "lucide-react";
 import { resetPassword } from "@/lib/emailService";
 import Link from "next/link";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ResetPasswordPage(props: any) {
   // Accept props as any because Next's generated PageProps may type searchParams as a Promise.

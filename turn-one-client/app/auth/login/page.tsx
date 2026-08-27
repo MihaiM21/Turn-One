@@ -12,8 +12,7 @@ import { LiveTimingPreview } from "@/components/auth/live-timing-preview"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { login } from "@/lib/auth"
-import type { LoginData } from "@/types/auth-types"
+import { useAuth } from "@/components/auth/auth-provider"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -21,6 +20,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const { login } = useAuth()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -28,11 +28,12 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const loginData: LoginData = { email, password }
-      const response = await login(loginData)
+      // Go through the context rather than calling lib/auth directly: it stores
+      // the token and populates the shared user state, so the app is logged in
+      // immediately instead of only after a reload.
+      const response = await login(email, password)
 
       if (response.success) {
-        localStorage.setItem("token", response.token)
         router.push("/dashboard")
       } else {
         throw new Error(response.message || "Login failed")

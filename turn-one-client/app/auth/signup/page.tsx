@@ -13,6 +13,8 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { register } from "@/lib/auth"
+import { setAuthToken } from "@/lib/auth-utils"
+import { useAuth } from "@/components/auth/auth-provider"
 import { RegisterData } from "@/types/auth-types"
 
 export default function SignUpPage() {
@@ -23,6 +25,7 @@ export default function SignUpPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const { refresh } = useAuth()
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,7 +44,10 @@ export default function SignUpPage() {
 
       if (response.success) {
         if (response.emailConfirmed) {
-          localStorage.setItem("token", response.token)
+          // Only a confirmed account gets a session. Refresh the shared auth
+          // state so the app is logged in without needing a reload.
+          setAuthToken(response.token)
+          await refresh()
           router.push("/dashboard")
         } else {
           router.push("/auth/check-email")

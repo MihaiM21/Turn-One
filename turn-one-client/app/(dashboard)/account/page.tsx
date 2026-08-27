@@ -32,7 +32,7 @@ import {
   X,
   AlertCircle,
 } from 'lucide-react';
-import { useAuth } from '@/lib/auth';
+import { useAuth } from '@/components/auth/auth-provider';
 import { DashboardHeader } from '@/components/dashboard/live dashboard/dashboard-header';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { ExploreMoreLinks } from '@/components/dashboard/explore-more-links';

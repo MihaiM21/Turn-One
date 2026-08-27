@@ -33,7 +33,6 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "app/(site)/team/page.tsx.old",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [

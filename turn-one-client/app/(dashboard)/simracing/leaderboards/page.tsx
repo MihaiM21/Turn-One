@@ -6,7 +6,7 @@ import { Trophy, Users, Route, Timer, Zap } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links";
 import { SectionCard } from "@/components/dashboard/simracing/section-card";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/components/auth/auth-provider";
 import {
     getLeaderboards,
     formatPlayTime,

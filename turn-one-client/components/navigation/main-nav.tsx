@@ -29,7 +29,7 @@ export function MainNav({ variant = "homepage" }: MainNavProps) {
     { href: "/features", label: "Features" },
     { href: "/examples", label: "Examples" },
     { href: "/how-it-works", label: "How It Works" },
-    { href: "/download", label: "Download", badge: "New" },
+    // { href: "/download", label: "Download", badge: "New" },
     // { href: "/games", label: "Games" },
     { href: "/api-launch", label: "API" },
     { href: "/news" , label: "News" },
@@ -49,7 +49,6 @@ export function MainNav({ variant = "homepage" }: MainNavProps) {
           transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
           willChange: 'transform, width, top, background-color, border-radius',
           backdropFilter: isScrolled ? 'blur(20px)' : 'blur(0px)',
-          // Am scăzut intensitatea folosind o culoare cu opacitate (ex: color-mix sau rgba)
           borderImage: !isScrolled 
             ? "linear-gradient(to right, transparent, color-mix(in srgb, var(--foreground), transparent 70%), transparent) 1" 
             : "none"

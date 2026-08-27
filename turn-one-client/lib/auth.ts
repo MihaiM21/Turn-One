@@ -1,8 +1,23 @@
-import { useState, useEffect } from 'react';
 import { LoginData, RegisterData, AuthResponse } from '../types/auth-types';
+import { getAuthToken, notifyUnauthorized } from './auth-utils';
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend.t1f1.com/api';
 
+/**
+ * The user shape returned by GET /Auth/me, limited to the fields the app reads.
+ * Extra fields are tolerated; this is not a full mirror of the backend entity
+ * (see types/user-types.ts `UserProfile` for the profile endpoint's shape).
+ */
+export interface AuthUser {
+  id?: string;
+  username?: string;
+  email?: string;
+  avatar?: string;
+  /** Serialised as either the enum name ('PRO') or its numeric value — see hooks/use-plan.ts. */
+  plan?: string | number;
+  role?: string;
+  [key: string]: unknown;
+}
 
 export const login = async (data: LoginData): Promise<AuthResponse> => {
   const response = await fetch(`${API_URL}/Auth/login`, {
@@ -44,18 +59,23 @@ export const register = async (data: RegisterData): Promise<AuthResponse> => {
   return await response.json();
 };
 
-export const getCurrentUser = async (): Promise<any> => {
-  const token = localStorage.getItem('token');
-  
+export const getCurrentUser = async (): Promise<AuthUser> => {
+  const token = getAuthToken();
+
   if (!token) {
     throw new Error('No authentication token found');
   }
 
   const response = await fetch(`${API_URL}/Auth/me`, {
     headers: {
-      'Authorization': token,
+      'Authorization': `Bearer ${token}`,
     },
   });
+
+  if (response.status === 401) {
+    notifyUnauthorized();
+    throw new Error('Session expired');
+  }
 
   if (!response.ok) {
     throw new Error('Failed to get user data');
@@ -64,57 +84,8 @@ export const getCurrentUser = async (): Promise<any> => {
   return await response.json();
 };
 
-export const useAuth = () => {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      getCurrentUser()
-        .then(userData => {
-          setUser(userData);
-        })
-        .catch(() => {
-          localStorage.removeItem('token');
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
-  const loginUser = async (data: LoginData) => {
-    const response = await login(data);
-    localStorage.setItem('token', response.token);
-    
-    const userData = await getCurrentUser();
-    setUser(userData);
-    return response;
-  };
-
-  const registerUser = async (data: RegisterData) => {
-    const response = await register(data);
-    localStorage.setItem('token', response.token);
-    
-    const userData = await getCurrentUser();
-    setUser(userData);
-    return response;
-  };
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-  };
-
-  return {
-    user,
-    loading,
-    loginUser,
-    registerUser,
-    logout,
-    isAuthenticated: !!user,
-  };
-};
+// NOTE: `useAuth` used to live here as a standalone stateful hook. Four
+// components imported it directly instead of the context in
+// components/auth/auth-provider.tsx, so each one held its own copy of the auth
+// state and independently re-fetched /Auth/me. The state now lives solely in
+// AuthProvider; import `useAuth` from '@/components/auth/auth-provider'.

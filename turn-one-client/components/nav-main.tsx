@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { usePathname } from "next/navigation"
 import { ChevronRight, type LucideIcon } from "lucide-react"
 
 import {
@@ -34,35 +35,11 @@ export function NavMain({
     }[]
   }[]
 }) {
-  const [currentPath, setCurrentPath] = React.useState<string>("");
+  // App Router client navigations do not emit `popstate`, and the 'routeChange'
+  // event this used to listen for is never dispatched anywhere in the app.
+  // usePathname is the supported way to observe the current route.
+  const currentPath = usePathname() ?? "";
   const [openItems, setOpenItems] = React.useState<Record<string, boolean>>({});
-
-  // Update current path when component mounts and when pathname changes
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const updatePath = () => {
-        setCurrentPath(window.location.pathname);
-      };
-      
-      // Set initial path
-      updatePath();
-      
-      // Listen for path changes
-      window.addEventListener('popstate', updatePath);
-      
-      // Listen for Next.js navigation
-      const handleRouteChange = () => {
-        updatePath();
-      };
-      
-      window.addEventListener('routeChange', handleRouteChange);
-      
-      return () => {
-        window.removeEventListener('popstate', updatePath);
-        window.removeEventListener('routeChange', handleRouteChange);
-      };
-    }
-  }, []);
 
   // Check if an item is active based on the current path
   const isItemActive = (itemUrl: string): boolean => {
@@ -76,20 +53,28 @@ export function NavMain({
     return false;
   };
 
-  // Auto-expand sections when navigating to their sub-items
+  // Auto-expand sections when navigating to their sub-items. Uses a single
+  // functional update so it reads the live `openItems` rather than a value
+  // captured from the render that scheduled the effect.
   React.useEffect(() => {
-    items.forEach((item) => {
-      const active = isItemActive(item.url);
-      const hasActiveSubItem = item.items?.some(subItem => isItemActive(subItem.url)) || false;
-      const shouldBeOpen = item.isActive || active || hasActiveSubItem;
-      
-      if (shouldBeOpen && openItems[item.title] === undefined) {
-        setOpenItems(prev => ({
-          ...prev,
-          [item.title]: true
-        }));
+    setOpenItems((prev) => {
+      let changed = false;
+      const next = { ...prev };
+
+      for (const item of items) {
+        if (next[item.title] !== undefined) continue;
+
+        const active = isItemActive(item.url);
+        const hasActiveSubItem = item.items?.some((subItem) => isItemActive(subItem.url)) ?? false;
+        if (item.isActive || active || hasActiveSubItem) {
+          next[item.title] = true;
+          changed = true;
+        }
       }
+
+      return changed ? next : prev;
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- isItemActive is derived from currentPath
   }, [currentPath, items]);
 
   return (

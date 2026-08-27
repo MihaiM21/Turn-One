@@ -7,6 +7,7 @@
  */
 
 import type { MultiChannelChartData } from "@/components/dashboard/simracing/charts/multi-channel-chart";
+import { notifyUnauthorized } from "@/lib/auth-utils";
 
 export class SimApiError extends Error {
     constructor(
@@ -47,6 +48,11 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     });
 
     if (!res.ok) {
+        // A 401 means the JWT expired or was revoked. There is no refresh flow,
+        // so hand off to the auth layer to clear the session and redirect
+        // instead of letting every subsequent request fail silently.
+        if (res.status === 401) notifyUnauthorized();
+
         let message = `${res.status} ${res.statusText}`;
         try {
             const body = await res.json();

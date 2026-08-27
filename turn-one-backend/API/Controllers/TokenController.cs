@@ -1,5 +1,6 @@
 using Application.DTOs;
 using Application.Interfaces;
+using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -26,19 +27,27 @@ namespace API.Controllers
             try
             {
                 var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-                
+
+                // Resolve price and amount from the server-side catalog. Never trust
+                // a cost supplied by the caller.
+                var pack = TokenPack.FindById(dto.PackId);
+                if (pack is null)
+                {
+                    return BadRequest(new { success = false, message = "Unknown token pack" });
+                }
+
                 // Validate the purchase
                 var userCoins = await _coinService.GetUserCoinsAsync(userId);
-                if (userCoins < dto.CoinCost)
+                if (userCoins < pack.CoinCost)
                 {
                     return BadRequest(new { success = false, message = "Insufficient coins" });
                 }
 
                 // Deduct coins
-                await _coinService.DeductCoinsAsync(userId, dto.CoinCost, $"Purchased {dto.Amount} tokens");
+                await _coinService.DeductCoinsAsync(userId, pack.CoinCost, $"Purchased {pack.TokenAmount} tokens");
 
                 // Add tokens
-                var newTokenBalance = await _tokenService.AddTokensAsync(userId, dto.Amount);
+                var newTokenBalance = await _tokenService.AddTokensAsync(userId, pack.TokenAmount);
                 var newCoinBalance = await _coinService.GetUserCoinsAsync(userId);
 
                 return Ok(new
