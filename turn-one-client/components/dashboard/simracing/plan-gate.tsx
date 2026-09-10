@@ -6,6 +6,7 @@ import { Lock, Sparkles } from "lucide-react";
 import { usePlan } from "@/hooks/use-plan";
 import type { PlanType } from "@/lib/plan-features";
 import { cn } from "@/lib/utils";
+import { DiamondLoader } from "@/components/ui/diamond-loader";
 
 interface PlanGateProps {
     /** Minimum plan required to see the real content. */
@@ -33,7 +34,7 @@ export function PlanGate({ required, title, description, preview, children, clas
     if (loading) {
         return (
             <div className={cn("flex items-center justify-center border border-zinc-800 bg-zinc-950 px-5 py-12", className)}>
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <DiamondLoader size={40} tone="flat" />
             </div>
         );
     }

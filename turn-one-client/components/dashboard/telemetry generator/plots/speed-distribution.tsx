@@ -1,7 +1,8 @@
 'use client'
 
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from 'recharts'
+import { CartesianGrid, Line, LineChart, ReferenceArea, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from 'recharts'
 import { AdvancedPlotSettings, SpeedDistributionPoint } from '@/types/plot-types'
+import { useDragZoom } from '@/components/plot-viewport/use-drag-zoom'
 
 interface SpeedDistributionGraphProps {
   data: SpeedDistributionPoint[]
@@ -73,6 +74,12 @@ function findNearestSpeed(points: DriverSpeedPoint[], targetTime: number): numbe
 }
 
 export function SpeedDistributionGraph({ data, selectedDrivers, advancedSettings, useDistinctColors }: SpeedDistributionGraphProps) {
+  // Drag across the chart to zoom into a time window. The surrounding
+  // ChartViewport owns the selected domain so its reset control can clear it;
+  // outside a viewport (the offscreen export renderer) this is simply absent
+  // and the chart shows its full range.
+  const { xDomain, dragHandlers, selection } = useDragZoom()
+
   const settings = advancedSettings || {
     showGrid: true,
     showLegend: true,
@@ -152,12 +159,17 @@ export function SpeedDistributionGraph({ data, selectedDrivers, advancedSettings
   return (
     <div style={{ height: `${settings.chartHeight}px` }}>
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData} margin={{ left: 8, right: 24, top: 8, bottom: 8 }}>
+        <LineChart
+          data={chartData}
+          margin={{ left: 8, right: 24, top: 8, bottom: 8 }}
+          {...dragHandlers}
+        >
           {settings.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#374151" />}
           <XAxis
             dataKey="time"
             type="number"
-            domain={['dataMin', 'dataMax']}
+            domain={xDomain}
+            allowDataOverflow
             stroke="#9CA3AF"
             tick={{ fontSize: Math.round(11 * (settings.textScale ?? 1)) }}
             tickFormatter={(value) => `${Number(value).toFixed(1)}s`}
@@ -222,6 +234,9 @@ export function SpeedDistributionGraph({ data, selectedDrivers, advancedSettings
               />
             )
           })}
+          {selection && (
+            <ReferenceArea x1={selection.x1} x2={selection.x2} fill="#F9FAFB" fillOpacity={0.12} />
+          )}
         </LineChart>
       </ResponsiveContainer>
     </div>

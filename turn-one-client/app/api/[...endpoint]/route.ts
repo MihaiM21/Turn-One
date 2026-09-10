@@ -1,18 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authorizeProxyRequest } from '@/lib/server/proxy-auth';
+import { classify, cacheControlFor, NO_STORE } from '@/lib/cache/f1-freshness';
+import { messageForStatus, sanitizeErrorMessage } from '@/lib/api-error-message';
+
+/** Upstream can be slow preparing a session; beyond this it is hung, not slow. */
+const UPSTREAM_TIMEOUT_MS = 20_000;
 
 const getContentType = (response: Response) => response.headers.get('content-type') || '';
+
+/** True for the abort raised when the upstream request exceeds its timeout. */
+const isTimeout = (error: unknown) =>
+  error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError');
 
 const parseErrorMessage = async (response: Response, fallback: string) => {
   const contentType = getContentType(response);
 
   if (contentType.includes('application/json')) {
     const errorData = await response.json().catch(() => ({}));
-    return errorData.message || errorData.error || fallback;
+    const message = errorData.message || errorData.error;
+    return message ? sanitizeErrorMessage(message, response.status) : fallback;
   }
 
   const text = await response.text().catch(() => '');
-  return text || fallback;
+  return text ? sanitizeErrorMessage(text, response.status) : fallback;
 };
 
 // Like parseErrorMessage, but preserves the full structured error body (e.g.
@@ -25,17 +35,38 @@ const parseErrorBody = async (response: Response, fallback: string) => {
   if (contentType.includes('application/json')) {
     const errorData = await response.json().catch(() => ({}));
     if (errorData && typeof errorData === 'object' && Object.keys(errorData).length > 0) {
-      return errorData as Record<string, unknown>;
+      // Keep the structured shape (error code, retry_after_seconds) but make
+      // sure any human-facing text is fit to display.
+      const body = errorData as Record<string, unknown>;
+      if (typeof body.detail === 'string') {
+        body.detail = sanitizeErrorMessage(body.detail, response.status);
+      }
+      return body;
     }
   } else {
-    const text = await response.text().catch(() => '');
-    if (text) return { error: text };
+    // A non-JSON body here is an infrastructure error page, not an API
+    // response — Cloudflare serves its 502 page as text/plain. Never forward
+    // it; describe the status instead.
+    await response.text().catch(() => '');
+    return { error: 'upstream_unavailable', detail: messageForStatus(response.status) };
   }
 
   return { error: fallback };
 };
 
-const buildProxyResponseHeaders = (response: Response) => {
+/**
+ * Builds response headers, choosing a cache lifetime from the request's
+ * freshness tier (see lib/cache/f1-freshness.ts). A finished session's data is
+ * immutable and can be cached hard; live data cannot.
+ *
+ * Note this runs server-side, where the session-start registry the classifier
+ * consults is empty — so a *current-season* session can only ever be graded
+ * `live` or `unknown` here, never `finished`. That is deliberate: the only way
+ * to do better would be to trust a client-supplied freshness hint, which would
+ * let one client poison a shared cache for everyone. The browser-side cache,
+ * which does know session times, picks up the slack for the current season.
+ */
+const buildProxyResponseHeaders = (response: Response, cacheControl: string) => {
   const proxiedHeaders = new Headers();
   const contentType = response.headers.get('content-type');
 
@@ -43,10 +74,23 @@ const buildProxyResponseHeaders = (response: Response) => {
     proxiedHeaders.set('Content-Type', contentType);
   }
 
-  // Keep existing cache behavior for proxy responses.
-  proxiedHeaders.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+  proxiedHeaders.set('Cache-Control', cacheControl);
 
   return proxiedHeaders;
+};
+
+/**
+ * Upstream sometimes reports failure as a 200 whose body carries an error
+ * sentinel rather than a failure status. Caching one of those would pin an
+ * error in front of every visitor for as long as the tier allows — days, for a
+ * finished session — so such responses are never cached, whatever the tier.
+ */
+const hasEmbeddedError = (data: unknown): boolean => {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
+  const record = data as Record<string, unknown>;
+  if (record.error) return true;
+  if (typeof record.detail === 'string') return true;
+  return typeof record.message === 'string' && record.message.toLowerCase().includes('error');
 };
 
 /**
@@ -118,6 +162,7 @@ export async function GET(
         'Accept': '*/*',
       },
       cache: 'no-store',
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
 
     // Check if the API request was successful
@@ -133,36 +178,54 @@ export async function GET(
 
       return NextResponse.json(
         errorBody,
-        { status: response.status }
+        { status: response.status, headers: { 'Cache-Control': NO_STORE } }
       );
     }
 
     // Return JSON as JSON, and forward binary/text payloads without parsing.
     const contentType = getContentType(response);
-    const proxyHeaders = buildProxyResponseHeaders(response);
+    const cacheControl = cacheControlFor(
+      classify(`${endpoint}${queryString ? `?${queryString}` : ''}`)
+    );
 
     if (contentType.includes('application/json')) {
       const data = await response.json();
       return NextResponse.json(data, {
         status: response.status,
-        headers: proxyHeaders,
+        headers: buildProxyResponseHeaders(
+          response,
+          hasEmbeddedError(data) ? NO_STORE : cacheControl
+        ),
       });
     }
 
+    // Binary payloads (rendered plot PNGs) are the most expensive thing
+    // upstream produces and are immutable once a session ends, so they get the
+    // same tiered treatment.
     const body = await response.arrayBuffer();
     return new NextResponse(body, {
       status: response.status,
-      headers: proxyHeaders,
+      headers: buildProxyResponseHeaders(response, cacheControl),
     });
 
   } catch (error) {
+    // A hung upstream fetch ties up this handler for every caller, not just the
+    // browser tab that triggered it, so surface it as a gateway timeout.
+    if (isTimeout(error)) {
+      console.error('[External API Proxy] Upstream timed out');
+      return NextResponse.json(
+        { error: 'upstream_timeout', detail: 'The F1 data service did not respond in time.' },
+        { status: 504, headers: { 'Cache-Control': NO_STORE } }
+      );
+    }
+
     console.error('[External API Proxy] Error:', error);
     return NextResponse.json(
       { 
         error: 'Failed to fetch data from external API',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
-      { status: 500 }
+      { status: 500, headers: { 'Cache-Control': NO_STORE } }
     );
   }
 }
@@ -203,24 +266,34 @@ export async function POST(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
 
     if (!response.ok) {
       const errorMessage = await parseErrorMessage(response, 'External API request failed');
       return NextResponse.json(
         { error: errorMessage },
-        { status: response.status }
+        { status: response.status, headers: { 'Cache-Control': NO_STORE } }
       );
     }
 
     const data = await response.json();
-    return NextResponse.json(data);
+    // POSTs are mutations; never cacheable.
+    return NextResponse.json(data, { headers: { 'Cache-Control': NO_STORE } });
 
   } catch (error) {
+    if (isTimeout(error)) {
+      console.error('[External API Proxy] POST upstream timed out');
+      return NextResponse.json(
+        { error: 'upstream_timeout', detail: 'The F1 data service did not respond in time.' },
+        { status: 504, headers: { 'Cache-Control': NO_STORE } }
+      );
+    }
+
     console.error('[External API Proxy] POST Error:', error);
     return NextResponse.json(
       { error: 'Failed to process request' },
-      { status: 500 }
+      { status: 500, headers: { 'Cache-Control': NO_STORE } }
     );
   }
 }

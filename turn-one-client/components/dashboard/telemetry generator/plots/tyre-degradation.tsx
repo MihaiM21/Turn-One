@@ -1,8 +1,10 @@
 'use client';
 
-import { ComposedChart, Scatter, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ZAxis } from 'recharts'
+import { useState } from 'react'
+import { ComposedChart, Scatter, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ZAxis, ReferenceArea } from 'recharts'
 import { TyreDegradationData } from '@/types/plot-types-v2'
 import { AdvancedPlotSettings } from '@/types/plot-types'
+import { useDragZoom } from '@/components/plot-viewport/use-drag-zoom'
 
 interface TyreDegradationGraphProps {
   data: TyreDegradationData
@@ -19,6 +21,12 @@ export function TyreDegradationGraph({ data, advancedSettings }: TyreDegradation
     showDataLabels: false,
   }
 
+  // Drag across the chart to zoom into a tyre-age window. The surrounding
+  // ChartViewport owns the selected domain so its reset control can clear it;
+  // outside a viewport (the offscreen export renderer) this is simply absent
+  // and the chart shows its full range.
+  const { zoomDomain, dragHandlers, selection } = useDragZoom()
+
   if (!data || data.length === 0) {
     return (
       <div className="flex items-center justify-center h-[400px] text-muted-foreground">
@@ -31,6 +39,7 @@ export function TyreDegradationGraph({ data, advancedSettings }: TyreDegradation
   const tickFontSize = Math.round(14 * s)
 
   const maxLapAge = Math.max(...data.flatMap((c) => c.points.map((p) => p.tyre_age)), 1)
+  const xDomain: [number | string, number | string] = zoomDomain ?? [0, maxLapAge + 1]
 
   // Only slope is provided by the API; derive the intercept from the
   // observed means so the fitted trendline passes through the data cloud.
@@ -50,12 +59,16 @@ export function TyreDegradationGraph({ data, advancedSettings }: TyreDegradation
     <div className="space-y-4">
       <div style={{ height: `${settings.chartHeight}px` }}>
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart margin={{ right: 30, top: 10 }}>
+          <ComposedChart
+            margin={{ right: 30, top: 10 }}
+            {...dragHandlers}
+          >
             {settings.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#374151" />}
             <XAxis
               dataKey="tyre_age"
               type="number"
-              domain={[0, maxLapAge + 1]}
+              domain={xDomain}
+              allowDataOverflow
               stroke="#9CA3AF"
               tick={{ fontSize: tickFontSize }}
               label={{ value: 'Tyre age (laps)', position: 'insideBottom', offset: -5, fill: '#9CA3AF' }}
@@ -117,6 +130,9 @@ export function TyreDegradationGraph({ data, advancedSettings }: TyreDegradation
                 isAnimationActive={false}
               />
             ))}
+            {selection && (
+              <ReferenceArea x1={selection.x1} x2={selection.x2} fill="#F9FAFB" fillOpacity={0.12} />
+            )}
           </ComposedChart>
         </ResponsiveContainer>
       </div>

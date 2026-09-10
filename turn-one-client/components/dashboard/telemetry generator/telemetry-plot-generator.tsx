@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -11,6 +11,7 @@ import {
   Coins,
   Download,
   HelpCircle,
+  Pin,
   Play,
   Users,
 } from "lucide-react"
@@ -29,10 +30,14 @@ import { useTokens } from "@/hooks/use-tokens"
 import { usePlotSharing } from "@/hooks/use-plot-sharing"
 import { ShareControls } from "./share-controls"
 import { logTelemetryRequest } from "@/lib/userService"
+import { notifyBalanceChanged } from "@/lib/balance-events"
 import { useAuth } from "@/components/auth/auth-provider"
 import { PlotTypePicker, type PlotType } from "./plot-type-picker"
 import { GeneratorTour, TOUR_STORAGE_KEY } from "./generator-tour"
 import { useGeneratorCore } from "@/components/plot-generator/use-generator-core"
+import { networkRequestCount } from "@/lib/cache/request-cache"
+import { ChartViewport } from "@/components/plot-viewport/chart-viewport"
+import { ComparePane, describeContext } from "@/components/plot-viewport/compare-pane"
 import { RaceSessionPanel } from "@/components/plot-generator/race-session-panel"
 import {
   ALL_DRIVERS_VALUE,
@@ -59,6 +64,15 @@ switch (currentYear) {
 }
 
 const LAST_STATE_KEY = "generator:last"
+
+/**
+ * Height to give a chart in the expanded dialog. Plots size themselves from
+ * AdvancedPlotSettings.chartHeight, so without this they would keep their
+ * inline height and full screen would only add whitespace around them.
+ * Approximates the dialog's 92vh interior, less its heading and padding.
+ */
+const expandedChartHeight = () =>
+  typeof window === "undefined" ? 900 : Math.max(400, Math.round(window.innerHeight * 0.92) - 110)
 
 type PersistedState = {
   plotType?: string
@@ -131,6 +145,8 @@ export function TelemetryPlotGenerator() {
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [chartSettings, setChartSettings] = useState<ChartSettingsState>(DEFAULT_CHART_SETTINGS)
   const [generated, setGenerated] = useState<GeneratedPlot | null>(null)
+  /** A snapshot held for side-by-side comparison against the next result. */
+  const [pinned, setPinned] = useState<GeneratedPlot | null>(null)
   const [tourOpen, setTourOpen] = useState(false)
 
   // Trigger tour on first visit (after mount, client only)
@@ -176,11 +192,24 @@ export function TelemetryPlotGenerator() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPlotType])
 
-  // Release the track-comparison blob URL when the result is replaced/unmounted.
+  // Release the track-comparison blob URL when the result is replaced or
+  // unmounted — unless it is still on screen as the pinned comparison, which
+  // holds the same data object and would otherwise be left with a dead URL.
+  const pinnedDataRef = useRef<unknown>(null)
+  pinnedDataRef.current = pinned?.data ?? null
+
   useEffect(() => {
     const data = generated?.data
-    return () => releaseImageUrl(data)
+    return () => {
+      if (data !== pinnedDataRef.current) releaseImageUrl(data)
+    }
   }, [generated])
+
+  // Comparing across different plot types would be misleading, so a pin only
+  // survives while the same plot type is selected.
+  useEffect(() => {
+    setPinned((current) => (current && current.key !== selectedPlotType ? null : current))
+  }, [selectedPlotType])
 
   // Token management
   const { isAuthenticated } = useAuth()
@@ -249,6 +278,13 @@ export function TelemetryPlotGenerator() {
     let generationError: string | undefined
     const generationStart = performance.now()
 
+    // Requests served entirely from cache cost us nothing upstream, so they
+    // shouldn't cost the user a token either. Generation is serialised (the
+    // button is disabled while it runs), so comparing the counter either side
+    // of the fetch reliably attributes those requests to this generation.
+    const networkCallsBefore = networkRequestCount()
+    let servedFromCache = false
+
     try {
       const validationError = def.validate?.(ctx)
       if (validationError) throw new Error(validationError)
@@ -266,11 +302,13 @@ export function TelemetryPlotGenerator() {
 
       setGenerated({ key: def.key, data, ctx })
       plotGeneratedSuccessfully = true
+      servedFromCache = networkRequestCount() === networkCallsBefore
 
-      if (isAuthenticated) {
+      if (isAuthenticated && !servedFromCache) {
         const tokenDeducted = await deductToken()
         if (tokenDeducted) {
           console.log("Token deducted successfully for plot generation")
+          notifyBalanceChanged()
         } else {
           console.warn("Failed to deduct token after successful plot generation")
         }
@@ -297,7 +335,7 @@ export function TelemetryPlotGenerator() {
           drivers: driversForCurrentPlot(),
           durationMs,
           success: plotGeneratedSuccessfully,
-          tokensUsed: plotGeneratedSuccessfully ? 1 : 0,
+          tokensUsed: plotGeneratedSuccessfully && !servedFromCache ? 1 : 0,
           errorMessage: generationError,
         })
       }
@@ -306,7 +344,7 @@ export function TelemetryPlotGenerator() {
 
   const hasResult = generated !== null && generated.key === selectedPlot.key
 
-  const renderPlot = () => {
+  const renderPlot = (isExpanded = false) => {
     if (!hasResult || !generated) {
       return (
         <div className="flex flex-col items-center justify-center h-[700px] text-muted-foreground space-y-4">
@@ -318,7 +356,10 @@ export function TelemetryPlotGenerator() {
         </div>
       )
     }
-    return selectedPlot.render(generated.data, advancedSettings, generated.ctx)
+    const settings = isExpanded
+      ? { ...advancedSettings, chartHeight: expandedChartHeight() }
+      : advancedSettings
+    return selectedPlot.render(generated.data, settings, generated.ctx)
   }
 
   const renderStats = () => {
@@ -544,6 +585,24 @@ export function TelemetryPlotGenerator() {
               )}
             </Tooltip>
 
+            {hasResult && generated && !pinned && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="border-zinc-800 bg-transparent hover:bg-zinc-900"
+                    onClick={() => setPinned(generated)}
+                  >
+                    <Pin className="mr-2 h-4 w-4" />
+                    Pin to compare
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[240px]">
+                  Keeps this chart on screen so the next one you generate appears beside it.
+                </TooltipContent>
+              </Tooltip>
+            )}
+
             {selectedPlot.shareable && hasResult && generated ? (
               <ShareControls
                 def={selectedPlot}
@@ -578,7 +637,46 @@ export function TelemetryPlotGenerator() {
 
           {/* Results */}
           <div className="space-y-4 pt-2">
-            <div className="border border-zinc-800 p-4">{renderPlot()}</div>
+            {pinned ? (
+              <ComparePane
+                pinnedLabel={describeContext(pinned.ctx)}
+                pinnedChart={
+                  <ChartViewport
+                    title={`${selectedPlot.title} — pinned`}
+                    domainZoomable={selectedPlot.domainZoomable}
+                  >
+                    {({ isExpanded }) =>
+                      selectedPlot.render(
+                        pinned.data,
+                        isExpanded
+                          ? { ...advancedSettings, chartHeight: expandedChartHeight() }
+                          : advancedSettings,
+                        pinned.ctx,
+                      )
+                    }
+                  </ChartViewport>
+                }
+                currentLabel={generated ? describeContext(generated.ctx) : "Not generated yet"}
+                currentChart={
+                  <ChartViewport
+                    title={selectedPlot.title}
+                    domainZoomable={selectedPlot.domainZoomable}
+                  >
+                    {({ isExpanded }) => renderPlot(isExpanded)}
+                  </ChartViewport>
+                }
+                onClear={() => setPinned(null)}
+              />
+            ) : (
+              <div className="border border-zinc-800 p-4">
+                <ChartViewport
+                  title={selectedPlot.title}
+                  domainZoomable={selectedPlot.domainZoomable}
+                >
+                  {({ isExpanded }) => renderPlot(isExpanded)}
+                </ChartViewport>
+              </div>
+            )}
             <div className="text-sm">{renderStats()}</div>
           </div>
 

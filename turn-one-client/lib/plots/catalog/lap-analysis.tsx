@@ -58,6 +58,21 @@ function lapDistributionStats(data: unknown): StatItem[] | null {
 export const LAP_ANALYSIS_PLOTS: PlotDefinition[] = [
   {
     key: "laptime",
+    explainer: {
+      whatItShows: "Every lap a driver completed, plotted in the order they were driven.",
+      howToRead: [
+        "Lower on the chart is a quicker lap.",
+        "A steady downward drift usually means the car is getting lighter as fuel burns off; a sudden spike is traffic, a pit stop or a mistake.",
+        "Drag across the chart to zoom into a run of laps.",
+      ],
+      whatToLookFor:
+        "The shape matters more than any single lap. A line that climbs steadily through a stint is tyre wear; one that jumps and recovers is usually traffic. The lowest point is often a lap set on fresh tyres with a light fuel load.",
+      glossary: [
+        { term: "Stint", definition: "A run of laps on one set of tyres, between pit stops." },
+        { term: "Out lap", definition: "The lap immediately after leaving the pits — always slow, because the tyres and brakes are still cold." },
+      ],
+    },
+    domainZoomable: true,
     title: "Lap Time Analysis",
     shortTitle: "Lap Time",
     description: "Compare lap times and sector performance",
@@ -92,6 +107,18 @@ export const LAP_ANALYSIS_PLOTS: PlotDefinition[] = [
   },
   {
     key: "lap_distribution",
+    explainer: {
+      whatItShows: "How each driver's lap times were spread across the session, rather than just their single best lap.",
+      howToRead: [
+        "Each driver gets their own group of laps; lower is quicker.",
+        "A tight cluster means consistency, a wide scatter means the pace varied a lot.",
+      ],
+      whatToLookFor:
+        "Consistency often matters more than a single fast lap. A driver whose laps sit in a narrow band is usually managing tyres well, while a wide spread can point to traffic, changing conditions or a car that is hard to drive.",
+      glossary: [
+        { term: "Consistency", definition: "How closely a driver repeats the same lap time. Small variation is a sign of control." },
+      ],
+    },
     title: "Lap Distribution",
     shortTitle: "Lap Distribution",
     description: "Lap-by-lap time evolution per driver",
@@ -174,6 +201,7 @@ export const LAP_ANALYSIS_PLOTS: PlotDefinition[] = [
   },
   {
     key: "track_evolution",
+    domainZoomable: true,
     title: "Track Evolution",
     shortTitle: "Track Evo",
     description: "Running best lap time vs track temperature",

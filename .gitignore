@@ -61,3 +61,6 @@ turn-one-backend/API/logs/
 docs/old/
 # TypeScript incremental build cache
 *.tsbuildinfo
+
+# infrastructure things
+infra

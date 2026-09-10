@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Authorization;
+using API.Services;
 
 namespace API.Hubs;
 
@@ -7,10 +8,12 @@ namespace API.Hubs;
 public class F1LiveDataHub : Hub
 {
     private readonly ILogger<F1LiveDataHub> _logger;
+    private readonly F1LiveTimingService _f1LiveTimingService;
 
-    public F1LiveDataHub(ILogger<F1LiveDataHub> logger)
+    public F1LiveDataHub(ILogger<F1LiveDataHub> logger, F1LiveTimingService f1LiveTimingService)
     {
         _logger = logger;
+        _f1LiveTimingService = f1LiveTimingService;
     }
 
     public override async Task OnConnectedAsync()
@@ -25,14 +28,23 @@ public class F1LiveDataHub : Hub
 
         // Add to F1 data group
         await Groups.AddToGroupAsync(Context.ConnectionId, "F1LiveData");
-        
+
         // Send a welcome message to confirm connection
-        await Clients.Caller.SendAsync("ReceiveFeedData", new { 
-            FeedName = "ConnectionStatus", 
-            Data = new { Status = "Connected", ConnectionId = Context.ConnectionId }, 
-            Timestamp = DateTime.UtcNow 
+        await Clients.Caller.SendAsync("ReceiveFeedData", new {
+            FeedName = "ConnectionStatus",
+            Data = new { Status = "Connected", ConnectionId = Context.ConnectionId },
+            Timestamp = DateTime.UtcNow
         });
-        
+
+        // Tell the caller right away whether the backend's upstream F1 feed
+        // (via the Cloudflare Worker proxy) is actually connected, so the
+        // client can distinguish "no live session" from "proxy unreachable".
+        await Clients.Caller.SendAsync("ReceiveUpstreamStatus", new
+        {
+            Connected = _f1LiveTimingService.IsConnected,
+            Timestamp = DateTime.UtcNow
+        });
+
         await base.OnConnectedAsync();
     }
 
@@ -58,6 +70,16 @@ public class F1LiveDataHub : Hub
     {
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"F1_{feedName}");
         //_logger.LogInformation($"Client {Context.ConnectionId} unsubscribed from feed: {feedName}");
+    }
+
+    // Method for clients to (re-)check whether the backend's upstream F1 feed is connected
+    public async Task RequestUpstreamStatus()
+    {
+        await Clients.Caller.SendAsync("ReceiveUpstreamStatus", new
+        {
+            Connected = _f1LiveTimingService.IsConnected,
+            Timestamp = DateTime.UtcNow
+        });
     }
 
     // Method to request current session status

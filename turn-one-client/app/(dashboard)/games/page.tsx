@@ -22,8 +22,9 @@ import {
   UserStatsCard,
   MyPredictions,
 } from '@/components/dashboard/games';
-import { leaderboardService, coinService } from '@/lib/gameService';
+import { leaderboardService } from '@/lib/gameService';
 import { UserStats } from '@/types/game-types';
+import { useBalance } from '@/components/providers/balance-provider';
 
 const tabs = [
   { value: 'predictions', label: 'Predict', longLabel: 'Make Prediction', icon: Target },
@@ -35,8 +36,8 @@ const tabs = [
 
 export default function GameHubPage() {
   const searchParams = useSearchParams();
+  const { coins } = useBalance();
   const [userStats, setUserStats] = useState<UserStats | null>(null);
-  const [coinBalance, setCoinBalance] = useState<number>(0);
   const [activeTab, setActiveTab] = useState('predictions');
 
   useEffect(() => {
@@ -47,12 +48,7 @@ export default function GameHubPage() {
 
   const loadUserData = async () => {
     try {
-      const [stats, balance] = await Promise.all([
-        leaderboardService.getUserStats(),
-        coinService.getBalance(),
-      ]);
-      setUserStats(stats);
-      setCoinBalance(balance);
+      setUserStats(await leaderboardService.getUserStats());
     } catch (error) {
       console.error('Failed to load user data:', error);
     }
@@ -73,7 +69,7 @@ export default function GameHubPage() {
           description="Predictions, trivia and the global leaderboard."
           stats={[
             { icon: Star, label: 'Level', value: userStats?.level ?? 1, iconClassName: 'text-purple-400' },
-            { icon: Coins, label: 'Coins', value: coinBalance.toLocaleString(), iconClassName: 'text-yellow-400' },
+            { icon: Coins, label: 'Coins', value: coins.toLocaleString(), iconClassName: 'text-yellow-400' },
             { icon: Trophy, label: 'Rank', value: userStats?.globalRank ? `#${userStats.globalRank}` : '—', iconClassName: 'text-blue-400' },
           ]}
         />

@@ -41,6 +41,26 @@ export interface PlotOptionDef {
   help?: string
 }
 
+/**
+ * Plain-English copy for the beginner-facing Simple Mode page.
+ *
+ * Every competitor surveyed puts its "what does this mean" material somewhere
+ * else entirely — a separate FAQ page or a blog post — so explaining a chart at
+ * the point of confusion is the clearest differentiator available. Optional and
+ * additive: a plot without an explainer is simply not offered in Simple Mode
+ * and is otherwise unaffected.
+ */
+export interface PlotExplainer {
+  /** One sentence, jargon-free: what is actually plotted. */
+  whatItShows: string
+  /** Two or three concrete reading instructions ("taller bar = faster"). */
+  howToRead: string[]
+  /** What an interesting or notable result looks like. */
+  whatToLookFor?: string
+  /** Terms worth defining inline for a newcomer. */
+  glossary?: { term: string; definition: string }[]
+}
+
 export interface PlotFetchContext {
   year: number
   /** Friendly event name passed as `gp` to the API (e.g. "Australian Grand Prix"). */
@@ -100,6 +120,18 @@ export interface PlotDefinition {
    * SharePolicy.AllowedPlotKeys allowlist (the real enforcement boundary).
    */
   shareable?: boolean
+  /**
+   * Default false. Opt-in flag for data-level X-axis zoom: the plot's chart
+   * component reads useChartViewport() to restrict its own domain and offers a
+   * drag-to-select range, so axes re-tick instead of merely being magnified.
+   * Mirrors `shareable`/`exportable` — it gates rollout to charts that have
+   * been wired up, not a permanent capability difference. Only meaningful for
+   * charts with a continuous numeric X axis; the visual zoom and full-screen
+   * view in ChartViewport apply to every plot regardless of this flag.
+   */
+  domainZoomable?: boolean
+  /** Beginner-facing copy; see PlotExplainer. Required for Simple Mode. */
+  explainer?: PlotExplainer
   fetch: (ctx: PlotFetchContext) => Promise<unknown>
   render: (data: unknown, settings: AdvancedPlotSettings, ctx?: PlotFetchContext) => ReactNode
   /** Optional empty check — defaults: array length === 0, or null/undefined. */

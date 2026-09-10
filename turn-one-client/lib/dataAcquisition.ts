@@ -4,14 +4,18 @@ import { useState, useEffect } from 'react';
 import { loadEnvConfig } from '@next/env'
 import { fetchFromExternalAPI, fetchFromExternalAPIv1, fetchFromExternalAPIv1Image, fetchFromExternalAPIv2, fetchFromExternalAPIv2Image } from './data-fetcher';
 
+// Schedule data used to be fetched with `cache: 'no-store'`, because event and
+// session lists shift during a live race weekend and a stale list must never be
+// shown. That constraint still holds, but it is now expressed as a freshness
+// tier rather than by disabling caching outright: the current season gets a
+// short (5 minute) TTL, past seasons are cached for a month. See the "schedule"
+// tier in lib/cache/f1-freshness.ts.
 export const fetchEventsByYear = async (year: number) => {
-  // no-store: event lists change during a live race weekend, so the browser's
-  // HTTP cache must not serve a stale list on refresh (see route.ts proxy cache header).
-  return fetchFromExternalAPIv2(`seasons/${year}/events`, { cache: 'no-store' });
+  return fetchFromExternalAPIv2(`seasons/${year}/events`);
 }
 
 export const fetchSessionsByEvent = async (year: number, eventName: string) => {
-  return fetchFromExternalAPIv2(`seasons/${year}/events/${encodeURIComponent(eventName)}/sessions`, { cache: 'no-store' });
+  return fetchFromExternalAPIv2(`seasons/${year}/events/${encodeURIComponent(eventName)}/sessions`);
 }
 
 

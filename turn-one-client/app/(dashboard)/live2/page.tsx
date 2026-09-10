@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { DiamondLoader } from '@/components/ui/diamond-loader';
 import Link from 'next/link';
 import { LiveTimingGrid } from '@/components/dashboard/live-timing-grid';
-import { getF1LiveDataService, type F1DataCallback, type F1StatusCallback } from '@/lib/f1LiveDataService';
+import { getF1LiveDataService, type F1DataCallback, type F1StatusCallback, type F1ConnectionStatus } from '@/lib/f1LiveDataService';
 import { F1DataMapper, type MappedF1Data } from '@/lib/f1DataMapper';
 import {
   Clock,
@@ -24,9 +25,7 @@ import { ExploreMoreLinks } from '@/components/dashboard/explore-more-links';
 
 export default function LiveDashboardV2() {
   const [liveData, setLiveData] = useState<MappedF1Data | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<
-    'disconnected' | 'connecting' | 'connected' | 'error' | 'no-session'
-  >('disconnected');
+  const [connectionStatus, setConnectionStatus] = useState<F1ConnectionStatus>('disconnected');
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   const f1Url = 'https://livetiming.formula1.com';
@@ -234,10 +233,13 @@ export default function LiveDashboardV2() {
 
         {/* Empty / connecting / error states */}
         {!liveData && connectionStatus === 'connecting' && (
-          <section className="border border-zinc-800 bg-zinc-950 px-6 py-16 text-center">
-            <div className="inline-block h-10 w-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            <p className="mt-5 text-sm uppercase tracking-[0.2em] text-zinc-400">Connecting to F1 Live Timing</p>
-            <p className="mt-1 text-xs text-zinc-600">Establishing connection to telemetry feed</p>
+          <section className="border border-zinc-800 bg-zinc-950 px-6 py-16">
+            <DiamondLoader
+              size={44}
+              tone="flat"
+              label="Connecting to F1 Live Timing"
+              sublabel="Establishing connection to telemetry feed"
+            />
           </section>
         )}
 

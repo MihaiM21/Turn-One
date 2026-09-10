@@ -9,8 +9,17 @@ import {
   type F1Event,
   type F1Session,
 } from "@/lib/plots/session-utils"
+import { recordSessionEnd } from "@/lib/cache/session-clock"
 
-type SessionDateFields = { start_date?: string; date?: string; session_date?: string }
+type SessionDateFields = {
+  start_date?: string
+  date?: string
+  session_date?: string
+  end_date?: string
+}
+
+/** How far back to walk when the newest listed event hasn't started yet. */
+const LATEST_EVENT_LOOKBACK = 3
 
 interface UseGeneratorCoreOptions {
   initialYear?: string
@@ -50,44 +59,49 @@ export function useGeneratorCore({
     return (races.length ? races : events)[0]
   }
 
-  // The events list has no date fields of its own (pre-season testing and
-  // Grands Prix are indistinguishable by date), so "most recent" has to be
-  // resolved from each event's own sessions, which do carry start_date.
+  // The events list carries no dates, but it is returned in calendar order and
+  // — for the current season — truncated to events that actually have data, so
+  // the newest entry is almost always the one we want. Verified against the
+  // live API: the 2026 list ends at the most recently run Grand Prix.
+  //
+  // This replaces a fan-out that fetched sessions for every event in the season
+  // (~24 parallel requests) on each mount and year change. We still confirm the
+  // candidate has started, walking back a few events if not, so a season whose
+  // full future calendar is published doesn't select a race that hasn't
+  // happened. Costs one request in the normal case.
+  //
+  // Note round numbers are deliberately not used: the events list has no round
+  // field, and its `key` is a FastF1 identifier with gaps where a round is
+  // missing, so position-based round arithmetic is unsafe.
   const resolveLatestEvent = async (events: F1Event[], year: string) => {
     if (!events.length) return null
     const races = events.filter((e) => !isTestingEvent(e))
     if (!races.length) return pickDefaultEvent(events)
 
     const now = Date.now()
-    const results = await Promise.allSettled(
-      races.map((e) => fetchSessionsByEvent(Number(year), e.name))
-    )
-
-    const withDates = races
-      .map((e, i) => {
-        const result = results[i]
-        if (result.status !== "fulfilled") return null
-        const sessions: (F1Session & SessionDateFields)[] = result.value?.sessions || []
-        const times = sessions
+    for (
+      let i = races.length - 1;
+      i >= 0 && i > races.length - 1 - LATEST_EVENT_LOOKBACK;
+      i--
+    ) {
+      const candidate = races[i]
+      try {
+        const data = await fetchSessionsByEvent(Number(year), candidate.name)
+        const sessions: (F1Session & SessionDateFields)[] = data?.sessions || []
+        const starts = sessions
           .map((s) => {
             const raw = s.start_date || s.date || s.session_date
             return raw ? new Date(raw).getTime() : NaN
           })
           .filter((t) => Number.isFinite(t))
-        if (times.length === 0) return null
-        return { e, start: Math.min(...times) }
-      })
-      .filter((x): x is { e: F1Event; start: number } => x !== null)
-
-    if (withDates.length === 0) return pickDefaultEvent(events)
-
-    const past = withDates.filter((x) => x.start <= now)
-    if (past.length) {
-      past.sort((a, b) => b.start - a.start)
-      return past[0].e
+        if (starts.length && Math.min(...starts) <= now) return candidate
+      } catch {
+        // Try the previous event rather than failing the whole resolution.
+      }
     }
-    withDates.sort((a, b) => a.start - b.start)
-    return withDates[0].e
+
+    // Nothing has started yet (e.g. a brand-new season): fall back to the first.
+    return pickDefaultEvent(events)
   }
 
   const loadEvents = async (year: string, preserveSelection = true) => {
@@ -141,6 +155,17 @@ export function useGeneratorCore({
       const sessions: F1Session[] = data.sessions || []
       const resolved = sessions.length > 0 ? sessions : DEFAULT_SESSIONS
       setAvailableSessions(resolved)
+
+      // Tell the cache policy when each of these sessions ends. A finished
+      // session's data is immutable, so this is what lets requests for it be
+      // cached hard instead of conservatively. Registered under both event-name
+      // spellings, since callers pass whichever they hold.
+      for (const session of sessions as (F1Session & SessionDateFields)[]) {
+        const code = getSessionCode(session.name, session.type, session.number)
+        const dates = { startDate: session.start_date, endDate: session.end_date }
+        recordSessionEnd(Number(year), apiEventName, code, dates)
+        if (eventName !== apiEventName) recordSessionEnd(Number(year), eventName, code, dates)
+      }
 
       if (resolved.length > 0) {
         const currentValid = resolved.find(

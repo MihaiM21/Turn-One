@@ -3,6 +3,7 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
+import { DiamondLoader } from "@/components/ui/diamond-loader";
 
 interface SectionCardProps {
     /** Small uppercase eyebrow above the title. */
@@ -65,9 +66,8 @@ export function SectionCard({
             ) : null}
 
             {loading ? (
-                <div className="flex flex-col items-center justify-center gap-3 px-5 py-12">
-                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                    <span className="text-xs uppercase tracking-[0.25em] text-zinc-500">Loading</span>
+                <div className="px-5 py-12">
+                    <DiamondLoader size={40} tone="flat" label="Loading" />
                 </div>
             ) : empty ? (
                 <div className="flex flex-col items-center justify-center gap-3 px-5 py-12 text-center">

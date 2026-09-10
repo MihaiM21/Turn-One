@@ -1,8 +1,9 @@
 'use client';
 
-import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceArea } from 'recharts'
 import { TrackEvolutionData } from '@/types/plot-types-v2'
 import { AdvancedPlotSettings } from '@/types/plot-types'
+import { useDragZoom } from '@/components/plot-viewport/use-drag-zoom'
 
 interface TrackEvolutionGraphProps {
   data: TrackEvolutionData
@@ -22,6 +23,12 @@ export function TrackEvolutionGraph({ data, advancedSettings }: TrackEvolutionGr
     lineThickness: 2,
     showDataLabels: false,
   }
+
+  // Drag across the chart to zoom into a session-time window. The surrounding
+  // ChartViewport owns the selected domain so its reset control can clear it;
+  // outside a viewport (the offscreen export renderer) this is simply absent
+  // and the chart shows its full range.
+  const { xDomain, dragHandlers, selection } = useDragZoom()
 
   const driverEntries = data ? Object.entries(data.drivers ?? {}) : []
 
@@ -79,9 +86,21 @@ export function TrackEvolutionGraph({ data, advancedSettings }: TrackEvolutionGr
       </p>
       <div style={{ height: `${settings.chartHeight}px` }}>
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={chartData} margin={{ right: 30, top: 10 }}>
+          <ComposedChart
+            data={chartData}
+            margin={{ right: 30, top: 10 }}
+            {...dragHandlers}
+          >
           {settings.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#374151" />}
-          <XAxis dataKey="minute" stroke="#9CA3AF" tick={{ fontSize: tickFontSize }} label={{ value: 'Session time (min)', position: 'insideBottom', offset: -5, fill: '#9CA3AF' }} />
+          <XAxis
+            dataKey="minute"
+            type="number"
+            domain={xDomain}
+            allowDataOverflow
+            stroke="#9CA3AF"
+            tick={{ fontSize: tickFontSize }}
+            label={{ value: 'Session time (min)', position: 'insideBottom', offset: -5, fill: '#9CA3AF' }}
+          />
           <YAxis
             yAxisId="left"
             stroke="#9CA3AF"
@@ -163,6 +182,9 @@ export function TrackEvolutionGraph({ data, advancedSettings }: TrackEvolutionGr
             connectNulls
             isAnimationActive={settings.animateChart}
           />
+          {selection && (
+            <ReferenceArea x1={selection.x1} x2={selection.x2} fill="#F9FAFB" fillOpacity={0.12} />
+          )}
           </ComposedChart>
         </ResponsiveContainer>
       </div>

@@ -46,6 +46,20 @@ const raceOnlyNote = (title: string) =>
 export const RACE_STRATEGY_PLOTS: PlotDefinition[] = [
   {
     key: "tyre_stint",
+    explainer: {
+      whatItShows: "Which tyre compound each driver used and for how many laps, from lights out to the flag.",
+      howToRead: [
+        "Each bar is one driver's race, read left to right.",
+        "Colours follow the usual convention: red is soft, yellow medium, white hard.",
+        "Where the colour changes, that driver pitted.",
+      ],
+      whatToLookFor:
+        "Compare drivers who finished near each other. Softer tyres are faster but wear out sooner, so a driver who started on softs and stopped early was chasing early track position, while a long opening stint on hards is usually a bet on a later safety car or clear air.",
+      glossary: [
+        { term: "Compound", definition: "The rubber mix of a tyre. Softer compounds grip better but degrade faster." },
+        { term: "Undercut", definition: "Pitting before a rival so fresh tyres let you set quicker laps and emerge ahead once they stop." },
+      ],
+    },
     title: "Tyre Stint Strategy",
     shortTitle: "Tyre Stints",
     description: "Visualize tyre compounds and pit stop strategy for every driver (Race & Sprint only)",
@@ -113,6 +127,7 @@ export const RACE_STRATEGY_PLOTS: PlotDefinition[] = [
   },
   {
     key: "race_gaps",
+    domainZoomable: true,
     title: "Race Gaps",
     shortTitle: "Race Gaps",
     description: "Per-driver gap to leader or vs average race pace",
@@ -170,6 +185,7 @@ export const RACE_STRATEGY_PLOTS: PlotDefinition[] = [
   },
   {
     key: "tyre_degradation",
+    domainZoomable: true,
     title: "Tyre Degradation",
     shortTitle: "Tyre Deg",
     description: "Per-compound tyre performance and degradation rate",

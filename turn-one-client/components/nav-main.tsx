@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { ChevronRight, type LucideIcon } from "lucide-react"
 
@@ -41,16 +42,12 @@ export function NavMain({
   const currentPath = usePathname() ?? "";
   const [openItems, setOpenItems] = React.useState<Record<string, boolean>>({});
 
-  // Check if an item is active based on the current path
+  // Check if an item is active based on the current path. Requires an exact
+  // match or a `/`-bounded prefix so a route like `/live2` doesn't also
+  // highlight a sibling nav item at `/live`.
   const isItemActive = (itemUrl: string): boolean => {
-    // Exact match for home or dashboard
-    if (itemUrl === '/' && currentPath === '/') return true;
-    
-    // For other pages, check if current path starts with the item URL
-    // This ensures that sub-routes also highlight the parent menu item
-    if (itemUrl !== '/' && currentPath.startsWith(itemUrl)) return true;
-    
-    return false;
+    if (itemUrl === '/') return currentPath === '/';
+    return currentPath === itemUrl || currentPath.startsWith(itemUrl + '/');
   };
 
   // Auto-expand sections when navigating to their sub-items. Uses a single
@@ -105,11 +102,11 @@ export function NavMain({
               }}
             >
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip={item.title} isActive={active}>
-                  <a href={item.url}>
+                <SidebarMenuButton asChild tooltip={item.title} isActive={active} size="sm">
+                  <Link href={item.url}>
                     <item.icon />
                     <span>{item.title}</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
                 {item.items?.length ? (
                   <>
@@ -127,9 +124,9 @@ export function NavMain({
                           return (
                             <SidebarMenuSubItem key={subItem.title}>
                               <SidebarMenuSubButton asChild isActive={subItemActive}>
-                                <a href={subItem.url}>
+                                <Link href={subItem.url}>
                                   <span>{subItem.title}</span>
-                                </a>
+                                </Link>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                           );

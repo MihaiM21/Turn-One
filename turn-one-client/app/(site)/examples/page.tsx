@@ -17,6 +17,7 @@ import {
 import { MainNav } from "@/components/navigation/main-nav";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DiamondLoader } from "@/components/ui/diamond-loader";
 import { PublicHero } from "@/components/site/public-hero";
 import { SectionHeader } from "@/components/site/section-header";
 import { PublicCard } from "@/components/site/public-card";
@@ -77,11 +78,10 @@ const mockWeather = {
 function PlotSkeleton({ height = 450 }: { height?: number }) {
   return (
     <div
-      className="flex animate-pulse flex-col items-center justify-center gap-3 border border-zinc-800 bg-zinc-950"
+      className="flex flex-col items-center justify-center border border-zinc-800 bg-zinc-950"
       style={{ height }}
     >
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      <span className="text-xs uppercase tracking-[0.25em] text-zinc-500">Loading live data…</span>
+      <DiamondLoader size={40} tone="flat" label="Loading live data…" />
     </div>
   );
 }

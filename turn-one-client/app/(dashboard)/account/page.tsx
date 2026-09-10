@@ -44,7 +44,7 @@ import {
 } from '@/lib/userService';
 import { UserProfile, TokenStatus, PasswordChangeRequest } from '@/types/user-types';
 import { toast } from 'sonner';
-import { useBalanceRefresh } from '@/lib/balance-events';
+import { notifyBalanceChanged, useBalanceRefresh } from '@/lib/balance-events';
 
 function SectionHeader({ label, title }: { label: string; title: string }) {
   return (
@@ -230,6 +230,7 @@ export default function AccountPage() {
       );
       if (!response.ok) throw new Error((await response.text()) || 'Failed to upgrade plan');
       await loadUserData();
+      notifyBalanceChanged();
       toast.success(`Successfully upgraded to ${selectedPlan} plan`);
       setShowUpgradeDialog(false);
     } catch (error: any) {
@@ -255,6 +256,7 @@ export default function AccountPage() {
       );
       if (!response.ok) throw new Error((await response.text()) || 'Failed to downgrade plan');
       await loadUserData();
+      notifyBalanceChanged();
       toast.success(`Plan downgrade scheduled. Switching to ${selectedPlan} after current period.`);
       setShowDowngradeDialog(false);
     } catch (error: any) {

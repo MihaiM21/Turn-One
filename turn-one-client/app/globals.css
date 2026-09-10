@@ -275,5 +275,32 @@
   .animate-draw-line {
     animation: drawLine 1.8s ease-out forwards;
   }
+
+  /* Loading diamond: a bright arc races clockwise around one continuous
+     square path (no separate edges, so corners stay clean). pathLength is
+     normalised to 100, so one full lap = dashoffset 0 -> -100. */
+  @keyframes diamondRace {
+    to { stroke-dashoffset: -100; }
+  }
+
+  .animate-diamond-race {
+    animation: diamondRace 1.05s linear infinite;
+  }
+
+  /* Loading diamond: quick breathing pulse for a bit of life */
+  @keyframes diamondPulse {
+    0%, 100% { transform: scale(0.93); }
+    50%      { transform: scale(1); }
+  }
+
+  .animate-diamond-pulse {
+    animation: diamondPulse 1.05s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-diamond-race { animation: none; opacity: 0; }
+    .animate-diamond-pulse { animation: none; }
+    .diamond-base { opacity: 0.7; }
+  }
 }
 

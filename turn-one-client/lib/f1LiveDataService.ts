@@ -29,17 +29,37 @@ export interface F1LiveData {
   [key: string]: any;
 }
 
+export type F1ConnectionStatus =
+  | 'connected'
+  | 'connecting'
+  | 'disconnected'
+  | 'error'
+  | 'no-session'
+  // Hub connection itself is fine, but the backend's own connection to F1
+  // (via the Cloudflare Worker proxy) is down — distinct from "no-session"
+  // (hub + upstream both fine, just nothing broadcasting right now).
+  | 'proxy-unavailable';
+
 export type F1DataCallback = (data: F1LiveData) => void;
-export type F1StatusCallback = (status: 'connected' | 'connecting' | 'disconnected' | 'error' | 'no-session') => void;
+export type F1StatusCallback = (status: F1ConnectionStatus) => void;
 
 export class F1LiveDataService {
   private readonly hubUrl = `${HUB_BASE}/hubs/f1livedata`;
   private connection: signalR.HubConnection | null = null;
-  private connectionState: 'connected' | 'connecting' | 'disconnected' | 'error' | 'no-session' = 'disconnected';
+  private connectionState: F1ConnectionStatus = 'disconnected';
+  // Assume upstream is fine until the hub tells us otherwise, so we don't
+  // flash a false "proxy-unavailable" before the first status message arrives.
+  private upstreamConnected = true;
 
   private state: F1LiveData = {};
   private lastReceivedData: F1LiveData = {};
   private messageCount = 0;
+
+  // Bumped on every connect()/disconnect(). Overlapping calls happen constantly
+  // — React StrictMode double-mounts, and /live + /live2 share this singleton —
+  // so a superseded attempt must never write status or the page flips back to
+  // "disconnected" right after a good connection lands.
+  private connectEpoch = 0;
 
   private dataCallbacks: F1DataCallback[] = [];
   private statusCallbacks: F1StatusCallback[] = [];
@@ -86,16 +106,22 @@ export class F1LiveDataService {
   }
 
   public async connect(): Promise<void> {
-    if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) return;
+    if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
+      this.notifyStatusCallbacks(this.upstreamConnected ? 'connected' : 'proxy-unavailable');
+      return;
+    }
 
+    const epoch = ++this.connectEpoch;
+    const current = () => this.connectEpoch === epoch;
     this.notifyStatusCallbacks('connecting');
 
     try {
       if (this.connection) {
         try { await this.connection.stop(); } catch { /* ignore */ }
       }
+      if (!current()) return; // a newer connect()/disconnect() superseded us
 
-      this.connection = new signalR.HubConnectionBuilder()
+      const connection = new signalR.HubConnectionBuilder()
         .withUrl(this.hubUrl, {
           accessTokenFactory: () => {
             try { return localStorage.getItem('token') || ''; } catch { return ''; }
@@ -107,8 +133,9 @@ export class F1LiveDataService {
         })
         .configureLogging(signalR.LogLevel.Warning)
         .build();
+      this.connection = connection;
 
-      this.connection.on('ReceiveStateData', (stateData: F1LiveData) => {
+      connection.on('ReceiveStateData', (stateData: F1LiveData) => {
         if (!stateData || typeof stateData !== 'object') return;
         this.state = { ...stateData };
         this.lastReceivedData = { ...stateData };
@@ -117,29 +144,69 @@ export class F1LiveDataService {
         this.notifyDataCallbacks();
       });
 
-      this.connection.on('ReceiveRawData', () => {
+      connection.on('ReceiveRawData', () => {
         // Raw envelope — counted but state arrives via ReceiveStateData
         this.messageCount++;
       });
 
-      this.connection.onreconnecting(() => this.notifyStatusCallbacks('connecting'));
-      this.connection.onreconnected(() => this.notifyStatusCallbacks('connected'));
-      this.connection.onclose(() => this.notifyStatusCallbacks('disconnected'));
+      // Hub sends this once on connect (FeedName: "ConnectionStatus") and it may
+      // also carry a first snapshot. Nothing to render from it today, but a
+      // registered handler stops SignalR logging "No client method ... found".
+      connection.on('ReceiveFeedData', () => {});
 
-      await this.connection.start();
-      this.notifyStatusCallbacks('connected');
+      connection.on('ReceiveUpstreamStatus', (payload: { Connected?: boolean }) => {
+        this.upstreamConnected = payload?.Connected ?? false;
+        if (!current()) return;
+        if (!this.upstreamConnected) {
+          this.notifyStatusCallbacks('proxy-unavailable');
+        } else if (connection.state === signalR.HubConnectionState.Connected) {
+          this.notifyStatusCallbacks('connected');
+        }
+      });
+
+      connection.onreconnecting(() => { if (current()) this.notifyStatusCallbacks('connecting'); });
+      connection.onreconnected(() => {
+        if (current()) this.notifyStatusCallbacks(this.upstreamConnected ? 'connected' : 'proxy-unavailable');
+      });
+      connection.onclose(() => { if (current()) this.notifyStatusCallbacks('disconnected'); });
+
+      await connection.start();
+      if (!current()) {
+        try { await connection.stop(); } catch { /* ignore */ }
+        return;
+      }
+      this.notifyStatusCallbacks(this.upstreamConnected ? 'connected' : 'proxy-unavailable');
     } catch (err) {
+      // A superseded attempt (StrictMode double-mount, disconnect() mid-startup,
+      // /live <-> /live2 nav) has its negotiate aborted. Whoever holds the
+      // current epoch owns the status now — stay silent.
+      if (!current()) return;
+      const message = err instanceof Error ? err.message : String(err);
+      const aborted =
+        (err instanceof Error && err.name === 'AbortError') ||
+        /stopped during negotiation|connection was stopped|The connection was stopped/i.test(message);
+      if (aborted) {
+        this.notifyStatusCallbacks('disconnected');
+        return;
+      }
       console.error('Failed to connect to F1 hub:', err);
       this.notifyStatusCallbacks('error');
     }
   }
 
   public async disconnect(): Promise<void> {
+    this.connectEpoch++; // invalidate any in-flight connect()
     if (this.connection) {
       try { await this.connection.stop(); } catch { /* ignore */ }
       this.connection = null;
     }
+    this.upstreamConnected = true;
     this.notifyStatusCallbacks('disconnected');
+  }
+
+  public async requestUpstreamStatus(): Promise<void> {
+    if (this.connection?.state !== signalR.HubConnectionState.Connected) return;
+    try { await this.connection.invoke('RequestUpstreamStatus'); } catch { /* ignore */ }
   }
 
   public onData(cb: F1DataCallback): void { this.dataCallbacks.push(cb); }

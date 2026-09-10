@@ -12,6 +12,9 @@ public class F1LiveTimingService
 {
     private const char RecordSeparator = '';
 
+    private static readonly TimeSpan InitialRetryDelay = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan MaxRetryDelay = TimeSpan.FromSeconds(60);
+
     private readonly ILogger<F1LiveTimingService> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IHubContext<F1LiveDataHub> _hubContext;
@@ -20,6 +23,7 @@ public class F1LiveTimingService
     private bool _isConnected;
     private CancellationTokenSource? _cancellationTokenSource;
     private string _subscribeInvocationId = string.Empty;
+    private bool _stopRequested;
 
     private readonly string _dataStoragePath;
     private ConcurrentDictionary<string, object> _currentState = new();
@@ -47,54 +51,94 @@ public class F1LiveTimingService
         LoadPersistedData();
     }
 
-    public async Task StartAsync()
-    {
-        if (_isConnected)
-        {
-            _logger.LogWarning("F1 live timing service is already connected");
-            return;
-        }
-
-        _cancellationTokenSource = new CancellationTokenSource();
-
-        try
-        {
-            var (connectionToken, cookies) = await NegotiateConnectionAsync();
-
-            _clientWebSocket = new ClientWebSocket();
-            _clientWebSocket.Options.SetRequestHeader("User-Agent", "Turn-One-F1-Client/1.0");
-            if (!string.IsNullOrEmpty(cookies))
-                _clientWebSocket.Options.SetRequestHeader("Cookie", cookies);
-
-            var wsBase = _baseUrl.Replace("https://", "wss://").Replace("http://", "ws://");
-            var wsUrl = $"{wsBase}?id={Uri.EscapeDataString(connectionToken)}";
-
-            await _clientWebSocket.ConnectAsync(new Uri(wsUrl), _cancellationTokenSource.Token);
-            _isConnected = true;
-
-            await SendHandshakeAsync();
-            await SubscribeToFeeds();
-
-            _ = ReceiveMessagesAsync(_cancellationTokenSource.Token);
-
-            _logger.LogInformation("F1 live timing service started successfully (SignalR Core via {BaseUrl})", _baseUrl);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to start F1 live timing service");
-            await StopAsync();
-            throw;
-        }
-    }
-
-    public async Task StopAsync()
+    public Task StartAsync()
     {
         if (_cancellationTokenSource != null)
         {
-            _cancellationTokenSource.Cancel();
-            _cancellationTokenSource.Dispose();
-            _cancellationTokenSource = null;
+            _logger.LogWarning("F1 live timing service is already running");
+            return Task.CompletedTask;
         }
+
+        _stopRequested = false;
+        _cancellationTokenSource = new CancellationTokenSource();
+        _ = RunConnectionLoopAsync(_cancellationTokenSource.Token);
+        return Task.CompletedTask;
+    }
+
+    // Keeps (re)connecting for the lifetime of the service instead of giving up
+    // after a single failed attempt at boot — a transient Worker/F1 hiccup used
+    // to require a full backend restart to recover from.
+    private async Task RunConnectionLoopAsync(CancellationToken lifecycleToken)
+    {
+        var delay = InitialRetryDelay;
+
+        while (!lifecycleToken.IsCancellationRequested && !_stopRequested)
+        {
+            try
+            {
+                await ConnectAndPumpAsync(lifecycleToken);
+                delay = InitialRetryDelay; // reset backoff after any successful session
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "F1 live timing connection attempt failed, retrying in {DelaySeconds}s", delay.TotalSeconds);
+            }
+            finally
+            {
+                await TeardownConnectionAsync();
+            }
+
+            if (lifecycleToken.IsCancellationRequested || _stopRequested) break;
+
+            try
+            {
+                await Task.Delay(delay, lifecycleToken);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+
+            delay = TimeSpan.FromSeconds(Math.Min(delay.TotalSeconds * 2, MaxRetryDelay.TotalSeconds));
+        }
+
+        _logger.LogInformation("F1 live timing connection loop exited");
+    }
+
+    private async Task ConnectAndPumpAsync(CancellationToken lifecycleToken)
+    {
+        var (connectionToken, cookies) = await NegotiateConnectionAsync();
+
+        _clientWebSocket = new ClientWebSocket();
+        _clientWebSocket.Options.SetRequestHeader("User-Agent", "Turn-One-F1-Client/1.0");
+        if (!string.IsNullOrEmpty(cookies))
+            _clientWebSocket.Options.SetRequestHeader("Cookie", cookies);
+
+        var wsBase = _baseUrl.Replace("https://", "wss://").Replace("http://", "ws://");
+        var wsUrl = $"{wsBase}?id={Uri.EscapeDataString(connectionToken)}";
+
+        await _clientWebSocket.ConnectAsync(new Uri(wsUrl), lifecycleToken);
+        _isConnected = true;
+        await BroadcastUpstreamStatusAsync(true);
+
+        await SendHandshakeAsync();
+        await SubscribeToFeeds();
+
+        _logger.LogInformation("F1 live timing connected (SignalR Core via {BaseUrl})", _baseUrl);
+
+        // Blocks until the socket closes, errors, or the lifecycle is cancelled —
+        // the outer loop then decides whether to retry.
+        await ReceiveMessagesAsync(lifecycleToken);
+    }
+
+    private async Task TeardownConnectionAsync()
+    {
+        var wasConnected = _isConnected;
+        _isConnected = false;
 
         if (_clientWebSocket != null)
         {
@@ -102,7 +146,7 @@ public class F1LiveTimingService
             {
                 try
                 {
-                    await _clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Stopping service", CancellationToken.None);
+                    await _clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Reconnecting", CancellationToken.None);
                 }
                 catch (Exception ex)
                 {
@@ -113,7 +157,39 @@ public class F1LiveTimingService
             _clientWebSocket = null;
         }
 
-        _isConnected = false;
+        if (wasConnected)
+            await BroadcastUpstreamStatusAsync(false);
+    }
+
+    private async Task BroadcastUpstreamStatusAsync(bool connected)
+    {
+        try
+        {
+            await _hubContext.Clients.Group("F1LiveData").SendAsync("ReceiveUpstreamStatus", new
+            {
+                Connected = connected,
+                Timestamp = DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to broadcast upstream status");
+        }
+    }
+
+    public async Task StopAsync()
+    {
+        _stopRequested = true;
+
+        if (_cancellationTokenSource != null)
+        {
+            _cancellationTokenSource.Cancel();
+            _cancellationTokenSource.Dispose();
+            _cancellationTokenSource = null;
+        }
+
+        await TeardownConnectionAsync();
+
         _logger.LogInformation("F1 live timing service stopped");
     }
 
@@ -135,7 +211,15 @@ public class F1LiveTimingService
                 response = await httpClient.GetAsync(negotiationUrl);
             }
         }
-        response.EnsureSuccessStatusCode();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync();
+            _logger.LogError(
+                "F1 negotiate failed against {Url}: {StatusCode} {ReasonPhrase} — {Body}",
+                negotiationUrl, (int)response.StatusCode, response.ReasonPhrase, errorBody.Length > 500 ? errorBody[..500] : errorBody);
+            response.EnsureSuccessStatusCode();
+        }
 
         var content = await response.Content.ReadAsStringAsync();
         var negotiationData = JsonSerializer.Deserialize<JsonElement>(content);
@@ -220,7 +304,6 @@ public class F1LiveTimingService
                 if (result.MessageType == WebSocketMessageType.Close)
                 {
                     _logger.LogInformation("WebSocket close message received");
-                    await StopAsync();
                     return;
                 }
 
@@ -246,7 +329,6 @@ public class F1LiveTimingService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error receiving WebSocket messages");
-            await StopAsync();
         }
     }
 

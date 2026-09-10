@@ -19,6 +19,18 @@ const CATEGORY = "Session Info"
 export const SESSION_INFO_PLOTS: PlotDefinition[] = [
   {
     key: "session_results",
+    explainer: {
+      whatItShows: "The order at the end of the session, with each driver's best lap and how far behind the quickest they were.",
+      howToRead: [
+        "Rows run from fastest at the top to slowest at the bottom.",
+        "The delta is the gap to the quickest lap, in seconds.",
+      ],
+      whatToLookFor:
+        "In qualifying the front of the field is usually covered by a few tenths. A gap of more than about half a second between two drivers in the same car normally means something went wrong — traffic, a mistake, or a lap cut short.",
+      glossary: [
+        { term: "Delta", definition: "The time difference between two laps. A delta of +0.250 means a quarter of a second slower." },
+      ],
+    },
     title: "Optimal Qualifying Time",
     shortTitle: "Results",
     description: "Visualize session results and lap time deltas",

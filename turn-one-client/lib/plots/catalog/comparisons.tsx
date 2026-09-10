@@ -34,6 +34,19 @@ const requireTwoDistinctDrivers = (ctx: PlotFetchContext): string | null =>
 export const COMPARISON_PLOTS: PlotDefinition[] = [
   {
     key: "track_comparison",
+    explainer: {
+      whatItShows: "A map of the circuit coloured by which of the two drivers was quicker through each part of the lap.",
+      howToRead: [
+        "Each coloured segment belongs to whoever was faster there.",
+        "Follow the lap around and see where each driver gains — the colour changes at the point the advantage swaps.",
+      ],
+      whatToLookFor:
+        "Advantages usually cluster by corner type. One driver dominating the long straights points to less wing or more engine power; an advantage through the slow, twisty sections usually means more downforce or more confidence on the brakes.",
+      glossary: [
+        { term: "Sector", definition: "One of three timed parts the lap is divided into." },
+        { term: "Downforce", definition: "Aerodynamic grip pressing the car into the track. More of it means faster corners but a slower top speed." },
+      ],
+    },
     title: "H2H Track Comparison",
     shortTitle: "Track H2H",
     description: "Head-to-head track comparison visualization",
@@ -106,6 +119,21 @@ export const COMPARISON_PLOTS: PlotDefinition[] = [
   },
   {
     key: "throttle_brake",
+    explainer: {
+      whatItShows: "Throttle and brake inputs for two drivers, plotted around a lap of the circuit.",
+      howToRead: [
+        "The horizontal axis is distance around the lap, so both drivers line up at the same corners.",
+        "Throttle rises to 100% on the straights and drops to zero under braking.",
+        "Drag across the chart to zoom into one corner.",
+      ],
+      whatToLookFor:
+        "The interesting moments are the transitions. Braking a few metres later, or getting back to full throttle earlier out of a corner, is worth real lap time — and a driver who has to lift mid-corner is usually fighting the car.",
+      glossary: [
+        { term: "Trail braking", definition: "Easing off the brake gradually while turning in, rather than releasing it all at once." },
+        { term: "Lift", definition: "Briefly coming off the throttle mid-corner, normally to settle a car that is sliding." },
+      ],
+    },
+    domainZoomable: true,
     title: "H2H Throttle & Brake",
     shortTitle: "Throttle/Brake",
     description: "Compare throttle and brake inputs across drivers on their fastest laps",

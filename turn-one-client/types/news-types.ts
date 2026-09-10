@@ -71,31 +71,6 @@ export interface LapTimeDistributionPoint {
   compound?: string;
 }
 
-export type TireCompound = "soft" | "medium" | "hard" | "intermediate" | "wet" | string;
-
-export interface DriverStint {
-  driver: string;
-  team?: string;
-  color?: string;
-  startLap: number;
-  endLap: number;
-  compound: TireCompound;
-  isFresh?: boolean;
-}
-
-export interface PitStop {
-  driver: string;
-  lap: number;
-  durationSeconds?: number;
-  color?: string;
-}
-
-export interface TireStrategy {
-  stints: DriverStint[];
-  pitStops: PitStop[];
-  totalLaps: number;
-}
-
 export interface TyreStintEntry {
   driver: string;
   team: string;
@@ -113,16 +88,35 @@ export interface TyreStintEntry {
 // (transient — will resolve on its own, worth a friendly message + retry) from
 // a genuine fetch failure (network error, unexpected 5xx, etc).
 export type SessionFetchStatus =
+  /** The session exists but its data has not been published yet. */
   | { kind: "not_ready"; retryAfterSeconds?: number }
+  /** The data service itself is failing — a gateway error, not missing data. */
+  | { kind: "unavailable"; message: string }
   | { kind: "error"; message: string };
 
-export interface NewsPageData {
+/** Errors are collected rather than thrown so one failed section cannot blank the page. */
+export type NewsErrors = Partial<
+  Record<"session" | "driverStandings" | "constructorStandings" | "lapDistribution" | "tyreStintData", string>
+>;
+
+/**
+ * The fast half of the news page: the session itself plus championship
+ * standings. Rendered immediately.
+ */
+export interface NewsCoreData {
   session: SessionDashboardData | null;
   driverStandings: DriverStanding[] | null;
   constructorStandings: ConstructorStanding[] | null;
-  lapDistribution: LapTimeDistributionPoint[] | null;
-  tireStrategy: TireStrategy | null;
-  tyreStintData: TyreStintEntry[] | null;
-  errors: Partial<Record<"session" | "driverStandings" | "constructorStandings" | "lapDistribution" | "tireStrategy" | "tyreStintData", string>>;
+  errors: NewsErrors;
   sessionStatus?: SessionFetchStatus;
+}
+
+/**
+ * The slow half: lap-time distribution fans out one request per driver, so it
+ * streams in behind a Suspense boundary rather than holding up the whole page.
+ */
+export interface NewsDeepData {
+  lapDistribution: LapTimeDistributionPoint[] | null;
+  tyreStintData: TyreStintEntry[] | null;
+  errors: NewsErrors;
 }

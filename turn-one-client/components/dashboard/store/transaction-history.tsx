@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { DiamondLoader } from '@/components/ui/diamond-loader';
 import { 
   Coins, 
   TrendingUp, 
@@ -58,10 +59,7 @@ export function TransactionHistory() {
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-20">
-          <div className="text-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="text-sm text-muted-foreground">Loading transactions...</p>
-          </div>
+          <DiamondLoader size={44} label="Loading transactions…" />
         </CardContent>
       </Card>
     );

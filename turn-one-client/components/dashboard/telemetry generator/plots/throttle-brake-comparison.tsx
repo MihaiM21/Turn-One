@@ -1,7 +1,9 @@
 'use client'
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend } from 'recharts'
+import { useState } from 'react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend, ReferenceArea } from 'recharts'
 import type { ThrottleBrakeComparisonData, AdvancedPlotSettings } from '@/types/plot-types'
+import { useDragZoom } from '@/components/plot-viewport/use-drag-zoom'
 
 interface Props {
   data: ThrottleBrakeComparisonData
@@ -22,6 +24,13 @@ export function ThrottleBrakeComparisonGraph({ data, advancedSettings }: Props) 
   const totalHeight = settings.chartHeight ?? 700
   const textScale = settings.textScale ?? 1
   const fontSize = Math.round(12 * textScale)
+
+  // Drag across the throttle chart (the primary chart of this pair) to zoom
+  // into a track-distance window. The surrounding ChartViewport owns the
+  // selected domain so its reset control can clear it; outside a viewport
+  // (the offscreen export renderer) this is simply absent and the chart
+  // shows its full range.
+  const { zoomDomain, dragHandlers, selection } = useDragZoom()
 
   if (!data?.telemetry?.length) {
     return (
@@ -90,6 +99,9 @@ export function ThrottleBrakeComparisonGraph({ data, advancedSettings }: Props) 
     chartData[0]?.distance ?? 0,
     chartData[chartData.length - 1]?.distance ?? 0,
   ]
+  // The throttle chart (below) is the primary chart of this pair — it owns the
+  // drag-to-zoom interaction. The brake chart keeps its own unzoomed axisDomain.
+  const xDomain: [number | string, number | string] = zoomDomain ?? axisDomain
 
   // Fit both charts + chrome within totalHeight
   // Chrome: legend row ~44px + two section headers ~60px + spacing ~20px = 124px
@@ -131,12 +143,17 @@ export function ThrottleBrakeComparisonGraph({ data, advancedSettings }: Props) 
         </div>
         <div style={{ height: `${subHeight}px` }}>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={margin}>
+            <LineChart
+              data={chartData}
+              margin={margin}
+              {...dragHandlers}
+            >
               {settings.showGrid && <CartesianGrid strokeDasharray="2 2" stroke={gridColor} opacity={0.3} />}
               <XAxis
                 type="number"
                 dataKey="distance"
-                domain={axisDomain}
+                domain={xDomain}
+                allowDataOverflow
                 tickCount={10}
                 stroke={axisColor}
                 tick={axisStyle}
@@ -154,6 +171,9 @@ export function ThrottleBrakeComparisonGraph({ data, advancedSettings }: Props) 
               <Line type="monotone" dataKey={`${data.driver1}_throttle`} stroke={data.driver1_color} strokeWidth={settings.lineThickness} dot={false} connectNulls name={data.driver1} isAnimationActive={settings.animateChart} />
               <Line type="monotone" dataKey={`${data.driver2}_throttle`} stroke={data.driver2_color} strokeWidth={settings.lineThickness} dot={false} connectNulls name={data.driver2} isAnimationActive={settings.animateChart} />
               {settings.showLegend && <Legend wrapperStyle={{ fontSize: `${Math.round(11 * textScale)}px` }} iconType="line" />}
+              {selection && (
+                <ReferenceArea x1={selection.x1} x2={selection.x2} fill="#F9FAFB" fillOpacity={0.12} />
+              )}
             </LineChart>
           </ResponsiveContainer>
         </div>

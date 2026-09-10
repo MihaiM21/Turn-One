@@ -3,12 +3,13 @@ import {
   DriverStanding,
   ConstructorStanding,
   LapTimeDistributionPoint,
-  TireStrategy,
   TyreStintEntry,
-  NewsPageData,
+  NewsCoreData,
+  NewsDeepData,
   SessionFetchStatus,
 } from "@/types/news-types";
 import { fetchFromExternalAPI, ExternalApiError } from "@/lib/data-fetcher";
+import { isTransientUpstreamStatus, messageForStatus } from "@/lib/api-error-message";
 
 // Every fetch in this module goes through an injectable fetcher so the same
 // shaping/aggregation logic works both from client components (default:
@@ -42,6 +43,11 @@ export function classifySessionFetchError(e: unknown): SessionFetchStatus {
       e.code === "data_not_available" || e.status === 404 || e.status === 503;
     if (isNotReady) {
       return { kind: "not_ready", retryAfterSeconds: e.retryAfterSeconds };
+    }
+    // A gateway error means the service is down, not that the session is still
+    // being processed — saying "this session just finished" would be wrong.
+    if (isTransientUpstreamStatus(e.status)) {
+      return { kind: "unavailable", message: messageForStatus(e.status) };
     }
   }
   return { kind: "error", message: e instanceof Error ? e.message : String(e) };
@@ -203,17 +209,6 @@ export async function getLapTimeDistribution(
 }
 
 // -----------------------------------------------------------------
-// Tire strategy — not yet exposed by a public REST endpoint for anonymous users.
-// Returns null so the UI can fall back to a styled placeholder behind the paywall gate.
-// -----------------------------------------------------------------
-
-export async function getTireStrategy(_year: number, _round: number): Promise<TireStrategy | null> {
-  void _year;
-  void _round;
-  return null;
-}
-
-// -----------------------------------------------------------------
 // Tyre stint data — from v2/tyre-stint-usage-data.
 // Only meaningful for Race and Sprint sessions.
 // -----------------------------------------------------------------
@@ -231,38 +226,28 @@ export async function getTyreStintData(
 }
 
 // -----------------------------------------------------------------
-// Aggregator — resilient to partial failures via Promise.allSettled.
+// The page is fetched in two halves so the fast one can render first.
+// Both are resilient to partial failure: a section that fails is reported
+// through `errors` rather than throwing and blanking the page.
 // -----------------------------------------------------------------
 
-export async function getNewsPageData(
+/** Session and standings — everything needed to paint the page. */
+export async function getNewsCoreData(
   fetcher: ExternalFetcher = fetchFromExternalAPI,
-): Promise<NewsPageData> {
-  const errors: NewsPageData["errors"] = {};
+): Promise<NewsCoreData> {
+  const errors: NewsCoreData["errors"] = {};
   let sessionStatus: SessionFetchStatus | undefined;
 
-  // Phase 1: fetch session + standings in parallel — both needed before we can
-  // build the driver list for the lap-distribution fan-out.
   const [session, standingsSettled] = await Promise.all([
     getLatestSessionData(fetcher).catch((e) => {
       errors.session = e instanceof Error ? e.message : String(e);
       sessionStatus = classifySessionFetchError(e);
       return null;
     }),
-    getSeasonStandings(fetcher).then((v) => ({ status: "fulfilled" as const, value: v })).catch((e) => ({
-      status: "rejected" as const,
-      reason: e,
-    })),
+    getSeasonStandings(fetcher)
+      .then((v) => ({ status: "fulfilled" as const, value: v }))
+      .catch((e) => ({ status: "rejected" as const, reason: e })),
   ]);
-
-  const year = session?.year ?? new Date().getFullYear();
-  const round = session?.round ?? 1;
-  // session_name arrives as a code ("R", "Q", "S", "FP1" …) from the dashboard.
-  // The v2 data endpoints expect the raw code, not the full name.
-  const sessionName = session?.session_name ?? "R";
-
-  const isRaceOrSprint =
-    sessionName === "R" || sessionName === "S" ||
-    session?.session_type === "race";
 
   const driverStandings =
     standingsSettled.status === "fulfilled" ? standingsSettled.value.drivers : null;
@@ -273,8 +258,32 @@ export async function getNewsPageData(
     errors.constructorStandings = String(standingsSettled.reason);
   }
 
-  // Build driver list: prefer session results (have race-day order + colors),
-  // fall back to top-5 from standings (always have verified 3-letter codes).
+  return { session, driverStandings, constructorStandings, errors, sessionStatus };
+}
+
+/**
+ * Lap-time distribution and tyre stints. Split out because the distribution
+ * needs one request per driver, making it far slower than the rest of the page;
+ * it takes the already-fetched core data rather than refetching it.
+ */
+export async function getNewsDeepData(
+  core: NewsCoreData,
+  fetcher: ExternalFetcher = fetchFromExternalAPI,
+): Promise<NewsDeepData> {
+  const errors: NewsDeepData["errors"] = {};
+  const { session, driverStandings } = core;
+
+  const year = session?.year ?? new Date().getFullYear();
+  const round = session?.round ?? 1;
+  // session_name arrives as a code ("R", "Q", "S", "FP1" …) from the dashboard.
+  // The v2 data endpoints expect the raw code, not the full name.
+  const sessionName = session?.session_name ?? "R";
+
+  const isRaceOrSprint =
+    sessionName === "R" || sessionName === "S" || session?.session_type === "race";
+
+  // Prefer session results (race-day order plus colours), falling back to the
+  // top of the standings, which always carry verified three-letter codes.
   const sessionDrivers: Array<{ code: string; color?: string }> = (
     session?.qualifying_results ?? session?.race_results ?? []
   )
@@ -289,10 +298,8 @@ export async function getNewsPageData(
           .filter((d) => !!d.code)
           .map((d) => ({ code: d.code!, color: d.color }));
 
-  // Phase 2: fan out to per-driver lap distribution + other data.
-  const [lapDistResult, tireResult, tyreStintResult] = await Promise.allSettled([
+  const [lapDistResult, tyreStintResult] = await Promise.allSettled([
     getLapTimeDistribution(year, round, sessionName, lapDrivers, fetcher),
-    getTireStrategy(year, round),
     isRaceOrSprint ? getTyreStintData(year, round, sessionName, fetcher) : Promise.resolve(null),
   ]);
 
@@ -301,24 +308,10 @@ export async function getNewsPageData(
     errors.lapDistribution = String(lapDistResult.reason);
   }
 
-  const tireStrategy = tireResult.status === "fulfilled" ? tireResult.value : null;
-  if (tireResult.status === "rejected") {
-    errors.tireStrategy = String(tireResult.reason);
-  }
-
   const tyreStintData = tyreStintResult.status === "fulfilled" ? tyreStintResult.value : null;
   if (tyreStintResult.status === "rejected") {
     errors.tyreStintData = String(tyreStintResult.reason);
   }
 
-  return {
-    session,
-    driverStandings,
-    constructorStandings,
-    lapDistribution,
-    tireStrategy,
-    tyreStintData,
-    errors,
-    sessionStatus,
-  };
+  return { lapDistribution, tyreStintData, errors };
 }

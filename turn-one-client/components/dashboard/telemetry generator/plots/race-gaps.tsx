@@ -1,8 +1,9 @@
 'use client';
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine, ReferenceArea } from 'recharts'
 import { RaceGapsData } from '@/types/plot-types-v2'
 import { AdvancedPlotSettings } from '@/types/plot-types'
+import { useDragZoom } from '@/components/plot-viewport/use-drag-zoom'
 
 interface RaceGapsGraphProps {
   data: RaceGapsData
@@ -19,6 +20,12 @@ export function RaceGapsGraph({ data, reference, advancedSettings }: RaceGapsGra
     lineThickness: 2,
     showDataLabels: false,
   }
+
+  // Drag across the chart to zoom into a lap-number window. The surrounding
+  // ChartViewport owns the selected domain so its reset control can clear it;
+  // outside a viewport (the offscreen export renderer) this is simply absent
+  // and the chart shows its full range.
+  const { xDomain, dragHandlers, selection } = useDragZoom()
 
   if (!data || data.length === 0) {
     return (
@@ -46,9 +53,21 @@ export function RaceGapsGraph({ data, reference, advancedSettings }: RaceGapsGra
   return (
     <div style={{ height: `${settings.chartHeight}px` }}>
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData} margin={{ right: 30, top: 10 }}>
+        <LineChart
+          data={chartData}
+          margin={{ right: 30, top: 10 }}
+          {...dragHandlers}
+        >
           {settings.showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#374151" />}
-          <XAxis dataKey="lap" stroke="#9CA3AF" tick={{ fontSize: tickFontSize }} label={{ value: 'Lap', position: 'insideBottom', offset: -5, fill: '#9CA3AF' }} />
+          <XAxis
+            dataKey="lap"
+            type="number"
+            domain={xDomain}
+            allowDataOverflow
+            stroke="#9CA3AF"
+            tick={{ fontSize: tickFontSize }}
+            label={{ value: 'Lap', position: 'insideBottom', offset: -5, fill: '#9CA3AF' }}
+          />
           <YAxis
             stroke="#9CA3AF"
             tick={{ fontSize: tickFontSize }}
@@ -94,6 +113,9 @@ export function RaceGapsGraph({ data, reference, advancedSettings }: RaceGapsGra
               )
             })
           })()}
+          {selection && (
+            <ReferenceArea x1={selection.x1} x2={selection.x2} fill="#F9FAFB" fillOpacity={0.12} />
+          )}
         </LineChart>
       </ResponsiveContainer>
     </div>

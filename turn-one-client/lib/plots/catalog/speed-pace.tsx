@@ -25,6 +25,19 @@ type SpeedDistributionResult = { drivers: string[]; points: SpeedDistributionPoi
 export const SPEED_PACE_PLOTS: PlotDefinition[] = [
   {
     key: "topspeeds",
+    explainer: {
+      whatItShows: "The highest speed each team's car reached anywhere on the lap.",
+      howToRead: [
+        "Each bar is one team — longer means faster.",
+        "Speeds come from the car's own telemetry, sampled all the way around the lap, not just at the finish line.",
+      ],
+      whatToLookFor:
+        "A wide spread usually means teams have chosen very different wing levels. A low-downforce car is quick in a straight line but gives that time back through the corners, so the fastest bar here is rarely the fastest car overall.",
+      glossary: [
+        { term: "Telemetry", definition: "Live measurements sent from the car — speed, throttle, brake, gear and more, many times a second." },
+        { term: "Speed trap", definition: "A fixed point on the track where speed is measured, usually at the end of the longest straight." },
+      ],
+    },
     title: "Top Speeds",
     shortTitle: "Top Speed",
     description: "Compare top speeds across teams",
@@ -108,6 +121,18 @@ export const SPEED_PACE_PLOTS: PlotDefinition[] = [
   },
   {
     key: "throttle_average",
+    explainer: {
+      whatItShows: "How much of the lap each driver spent on the throttle, averaged across the session.",
+      howToRead: [
+        "Higher means more time at full power.",
+        "The values sit close together, so a couple of percent is a real difference rather than noise.",
+      ],
+      whatToLookFor:
+        "Circuits with long straights push everyone high. On twistier tracks the gaps open up, and they tend to reflect how much confidence a driver has in the car's rear end on corner exit.",
+      glossary: [
+        { term: "Throttle", definition: "How far the accelerator is pressed, from 0% (off) to 100% (flat out)." },
+      ],
+    },
     title: "Throttle Average",
     shortTitle: "Throttle Avg",
     description: "Compare average throttle across drivers",
@@ -157,6 +182,21 @@ export const SPEED_PACE_PLOTS: PlotDefinition[] = [
   },
   {
     key: "speed_distribution",
+    explainer: {
+      whatItShows: "Each selected driver's speed across a single lap, drawn as a line.",
+      howToRead: [
+        "Left to right is time through the lap: the peaks are straights and the dips are corners.",
+        "Where one line sits above another, that driver was carrying more speed at that moment.",
+        "Drag across the chart to zoom into a single corner, then press reset to zoom back out.",
+      ],
+      whatToLookFor:
+        "Watch how sharply a line falls into a corner and how early it climbs again. Braking later and getting back on the power sooner is where most lap time is actually found — often worth more than raw top speed.",
+      glossary: [
+        { term: "Speed trace", definition: "A line showing how a car's speed changes over a lap." },
+        { term: "Apex", definition: "The slowest point of a corner, where the car is closest to the inside edge — normally the bottom of each dip." },
+      ],
+    },
+    domainZoomable: true,
     title: "Speed Trace",
     shortTitle: "Speed Trace",
     description: "Overlay up to 3 drivers by speed over time",

@@ -2,7 +2,9 @@ import Link from "next/link";
 import { Trophy, Gauge, Zap, Calendar, Flag, ArrowLeft, Home, Clock, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getNewsPageData } from "@/lib/newsService";
+import { Suspense } from "react";
+import { getNewsCoreData, getNewsDeepData } from "@/lib/newsService";
+import type { NewsCoreData } from "@/types/news-types";
 import { serverFetchFromExternalAPI } from "@/lib/newsServerFetch";
 import { MainNav } from "@/components/navigation/main-nav";
 import { QualifyingChart } from "@/components/news/qualifying-chart";
@@ -49,12 +51,49 @@ const sessionName = (type: string) => {
   return "Session";
 }
 
+/**
+ * Lap distribution needs one upstream request per driver, which makes it much
+ * slower than everything else on the page. Streaming it in separately lets the
+ * session header, standings and speed charts paint straight away.
+ */
+async function DeepTelemetry({ core }: { core: NewsCoreData }) {
+  const deep = await getNewsDeepData(core, serverFetchFromExternalAPI);
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      <GatedPreview
+        teaser="Lap-by-lap pace evolution. Spot pit windows, tire degradation and pace deltas."
+        cta={{ label: "Unlock free", href: "/auth/signup" }}
+      >
+        <LapDistributionChart data={deep.lapDistribution ?? undefined} />
+      </GatedPreview>
+      <GatedPreview
+        teaser="Tyre stints and pit stops for every driver — visualize the race strategy within the race."
+        cta={{ label: "Unlock free", href: "/auth/signup" }}
+      >
+        <TyreStintChart data={deep.tyreStintData} />
+      </GatedPreview>
+    </div>
+  );
+}
+
+function DeepTelemetrySkeleton() {
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      {[0, 1].map((i) => (
+        <div key={i} className="h-[320px] animate-pulse border border-zinc-800 bg-zinc-900/40" />
+      ))}
+    </div>
+  );
+}
+
 export default async function NewsPage() {
-  const data = await getNewsPageData(serverFetchFromExternalAPI);
+  const data = await getNewsCoreData(serverFetchFromExternalAPI);
 
   if (!data?.session) {
     const status = data?.sessionStatus;
     const isNotReady = status?.kind === "not_ready";
+    const isUnavailable = status?.kind === "unavailable";
 
     return (
       <div className="min-h-screen bg-black">
@@ -75,6 +114,16 @@ export default async function NewsPage() {
                     ? ` Try checking back in about ${Math.round(status.retryAfterSeconds / 60)} min.`
                     : ""}
                 </p>
+              </>
+            ) : isUnavailable ? (
+              <>
+                <div className="flex items-center gap-2 text-yellow-400">
+                  <AlertTriangle className="h-4 w-4" />
+                  <p className="text-sm font-bold uppercase tracking-tight">
+                    Service unavailable
+                  </p>
+                </div>
+                <p className="mt-2 text-sm text-zinc-400">{status.message}</p>
               </>
             ) : (
               <>
@@ -193,20 +242,9 @@ export default async function NewsPage() {
             <ThrottleChart data={session.throttle_comparison} />
           </GatedPreview>
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            <GatedPreview
-              teaser="Lap-by-lap pace evolution. Spot pit windows, tire degradation and pace deltas."
-              cta={{ label: "Unlock free", href: "/auth/signup" }}
-            >
-              <LapDistributionChart data={data.lapDistribution ?? undefined} />
-            </GatedPreview>
-            <GatedPreview
-              teaser="Tyre stints and pit stops for every driver — visualize the race strategy within the race."
-              cta={{ label: "Unlock free", href: "/auth/signup" }}
-            >
-              <TyreStintChart data={data.tyreStintData} />
-            </GatedPreview>
-          </div>
+          <Suspense fallback={<DeepTelemetrySkeleton />}>
+            <DeepTelemetry core={data} />
+          </Suspense>
         </section>
 
         {/* Insights */}
