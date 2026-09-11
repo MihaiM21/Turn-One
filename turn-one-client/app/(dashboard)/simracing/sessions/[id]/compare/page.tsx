@@ -1,196 +1,294 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, GitCompareArrows } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
+import { ArrowLeft, GitCompareArrows, LineChart, Map as MapIcon, TrendingDown, Sparkles } from "lucide-react";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { SectionCard } from "@/components/dashboard/simracing/section-card";
+import { PlanGate } from "@/components/dashboard/simracing/plan-gate";
+import { DeltaTraceChart } from "@/components/dashboard/simracing/charts/delta-trace-chart";
+import { DistanceTraceChart } from "@/components/dashboard/simracing/charts/distance-trace-chart";
+import { TrackMap } from "@/components/dashboard/simracing/charts/track-map";
+import { TimeLossList } from "@/components/dashboard/simracing/charts/time-loss-list";
+import type { MultiChannelChartData } from "@/components/dashboard/simracing/charts/multi-channel-chart";
 import {
-    MultiChannelChart,
-    type MultiChannelChartData,
-} from "@/components/dashboard/simracing/charts/multi-channel-chart";
+    getSession,
+    getMySessions,
+    getLaps,
+    compare as compareApi,
+    formatLapTime,
+    SimApiError,
+    type SimSession,
+    type SimLap,
+} from "@/lib/simracing/api";
+import { toDistanceSeries, resampleByDistance, deltaTrace, biggestLoss } from "@/lib/simracing/analysis";
 
-interface SessionDto {
-    id: string;
-    carModel: string;
-    track: string;
-    sessionType: string;
-    lapCount: number;
-    startedAt: string;
-}
-
-function apiBase() {
-    return (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271/api").replace(/\/api\/?$/, "");
-}
-
-function authHeaders(): Record<string, string> {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    return token ? { Authorization: `Bearer ${token}` } : {};
-}
+const EMPTY: MultiChannelChartData = { channels: [], points: [] };
 
 export default function CompareSessionPage() {
     const params = useParams();
     const id = params.id as string;
 
-    const [primary, setPrimary] = useState<SessionDto | null>(null);
-    const [candidates, setCandidates] = useState<SessionDto[]>([]);
-    const [againstId, setAgainstId] = useState<string>("");
-    const [primaryLap, setPrimaryLap] = useState<string>("");
-    const [againstLap, setAgainstLap] = useState<string>("");
-    const [primaryData, setPrimaryData] = useState<MultiChannelChartData>({ channels: [], points: [] });
+    const [primary, setPrimary] = useState<SimSession | null>(null);
+    const [candidates, setCandidates] = useState<SimSession[]>([]);
+    const [primaryLaps, setPrimaryLaps] = useState<SimLap[]>([]);
+    const [againstLaps, setAgainstLaps] = useState<SimLap[]>([]);
+
+    const [againstId, setAgainstId] = useState("");
+    const [primaryLap, setPrimaryLap] = useState("");
+    const [againstLap, setAgainstLap] = useState("");
+
+    const [primaryData, setPrimaryData] = useState<MultiChannelChartData>(EMPTY);
     const [secondaryData, setSecondaryData] = useState<MultiChannelChartData | null>(null);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [cursor, setCursor] = useState<number | null>(null);
 
     useEffect(() => {
         if (!id) return;
-        const url = apiBase();
-        (async () => {
-            const [self, mine] = await Promise.all([
-                fetch(`${url}/api/telemetry/sessions/${id}`, { headers: authHeaders() }),
-                fetch(`${url}/api/telemetry/sessions/me`, { headers: authHeaders() }),
-            ]);
-            if (self.ok) setPrimary(await self.json());
-            if (mine.ok) {
-                const all: SessionDto[] = await mine.json();
-                setCandidates(all.filter(s => s.id !== id));
-            }
-        })();
+        Promise.allSettled([getSession(id), getMySessions(), getLaps(id)]).then(([self, mine, laps]) => {
+            if (self.status === "fulfilled") setPrimary(self.value);
+            if (mine.status === "fulfilled") setCandidates(mine.value.filter(s => s.id !== id));
+            if (laps.status === "fulfilled") setPrimaryLaps(laps.value);
+        });
     }, [id]);
+
+    // Load the other session's laps so its lap picker shows real times, not a bare number box.
+    useEffect(() => {
+        if (!againstId) {
+            setAgainstLaps([]);
+            setAgainstLap("");
+            return;
+        }
+        getLaps(againstId)
+            .then(setAgainstLaps)
+            .catch(() => setAgainstLaps([]));
+    }, [againstId]);
 
     const runCompare = useCallback(async () => {
         if (!id || !againstId) return;
-        setError(null);
         setLoading(true);
         try {
-            const url = apiBase();
-            const qs = new URLSearchParams({ against: againstId });
-            if (primaryLap) qs.set("lap", primaryLap);
-            if (againstLap) qs.set("againstLap", againstLap);
-
-            const res = await fetch(`${url}/api/telemetry/sessions/${id}/compare?${qs.toString()}`, {
-                headers: authHeaders(),
+            const body = await compareApi(id, againstId, {
+                lap: primaryLap ? Number(primaryLap) : null,
+                againstLap: againstLap ? Number(againstLap) : null,
             });
-            if (res.status === 403) {
-                setError("Session comparison requires a PRO or ELITE plan.");
-                return;
-            }
-            if (!res.ok) {
-                setError("Failed to load comparison.");
-                return;
-            }
-            const body = await res.json();
             setPrimaryData(body.primary.data);
             setSecondaryData(body.secondary.data);
+        } catch (err) {
+            toast.error(
+                err instanceof SimApiError && err.isPlanGated
+                    ? "Session comparison requires a PRO or ELITE plan."
+                    : "Couldn't load the comparison."
+            );
         } finally {
             setLoading(false);
         }
     }, [id, againstId, primaryLap, againstLap]);
 
+    // ---- derived ----
+    const primarySeries = useMemo(() => toDistanceSeries(primaryData), [primaryData]);
+    const secondarySeries = useMemo(
+        () => (secondaryData ? toDistanceSeries(secondaryData) : null),
+        [secondaryData]
+    );
+
+    const primarySamples = useMemo(() => resampleByDistance(primarySeries, 5), [primarySeries]);
+    const secondarySamples = useMemo(
+        () => (secondarySeries ? resampleByDistance(secondarySeries, 5) : []),
+        [secondarySeries]
+    );
+
+    const delta = useMemo(
+        () => (secondarySeries ? deltaTrace(primarySeries, secondarySeries, 5) : []),
+        [primarySeries, secondarySeries]
+    );
+
+    const losses = useMemo(
+        () => (delta.length ? biggestLoss(delta, primarySamples, 5) : []),
+        [delta, primarySamples]
+    );
+
+    const againstSession = candidates.find(c => c.id === againstId) ?? null;
+    const primaryLabel = primaryLap ? `Lap ${primaryLap}` : "Full session";
+    const againstLabel = againstSession
+        ? `${againstSession.track}${againstLap ? ` lap ${againstLap}` : ""}`
+        : "Reference";
+
     return (
-        <div className="w-full min-h-screen p-6 bg-gradient-to-br from-black via-red-950/20 to-black font-sans text-white">
-            <div className="container mx-auto px-4 py-8 max-w-7xl space-y-6">
-                <div>
-                    <Link
-                        href={`/simracing/sessions/${id}`}
-                        className="inline-flex items-center gap-2 text-muted-foreground hover:text-white text-sm font-semibold transition-colors mb-4"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Back to Session
-                    </Link>
+        <main className="w-full space-y-4 px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+            <Link
+                href={`/simracing/sessions/${id}`}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 transition-colors hover:text-primary"
+            >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Back to session
+            </Link>
 
-                    <div className="flex items-center gap-3">
-                        <GitCompareArrows className="w-5 h-5 text-primary" />
-                        <h1 className="text-3xl font-black italic tracking-tight">Compare</h1>
-                    </div>
-                    {primary ? (
-                        <p className="text-muted-foreground mt-1">
-                            {primary.track} · {primary.carModel}
-                        </p>
-                    ) : null}
+            <PageHeader
+                label="Sim racing"
+                title="Compare laps"
+                description={
+                    primary
+                        ? `${primary.track} · ${primary.carModel} against any other session you've recorded.`
+                        : "Overlay two laps and see exactly where the time went."
+                }
+            />
+
+            <PlanGate
+                required="PRO"
+                title="Lap comparison"
+                description="Overlay any two laps on a distance axis with a true time-delta trace and a ranked breakdown of where the time went."
+            >
+                <div className="space-y-4">
+                    <SectionCard label="Setup" title="Pick what to compare" icon={GitCompareArrows}>
+                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                            <div>
+                                <label
+                                    htmlFor="primary-lap"
+                                    className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500"
+                                >
+                                    This session · lap
+                                </label>
+                                <select
+                                    id="primary-lap"
+                                    value={primaryLap}
+                                    onChange={e => setPrimaryLap(e.target.value)}
+                                    className="h-9 w-full border border-zinc-800 bg-zinc-950 px-3 text-sm text-white focus:border-primary/40 focus:outline-none"
+                                >
+                                    <option value="">All laps</option>
+                                    {primaryLaps.map(l => (
+                                        <option key={l.lapNumber} value={l.lapNumber}>
+                                            Lap {l.lapNumber} — {formatLapTime(l.lapTimeMs)}
+                                            {l.isValid ? "" : " (invalid)"}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label
+                                    htmlFor="against-session"
+                                    className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500"
+                                >
+                                    Compare against
+                                </label>
+                                <select
+                                    id="against-session"
+                                    value={againstId}
+                                    onChange={e => setAgainstId(e.target.value)}
+                                    className="h-9 w-full border border-zinc-800 bg-zinc-950 px-3 text-sm text-white focus:border-primary/40 focus:outline-none"
+                                >
+                                    <option value="">Select a session…</option>
+                                    {candidates.map(c => (
+                                        <option key={c.id} value={c.id}>
+                                            {c.track} · {c.carModel} · {new Date(c.startedAt).toLocaleDateString()}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label
+                                    htmlFor="against-lap"
+                                    className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500"
+                                >
+                                    That session · lap
+                                </label>
+                                <select
+                                    id="against-lap"
+                                    value={againstLap}
+                                    onChange={e => setAgainstLap(e.target.value)}
+                                    disabled={!againstId}
+                                    className="h-9 w-full border border-zinc-800 bg-zinc-950 px-3 text-sm text-white focus:border-primary/40 focus:outline-none disabled:opacity-40"
+                                >
+                                    <option value="">All laps</option>
+                                    {againstLaps.map(l => (
+                                        <option key={l.lapNumber} value={l.lapNumber}>
+                                            Lap {l.lapNumber} — {formatLapTime(l.lapTimeMs)}
+                                            {l.isValid ? "" : " (invalid)"}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="flex items-end">
+                                <button
+                                    onClick={runCompare}
+                                    disabled={!againstId || loading}
+                                    className="h-9 w-full bg-primary text-xs font-bold uppercase tracking-wide text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                    {loading ? "Comparing…" : "Compare"}
+                                </button>
+                            </div>
+                        </div>
+
+                        {primaryLap && againstLap ? null : (
+                            <p className="mt-4 border border-blue-500/20 bg-blue-950/10 px-3 py-2 text-xs text-blue-300">
+                                Pick a specific lap on both sides for a meaningful delta — comparing whole sessions
+                                averages every lap together.
+                            </p>
+                        )}
+                    </SectionCard>
+
+                    {secondaryData ? (
+                        <>
+                            <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
+                                <SectionCard label="Delta" title={`${primaryLabel} vs ${againstLabel}`} icon={TrendingDown}>
+                                    <DeltaTraceChart
+                                        delta={delta}
+                                        lapLabel={primaryLabel}
+                                        referenceLabel={againstLabel}
+                                        cursorDistance={cursor}
+                                        onCursorChange={setCursor}
+                                    />
+                                </SectionCard>
+
+                                <SectionCard label="Where it went" title="Biggest time losses" icon={Sparkles}>
+                                    <TimeLossList
+                                        losses={losses}
+                                        totalDelta={delta.length ? delta[delta.length - 1].delta : null}
+                                        referenceLabel={againstLabel}
+                                        onSelect={setCursor}
+                                    />
+                                </SectionCard>
+                            </div>
+
+                            <SectionCard
+                                label="Telemetry"
+                                title="Overlaid traces"
+                                icon={LineChart}
+                                actions={<span className="text-[11px] text-zinc-500">Dashed = {againstLabel}</span>}
+                            >
+                                <DistanceTraceChart
+                                    samples={primarySamples}
+                                    compareSamples={secondarySamples}
+                                    compareLabel={againstLabel}
+                                    availableChannels={primaryData.channels}
+                                    cursorDistance={cursor}
+                                    onCursorChange={setCursor}
+                                />
+                            </SectionCard>
+
+                            <SectionCard label="Circuit" title="Racing line" icon={MapIcon}>
+                                <TrackMap
+                                    samples={primarySamples}
+                                    raw={primaryData}
+                                    deltaByDistance={delta}
+                                    cursorDistance={cursor}
+                                    onCursorChange={setCursor}
+                                />
+                            </SectionCard>
+                        </>
+                    ) : (
+                        <SectionCard
+                            emptyIcon={GitCompareArrows}
+                            empty="Choose a session and lap above, then hit Compare."
+                        />
+                    )}
                 </div>
-
-                <Card className="border-primary/20 bg-gradient-to-br from-black/80 to-black/60 backdrop-blur-md">
-                    <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
-                                Primary Lap (this session)
-                            </label>
-                            <input
-                                type="number"
-                                placeholder="All laps"
-                                value={primaryLap}
-                                onChange={e => setPrimaryLap(e.target.value)}
-                                className="w-full bg-black/60 border border-white/10 rounded-md px-3 py-2 text-sm font-mono focus:border-primary/40 outline-none"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
-                                Compare Against (your sessions)
-                            </label>
-                            <select
-                                value={againstId}
-                                onChange={e => setAgainstId(e.target.value)}
-                                className="w-full bg-black/60 border border-white/10 rounded-md px-3 py-2 text-sm focus:border-primary/40 outline-none"
-                            >
-                                <option value="">Select a session...</option>
-                                {candidates.map(c => (
-                                    <option key={c.id} value={c.id}>
-                                        {c.track} · {c.carModel} · {new Date(c.startedAt).toLocaleDateString()}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
-                                Against Lap
-                            </label>
-                            <input
-                                type="number"
-                                placeholder="All laps"
-                                value={againstLap}
-                                onChange={e => setAgainstLap(e.target.value)}
-                                className="w-full bg-black/60 border border-white/10 rounded-md px-3 py-2 text-sm font-mono focus:border-primary/40 outline-none"
-                            />
-                        </div>
-
-                        <div className="flex items-end">
-                            <button
-                                onClick={runCompare}
-                                disabled={!againstId || loading}
-                                className="w-full bg-primary/20 border border-primary/40 hover:bg-primary/30 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 text-sm font-bold rounded-md transition-colors"
-                            >
-                                {loading ? "Loading..." : "Run Comparison"}
-                            </button>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {error ? (
-                    <Card className="border-red-500/40 bg-red-950/20 backdrop-blur-md">
-                        <CardContent className="p-4">
-                            <p className="text-red-300 font-mono text-sm">{error}</p>
-                        </CardContent>
-                    </Card>
-                ) : null}
-
-                {secondaryData ? (
-                    <Card className="border-primary/20 bg-gradient-to-br from-black/80 to-black/60 backdrop-blur-md">
-                        <CardContent className="p-6">
-                            <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-4">
-                                Overlay (dashed = compare)
-                            </h2>
-                            <MultiChannelChart
-                                data={primaryData}
-                                compareData={secondaryData}
-                                compareLabel="Compare"
-                            />
-                        </CardContent>
-                    </Card>
-                ) : null}
-            </div>
-        </div>
+            </PlanGate>
+        </main>
     );
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { DiamondLoader } from '@/components/ui/diamond-loader';
 import Link from 'next/link';
 import { LiveTimingGrid } from '@/components/dashboard/live-timing-grid';
 import { getF1LiveDataService, type F1DataCallback, type F1StatusCallback } from '@/lib/f1LiveDataService';
@@ -108,7 +109,7 @@ interface LiveSessionData {
 
 export default function LiveDashboard() {
   const [liveData, setLiveData] = useState<MappedF1Data | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error' | 'no-session'>('disconnected');
+  const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error' | 'no-session' | 'proxy-unavailable'>('disconnected');
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isManuallyConnected, setIsManuallyConnected] = useState(false);
 
@@ -222,6 +223,8 @@ export default function LiveDashboard() {
         return 'bg-red-500';
       case 'no-session':
         return 'bg-orange-500';
+      case 'proxy-unavailable':
+        return 'bg-red-500';
       case 'disconnected':
       default:
         return 'bg-gray-500';
@@ -238,6 +241,8 @@ export default function LiveDashboard() {
         return <WifiOff className="w-4 h-4 text-red-500" />;
       case 'no-session':
         return <AlertCircle className="w-4 h-4 text-orange-500" />;
+      case 'proxy-unavailable':
+        return <WifiOff className="w-4 h-4 text-red-500" />;
       case 'disconnected':
       default:
         return <WifiOff className="w-4 h-4 text-gray-500" />;
@@ -254,6 +259,8 @@ export default function LiveDashboard() {
         return 'Connection Error';
       case 'no-session':
         return 'No Live Session';
+      case 'proxy-unavailable':
+        return 'Live Feed Unavailable';
       case 'disconnected':
       default:
         return 'Disconnected';
@@ -383,15 +390,12 @@ export default function LiveDashboard() {
 
       {!liveData && connectionStatus === 'connecting' && (
         <Card className="border border-primary/20">
-          <CardContent className="flex flex-col items-center justify-center py-24 gap-6">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-primary/10 animate-ping" />
-              <div className="w-14 h-14 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-            </div>
-            <div className="text-center space-y-2">
-              <p className="text-lg font-semibold">Connecting to F1 Live Timing...</p>
-              <p className="text-sm text-muted-foreground">Establishing connection to Formula 1 telemetry feed</p>
-            </div>
+          <CardContent className="flex flex-col items-center justify-center py-24">
+            <DiamondLoader
+              size={64}
+              label="Connecting to F1 Live Timing…"
+              sublabel="Establishing connection to Formula 1 telemetry feed"
+            />
           </CardContent>
         </Card>
       )}
@@ -422,6 +426,39 @@ export default function LiveDashboard() {
               <PlayCircle className="w-4 h-4" />
               Retry Connection
             </button>
+          </CardContent>
+        </Card>
+      )}
+
+      {connectionStatus === 'proxy-unavailable' && (
+        <Card className="border-red-500/20 bg-red-500/5">
+          <CardContent className="flex flex-col items-center justify-center py-20 gap-6">
+            <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center">
+              <WifiOff className="w-8 h-8 text-red-500" />
+            </div>
+            <div className="text-center space-y-2">
+              <h2 className="text-xl font-bold">Live Feed Unavailable</h2>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                F1&apos;s live-timing feed blocks connections from hosting-provider IPs, which can make
+                web live timing unreliable. We&apos;re building a desktop app that connects directly
+                from your machine to avoid this entirely.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <button
+                onClick={handleManualConnect}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
+              >
+                <PlayCircle className="w-4 h-4" />
+                Retry Connection
+              </button>
+              <Link
+                href="/live-desktop-app"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/15 text-primary transition-colors text-sm font-medium"
+              >
+                About the desktop app
+              </Link>
+            </div>
           </CardContent>
         </Card>
       )}

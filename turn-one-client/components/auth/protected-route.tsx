@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth';
+import { useAuth } from '@/components/auth/auth-provider';
+import { DiamondLoader } from '@/components/ui/diamond-loader';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -21,7 +22,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
+        <DiamondLoader size={44} label="Checking your session…" />
       </div>
     );
   }

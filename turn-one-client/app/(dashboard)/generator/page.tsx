@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { usePageMaintenance } from '@/hooks/usePageMaintenance';
 import { MaintenanceScreen } from '@/components/dashboard/maintenance-screen';
 import { TelemetryPlotGenerator } from '@/components/dashboard/telemetry generator/telemetry-plot-generator';
@@ -16,7 +17,9 @@ export default function GeneratorPage() {
     <div className="min-h-screen bg-gradient-to-br from-black via-red-950/20 to-black">
       <DashboardHeader />
       <main className="container mx-auto px-4 py-8 space-y-8">
-        <TelemetryPlotGenerator />
+        <Suspense fallback={null}>
+          <TelemetryPlotGenerator />
+        </Suspense>
         <ExploreMoreLinks currentPage="/generator" />
       </main>
     </div>

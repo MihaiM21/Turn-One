@@ -55,6 +55,14 @@ export function LapDistributionGraph({ data, advancedSettings }: LapDistribution
     return m
   }, [data])
 
+  const driverTeam = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const p of data) {
+      if (!m.has(p.driver)) m.set(p.driver, p.team ?? p.driver)
+    }
+    return m
+  }, [data])
+
   const drivers = useMemo(() => Array.from(driverMeta.keys()), [driverMeta])
 
   const filteredData = useMemo(() => {
@@ -133,19 +141,28 @@ export function LapDistributionGraph({ data, advancedSettings }: LapDistribution
           {settings.showLegend && (
             <Legend wrapperStyle={{ fontSize: tickFontSize, fontFamily: 'monospace' }} />
           )}
-          {drivers.map((d) => (
-            <Line
-              key={d}
-              type="monotone"
-              dataKey={d}
-              stroke={driverMeta.get(d)}
-              strokeWidth={settings.lineThickness}
-              dot={false}
-              activeDot={{ r: 4 }}
-              connectNulls={true}
-              isAnimationActive={settings.animateChart}
-            />
-          ))}
+          {(() => {
+            const teamSeen = new Set<string>()
+            return drivers.map((d) => {
+              const team = driverTeam.get(d) ?? d
+              const isSecondTeammate = teamSeen.has(team)
+              teamSeen.add(team)
+              return (
+                <Line
+                  key={d}
+                  type="monotone"
+                  dataKey={d}
+                  stroke={driverMeta.get(d)}
+                  strokeWidth={settings.lineThickness}
+                  strokeDasharray={isSecondTeammate ? '6 3' : undefined}
+                  dot={false}
+                  activeDot={{ r: 4 }}
+                  connectNulls={true}
+                  isAnimationActive={settings.animateChart}
+                />
+              )
+            })
+          })()}
         </LineChart>
       </ResponsiveContainer>
     </div>

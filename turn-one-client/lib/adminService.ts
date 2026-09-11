@@ -150,6 +150,35 @@ export const updateUserTokens = async (userId: string, tokens: number) => {
         return { success: false, error: 'Failed to update user tokens' };
     }
 };
+// Creator identity is the existing CONTENT_CREATOR role (set via updateUserRole
+// below) — this only sets the optional monthly token override that applies
+// while that role is assigned.
+export const updateUserCreatorAllowance = async (userId: string, tokenAllowance: number | null) => {
+    const token = getToken();
+    if (!token) {
+        return { success: false, error: 'No token found' };
+    }
+    try {
+        const response = await fetch(`${API_URL}/admin/users/${userId}/creator-allowance`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token,
+            },
+            body: JSON.stringify({ tokenAllowance }),
+        });
+
+        if (response.ok) {
+            return { success: true };
+        } else {
+            return { success: false, error: 'Failed to update creator token allowance' };
+        }
+    } catch (error) {
+        console.error('Error updating creator token allowance:', error);
+        return { success: false, error: 'Failed to update creator token allowance' };
+    }
+};
+
 export const updateUserCoins = async (userId: string, coins: number) => {
     const token = getToken();
     if (!token) {

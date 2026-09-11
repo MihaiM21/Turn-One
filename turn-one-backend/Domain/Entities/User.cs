@@ -20,6 +20,14 @@ public class User
     
     public int Tokens { get; set; } = 30;
     public DateTime LastTokenRefillDate { get; set; } = DateTime.UtcNow;
+
+    // Creator program: watermark-free export + 4K transparent export are
+    // gated on Role == CONTENT_CREATOR (the existing role, assigned via the
+    // admin "Change Role" action) — not a separate flag. This optional
+    // override lets an admin grant a content creator a monthly token amount
+    // other than their plan's default; it only applies when Role is
+    // CONTENT_CREATOR (see SubscriptionService.GetMonthlyTokens).
+    public int? CreatorTokenAllowance { get; set; }
     
     public DateTime? LastDailyGiftDate { get; set; }
     public bool HasClaimedStarterPack { get; set; } = false;

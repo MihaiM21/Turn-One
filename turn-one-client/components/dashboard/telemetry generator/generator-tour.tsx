@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useLayoutEffect, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
 
@@ -58,27 +58,56 @@ type GeneratorTourProps = {
 export function GeneratorTour({ open, onClose }: GeneratorTourProps) {
   const [stepIdx, setStepIdx] = useState(0)
   const [rect, setRect] = useState<Rect>(null)
-  const [tick, setTick] = useState(0)
 
   const step = STEPS[stepIdx]
 
+  const finish = useCallback(() => {
+    try {
+      localStorage.setItem(TOUR_STORAGE_KEY, "1")
+    } catch {
+      /* ignore */
+    }
+    setStepIdx(0)
+    onClose()
+  }, [onClose])
+
+  const next = useCallback(() => {
+    setStepIdx((i) => {
+      if (i >= STEPS.length - 1) {
+        finish()
+        return i
+      }
+      return i + 1
+    })
+  }, [finish])
+
+  const prev = useCallback(() => setStepIdx((i) => Math.max(0, i - 1)), [])
+
+  // Scroll the anchor into view once per step. This is deliberately separate
+  // from the re-measure effect below: it used to share one effect keyed on a
+  // `tick` that the scroll listener incremented, so each smooth scroll emitted
+  // scroll events that bumped the tick, re-ran the effect and scrolled again.
+  useLayoutEffect(() => {
+    if (!open) return
+    const el = document.querySelector<HTMLElement>(`[data-tour="${step.anchor}"]`)
+    el?.scrollIntoView({ behavior: "smooth", block: "center" })
+  }, [open, step.anchor])
+
+  // Keep the spotlight aligned. Listeners only re-measure — they never trigger
+  // another scroll — so there is no feedback loop.
   useLayoutEffect(() => {
     if (!open) return
     const update = () => setRect(getRect(step.anchor))
     update()
-    // Scroll target into view
-    const el = document.querySelector<HTMLElement>(`[data-tour="${step.anchor}"]`)
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" })
-    const onResize = () => setTick((t) => t + 1)
-    window.addEventListener("resize", onResize)
-    window.addEventListener("scroll", onResize, true)
-    const id = window.setTimeout(update, 350) // re-measure after scroll
+    window.addEventListener("resize", update)
+    window.addEventListener("scroll", update, true)
+    const id = window.setTimeout(update, 350) // re-measure once the smooth scroll settles
     return () => {
-      window.removeEventListener("resize", onResize)
-      window.removeEventListener("scroll", onResize, true)
+      window.removeEventListener("resize", update)
+      window.removeEventListener("scroll", update, true)
       window.clearTimeout(id)
     }
-  }, [open, step.anchor, tick])
+  }, [open, step.anchor])
 
   useEffect(() => {
     if (!open) return
@@ -89,26 +118,9 @@ export function GeneratorTour({ open, onClose }: GeneratorTourProps) {
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, stepIdx])
+  }, [open, finish, next, prev])
 
   if (!open) return null
-
-  const finish = () => {
-    try {
-      localStorage.setItem(TOUR_STORAGE_KEY, "1")
-    } catch {
-      /* ignore */
-    }
-    setStepIdx(0)
-    onClose()
-  }
-
-  const next = () => {
-    if (stepIdx >= STEPS.length - 1) finish()
-    else setStepIdx((i) => i + 1)
-  }
-  const prev = () => setStepIdx((i) => Math.max(0, i - 1))
 
   // Position popover card next to the spotlight
   const cardWidth = 320

@@ -1,6 +1,5 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -26,27 +25,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { SidebarMenu, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar"
 import { useAuth } from "@/components/auth/auth-provider"
-import { fetchTokenStatus, fetchUserProfile } from "@/lib/userService"
-import { TokenStatus, UserProfile } from "@/types/user-types"
+import { useBalance } from "@/components/providers/balance-provider"
 import { useNotificationStats } from "@/hooks/use-notification-stats"
 import { Badge as BadgeUI } from "@/components/ui/badge"
-import { useBalanceRefresh } from "@/lib/balance-events"
-
-const emptyProfile: UserProfile = {
-  id: "",
-  email: "",
-  username: "",
-  avatarUrl: "",
-  plan: "BASIC",
-  planStartDate: "",
-  planEndDate: "",
-  autoRenew: false,
-  coins: 0,
-  tokens: 0,
-  lastTokenRefillDate: "",
-  createdAt: "",
-  lastLogin: "",
-}
 
 export function NavUser({
   user,
@@ -54,41 +35,17 @@ export function NavUser({
   user: { name: string; email: string; avatar: string }
 }) {
   const { isMobile } = useSidebar()
-  const [profileData, setProfileData] = useState<UserProfile>(emptyProfile)
-  const [, setTokenStatus] = useState<TokenStatus | null>(null)
-  const { isAuthenticated, logout } = useAuth()
+  const { logout } = useAuth()
+  const { coins, tokens } = useBalance()
   const { stats } = useNotificationStats()
   const router = useRouter()
-
-  const loadUserData = useCallback(async () => {
-    if (!isAuthenticated) return
-    try {
-      const token = localStorage.getItem("token") || ""
-      const profileResponse = await fetchUserProfile(token)
-      setProfileData(profileResponse)
-      try {
-        const tokenResponse = await fetchTokenStatus(token)
-        setTokenStatus(tokenResponse)
-      } catch {
-        // token status optional
-      }
-    } catch (error) {
-      console.error("Error loading user data:", error)
-    }
-  }, [isAuthenticated])
-
-  useEffect(() => {
-    if (isAuthenticated) loadUserData()
-  }, [isAuthenticated, loadUserData])
-
-  useBalanceRefresh(loadUserData)
 
   const handleLogout = () => {
     logout()
     router.push("/")
   }
 
-  const displayName = profileData.username || user.name
+  const displayName = user.name
   const initials = (displayName || "T1").substring(0, 2).toUpperCase()
 
   return (
@@ -101,21 +58,21 @@ export function NavUser({
               className="flex w-full items-center gap-3 rounded-xl border border-zinc-800/80 bg-zinc-950/80 px-3 py-2.5 text-left transition-colors hover:border-zinc-700 hover:bg-zinc-900/70 data-[state=open]:border-zinc-700 data-[state=open]:bg-zinc-900/70"
             >
               <Avatar className="h-8 w-8 shrink-0 rounded-lg border border-zinc-800">
-                <AvatarImage src={profileData.avatarUrl} alt={displayName} />
+                <AvatarImage src={user.avatar} alt={displayName} />
                 <AvatarFallback className="rounded-lg bg-zinc-900 text-[11px] font-semibold text-zinc-300">
                   {initials}
                 </AvatarFallback>
               </Avatar>
               <div className="grid min-w-0 flex-1 leading-tight">
                 <span className="truncate text-sm font-bold tracking-tight">{displayName}</span>
-                <div className="mt-0.5 flex items-center gap-3 text-[11px]">
-                  <span className="flex items-center gap-1 text-yellow-400/90">
+                <div className="mt-1 flex items-center gap-1.5 text-[11px]">
+                  <span className="flex items-center gap-1 rounded-md bg-yellow-400/10 px-1.5 py-0.5 text-yellow-400">
                     <Coins className="h-3 w-3" />
-                    <span className="font-mono tabular-nums">{profileData.coins.toLocaleString()}</span>
+                    <span className="font-mono tabular-nums">{coins.toLocaleString()}</span>
                   </span>
-                  <span className="flex items-center gap-1 text-primary/90">
+                  <span className="flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 text-primary">
                     <Zap className="h-3 w-3" />
-                    <span className="font-mono tabular-nums">{profileData.tokens}</span>
+                    <span className="font-mono tabular-nums">{tokens}</span>
                   </span>
                 </div>
               </div>
@@ -131,22 +88,22 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-3 border-b border-zinc-800 px-3 py-3">
                 <Avatar className="h-8 w-8 rounded-lg border border-zinc-800">
-                  <AvatarImage src={profileData.avatarUrl} alt={displayName} />
+                  <AvatarImage src={user.avatar} alt={displayName} />
                   <AvatarFallback className="rounded-lg bg-zinc-900 text-[11px] font-semibold text-zinc-300">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid min-w-0 flex-1 leading-tight">
                   <span className="truncate text-sm font-bold tracking-tight">{displayName}</span>
-                  <span className="truncate text-[11px] text-zinc-500">{profileData.email || user.email}</span>
-                  <div className="mt-1 flex items-center gap-3 text-[11px]">
-                    <span className="flex items-center gap-1 text-yellow-400/90">
+                  <span className="truncate text-[11px] text-zinc-500">{user.email}</span>
+                  <div className="mt-1.5 grid grid-cols-2 gap-1.5 text-[11px]">
+                    <span className="flex items-center gap-1 rounded-md bg-yellow-400/10 px-2 py-1 text-yellow-400">
                       <Coins className="h-3 w-3" />
-                      <span className="font-mono tabular-nums">{profileData.coins.toLocaleString()}</span>
+                      <span className="font-mono tabular-nums">{coins.toLocaleString()}</span>
                     </span>
-                    <span className="flex items-center gap-1 text-primary/90">
+                    <span className="flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-primary">
                       <Zap className="h-3 w-3" />
-                      <span className="font-mono tabular-nums">{profileData.tokens}</span>
+                      <span className="font-mono tabular-nums">{tokens}</span>
                     </span>
                   </div>
                 </div>

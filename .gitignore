@@ -56,3 +56,11 @@ ARTICLE_MANAGEMENT_GUIDE.md
 
 # Logs
 turn-one-backend/API/logs/
+
+# Old documentation
+docs/old/
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# infrastructure things
+infra

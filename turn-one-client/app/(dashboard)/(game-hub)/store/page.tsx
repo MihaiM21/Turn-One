@@ -41,7 +41,6 @@ export default function StorePage() {
 
   useEffect(() => {
     loadBalances();
-    loadPurchasedItems();
   }, []);
 
   const loadBalances = async () => {
@@ -69,14 +68,6 @@ export default function StorePage() {
     }
   };
 
-  const loadPurchasedItems = () => {
-    const purchased = localStorage.getItem('purchasedItems');
-    if (purchased) {
-      const items = JSON.parse(purchased);
-      setPurchasedItems(items.filter((id: string) => id !== 'starter-pack-free'));
-    }
-  };
-
   const handlePurchase = (item: StoreItem) => {
     if (item.price > 0 && coinBalance < item.price) {
       toast({
@@ -97,124 +88,72 @@ export default function StorePage() {
     setPurchaseDialogOpen(false);
 
     try {
+      const token = getAuthToken();
+      if (!token) {
+        toast({
+          title: 'Authentication Required',
+          description: 'Please log in to make a purchase.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       if (selectedItem.id === 'starter-pack-free' && selectedItem.price === 0) {
-        try {
-          const token = getAuthToken();
-          if (!token) {
-            toast({
-              title: 'Authentication Required',
-              description: 'Please log in to claim the starter pack.',
-              variant: 'destructive',
-            });
-            setLoading(false);
-            setSelectedItem(null);
-            return;
-          }
+        const result = await claimStarterPack(token);
 
-          const result = await claimStarterPack(token);
-
-          if (result.success) {
-            setCoinBalance(result.data.newCoinBalance);
-            setTokenBalance(result.data.newTokenBalance);
-            setPurchasedItems((prev) => [...prev, selectedItem.id]);
-            notifyBalanceChanged();
-            toast({
-              title: 'Welcome Gift Claimed! 🎉',
-              description: `You've received 500 coins and 50 tokens to get started!`,
-            });
-          } else {
-            toast({
-              title: 'Already Claimed',
-              description: result.message || 'You have already claimed the starter pack.',
-              variant: 'destructive',
-            });
-          }
-        } catch (error: any) {
+        if (!result.success) {
           toast({
-            title: 'Claim Failed',
-            description: error.message || 'Failed to claim starter pack. Please try again.',
+            title: 'Already Claimed',
+            description: result.message || 'You have already claimed the starter pack.',
             variant: 'destructive',
           });
+          return;
         }
-        setLoading(false);
-        setSelectedItem(null);
+
+        setCoinBalance(result.data.newCoinBalance);
+        setTokenBalance(result.data.newTokenBalance);
+        setPurchasedItems((prev) => [...prev, selectedItem.id]);
+        notifyBalanceChanged();
+        toast({
+          title: 'Welcome Gift Claimed! 🎉',
+          description: `You've received 500 coins and 50 tokens to get started!`,
+        });
         return;
       }
 
       if (selectedItem.type === 'token-pack' && selectedItem.tokenAmount) {
-        try {
-          const token = getAuthToken();
-          if (!token) {
-            toast({
-              title: 'Authentication Required',
-              description: 'Please log in to purchase tokens.',
-              variant: 'destructive',
-            });
-            return;
-          }
+        const result = await purchaseTokens(token, selectedItem.id);
 
-          const result = await purchaseTokens(token, selectedItem.tokenAmount, selectedItem.price);
-
-          if (result.success && result.data) {
-            setCoinBalance(result.data.newCoinBalance);
-            setTokenBalance(result.data.newTokenBalance);
-            notifyBalanceChanged();
-            toast({
-              title: 'Tokens Purchased! 🎉',
-              description: `You've bought ${selectedItem.tokenAmount} tokens. New token balance: ${result.data.newTokenBalance}`,
-            });
-          } else {
-            throw new Error(result.message || 'Purchase failed');
-          }
-        } catch (error: any) {
-          if (error.message.includes('Failed to fetch') || error.message.includes('404')) {
-            const newCoinBalance = coinBalance - selectedItem.price;
-            const newTokenBalance = tokenBalance + selectedItem.tokenAmount;
-            setCoinBalance(newCoinBalance);
-            setTokenBalance(newTokenBalance);
-            localStorage.setItem('tokenBalance', newTokenBalance.toString());
-            notifyBalanceChanged();
-            toast({
-              title: 'Tokens Purchased! 🎉',
-              description: `You've bought ${selectedItem.tokenAmount} tokens. New token balance: ${newTokenBalance}`,
-            });
-          } else {
-            throw error;
-          }
+        // Balances come back from the server and are never derived locally: a
+        // failed request must not move the user's balance in either direction.
+        if (!result.success || !result.data) {
+          throw new Error(result.message || 'Purchase failed');
         }
+
+        setCoinBalance(result.data.newCoinBalance);
+        setTokenBalance(result.data.newTokenBalance);
+        notifyBalanceChanged();
+        toast({
+          title: 'Tokens Purchased! 🎉',
+          description: `You've bought ${selectedItem.tokenAmount} tokens. New token balance: ${result.data.newTokenBalance}`,
+        });
         return;
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      const newBalance = coinBalance - selectedItem.price;
-      setCoinBalance(newBalance);
-
-      const newPurchased = [...purchasedItems, selectedItem.id];
-      setPurchasedItems(newPurchased);
-      localStorage.setItem('purchasedItems', JSON.stringify(newPurchased));
-      notifyBalanceChanged();
-
-      const transaction = {
-        id: Date.now().toString(),
-        amount: -selectedItem.price,
-        type: 'PURCHASE' as const,
-        description: `Purchased ${selectedItem.name}`,
-        createdAt: new Date(),
-      };
-      const existingTransactions = localStorage.getItem('coinTransactions');
-      const transactions = existingTransactions ? JSON.parse(existingTransactions) : [];
-      transactions.unshift(transaction);
-      localStorage.setItem('coinTransactions', JSON.stringify(transactions.slice(0, 50)));
-
+      // Every entry in `storeItems` is currently a token pack. Anything else has
+      // no server-side purchase endpoint, so refuse rather than fabricate a balance.
       toast({
-        title: 'Purchase Successful! 🎉',
-        description: `You've purchased ${selectedItem.name}. Your new balance is ${newBalance.toLocaleString()} coins.`,
+        title: 'Not Available',
+        description: `${selectedItem.name} can't be purchased yet.`,
+        variant: 'destructive',
       });
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Purchase Failed',
-        description: error.message || 'Failed to purchase item. Please try again.',
+        description:
+          error instanceof Error && error.message
+            ? error.message
+            : 'Failed to purchase item. Please try again.',
         variant: 'destructive',
       });
     } finally {

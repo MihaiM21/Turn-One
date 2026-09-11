@@ -87,6 +87,10 @@ const data = {
           title: "Leaderboards",
           url: "/simracing/leaderboards",
         },
+        {
+          title: "Get Turn One Link",
+          url: "/simracing/download",
+        },
       ],
     },
     {
@@ -142,9 +146,18 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuth();
-  data.user.name = user?.username || 'User';
-  data.user.email = user?.email || 'user@example.com';
-  data.user.avatar = user?.avatar || '/basic-avatar.webp';
+
+  // Derive the display user instead of writing onto the module-level `data`
+  // object during render: that mutation is a render side effect and leaks
+  // across every component instance sharing the module.
+  const displayUser = React.useMemo(
+    () => ({
+      name: user?.username || 'User',
+      email: user?.email || 'user@example.com',
+      avatar: user?.avatar || '/basic-avatar.webp',
+    }),
+    [user],
+  );
 
   // Check if user is admin by decoding JWT token from localStorage
   const isAdmin = React.useMemo(() => {
@@ -204,7 +217,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={displayUser} />
       </SidebarFooter>
     </Sidebar>
   )

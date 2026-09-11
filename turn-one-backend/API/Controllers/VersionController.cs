@@ -1,4 +1,5 @@
 using Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
@@ -47,6 +48,9 @@ namespace API.Controllers
             }));
         }
 
+        // Called by scripts/update-version.{sh,ps1}, which already send
+        // "Authorization: Bearer $API_TOKEN" — that token must belong to an admin.
+        [Authorize(Roles = "ADMIN")]
         [HttpPost("update")]
         public async Task<IActionResult> UpdateVersion([FromBody] UpdateVersionRequest request)
         {

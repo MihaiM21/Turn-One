@@ -26,6 +26,7 @@ import { PublicCard } from "@/components/site/public-card";
 import { CtaRow } from "@/components/site/cta-row";
 import { generateSEO } from "@/lib/seo";
 
+
 export const metadata: Metadata = generateSEO({
   title: "Features",
   description:

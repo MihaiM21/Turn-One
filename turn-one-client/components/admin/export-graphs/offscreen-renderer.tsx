@@ -6,6 +6,8 @@ interface OffscreenRendererProps {
   width: number
   height: number
   children: ReactNode
+  /** Skips the opaque wrapper background — needed for the 4K transparent creator export. */
+  transparent?: boolean
 }
 
 /**
@@ -14,7 +16,8 @@ interface OffscreenRendererProps {
  * so Recharts ResponsiveContainer measures its real width/height.
  */
 export const OffscreenRenderer = forwardRef<HTMLDivElement, OffscreenRendererProps>(
-  function OffscreenRenderer({ width, height, children }, ref) {
+  function OffscreenRenderer({ width, height, children, transparent = false }, ref) {
+    const background = transparent ? undefined : "#09090b"
     return (
       <div
         style={{
@@ -23,13 +26,13 @@ export const OffscreenRenderer = forwardRef<HTMLDivElement, OffscreenRendererPro
           left: -100000,
           width,
           height,
-          background: "#09090b",
+          background,
           pointerEvents: "none",
           zIndex: -1,
         }}
         aria-hidden="true"
       >
-        <div ref={ref} style={{ width, height, background: "#09090b" }}>
+        <div ref={ref} style={{ width, height, background }}>
           {children}
         </div>
       </div>

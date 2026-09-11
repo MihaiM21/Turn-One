@@ -1,9 +1,11 @@
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { BarChart3, Mail, MapPin, Twitter, Youtube, Instagram } from "lucide-react"
 import VersionDisplay from "@/components/ui/version-display"
 import { ObfuscatedEmail } from "@/components/ui/obfuscated-email"
 import { SOCIAL_LINKS } from "@/lib/social-links"
+import { LegalDisclaimer } from "@/components/footer/legal-disclaimer"
 
 export function MainFooter() {
   const currentYear = new Date().getFullYear()
@@ -18,7 +20,7 @@ export function MainFooter() {
             <Link href="/" className="flex items-center space-x-3 group">
               <div className="relative">
                 <div className="w-10 h-10 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-                  <img src="logo.png" alt="Logo Turn One" />
+                  <Image src="/logo.png" alt="Logo Turn One" width={40} height={40} />
                 </div>
               </div>
               <div className="flex flex-col">
@@ -85,6 +87,7 @@ export function MainFooter() {
                 { href: "/predictions", label: "Predictions" },
                 { href: "/rewards", label: "Rewards & Leveling" },
                 { href: "/live", label: "Live Timing" },
+                { href: "/download", label: "Turn One Link" },
               ].map((link) => (
                 <Link
                   key={link.href}
@@ -142,7 +145,7 @@ export function MainFooter() {
 
       {/* Bottom Bar */}
       <div className="border-t border-border bg-black/50">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-4 py-6 space-y-4">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
               <span>© {currentYear} Turn One. All rights reserved.</span>
@@ -161,6 +164,7 @@ export function MainFooter() {
               </Link>
             </div>
           </div>
+          <LegalDisclaimer variant="minimal" className="text-center md:text-left" />
         </div>
       </div>
     </footer>

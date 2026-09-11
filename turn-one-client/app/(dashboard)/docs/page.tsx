@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { DashboardHeader } from '@/components/dashboard/live dashboard/dashboard-header';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { ExploreMoreLinks } from '@/components/dashboard/explore-more-links';

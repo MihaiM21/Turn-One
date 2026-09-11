@@ -228,6 +228,84 @@ public class TelemetryController : ControllerBase
         return Ok(laps);
     }
 
+    /// <summary>
+    /// Headline digest for a session — theoretical best, consistency, valid/invalid split.
+    /// Computed server-side so the client doesn't have to pull every lap just to render four numbers.
+    /// </summary>
+    [HttpGet("sessions/{id}/summary")]
+    public async Task<ActionResult> GetSessionSummary(Guid id)
+    {
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId)) return Unauthorized();
+
+        var session = await _sessionService.GetSessionDetailAsync(id, userId);
+        if (session == null) return NotFound();
+
+        var laps = await _db.TelemetryLaps
+            .Where(l => l.SessionId == id)
+            .OrderBy(l => l.LapNumber)
+            .Select(l => new
+            {
+                l.LapNumber,
+                l.LapTimeMs,
+                l.Sector1Ms,
+                l.Sector2Ms,
+                l.Sector3Ms,
+                l.IsValid,
+                l.MaxSpeedKmh,
+                l.FuelUsed
+            })
+            .ToListAsync();
+
+        var timed = laps.Where(l => l.IsValid && l.LapTimeMs is > 0).Select(l => l.LapTimeMs!.Value).OrderBy(t => t).ToList();
+
+        static int? BestSector(IEnumerable<int?> values)
+        {
+            var valid = values.Where(v => v is > 0).Select(v => v!.Value).ToList();
+            return valid.Count == 0 ? null : valid.Min();
+        }
+
+        var s1 = BestSector(laps.Where(l => l.IsValid).Select(l => l.Sector1Ms));
+        var s2 = BestSector(laps.Where(l => l.IsValid).Select(l => l.Sector2Ms));
+        var s3 = BestSector(laps.Where(l => l.IsValid).Select(l => l.Sector3Ms));
+        int? theoreticalBestMs = s1.HasValue && s2.HasValue && s3.HasValue ? s1 + s2 + s3 : null;
+
+        double? stdDevMs = null;
+        if (timed.Count > 1)
+        {
+            var mean = timed.Average();
+            stdDevMs = Math.Sqrt(timed.Sum(t => (t - mean) * (t - mean)) / (timed.Count - 1));
+        }
+
+        int? median = timed.Count == 0
+            ? null
+            : timed.Count % 2 == 1
+                ? timed[timed.Count / 2]
+                : (timed[timed.Count / 2 - 1] + timed[timed.Count / 2]) / 2;
+
+        var fuelLaps = laps.Where(l => l.FuelUsed > 0).Select(l => l.FuelUsed).ToList();
+
+        return Ok(new
+        {
+            sessionId = id,
+            totalLaps = laps.Count,
+            validLaps = laps.Count(l => l.IsValid),
+            invalidLaps = laps.Count(l => !l.IsValid),
+            bestLapMs = timed.Count > 0 ? timed.First() : (int?)null,
+            medianLapMs = median,
+            worstLapMs = timed.Count > 0 ? timed.Last() : (int?)null,
+            theoreticalBestMs,
+            bestSector1Ms = s1,
+            bestSector2Ms = s2,
+            bestSector3Ms = s3,
+            // How much is left on the table by never stringing the best sectors together.
+            timeLeftOnTableMs = theoreticalBestMs.HasValue && timed.Count > 0 ? timed.First() - theoreticalBestMs.Value : (int?)null,
+            consistencyStdDevMs = stdDevMs,
+            topSpeedKmh = laps.Count > 0 ? laps.Max(l => l.MaxSpeedKmh) : 0,
+            averageFuelPerLap = fuelLaps.Count > 0 ? fuelLaps.Average() : (double?)null
+        });
+    }
+
     [HttpGet("sessions/{id}/metrics")]
     public async Task<ActionResult<List<LapMetrics>>> GetSessionMetrics(
         [FromServices] ILapAnalyticsService analytics,

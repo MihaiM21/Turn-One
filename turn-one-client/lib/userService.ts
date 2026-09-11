@@ -148,13 +148,18 @@ export const consumeTokens = async (token: string, amount: number) => {
   });
 }
 
-export const purchaseTokens = async (token: string, amount: number, coinCost: number) => {
+/**
+ * Buys a token pack. Only the pack id is sent — the token amount and coin cost
+ * are resolved from the server-side catalog (Domain.Entities.TokenPack), so the
+ * client cannot dictate the price.
+ */
+export const purchaseTokens = async (token: string, packId: string) => {
   return fetchWithAuth('Token/purchase', token, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ amount, coinCost }),
+    body: JSON.stringify({ packId }),
   });
 }
 

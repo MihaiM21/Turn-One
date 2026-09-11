@@ -6,6 +6,7 @@ import { Brain, CheckCircle2, XCircle, Coins, Zap, RefreshCw, Loader2 } from 'lu
 import { triviaService } from '@/lib/gameService';
 import { Trivia, TriviaResult } from '@/types/game-types';
 import { toast } from '@/hooks/use-toast';
+import { notifyBalanceChanged } from '@/lib/balance-events';
 
 interface TriviaGameProps {
   onTriviaCompleted?: () => void;
@@ -69,6 +70,7 @@ export function TriviaGame({ onTriviaCompleted }: TriviaGameProps) {
         description: triviaResult.message,
         variant: triviaResult.isCorrect ? 'default' : 'destructive',
       });
+      notifyBalanceChanged();
       onTriviaCompleted?.();
     } catch (error: any) {
       toast({ title: 'Error', description: error.message || 'Failed to submit answer', variant: 'destructive' });

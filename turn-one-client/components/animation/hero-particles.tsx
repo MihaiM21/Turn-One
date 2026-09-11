@@ -9,6 +9,7 @@ interface Point {
 
 export function NumberOneOutline() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationRef = useRef<number | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -198,14 +199,20 @@ export function NumberOneOutline() {
       progress += CONFIG.speed;
       if (progress >= 1) progress = 0;
 
-      requestAnimationFrame(animate);
+      // Track the pending frame so cleanup cancels the *live* one. Assigning to a
+      // local would only ever cancel the first frame, leaving the loop running
+      // against a detached canvas after unmount.
+      animationRef.current = requestAnimationFrame(animate);
     };
 
-    const animationId = requestAnimationFrame(animate);
+    animationRef.current = requestAnimationFrame(animate);
 
     return () => {
       window.removeEventListener('resize', resizeCanvas);
-      cancelAnimationFrame(animationId);
+      if (animationRef.current !== null) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
     };
   }, []);
 

@@ -1,7 +1,8 @@
 'use client';
 
-import {Line, LineChart, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts'
+import {Line, LineChart, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend, ReferenceArea } from 'recharts'
 import { LapTimeData, AdvancedPlotSettings } from '@/types/plot-types';
+import { useDragZoom } from '@/components/plot-viewport/use-drag-zoom'
 
 
 export function LapTimeAnalysisGraph({ lapTimeData, advancedSettings }: { lapTimeData: LapTimeData[], advancedSettings?: AdvancedPlotSettings }) {
@@ -14,6 +15,12 @@ export function LapTimeAnalysisGraph({ lapTimeData, advancedSettings }: { lapTim
     lineThickness: 2,
     showDataLabels: false
   }
+
+  // Drag across the chart to zoom into a lap-number window. The surrounding
+  // ChartViewport owns the selected domain so its reset control can clear it;
+  // outside a viewport (the offscreen export renderer) this is simply absent
+  // and the chart shows its full range.
+  const { xDomain, dragHandlers, selection } = useDragZoom()
 
   // Don't render if no data
     if (!lapTimeData || lapTimeData.length === 0) {
@@ -142,20 +149,24 @@ export function LapTimeAnalysisGraph({ lapTimeData, advancedSettings }: { lapTim
           `}</style>
           
           <ResponsiveContainer width="100%" height={settings.chartHeight}>
-            <LineChart 
-              data={filteredData} 
+            <LineChart
+              data={filteredData}
               margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
               className={settings.animateChart ? "animate-in fade-in-0 zoom-in-95 duration-1000" : ""}
+              {...dragHandlers}
             >
               {settings.showGrid && (
-                <CartesianGrid 
-                  strokeDasharray="3 3" 
-                  stroke="#374151" 
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#374151"
                   className={settings.animateChart ? "animate-in fade-in-0 duration-1500" : ""}
                 />
               )}
-              <XAxis 
-                dataKey="lap_numbers" 
+              <XAxis
+                dataKey="lap_numbers"
+                type="number"
+                domain={xDomain}
+                allowDataOverflow
                 stroke="#9CA3AF"
                 label={{ value: 'Lap Number', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: '#9CA3AF' } }}
                 className={settings.animateChart ? "animate-in slide-in-from-bottom-2 duration-1000 delay-300" : ""}
@@ -194,6 +205,9 @@ export function LapTimeAnalysisGraph({ lapTimeData, advancedSettings }: { lapTim
                   animation: 'drawLine 2s ease-in-out 0.7s'
                 } : {}}
               />
+              {selection && (
+                <ReferenceArea x1={selection.x1} x2={selection.x2} fill="#F9FAFB" fillOpacity={0.12} />
+              )}
             </LineChart>
           </ResponsiveContainer>
           

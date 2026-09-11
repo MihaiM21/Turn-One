@@ -10,7 +10,6 @@ import { Coins } from 'lucide-react';
 import { predictionService } from '@/lib/gameService';
 import { CreatePrediction } from '@/types/game-types';
 import { toast } from '@/hooks/use-toast';
-import { ToastAction } from '@/components/ui/toast';
 import { f1_2026_races } from '@/lib/constants/f1_races';
 import { f1_2026_drivers } from '@/lib/constants/f1_2026_drivers_full';
 import { notifyBalanceChanged } from '@/lib/balance-events';
@@ -88,11 +87,10 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
           title: 'Prediction Already Exists',
           description: "You've already made a prediction for this race.",
           variant: 'destructive',
-          action: (
-            <ToastAction altText="View Prediction" onClick={() => (window.location.href = '/predictions')}>
-              View Prediction
-            </ToastAction>
-          ),
+          action: {
+            label: 'View Prediction',
+            onClick: () => (window.location.href = '/predictions'),
+          },
         });
         setSelectedRaceIndex(-1);
         return;
@@ -153,11 +151,10 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
       toast({
         title: 'Prediction Created',
         description: `Wagered ${coinsWagered} coins on ${prediction.raceName}. Good luck.`,
-        action: (
-          <ToastAction altText="View All Predictions" onClick={() => (window.location.href = '/predictions')}>
-            View
-          </ToastAction>
-        ),
+        action: {
+          label: 'View',
+          onClick: () => (window.location.href = '/predictions'),
+        },
       });
 
       setSelectedRaceIndex(-1);

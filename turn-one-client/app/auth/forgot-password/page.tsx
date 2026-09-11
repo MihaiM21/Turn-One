@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { KeyRound, Mail } from "lucide-react";
 import { requestPasswordReset } from "@/lib/emailService";
 import Link from "next/link";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");

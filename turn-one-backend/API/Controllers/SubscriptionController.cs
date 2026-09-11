@@ -19,6 +19,10 @@ public class SubscriptionController : ControllerBase
         _subscriptionService = subscriptionService;
     }
 
+    // Plan changes grant paid entitlements, so they must never be driven by a
+    // user-supplied PlanType. Until billing is wired up these are admin-only;
+    // once a payment provider exists the webhook handler becomes the caller.
+    [Authorize(Roles = "ADMIN")]
     [HttpPost("upgrade")]
     public async Task<ActionResult<User>> UpgradePlan([FromBody] PlanType newPlan)
     {
@@ -38,6 +42,7 @@ public class SubscriptionController : ControllerBase
         }
     }
 
+    [Authorize(Roles = "ADMIN")]
     [HttpPost("downgrade")]
     public async Task<ActionResult<User>> DowngradePlan([FromBody] PlanType newPlan)
     {
@@ -96,6 +101,11 @@ public class SubscriptionController : ControllerBase
         }
     }
 
+    // PurchaseTokensAsync credits tokens without taking anything in exchange —
+    // no coins are deducted and there is no payment step — so this is admin-only
+    // until it is fronted by a real transaction. Coin-funded token purchases go
+    // through TokenController.Purchase instead.
+    [Authorize(Roles = "ADMIN")]
     [HttpPost("purchase-tokens")]
     public async Task<ActionResult<User>> PurchaseTokens([FromBody] int amount)
     {

@@ -1,6 +1,8 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { ChevronRight, type LucideIcon } from "lucide-react"
 
 import {
@@ -34,62 +36,42 @@ export function NavMain({
     }[]
   }[]
 }) {
-  const [currentPath, setCurrentPath] = React.useState<string>("");
+  // App Router client navigations do not emit `popstate`, and the 'routeChange'
+  // event this used to listen for is never dispatched anywhere in the app.
+  // usePathname is the supported way to observe the current route.
+  const currentPath = usePathname() ?? "";
   const [openItems, setOpenItems] = React.useState<Record<string, boolean>>({});
 
-  // Update current path when component mounts and when pathname changes
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const updatePath = () => {
-        setCurrentPath(window.location.pathname);
-      };
-      
-      // Set initial path
-      updatePath();
-      
-      // Listen for path changes
-      window.addEventListener('popstate', updatePath);
-      
-      // Listen for Next.js navigation
-      const handleRouteChange = () => {
-        updatePath();
-      };
-      
-      window.addEventListener('routeChange', handleRouteChange);
-      
-      return () => {
-        window.removeEventListener('popstate', updatePath);
-        window.removeEventListener('routeChange', handleRouteChange);
-      };
-    }
-  }, []);
-
-  // Check if an item is active based on the current path
+  // Check if an item is active based on the current path. Requires an exact
+  // match or a `/`-bounded prefix so a route like `/live2` doesn't also
+  // highlight a sibling nav item at `/live`.
   const isItemActive = (itemUrl: string): boolean => {
-    // Exact match for home or dashboard
-    if (itemUrl === '/' && currentPath === '/') return true;
-    
-    // For other pages, check if current path starts with the item URL
-    // This ensures that sub-routes also highlight the parent menu item
-    if (itemUrl !== '/' && currentPath.startsWith(itemUrl)) return true;
-    
-    return false;
+    if (itemUrl === '/') return currentPath === '/';
+    return currentPath === itemUrl || currentPath.startsWith(itemUrl + '/');
   };
 
-  // Auto-expand sections when navigating to their sub-items
+  // Auto-expand sections when navigating to their sub-items. Uses a single
+  // functional update so it reads the live `openItems` rather than a value
+  // captured from the render that scheduled the effect.
   React.useEffect(() => {
-    items.forEach((item) => {
-      const active = isItemActive(item.url);
-      const hasActiveSubItem = item.items?.some(subItem => isItemActive(subItem.url)) || false;
-      const shouldBeOpen = item.isActive || active || hasActiveSubItem;
-      
-      if (shouldBeOpen && openItems[item.title] === undefined) {
-        setOpenItems(prev => ({
-          ...prev,
-          [item.title]: true
-        }));
+    setOpenItems((prev) => {
+      let changed = false;
+      const next = { ...prev };
+
+      for (const item of items) {
+        if (next[item.title] !== undefined) continue;
+
+        const active = isItemActive(item.url);
+        const hasActiveSubItem = item.items?.some((subItem) => isItemActive(subItem.url)) ?? false;
+        if (item.isActive || active || hasActiveSubItem) {
+          next[item.title] = true;
+          changed = true;
+        }
       }
+
+      return changed ? next : prev;
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- isItemActive is derived from currentPath
   }, [currentPath, items]);
 
   return (
@@ -120,11 +102,11 @@ export function NavMain({
               }}
             >
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip={item.title} isActive={active}>
-                  <a href={item.url}>
+                <SidebarMenuButton asChild tooltip={item.title} isActive={active} size="sm">
+                  <Link href={item.url}>
                     <item.icon />
                     <span>{item.title}</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
                 {item.items?.length ? (
                   <>
@@ -142,9 +124,9 @@ export function NavMain({
                           return (
                             <SidebarMenuSubItem key={subItem.title}>
                               <SidebarMenuSubButton asChild isActive={subItemActive}>
-                                <a href={subItem.url}>
+                                <Link href={subItem.url}>
                                   <span>{subItem.title}</span>
-                                </a>
+                                </Link>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                           );

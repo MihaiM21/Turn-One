@@ -1,14 +1,12 @@
-"use client";
-
-import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Trophy, Gauge, Zap, Calendar, Flag, ArrowLeft, Home, RefreshCw, Clock, AlertTriangle } from "lucide-react";
+import { Trophy, Gauge, Zap, Calendar, Flag, ArrowLeft, Home, Clock, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { NewsPageData } from "@/types/news-types";
-import { getNewsPageData } from "@/lib/newsService";
+import { Suspense } from "react";
+import { getNewsCoreData, getNewsDeepData } from "@/lib/newsService";
+import type { NewsCoreData } from "@/types/news-types";
+import { serverFetchFromExternalAPI } from "@/lib/newsServerFetch";
 import { MainNav } from "@/components/navigation/main-nav";
-import { Loading } from "@/components/ui/loading";
 import { QualifyingChart } from "@/components/news/qualifying-chart";
 import { TopSpeedChart } from "@/components/news/top-speed-chart";
 import { ThrottleChart } from "@/components/news/throttle-chart";
@@ -18,6 +16,10 @@ import { TyreStintChart } from "@/components/news/tyre-stint-chart";
 import { GatedPreview } from "@/components/site/gated-preview";
 import { SectionHeader } from "@/components/site/section-header";
 import { PublicCard } from "@/components/site/public-card";
+import { RefreshButton } from "@/components/news/refresh-button";
+
+
+export const revalidate = 300;
 
 const sessionColor = (type: string) => {
   switch (type) {
@@ -49,41 +51,49 @@ const sessionName = (type: string) => {
   return "Session";
 }
 
-export default function NewsPage() {
-  const [data, setData] = useState<NewsPageData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+/**
+ * Lap distribution needs one upstream request per driver, which makes it much
+ * slower than everything else on the page. Streaming it in separately lets the
+ * session header, standings and speed charts paint straight away.
+ */
+async function DeepTelemetry({ core }: { core: NewsCoreData }) {
+  const deep = await getNewsDeepData(core, serverFetchFromExternalAPI);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const result = await getNewsPageData();
-        if (!cancelled) setData(result);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      <GatedPreview
+        teaser="Lap-by-lap pace evolution. Spot pit windows, tire degradation and pace deltas."
+        cta={{ label: "Unlock free", href: "/auth/signup" }}
+      >
+        <LapDistributionChart data={deep.lapDistribution ?? undefined} />
+      </GatedPreview>
+      <GatedPreview
+        teaser="Tyre stints and pit stops for every driver — visualize the race strategy within the race."
+        cta={{ label: "Unlock free", href: "/auth/signup" }}
+      >
+        <TyreStintChart data={deep.tyreStintData} />
+      </GatedPreview>
+    </div>
+  );
+}
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      const result = await getNewsPageData();
-      setData(result);
-    } finally {
-      setRefreshing(false);
-    }
-  }, []);
+function DeepTelemetrySkeleton() {
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      {[0, 1].map((i) => (
+        <div key={i} className="h-[320px] animate-pulse border border-zinc-800 bg-zinc-900/40" />
+      ))}
+    </div>
+  );
+}
 
-  if (loading) return <Loading message="Loading session data..." />;
+export default async function NewsPage() {
+  const data = await getNewsCoreData(serverFetchFromExternalAPI);
 
   if (!data?.session) {
     const status = data?.sessionStatus;
     const isNotReady = status?.kind === "not_ready";
+    const isUnavailable = status?.kind === "unavailable";
 
     return (
       <div className="min-h-screen bg-black">
@@ -105,6 +115,16 @@ export default function NewsPage() {
                     : ""}
                 </p>
               </>
+            ) : isUnavailable ? (
+              <>
+                <div className="flex items-center gap-2 text-yellow-400">
+                  <AlertTriangle className="h-4 w-4" />
+                  <p className="text-sm font-bold uppercase tracking-tight">
+                    Service unavailable
+                  </p>
+                </div>
+                <p className="mt-2 text-sm text-zinc-400">{status.message}</p>
+              </>
             ) : (
               <>
                 <div className="flex items-center gap-2 text-primary">
@@ -117,15 +137,7 @@ export default function NewsPage() {
               </>
             )}
             <div className="mt-4 flex gap-2">
-              <Button
-                variant="outline"
-                className="flex-1 rounded-none border-zinc-700"
-                onClick={handleRefresh}
-                disabled={refreshing}
-              >
-                <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-                {refreshing ? "Refreshing..." : "Refresh"}
-              </Button>
+              <RefreshButton />
               <Button asChild variant="ghost" className="flex-1 rounded-none">
                 <Link href="/">
                   <Home className="mr-2 h-4 w-4" />
@@ -230,20 +242,9 @@ export default function NewsPage() {
             <ThrottleChart data={session.throttle_comparison} />
           </GatedPreview>
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            <GatedPreview
-              teaser="Lap-by-lap pace evolution. Spot pit windows, tire degradation and pace deltas."
-              cta={{ label: "Unlock free", href: "/auth/signup" }}
-            >
-              <LapDistributionChart data={data.lapDistribution ?? undefined} />
-            </GatedPreview>
-            <GatedPreview
-              teaser="Tyre stints and pit stops for every driver — visualize the race strategy within the race."
-              cta={{ label: "Unlock free", href: "/auth/signup" }}
-            >
-              <TyreStintChart data={data.tyreStintData} />
-            </GatedPreview>
-          </div>
+          <Suspense fallback={<DeepTelemetrySkeleton />}>
+            <DeepTelemetry core={data} />
+          </Suspense>
         </section>
 
         {/* Insights */}

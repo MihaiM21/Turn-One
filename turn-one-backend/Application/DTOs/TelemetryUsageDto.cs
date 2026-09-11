@@ -18,7 +18,7 @@ namespace Application.DTOs
     public class TelemetryRequestDto
     {
         public Guid Id { get; set; }
-        public Guid UserId { get; set; }
+        public Guid? UserId { get; set; }
         public string Username { get; set; } = string.Empty;
         public string PlotType { get; set; } = string.Empty;
         public int Year { get; set; }

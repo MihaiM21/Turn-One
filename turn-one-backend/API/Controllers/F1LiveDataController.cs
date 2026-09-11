@@ -40,6 +40,9 @@ public class F1LiveDataController : ControllerBase
         }
     }
 
+    // Restarting the upstream feed affects every connected client, so it is not
+    // something an ordinary authenticated user should be able to trigger.
+    [Authorize(Roles = "ADMIN")]
     [HttpPost("restart")]
     public async Task<IActionResult> RestartService()
     {
@@ -104,6 +107,7 @@ public class F1LiveDataController : ControllerBase
         }
     }
     
+    [Authorize(Roles = "ADMIN")]
     [HttpPost("clear-persisted-data")]
     public IActionResult ClearPersistedData()
     {

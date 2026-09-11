@@ -2,309 +2,539 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
-import { format } from "date-fns";
-import { ArrowLeft, Activity, Clock, Flag, Lock, Globe, GitCompareArrows } from "lucide-react";
 import Link from "next/link";
+import { format } from "date-fns";
+import { toast } from "sonner";
 import {
-    MultiChannelChart,
-    type MultiChannelChartData,
-} from "@/components/dashboard/simracing/charts/multi-channel-chart";
-import { ReplayScrubber } from "@/components/dashboard/simracing/replay-scrubber";
-import {
-    LapMetricsPanel,
-    type LapMetrics,
-} from "@/components/dashboard/simracing/lap-metrics-panel";
+    ArrowLeft,
+    Activity,
+    Clock,
+    Flag,
+    Lock,
+    Globe,
+    GitCompareArrows,
+    Gauge,
+    Map as MapIcon,
+    LineChart,
+    Sparkles,
+    Bot,
+    Timer,
+    Zap,
+    TrendingDown,
+    CircleDot,
+    Cog,
+} from "lucide-react";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { SectionCard, StatStrip, Stat } from "@/components/dashboard/simracing/section-card";
+import { PlanGate } from "@/components/dashboard/simracing/plan-gate";
 import { LapSelector, type LapSummary } from "@/components/dashboard/simracing/lap-selector";
 import { CoachingPanel } from "@/components/dashboard/simracing/coaching/coaching-panel";
+import { DistanceTraceChart } from "@/components/dashboard/simracing/charts/distance-trace-chart";
+import { DeltaTraceChart } from "@/components/dashboard/simracing/charts/delta-trace-chart";
+import { TrackMap } from "@/components/dashboard/simracing/charts/track-map";
+import { FrictionCircleChart } from "@/components/dashboard/simracing/charts/friction-circle";
+import { DrivingStylePanel } from "@/components/dashboard/simracing/charts/driving-style-panel";
+import { ShiftHistogram } from "@/components/dashboard/simracing/charts/shift-histogram";
+import { LapEvolutionChart } from "@/components/dashboard/simracing/charts/lap-evolution-chart";
+import { SectorMatrixTable } from "@/components/dashboard/simracing/charts/sector-matrix";
+import { TimeLossList } from "@/components/dashboard/simracing/charts/time-loss-list";
+import { ShareCardButton } from "@/components/dashboard/simracing/share-card";
+import type { MultiChannelChartData } from "@/components/dashboard/simracing/charts/multi-channel-chart";
+import {
+    getSession,
+    getLaps,
+    getSummary,
+    getLapChart,
+    getChannels,
+    setVisibility as setVisibilityApi,
+    formatLapTime,
+    SimApiError,
+    type SimSession,
+    type SimLap,
+    type SimSessionSummary,
+} from "@/lib/simracing/api";
+import { toDistanceSeries, resampleByDistance, deltaTrace, biggestLoss } from "@/lib/simracing/analysis";
 
-interface SessionDto {
-    id: string;
-    carModel: string;
-    track: string;
-    driverName: string;
-    sessionType: string;
-    visibility: number;
-    isActive: boolean;
-    lapCount: number;
-    startedAt: string;
-    endedAt?: string;
-}
+type Tab = "overview" | "traces" | "analysis" | "coach";
 
-interface LapDto {
-    lapNumber: number;
-    lapTimeMs: number | null;
-    isValid: boolean;
-}
+const TABS: { key: Tab; label: string; icon: typeof Gauge }[] = [
+    { key: "overview", label: "Overview", icon: Gauge },
+    { key: "traces", label: "Traces", icon: LineChart },
+    { key: "analysis", label: "Analysis", icon: Sparkles },
+    { key: "coach", label: "Coach", icon: Bot },
+];
 
-function apiBase() {
-    return (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271/api").replace(/\/api\/?$/, "");
-}
-
-function authHeaders(): Record<string, string> {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    return token ? { Authorization: `Bearer ${token}` } : {};
-}
+const EMPTY_CHART: MultiChannelChartData = { channels: [], points: [] };
 
 export default function SessionDetailPage() {
     const params = useParams();
     const id = params.id as string;
 
-    const [session, setSession] = useState<SessionDto | null>(null);
-    const [chartData, setChartData] = useState<MultiChannelChartData>({ channels: [], points: [] });
-    const [laps, setLaps] = useState<LapSummary[]>([]);
-    const [metrics, setMetrics] = useState<LapMetrics[]>([]);
-    const [selectedLap, setSelectedLap] = useState<number | null>(null);
-    const [cursor, setCursor] = useState<number | null>(null);
+    const [tab, setTab] = useState<Tab>("overview");
+    const [session, setSession] = useState<SimSession | null>(null);
+    const [laps, setLaps] = useState<SimLap[]>([]);
+    const [summary, setSummary] = useState<SimSessionSummary | null>(null);
     const [loading, setLoading] = useState(true);
-    const [chartLoading, setChartLoading] = useState(false);
 
+    const [selectedLap, setSelectedLap] = useState<number | null>(null);
+    const [lapChart, setLapChart] = useState<MultiChannelChartData>(EMPTY_CHART);
+    const [referenceChart, setReferenceChart] = useState<MultiChannelChartData>(EMPTY_CHART);
+    const [chartLoading, setChartLoading] = useState(false);
+    const [cursor, setCursor] = useState<number | null>(null);
+
+    // ---- load session ----------------------------------------------------
     useEffect(() => {
         if (!id) return;
-        const url = apiBase();
-
-        (async () => {
-            try {
-                const [sessionRes, lapsRes, metricsRes] = await Promise.all([
-                    fetch(`${url}/api/telemetry/sessions/${id}`, { headers: authHeaders() }),
-                    fetch(`${url}/api/telemetry/sessions/${id}/laps`, { headers: authHeaders() }),
-                    fetch(`${url}/api/telemetry/sessions/${id}/metrics`, { headers: authHeaders() }),
-                ]);
-                if (sessionRes.ok) setSession(await sessionRes.json());
-                if (lapsRes.ok) {
-                    const data: LapDto[] = await lapsRes.json();
-                    setLaps(
-                        data.map(l => ({
-                            lapNumber: l.lapNumber,
-                            lapTimeMs: l.lapTimeMs,
-                            isValid: l.isValid,
-                        }))
-                    );
-                }
-                if (metricsRes.ok) setMetrics(await metricsRes.json());
-            } catch (err) {
-                console.error("Failed to fetch session", err);
-            } finally {
-                setLoading(false);
-            }
-        })();
+        Promise.allSettled([getSession(id), getLaps(id), getSummary(id)])
+            .then(([s, l, sum]) => {
+                if (s.status === "fulfilled") setSession(s.value);
+                if (l.status === "fulfilled") setLaps(l.value);
+                if (sum.status === "fulfilled") setSummary(sum.value);
+            })
+            .finally(() => setLoading(false));
     }, [id]);
 
-    const loadChart = useCallback(
+    const lapSummaries: LapSummary[] = useMemo(
+        () => laps.map(l => ({ lapNumber: l.lapNumber, lapTimeMs: l.lapTimeMs, isValid: l.isValid })),
+        [laps]
+    );
+
+    /** Fastest valid lap — the natural reference for deltas and style comparisons. */
+    const bestLapNumber = useMemo(() => {
+        const valid = laps.filter(l => l.isValid && l.lapTimeMs && l.lapTimeMs > 0);
+        if (!valid.length) return null;
+        return valid.reduce((best, l) => (l.lapTimeMs! < best.lapTimeMs! ? l : best)).lapNumber;
+    }, [laps]);
+
+    // Default to the best lap: a specific lap is far more useful than a whole-session smear.
+    useEffect(() => {
+        if (selectedLap == null && bestLapNumber != null) setSelectedLap(bestLapNumber);
+    }, [bestLapNumber, selectedLap]);
+
+    // ---- load telemetry --------------------------------------------------
+    const loadCharts = useCallback(
         async (lap: number | null) => {
             if (!id) return;
-            const url = apiBase();
             setChartLoading(true);
             try {
-                const endpoint =
-                    lap == null
-                        ? `${url}/api/telemetry/sessions/${id}/channels`
-                        : `${url}/api/telemetry/sessions/${id}/laps/${lap}/chart`;
-                const res = await fetch(endpoint, { headers: authHeaders() });
-                if (res.ok) setChartData(await res.json());
+                const primary = lap == null ? await getChannels(id) : await getLapChart(id, lap);
+                setLapChart(primary);
+
+                // Fetch the reference lap too, unless it *is* the selected lap.
+                if (bestLapNumber != null && bestLapNumber !== lap) {
+                    setReferenceChart(await getLapChart(id, bestLapNumber));
+                } else {
+                    setReferenceChart(EMPTY_CHART);
+                }
             } catch (err) {
-                console.error("Failed to load chart", err);
+                if (err instanceof SimApiError && err.isPlanGated) {
+                    // The PlanGate around the chart already explains this; don't double-report.
+                    setLapChart(EMPTY_CHART);
+                } else {
+                    toast.error("Couldn't load telemetry for this lap.");
+                }
             } finally {
                 setChartLoading(false);
             }
         },
-        [id]
+        [id, bestLapNumber]
     );
 
     useEffect(() => {
-        loadChart(selectedLap);
+        loadCharts(selectedLap);
         setCursor(null);
-    }, [selectedLap, loadChart]);
+    }, [selectedLap, loadCharts]);
 
-    const handleVisibilityUpdate = async (newVis: number) => {
+    // ---- derived analysis ------------------------------------------------
+    const trackLengthM = undefined; // Not exposed by the API yet; distance falls back to speed integration.
+
+    const lapSeries = useMemo(() => toDistanceSeries(lapChart, trackLengthM), [lapChart]);
+    const refSeries = useMemo(() => toDistanceSeries(referenceChart, trackLengthM), [referenceChart]);
+
+    const lapSamples = useMemo(() => resampleByDistance(lapSeries, 5), [lapSeries]);
+    const refSamples = useMemo(() => resampleByDistance(refSeries, 5), [refSeries]);
+
+    const delta = useMemo(
+        () => (refSeries.samples.length ? deltaTrace(lapSeries, refSeries, 5) : []),
+        [lapSeries, refSeries]
+    );
+
+    const losses = useMemo(
+        () => (delta.length ? biggestLoss(delta, lapSamples, 5) : []),
+        [delta, lapSamples]
+    );
+
+    const maxRpm = useMemo(() => {
+        const rpms = laps.map(l => l.maxRpm).filter(r => r > 0);
+        return rpms.length ? Math.max(...rpms) : null;
+    }, [laps]);
+
+    // ---- visibility ------------------------------------------------------
+    const handleVisibility = async (next: number) => {
+        const previous = session?.visibility;
+        setSession(s => (s ? { ...s, visibility: next } : s));
         try {
-            const url = apiBase();
-            await fetch(`${url}/api/telemetry/sessions/${id}/visibility`, {
-                method: "PATCH",
-                headers: { ...authHeaders(), "Content-Type": "application/json" },
-                body: JSON.stringify(newVis),
-            });
-            setSession(prev => (prev ? { ...prev, visibility: newVis } : prev));
-        } catch {
-            alert("Failed to update visibility. Check plan level.");
+            await setVisibilityApi(id, next);
+            toast.success(next === 1 ? "Session is now public." : "Session is now private.");
+        } catch (err) {
+            setSession(s => (s && previous != null ? { ...s, visibility: previous } : s));
+            toast.error(
+                err instanceof SimApiError && err.isPlanGated
+                    ? "Public sessions require a PRO or ELITE plan."
+                    : "Couldn't change visibility."
+            );
         }
     };
 
-    const activeMetrics = useMemo(() => {
-        if (selectedLap == null) return null;
-        return metrics.find(m => m.lapNumber === selectedLap) ?? null;
-    }, [selectedLap, metrics]);
-
-    const { minTs, maxTs } = useMemo(() => {
-        if (!chartData.points.length) return { minTs: 0, maxTs: 0 };
-        return {
-            minTs: chartData.points[0].timestamp,
-            maxTs: chartData.points[chartData.points.length - 1].timestamp,
-        };
-    }, [chartData]);
-
-    if (loading)
+    if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-black via-red-950/20 to-black flex items-center justify-center">
-                <p className="text-slate-500 animate-pulse font-mono">Loading session...</p>
-            </div>
+            <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+                <SectionCard loading />
+            </main>
         );
-    if (!session)
+    }
+
+    if (!session) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-black via-red-950/20 to-black flex items-center justify-center">
-                <p className="text-white">Session not found.</p>
-            </div>
+            <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+                <SectionCard
+                    emptyIcon={Flag}
+                    empty={
+                        <div className="space-y-3">
+                            <p className="text-sm text-zinc-400">Session not found.</p>
+                            <Link href="/simracing/sessions" className="text-xs font-bold text-primary hover:underline">
+                                Back to my sessions
+                            </Link>
+                        </div>
+                    }
+                />
+            </main>
         );
+    }
+
+    const selectedLapData = laps.find(l => l.lapNumber === selectedLap) ?? null;
+    const isReferenceLap = selectedLap != null && selectedLap === bestLapNumber;
 
     return (
-        <div className="w-full min-h-screen p-6 bg-gradient-to-br from-black via-red-950/20 to-black font-sans text-white">
-            <div className="container mx-auto px-4 py-8 max-w-7xl space-y-6">
-                <div>
-                    <Link
-                        href="/simracing/sessions"
-                        className="inline-flex items-center gap-2 text-muted-foreground hover:text-white text-sm font-semibold transition-colors mb-4"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        My Sessions
-                    </Link>
+        <main className="w-full space-y-4 px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
+            <Link
+                href="/simracing/sessions"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 transition-colors hover:text-primary"
+            >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                My sessions
+            </Link>
 
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                        <div>
-                            <div className="flex items-center gap-3 mb-1">
-                                <Activity className="w-5 h-5 text-primary" />
-                                <h1 className="text-3xl font-black italic tracking-tight">{session.track}</h1>
-                            </div>
-                            <p className="text-muted-foreground ml-8">{session.carModel}</p>
-                        </div>
+            <PageHeader
+                label={session.sessionType?.replace(/^AC_/, "") || "Session"}
+                title={session.track}
+                description={`${session.carModel}${session.driverName ? ` · ${session.driverName}` : ""}`}
+                stats={[
+                    { icon: Flag, label: "Laps", value: session.lapCount },
+                    { icon: Timer, label: "Best", value: formatLapTime(summary?.bestLapMs ?? session.bestLapMs) },
+                    {
+                        icon: Activity,
+                        label: "Status",
+                        value: session.isActive ? "Live" : "Done",
+                        iconClassName: session.isActive ? "text-green-500" : "text-zinc-500",
+                    },
+                ]}
+                actions={
+                    <div className="flex flex-wrap items-center gap-2">
+                        <ShareCardButton session={session} summary={summary} laps={laps} />
 
-                        <div className="flex items-center gap-2">
-                            <Link
-                                href={`/simracing/sessions/${id}/compare`}
-                                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-bold rounded-md bg-black/40 border border-primary/20 hover:border-primary/40 transition-colors"
+                        <Link
+                            href={`/simracing/sessions/${id}/compare`}
+                            className="inline-flex h-8 items-center gap-1.5 border border-zinc-800 bg-zinc-900/60 px-3 text-xs text-zinc-300 transition-colors hover:border-primary/40 hover:text-primary"
+                        >
+                            <GitCompareArrows className="h-3.5 w-3.5" />
+                            Compare
+                        </Link>
+
+                        <div className="flex border border-zinc-800">
+                            <button
+                                onClick={() => handleVisibility(0)}
+                                className={`inline-flex h-8 items-center gap-1.5 px-3 text-xs font-bold transition-colors ${
+                                    session.visibility === 0
+                                        ? "bg-zinc-900 text-white"
+                                        : "text-zinc-500 hover:text-zinc-300"
+                                }`}
                             >
-                                <GitCompareArrows className="w-3.5 h-3.5" />
-                                Compare
-                            </Link>
-
-                            <div className="flex gap-1 items-center bg-black/40 border border-primary/20 p-1 rounded-lg backdrop-blur-md">
-                                <button
-                                    onClick={() => handleVisibilityUpdate(0)}
-                                    className={`flex items-center gap-1.5 px-3 py-2 text-sm font-bold rounded-md transition-all ${
-                                        session.visibility === 0
-                                            ? "bg-primary/20 text-white border border-primary/40"
-                                            : "text-muted-foreground hover:text-white"
-                                    }`}
-                                >
-                                    <Lock className="w-3.5 h-3.5" />
-                                    Private
-                                </button>
-                                <button
-                                    onClick={() => handleVisibilityUpdate(1)}
-                                    className={`flex items-center gap-1.5 px-3 py-2 text-sm font-bold rounded-md transition-all ${
-                                        session.visibility === 1
-                                            ? "bg-blue-600/30 text-blue-200 border border-blue-500/40"
-                                            : "text-muted-foreground hover:text-white"
-                                    }`}
-                                >
-                                    <Globe className="w-3.5 h-3.5" />
-                                    Public
-                                </button>
-                            </div>
+                                <Lock className="h-3 w-3" />
+                                Private
+                            </button>
+                            <button
+                                onClick={() => handleVisibility(1)}
+                                className={`inline-flex h-8 items-center gap-1.5 px-3 text-xs font-bold transition-colors ${
+                                    session.visibility === 1
+                                        ? "bg-blue-950/50 text-blue-300"
+                                        : "text-zinc-500 hover:text-zinc-300"
+                                }`}
+                            >
+                                <Globe className="h-3 w-3" />
+                                Public
+                            </button>
                         </div>
                     </div>
-                </div>
+                }
+            />
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <StatCard
-                        icon={<Activity className="w-4 h-4" />}
-                        label="Status"
-                        value={session.isActive ? "LIVE" : "Completed"}
-                        valueClass={session.isActive ? "text-primary animate-pulse" : "text-white"}
+            {/* Tabs */}
+            <div className="flex gap-px overflow-x-auto bg-zinc-800 p-px">
+                {TABS.map(({ key, label, icon: Icon }) => (
+                    <button
+                        key={key}
+                        onClick={() => setTab(key)}
+                        aria-pressed={tab === key}
+                        className={`inline-flex shrink-0 items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wide transition-colors ${
+                            tab === key
+                                ? "bg-primary/15 text-primary"
+                                : "bg-zinc-950 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+                        }`}
+                    >
+                        <Icon className="h-3.5 w-3.5" />
+                        {label}
+                    </button>
+                ))}
+            </div>
+
+            {/* Lap picker — shared by every tab except Overview */}
+            {tab !== "overview" ? (
+                <SectionCard
+                    label="Lap"
+                    title={
+                        selectedLap != null
+                            ? `Lap ${selectedLap}${isReferenceLap ? " · your reference" : ""}`
+                            : "Full session"
+                    }
+                    icon={Timer}
+                    actions={
+                        selectedLapData ? (
+                            <span className="font-mono text-sm font-bold tabular-nums text-primary">
+                                {formatLapTime(selectedLapData.lapTimeMs)}
+                            </span>
+                        ) : null
+                    }
+                    flush
+                >
+                    <LapSelector
+                        laps={lapSummaries}
+                        selected={selectedLap}
+                        onSelect={setSelectedLap}
+                        requireLap={tab === "analysis"}
                     />
-                    <StatCard
-                        icon={<Clock className="w-4 h-4" />}
-                        label="Started"
-                        value={format(new Date(session.startedAt), "MMM d, HH:mm")}
-                    />
-                    <StatCard label="Type" value={session.sessionType} />
-                    <StatCard
-                        icon={<Flag className="w-4 h-4" />}
-                        label="Total Laps"
-                        value={session.lapCount}
-                        valueClass="text-2xl font-mono font-bold text-primary"
-                    />
-                </div>
+                </SectionCard>
+            ) : null}
 
-                <Card className="border-primary/20 bg-gradient-to-br from-black/80 to-black/60 shadow-xl backdrop-blur-md">
-                    <CardContent className="p-6 space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-sm font-bold text-white uppercase tracking-widest">Laps</h2>
-                            <span className="text-xs text-muted-foreground font-mono">{laps.length} recorded</span>
-                        </div>
-                        <LapSelector laps={laps} selected={selectedLap} onSelect={setSelectedLap} />
-                    </CardContent>
-                </Card>
+            {/* ---------------- Overview ---------------- */}
+            {tab === "overview" ? (
+                <div className="space-y-4">
+                    <StatStrip>
+                        <Stat icon={Flag} label="Laps" value={summary?.totalLaps ?? session.lapCount} sub={summary ? `${summary.validLaps} valid` : undefined} />
+                        <Stat icon={Timer} label="Best lap" value={formatLapTime(summary?.bestLapMs ?? session.bestLapMs)} valueClassName="text-primary" />
+                        <Stat
+                            icon={Sparkles}
+                            label="Theoretical"
+                            value={formatLapTime(summary?.theoreticalBestMs ?? null)}
+                            sub={
+                                summary?.timeLeftOnTableMs
+                                    ? `${(summary.timeLeftOnTableMs / 1000).toFixed(3)}s on the table`
+                                    : undefined
+                            }
+                        />
+                        <Stat
+                            icon={Zap}
+                            label="Top speed"
+                            value={summary?.topSpeedKmh ? `${Math.round(summary.topSpeedKmh)} km/h` : "—"}
+                            sub={
+                                summary?.consistencyStdDevMs != null
+                                    ? `±${(summary.consistencyStdDevMs / 1000).toFixed(3)}s consistency`
+                                    : undefined
+                            }
+                        />
+                    </StatStrip>
 
-                <LapMetricsPanel metrics={activeMetrics} />
+                    <SectionCard label="Pace" title="Lap evolution" icon={TrendingDown}>
+                        <LapEvolutionChart
+                            laps={lapSummaries.map(l => ({ ...l, sector1Ms: null, sector2Ms: null, sector3Ms: null }))}
+                            selectedLap={selectedLap}
+                            onSelectLap={lap => {
+                                setSelectedLap(lap);
+                                setTab("traces");
+                            }}
+                        />
+                    </SectionCard>
 
-                <Card className="border-primary/20 bg-gradient-to-br from-black/80 to-black/60 shadow-xl backdrop-blur-md overflow-hidden">
-                    <CardContent className="p-6 space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-sm font-bold text-white uppercase tracking-widest">
-                                Telemetry {selectedLap != null ? `· Lap ${selectedLap}` : "· Full Session"}
-                            </h2>
-                        </div>
+                    <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
+                        <SectionCard label="Timing" title="Sectors & theoretical best" icon={Timer} flush bodyClassName="px-5 py-4">
+                            <SectorMatrixTable
+                                laps={laps}
+                                selectedLap={selectedLap}
+                                onSelectLap={lap => {
+                                    setSelectedLap(lap);
+                                    setTab("traces");
+                                }}
+                            />
+                        </SectionCard>
 
-                        {chartLoading ? (
-                            <div className="h-64 flex items-center justify-center text-muted-foreground animate-pulse font-mono text-sm">
-                                Loading telemetry data...
+                        <SectionCard
+                            label="Circuit"
+                            title={selectedLap != null ? `Lap ${selectedLap} racing line` : "Racing line"}
+                            icon={MapIcon}
+                            loading={chartLoading}
+                        >
+                            <TrackMap
+                                samples={lapSamples}
+                                raw={lapChart}
+                                deltaByDistance={delta}
+                                cursorDistance={cursor}
+                                onCursorChange={setCursor}
+                                height={300}
+                            />
+                        </SectionCard>
+                    </div>
+
+                    <SectionCard label="Session" title="Details" icon={Clock}>
+                        <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            <div>
+                                <dt className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Started</dt>
+                                <dd className="mt-1 font-mono text-sm text-white">
+                                    {format(new Date(session.startedAt), "MMM d, yyyy · HH:mm")}
+                                </dd>
                             </div>
-                        ) : (
-                            <>
-                                <MultiChannelChart
-                                    data={chartData}
-                                    cursorTimestamp={cursor}
+                            <div>
+                                <dt className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Ended</dt>
+                                <dd className="mt-1 font-mono text-sm text-white">
+                                    {session.endedAt ? format(new Date(session.endedAt), "MMM d, yyyy · HH:mm") : "—"}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Fuel / lap</dt>
+                                <dd className="mt-1 font-mono text-sm text-white">
+                                    {summary?.averageFuelPerLap ? `${summary.averageFuelPerLap.toFixed(2)} L` : "—"}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Link version</dt>
+                                <dd className="mt-1 font-mono text-sm text-white">
+                                    {session.clientVersion ? `v${session.clientVersion.replace(/^v/, "")}` : "—"}
+                                </dd>
+                            </div>
+                        </dl>
+                    </SectionCard>
+                </div>
+            ) : null}
+
+            {/* ---------------- Traces ---------------- */}
+            {tab === "traces" ? (
+                <div className="space-y-4">
+                    <SectionCard
+                        label="Telemetry"
+                        title={selectedLap != null ? `Lap ${selectedLap} traces` : "Full session traces"}
+                        icon={LineChart}
+                        loading={chartLoading}
+                        actions={
+                            refSamples.length && !isReferenceLap ? (
+                                <span className="text-[11px] text-zinc-500">
+                                    Dashed = lap {bestLapNumber} (your best)
+                                </span>
+                            ) : null
+                        }
+                    >
+                        <DistanceTraceChart
+                            samples={lapSamples}
+                            compareSamples={isReferenceLap ? null : refSamples}
+                            compareLabel={`Lap ${bestLapNumber}`}
+                            availableChannels={lapChart.channels}
+                            cursorDistance={cursor}
+                            onCursorChange={setCursor}
+                        />
+                    </SectionCard>
+
+                    <SectionCard label="Circuit" title="Racing line" icon={MapIcon} loading={chartLoading}>
+                        <TrackMap
+                            samples={lapSamples}
+                            raw={lapChart}
+                            deltaByDistance={delta}
+                            cursorDistance={cursor}
+                            onCursorChange={setCursor}
+                        />
+                    </SectionCard>
+
+                    {!lapSeries.fromTrackPosition && lapSamples.length ? (
+                        <p className="border border-blue-500/20 bg-blue-950/10 px-4 py-3 text-xs text-blue-300">
+                            Distance for this lap is derived by integrating speed rather than read from the track
+                            position channel, so it may drift by a percent or two. Upgrading to PRO unlocks the
+                            position channel for exact alignment.
+                        </p>
+                    ) : null}
+                </div>
+            ) : null}
+
+            {/* ---------------- Analysis ---------------- */}
+            {tab === "analysis" ? (
+                <PlanGate
+                    required="PRO"
+                    title="Lap analysis"
+                    description="Delta traces, time-loss breakdown, driving-style profiling, the friction circle and shift analysis."
+                >
+                    <div className="space-y-4">
+                        {isReferenceLap ? (
+                            <p className="border border-zinc-800 bg-zinc-950 px-4 py-3 text-xs text-zinc-400">
+                                Lap {selectedLap} is your fastest lap, so there&apos;s nothing to compare it against.
+                                Pick a different lap above to see where it lost time.
+                            </p>
+                        ) : null}
+
+                        <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
+                            <SectionCard
+                                label="Delta"
+                                title={`Lap ${selectedLap ?? "—"} vs lap ${bestLapNumber ?? "—"}`}
+                                icon={TrendingDown}
+                                loading={chartLoading}
+                            >
+                                <DeltaTraceChart
+                                    delta={delta}
+                                    lapLabel={`Lap ${selectedLap}`}
+                                    referenceLabel={`Lap ${bestLapNumber}`}
+                                    cursorDistance={cursor}
                                     onCursorChange={setCursor}
                                 />
-                                {maxTs > minTs ? (
-                                    <ReplayScrubber
-                                        minTimestamp={minTs}
-                                        maxTimestamp={maxTs}
-                                        value={cursor}
-                                        onChange={setCursor}
-                                    />
-                                ) : null}
-                            </>
-                        )}
-                    </CardContent>
-                </Card>
+                            </SectionCard>
 
-                <CoachingPanel sessionId={id} lapNumber={selectedLap} />
-            </div>
-        </div>
-    );
-}
+                            <SectionCard label="Where it went" title="Biggest time losses" icon={Sparkles}>
+                                <TimeLossList
+                                    losses={losses}
+                                    totalDelta={delta.length ? delta[delta.length - 1].delta : null}
+                                    referenceLabel={`lap ${bestLapNumber}`}
+                                    onSelect={setCursor}
+                                />
+                            </SectionCard>
+                        </div>
 
-function StatCard({
-    icon,
-    label,
-    value,
-    valueClass = "text-lg font-bold text-white",
-}: {
-    icon?: React.ReactNode;
-    label: string;
-    value: string | number;
-    valueClass?: string;
-}) {
-    return (
-        <Card className="border-primary/20 bg-gradient-to-br from-black/80 to-black/60 shadow-xl backdrop-blur-md">
-            <CardContent className="p-5">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 mb-2">
-                    {icon}
-                    {label}
-                </span>
-                <span className={valueClass}>{value}</span>
-            </CardContent>
-        </Card>
+                        <div className="grid gap-4 lg:grid-cols-2">
+                            <SectionCard label="Inputs" title="Driving style" icon={Gauge}>
+                                <DrivingStylePanel
+                                    samples={lapSamples}
+                                    referenceSamples={isReferenceLap ? null : refSamples}
+                                    referenceLabel={`lap ${bestLapNumber}`}
+                                />
+                            </SectionCard>
+
+                            <SectionCard label="Grip" title="Friction circle" icon={CircleDot}>
+                                <FrictionCircleChart samples={lapSamples} />
+                            </SectionCard>
+                        </div>
+
+                        <SectionCard label="Gearbox" title="Shift points" icon={Cog}>
+                            <ShiftHistogram samples={lapSamples} maxRpm={maxRpm} />
+                        </SectionCard>
+                    </div>
+                </PlanGate>
+            ) : null}
+
+            {/* ---------------- Coach ---------------- */}
+            {tab === "coach" ? <CoachingPanel sessionId={id} lapNumber={selectedLap} /> : null}
+        </main>
     );
 }

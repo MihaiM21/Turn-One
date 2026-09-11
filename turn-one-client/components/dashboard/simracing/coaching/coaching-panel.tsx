@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { SectionCard } from "../section-card";
 import { Sparkles, MessageSquare, Lightbulb, AlertTriangle, AlertOctagon, Info, Lock, Send } from "lucide-react";
 import { useCoaching, type CoachingSeverity } from "@/hooks/use-coaching";
 
@@ -30,52 +30,50 @@ export function CoachingPanel({ sessionId, lapNumber }: CoachingPanelProps) {
     };
 
     return (
-        <Card className="border-primary/20 bg-gradient-to-br from-black/80 to-black/60 shadow-xl backdrop-blur-md">
-            <CardContent className="p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-primary" />
-                        <h2 className="text-sm font-bold text-white uppercase tracking-widest">AI Coach</h2>
-                    </div>
-
-                    <div className="flex gap-1 items-center bg-black/40 border border-primary/20 p-1 rounded-lg">
-                        <TabButton active={tab === "tips"} onClick={() => setTab("tips")} icon={<Lightbulb className="w-3.5 h-3.5" />}>
-                            Tips
-                        </TabButton>
-                        <TabButton active={tab === "chat"} onClick={() => setTab("chat")} icon={<MessageSquare className="w-3.5 h-3.5" />}>
-                            Chat
-                        </TabButton>
-                    </div>
+        <SectionCard
+            label="Coaching"
+            title={lapNumber != null ? `AI Coach · lap ${lapNumber}` : "AI Coach"}
+            icon={Sparkles}
+            actions={
+                <div className="flex border border-zinc-800">
+                    <TabButton
+                        active={tab === "tips"}
+                        onClick={() => setTab("tips")}
+                        icon={<Lightbulb className="h-3.5 w-3.5" />}
+                    >
+                        Tips
+                    </TabButton>
+                    <TabButton
+                        active={tab === "chat"}
+                        onClick={() => setTab("chat")}
+                        icon={<MessageSquare className="h-3.5 w-3.5" />}
+                    >
+                        Chat
+                    </TabButton>
                 </div>
-
-                {tab === "tips" ? (
-                    <TipsView tips={tips} status={tipsStatus} />
-                ) : (
-                    <ChatView
-                        history={history}
-                        status={chatStatus}
-                        draft={draft}
-                        onDraft={setDraft}
-                        onSend={handleSend}
-                    />
-                )}
-            </CardContent>
-        </Card>
+            }
+        >
+            {tab === "tips" ? (
+                <TipsView tips={tips} status={tipsStatus} />
+            ) : (
+                <ChatView history={history} status={chatStatus} draft={draft} onDraft={setDraft} onSend={handleSend} />
+            )}
+        </SectionCard>
     );
 }
 
 function TipsView({ tips, status }: { tips: ReturnType<typeof useCoaching>["tips"]; status: ReturnType<typeof useCoaching>["tipsStatus"] }) {
     if (status === "loading") {
-        return <p className="text-muted-foreground animate-pulse font-mono text-sm">Analysing your laps...</p>;
+        return <p className="animate-pulse font-mono text-sm text-zinc-500">Analysing your laps…</p>;
     }
     if (status === "locked") {
         return <LockedNotice message="AI tips are available on PRO and ELITE plans." />;
     }
     if (status === "error") {
-        return <p className="text-red-300 font-mono text-sm">Couldn&apos;t load tips. Try again later.</p>;
+        return <p className="font-mono text-sm text-red-400">Couldn&apos;t load tips. Try again later.</p>;
     }
     if (!tips.length) {
-        return <p className="text-muted-foreground font-mono text-sm">No tips for this lap yet.</p>;
+        return <p className="font-mono text-sm text-zinc-500">No tips for this lap yet.</p>;
     }
 
     return (
@@ -84,20 +82,20 @@ function TipsView({ tips, status }: { tips: ReturnType<typeof useCoaching>["tips
                 const meta = SEVERITY_META[tip.severity];
                 const Icon = meta.icon;
                 return (
-                    <div key={tip.id} className={`p-4 rounded-md border bg-black/40 ${meta.ring}`}>
+                    <div key={tip.id} className={`border bg-black p-4 ${meta.ring}`}>
                         <div className="flex items-start gap-3">
                             <Icon className={`w-4 h-4 mt-0.5 ${meta.color}`} />
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                                     <h3 className="text-sm font-bold text-white">{tip.title}</h3>
-                                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
                                         {tip.category}
                                     </span>
                                     {tip.lapNumber != null ? (
-                                        <span className="text-[10px] font-mono text-muted-foreground">L{tip.lapNumber}</span>
+                                        <span className="font-mono text-[10px] text-zinc-500">L{tip.lapNumber}</span>
                                     ) : null}
                                 </div>
-                                <p className="text-sm text-muted-foreground leading-relaxed">{tip.detail}</p>
+                                <p className="text-sm leading-relaxed text-zinc-400">{tip.detail}</p>
                             </div>
                         </div>
                     </div>
@@ -126,19 +124,19 @@ function ChatView({
 
     return (
         <div className="space-y-3">
-            <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+            <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
                 {history.length === 0 ? (
-                    <p className="text-muted-foreground font-mono text-sm">
+                    <p className="font-mono text-sm text-zinc-500">
                         Ask the coach about a corner, a sector, or a setup change.
                     </p>
                 ) : (
                     history.map((m, i) => (
                         <div
                             key={i}
-                            className={`p-3 rounded-md border text-sm whitespace-pre-wrap leading-relaxed ${
+                            className={`whitespace-pre-wrap border p-3 text-sm leading-relaxed ${
                                 m.role === "user"
-                                    ? "bg-primary/10 border-primary/30 text-white"
-                                    : "bg-black/40 border-white/10 text-slate-200"
+                                    ? "border-primary/30 bg-primary/5 text-white"
+                                    : "border-zinc-800 bg-zinc-900/40 text-zinc-200"
                             }`}
                         >
                             {m.content}
@@ -146,10 +144,10 @@ function ChatView({
                     ))
                 )}
                 {status === "sending" ? (
-                    <p className="text-muted-foreground animate-pulse font-mono text-xs">Thinking...</p>
+                    <p className="animate-pulse font-mono text-xs text-zinc-500">Thinking…</p>
                 ) : null}
                 {status === "error" ? (
-                    <p className="text-red-300 font-mono text-xs">Request failed. Try again.</p>
+                    <p className="font-mono text-xs text-red-400">Request failed. Try again.</p>
                 ) : null}
             </div>
 
@@ -164,13 +162,13 @@ function ChatView({
                             onSend();
                         }
                     }}
-                    placeholder="Ask about a lap, sector, or setup..."
-                    className="flex-1 bg-black/60 border border-white/10 rounded-md px-3 py-2 text-sm focus:border-primary/40 outline-none"
+                    placeholder="Ask about a lap, sector, or setup…"
+                    className="h-9 flex-1 border border-zinc-800 bg-zinc-900 px-3 text-sm text-white outline-none transition-colors focus:border-primary/40"
                 />
                 <button
                     onClick={onSend}
                     disabled={!draft.trim() || status === "sending"}
-                    className="px-3 py-2 rounded-md bg-primary/20 border border-primary/40 hover:bg-primary/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center border border-primary/40 bg-primary/10 text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-40"
                     aria-label="Send"
                 >
                     <Send className="w-4 h-4" />
@@ -182,12 +180,12 @@ function ChatView({
 
 function LockedNotice({ message }: { message: string }) {
     return (
-        <div className="flex items-center gap-3 p-4 rounded-md border border-primary/30 bg-black/40">
-            <Lock className="w-4 h-4 text-primary" />
+        <div className="flex items-center gap-3 border border-primary/30 bg-primary/5 p-4">
+            <Lock className="h-4 w-4 shrink-0 text-primary" />
             <div className="flex-1">
-                <p className="text-sm text-white font-bold">{message}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                    Upgrade your plan in Settings to unlock this feature.
+                <p className="text-sm font-bold text-white">{message}</p>
+                <p className="mt-0.5 text-xs text-zinc-500">
+                    Upgrade your plan to unlock this feature.
                 </p>
             </div>
         </div>
@@ -208,8 +206,8 @@ function TabButton({
     return (
         <button
             onClick={onClick}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
-                active ? "bg-primary/20 text-white border border-primary/40" : "text-muted-foreground hover:text-white"
+            className={`inline-flex h-7 items-center gap-1.5 px-3 text-[11px] font-bold transition-colors ${
+                active ? "bg-primary/15 text-primary" : "text-zinc-500 hover:text-zinc-300"
             }`}
         >
             {icon}

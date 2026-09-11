@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { generateSEO } from '@/lib/seo'
 
+
 export const metadata: Metadata = generateSEO({
   title: 'Confirm Email',
   description: 'Confirm your Turn One account email address.',
