@@ -21,6 +21,8 @@ dist/
 .env
 .env.local
 .env.*
+!.env.*.example
+!**/.env.template
 
 turnone.sqlite
 .env.development

@@ -14,6 +14,18 @@ services:
       - SmtpSettings__Password=${SmtpSettings__Password}
       - APP_BASE_URL=${APP_BASE_URL}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
+      - F1_LIVETIMING_URL=${F1_LIVETIMING_URL}
+      - InfluxDB__Url=${INFLUXDB_URL:-http://influxdb:8086}
+      - InfluxDB__Token=${INFLUXDB_TOKEN}
+      - InfluxDB__Org=${INFLUXDB_ORG:-TurnOne}
+      - InfluxDB__Bucket=${INFLUXDB_BUCKET:-telemetry}
+    volumes:
+      # Pre-existing gap: admin media uploads (ImageController) had no volume and
+      # were destroyed on every redeploy.
+      - api-uploads:/app/wwwroot/uploads
+    depends_on:
+      influxdb:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5271/health"]
       interval: 30s
@@ -22,18 +34,56 @@ services:
       start_period: 40s
     restart: unless-stopped
 
+  # Tick-level sim telemetry store. Without this the whole simracing vertical
+  # degrades silently: InfluxTickRepository catches connection errors and returns
+  # empty lists, so charts and lap analytics just render blank.
+  influxdb:
+    image: influxdb:2.7
+    ports:
+      - "${INFLUXDB_PORT:-8086}:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME:-turnone}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG:-TurnOne}
+      - DOCKER_INFLUXDB_INIT_BUCKET=telemetry
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN}
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+      - influxdb-config:/etc/influxdb2
+      - ./docker/influxdb/init-buckets.sh:/docker-entrypoint-initdb.d/init-buckets.sh:ro
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
   client:
     build:
       context: .
       dockerfile: docker/client/Dockerfile
       args:
         - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+        - NEXT_PUBLIC_F1_PROXY_URL=${NEXT_PUBLIC_F1_PROXY_URL}
     ports:
       - "${CLIENT_PORT:-3000}:3000"
     environment:
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
       - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+      - NEXT_PUBLIC_F1_PROXY_URL=${NEXT_PUBLIC_F1_PROXY_URL}
+      # Same raw key as the backend's JWT__Key — lets the catch-all proxy
+      # verify a Bearer token locally instead of round-tripping to /Auth/me
+      # on every chart fetch.
+      - JWT_SECRET=${JWT__Key}
+      - ANON_COOKIE_SECRET=${ANON_COOKIE_SECRET}
+      # Used by app/api/[...endpoint]/route.ts to proxy requests to the
+      # external F1 data API. Without these the catch-all route 500s with
+      # "Missing external API configuration in environment variables".
+      - F1_API_URL=${F1_API_URL}
+      - F1_API_KEY=${F1_API_KEY}
     depends_on:
       - api
     healthcheck:
@@ -43,6 +93,11 @@ services:
       retries: 3
       start_period: 40s
     restart: unless-stopped
+
+volumes:
+  influxdb-data:
+  influxdb-config:
+  api-uploads:
 
 networks:
   default:
