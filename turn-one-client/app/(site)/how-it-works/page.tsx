@@ -17,6 +17,7 @@ import {
   GitCompareArrows,
   Radio,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { MainNav } from "@/components/navigation/main-nav";
 import { Button } from "@/components/ui/button";
 import { PublicHero } from "@/components/site/public-hero";
@@ -30,14 +31,14 @@ import {
 } from "@/components/site/tutorial-illustrations";
 
 interface GuideStep {
-  icon: React.ElementType;
+  icon: LucideIcon;
   title: string;
   description: string;
 }
 
 interface GuideSection {
   id: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
   badge: string;
   title: string;
   subtitle: string;
@@ -113,7 +114,7 @@ const sections: GuideSection[] = [
 export default function HowItWorksPage() {
   return (
     <div className="min-h-screen bg-black">
-      <MainNav variant="homepage" />
+      <MainNav />
 
       <PublicHero
         eyebrow="Start here"

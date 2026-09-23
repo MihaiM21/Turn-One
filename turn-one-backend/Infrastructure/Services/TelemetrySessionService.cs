@@ -1,5 +1,6 @@
 using Application.DTOs;
 using Application.Interfaces;
+using Application.Telemetry;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -92,6 +93,131 @@ public class TelemetrySessionService : ITelemetrySessionService
         return newSession;
     }
 
+    public async Task<TelemetrySession> StartOrUpsertSessionV2Async(StartSessionV2Request request)
+    {
+        var existing = await _context.TelemetrySessions.FindAsync(request.SessionId);
+        TelemetrySession session;
+
+        if (existing != null)
+        {
+            ApplyV2Fields(existing, request);
+            existing.Status = TelemetrySessionStatus.Active;
+            existing.IsActive = true;
+            existing.EndedAt = null;
+            existing.LastSeenAt = request.StartedAt;
+            session = existing;
+        }
+        else
+        {
+            int sessionLimit = request.Plan switch
+            {
+                PlanType.BASIC => 1,
+                PlanType.PRO => 5,
+                PlanType.ELITE => 15,
+                _ => 1
+            };
+
+            var userSessions = await _context.TelemetrySessions
+                .Where(s => s.UserId == request.UserId)
+                .OrderByDescending(s => s.StartedAt)
+                .ToListAsync();
+
+            if (userSessions.Count >= sessionLimit)
+            {
+                var toDelete = userSessions.Skip(sessionLimit - 1).ToList();
+                _context.TelemetrySessions.RemoveRange(toDelete);
+            }
+
+            var newSession = new TelemetrySession
+            {
+                Id = request.SessionId,
+                UserId = request.UserId,
+                Mode = request.Mode,
+                Visibility = TelemetryVisibility.Private,
+                Status = TelemetrySessionStatus.Active,
+                IsActive = true,
+                StartedAt = request.StartedAt,
+                LastSeenAt = request.StartedAt,
+            };
+            ApplyV2Fields(newSession, request);
+
+            _context.TelemetrySessions.Add(newSession);
+
+            var simUser = await _context.SimUsers.FirstOrDefaultAsync(u => u.UserId == request.UserId);
+            if (simUser == null)
+            {
+                simUser = new SimUser { UserId = request.UserId, TotalSessions = 1, LastSessionAt = DateTime.UtcNow };
+                _context.SimUsers.Add(simUser);
+            }
+            else
+            {
+                simUser.TotalSessions++;
+                simUser.LastSessionAt = DateTime.UtcNow;
+            }
+
+            session = newSession;
+        }
+
+        if (!string.IsNullOrEmpty(request.TrackId))
+            session.TrackProfileId = (await UpsertTrackProfileAsync(request)).Id;
+
+        await _context.SaveChangesAsync();
+        return session;
+    }
+
+    private static void ApplyV2Fields(TelemetrySession session, StartSessionV2Request request)
+    {
+        session.Source = request.Source;
+        session.TrackId = request.TrackId;
+        session.TrackLengthM = request.TrackLengthM;
+        session.SectorCount = request.SectorCount;
+        session.SessionKind = request.SessionKind;
+        session.SchemaVersion = 2;
+        session.TickRateHz = request.TickRateHz;
+        session.CarId = request.CarId;
+        if (!string.IsNullOrEmpty(request.CarName)) session.CarModel = request.CarName;
+        if (!string.IsNullOrEmpty(request.TrackName)) session.Track = request.TrackName;
+        session.SessionType = request.SessionTypeRaw ?? WireEnums.SessionTypeName(request.SessionKind);
+        if (!string.IsNullOrEmpty(request.Driver)) session.DriverName = request.Driver;
+    }
+
+    private async Task<TrackProfile> UpsertTrackProfileAsync(StartSessionV2Request request)
+    {
+        var trackId = request.TrackId!;
+        var profile = await _context.TrackProfiles
+            .FirstOrDefaultAsync(p => p.Source == request.Source && p.TrackId == trackId);
+
+        if (profile == null)
+        {
+            profile = new TrackProfile
+            {
+                Id = Guid.NewGuid(),
+                Source = request.Source,
+                TrackId = trackId,
+                DisplayName = request.TrackName ?? trackId,
+                LengthM = request.TrackLengthM ?? 0f,
+                SectorCount = (short)(request.SectorCount ?? 3),
+                SectorBoundariesM = request.SectorBoundariesM ?? Array.Empty<float>(),
+                Status = TrackProfileStatus.Provisional,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _context.TrackProfiles.Add(profile);
+        }
+        else
+        {
+            var changed = false;
+            if (profile.LengthM <= 0 && request.TrackLengthM is > 0)
+            {
+                profile.LengthM = request.TrackLengthM.Value;
+                changed = true;
+            }
+            if (changed) profile.UpdatedAt = DateTime.UtcNow;
+        }
+
+        return profile;
+    }
+
     public async Task EndSessionAsync(Guid sessionId, DateTime endedAt, int completedLaps, int bestLapMs)
     {
         var session = await _context.TelemetrySessions.FindAsync(sessionId);
@@ -147,29 +273,32 @@ public class TelemetrySessionService : ITelemetrySessionService
 
     public async Task<List<TelemetrySessionDto>> GetUserSessionsAsync(Guid userId)
     {
-        return await _context.TelemetrySessions
+        var sessions = await _context.TelemetrySessions
             .Where(s => s.UserId == userId)
             .OrderByDescending(s => s.StartedAt)
-            .Select(s => MapToDto(s))
+            .Include(s => s.User)
             .ToListAsync();
+        return sessions.Select(MapToDto).ToList();
     }
 
     public async Task<List<TelemetrySessionDto>> GetPublicLiveSessionsAsync()
     {
-        return await _context.TelemetrySessions
+        var sessions = await _context.TelemetrySessions
             .Where(s => s.Visibility == TelemetryVisibility.Public && s.IsActive)
             .OrderByDescending(s => s.StartedAt)
-            .Select(s => MapToDto(s))
+            .Include(s => s.User)
             .ToListAsync();
+        return sessions.Select(MapToDto).ToList();
     }
 
     public async Task<List<TelemetrySessionDto>> GetPublicSessionsAsync()
     {
-        return await _context.TelemetrySessions
+        var sessions = await _context.TelemetrySessions
             .Where(s => s.Visibility == TelemetryVisibility.Public)
             .OrderByDescending(s => s.StartedAt)
-            .Select(s => MapToDto(s))
+            .Include(s => s.User)
             .ToListAsync();
+        return sessions.Select(MapToDto).ToList();
     }
 
     public async Task<TelemetrySessionDto?> GetSessionDetailAsync(Guid sessionId, Guid requestingUserId)
@@ -268,7 +397,14 @@ public class TelemetrySessionService : ITelemetrySessionService
     {
         Id = s.Id,
         UserId = s.UserId,
-        Username = s.User.Username,
+        Username = s.User?.Username ?? "",
+        Source = s.Source.ToString(),
+        TrackId = s.TrackId,
+        TrackProfileId = s.TrackProfileId,
+        TrackLengthM = s.TrackLengthM,
+        SessionKind = s.SessionKind.ToString(),
+        SchemaVersion = s.SchemaVersion,
+        CarId = s.CarId,
         CarModel = s.CarModel,
         Track = s.Track,
         DriverName = s.DriverName,

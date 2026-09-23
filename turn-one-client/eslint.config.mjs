@@ -35,6 +35,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored Draco/WASM loaders for the 3D landing hero — generated code, not ours to lint.
+    "public/draco/**",
   ]),
 ]);
 

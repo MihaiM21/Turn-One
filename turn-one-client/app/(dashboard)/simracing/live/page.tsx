@@ -1,8 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Activity } from "lucide-react";
-import { simTelemetryService, ConnectionStatus, SimPhysics, SimGraphics, SimStatic } from "@/lib/simTelemetryService";
+import { toast } from "sonner";
+import {
+    simTelemetryService,
+    ConnectionStatus,
+    SimPhysics,
+    SimGraphics,
+    SimStatic,
+    LapProcessedEvent,
+} from "@/lib/simTelemetryService";
+import { formatLapTime } from "@/lib/simracing/api";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { SimVitalsCard } from "@/components/dashboard/simracing/sim-vitals-card";
 import { SimPedalsCard } from "@/components/dashboard/simracing/sim-pedals-card";
@@ -16,6 +26,7 @@ import { usePageMaintenance } from "@/hooks/usePageMaintenance";
 import { MaintenanceScreen } from "@/components/dashboard/maintenance-screen";
 
 export default function SimracingLiveDashboard() {
+    const router = useRouter();
     const [status, setStatus] = useState<ConnectionStatus>("disconnected");
     const [physics, setPhysics] = useState<SimPhysics | null>(null);
     const [graphics, setGraphics] = useState<SimGraphics | null>(null);
@@ -23,7 +34,7 @@ export default function SimracingLiveDashboard() {
     const [isActive, setIsActive] = useState(false);
 
     // Latest physics frame, sampled on a timer by the trace rather than on every
-    // frame — ACC pushes ~100 Hz and re-rendering a chart that often is wasteful.
+    // frame — 20 Hz sim-neutral ticks and re-rendering a chart that often is wasteful.
     const latestPhysics = useRef<SimPhysics | null>(null);
 
     const { isDisabled, message, loading: maintenanceLoading } = usePageMaintenance("simracing");
@@ -39,11 +50,20 @@ export default function SimracingLiveDashboard() {
             setIsActive(d.status !== "AC_OFF");
         };
         const handleStatic = (d: SimStatic) => setStaticInfo(d);
+        const handleLapProcessed = (e: LapProcessedEvent) => {
+            toast.success(`Lap ${e.lapNumber} processed — ${formatLapTime(e.lapTimeMs)}`, {
+                action: {
+                    label: "View analysis",
+                    onClick: () => router.push(`/simracing/analysis?ref=${e.lapId}`),
+                },
+            });
+        };
 
         simTelemetryService.onStatusChange(handleStatus);
         simTelemetryService.onPhysics(handlePhysics);
         simTelemetryService.onGraphics(handleGraphics);
         simTelemetryService.onStatic(handleStatic);
+        simTelemetryService.onLapProcessed(handleLapProcessed);
         simTelemetryService.connect();
 
         return () => {
@@ -51,9 +71,10 @@ export default function SimracingLiveDashboard() {
             simTelemetryService.offPhysics(handlePhysics);
             simTelemetryService.offGraphics(handleGraphics);
             simTelemetryService.offStatic(handleStatic);
+            simTelemetryService.offLapProcessed(handleLapProcessed);
             simTelemetryService.disconnect();
         };
-    }, []);
+    }, [router]);
 
     if (maintenanceLoading) return null;
     if (isDisabled) return <MaintenanceScreen slug="simracing" message={message} />;

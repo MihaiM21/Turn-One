@@ -6,8 +6,20 @@
  * (403) apart from a genuine failure instead of showing a blank panel or an alert().
  */
 
-import type { MultiChannelChartData } from "@/components/dashboard/simracing/charts/multi-channel-chart";
 import { notifyUnauthorized } from "@/lib/auth-utils";
+import type {
+    CornerCompareDto,
+    LapCornerDto,
+    LapKind,
+    LapOverlayDto,
+    LapTelemetryDto,
+    MultiChannelChartData,
+    MyTrackDto,
+    ReprocessStatusDto,
+    SimSource,
+    TrackLapListItemDto,
+    TrackProfileDto,
+} from "@/lib/simracing/protocol";
 
 export class SimApiError extends Error {
     constructor(
@@ -41,7 +53,7 @@ function authHeaders(): Record<string, string> {
     return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const res = await fetch(`${simApiBase()}${path}`, {
         ...init,
         headers: { ...authHeaders(), ...(init.headers ?? {}) },
@@ -108,6 +120,13 @@ export interface SimSession {
     endedAt?: string;
     clientVersion?: string | null;
     lastSeenAt?: string | null;
+    source?: SimSource;
+    trackId?: string | null;
+    trackProfileId?: string | null;
+    trackLengthM?: number | null;
+    sessionKind?: string;
+    schemaVersion?: number;
+    carId?: string | null;
 }
 
 export interface SimLap {
@@ -128,6 +147,10 @@ export interface SimLap {
     throttleScore: number | null;
     consistencyScore: number | null;
     recordedAt: string;
+    kind?: LapKind;
+    processingStatus?: string;
+    hasTelemetry?: boolean;
+    sectorsMs?: (number | null)[];
 }
 
 export interface SimSessionSummary {
@@ -187,16 +210,6 @@ export const getSummary = (id: string) => request<SimSessionSummary>(`/api/telem
 export const getLiveSessions = () => request<SimSession[]>("/api/telemetry/live");
 export const getLeaderboards = () => request<SimLeaderboardRow[]>("/api/telemetry/leaderboards");
 
-export const getMetrics = (id: string) =>
-    request<
-        {
-            lapNumber: number;
-            brakingScore: number | null;
-            throttleScore: number | null;
-            consistencyScore: number | null;
-        }[]
-    >(`/api/telemetry/sessions/${id}/metrics`);
-
 export const getChannels = (id: string, channels?: string[]) =>
     request<MultiChannelChartData>(
         `/api/telemetry/sessions/${id}/channels${channels?.length ? `?channels=${channels.join(",")}` : ""}`
@@ -230,6 +243,89 @@ export const deleteSession = (id: string) =>
     request<void>(`/api/telemetry/sessions/${id}`, { method: "DELETE" });
 
 export const getLinkRelease = () => request<LinkReleaseInfo>("/api/simracing/link/release");
+
+// ---------------------------------------------------------------------------
+// Lap-telemetry API v2
+// ---------------------------------------------------------------------------
+
+function channelParams(opts?: { channels?: string[]; step?: number }) {
+    const params = new URLSearchParams();
+    if (opts?.channels?.length) params.set("channels", opts.channels.join(","));
+    if (opts?.step != null) params.set("step", String(opts.step));
+    return params;
+}
+
+export const getLapTelemetry = (lapId: string, opts?: { channels?: string[]; step?: number }) => {
+    const qs = channelParams(opts).toString();
+    return request<LapTelemetryDto>(`/api/telemetry/laps/${lapId}/telemetry${qs ? `?${qs}` : ""}`);
+};
+
+export const getSessionLapTelemetry = (
+    sessionId: string,
+    lapNumber: number,
+    opts?: { channels?: string[]; step?: number }
+) => {
+    const qs = channelParams(opts).toString();
+    return request<LapTelemetryDto>(
+        `/api/telemetry/sessions/${sessionId}/laps/${lapNumber}/telemetry${qs ? `?${qs}` : ""}`
+    );
+};
+
+export const getLapOverlay = (
+    lapIds: string[],
+    refLapId: string,
+    opts?: { channels?: string[]; step?: number }
+) => {
+    const params = channelParams(opts);
+    params.set("laps", lapIds.join(","));
+    params.set("ref", refLapId);
+    return request<LapOverlayDto>(`/api/telemetry/laps/overlay?${params}`);
+};
+
+export const getLapCorners = (lapId: string) => request<LapCornerDto[]>(`/api/telemetry/laps/${lapId}/corners`);
+
+export const compareCorners = (lapIds: string[]) =>
+    request<CornerCompareDto>(`/api/telemetry/laps/corners/compare?laps=${lapIds.join(",")}`);
+
+export const getMyTracks = () => request<MyTrackDto[]>("/api/telemetry/tracks/me");
+
+export const getTrackProfile = (profileId: string) =>
+    request<TrackProfileDto>(`/api/telemetry/tracks/${profileId}`);
+
+export const getMyTrackLaps = (
+    profileId: string,
+    opts?: {
+        valid?: boolean;
+        kind?: LapKind;
+        car?: string;
+        limit?: number;
+        cursor?: string;
+        includePublic?: boolean;
+    }
+) => {
+    const params = new URLSearchParams();
+    if (opts?.valid != null) params.set("valid", String(opts.valid));
+    if (opts?.kind != null) params.set("kind", opts.kind);
+    if (opts?.car != null) params.set("car", opts.car);
+    if (opts?.limit != null) params.set("limit", String(opts.limit));
+    if (opts?.cursor != null) params.set("cursor", opts.cursor);
+    if (opts?.includePublic != null) params.set("includePublic", String(opts.includePublic));
+    const qs = params.toString();
+    return request<{ items: TrackLapListItemDto[]; nextCursor: string | null }>(
+        `/api/telemetry/tracks/${profileId}/laps/me${qs ? `?${qs}` : ""}`
+    );
+};
+
+export const reprocessLap = (sessionId: string, lapNumber: number) =>
+    request<ReprocessStatusDto>(`/api/telemetry/sessions/${sessionId}/laps/${lapNumber}/reprocess`, {
+        method: "POST",
+    });
+
+/** Re-runs the lap processor over the session's raw archive; `force` also redoes laps that already have telemetry. */
+export const reprocessSession = (sessionId: string, force = false) =>
+    request<ReprocessStatusDto>(`/api/telemetry/sessions/${sessionId}/reprocess${force ? "?force=true" : ""}`, {
+        method: "POST",
+    });
 
 // ---------------------------------------------------------------------------
 // Formatting helpers (were duplicated inline across the section)

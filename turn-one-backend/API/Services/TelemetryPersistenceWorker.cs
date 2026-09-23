@@ -66,19 +66,13 @@ public class TelemetryPersistenceWorker : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var influxRepo = scope.ServiceProvider.GetRequiredService<ITelemetryTickRepository>();
 
-        // Group by PlanType
-        var grouped = batch.GroupBy(b => b.Plan);
-
-        foreach (var group in grouped)
-        {
-            var records = group.Select(b => b.Record).ToList();
-            await influxRepo.BatchWriteTicksAsync(group.Key, records);
-        }
+        await influxRepo.BatchWriteTicksAsync(batch.Select(b => b.Record).ToList());
     }
 }
 
 public class TickItem
 {
+    /// <summary>Plan of the session owner at ingest time. Kept for diagnostics; storage is no longer partitioned by it.</summary>
     public PlanType Plan { get; set; }
     public TickRecord Record { get; set; } = null!;
 }

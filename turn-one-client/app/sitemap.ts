@@ -12,7 +12,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages = [
     // Home and main pages - highest priority
     { url: '', changeFrequency: 'daily' as const, priority: 1.0 },
-    { url: '/home', changeFrequency: 'daily' as const, priority: 0.9 },
 
     // Information pages
     { url: '/about', changeFrequency: 'monthly' as const, priority: 0.6 },

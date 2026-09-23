@@ -15,7 +15,7 @@ export const revalidate = 3600
 export default function ExplorePage() {
   return (
     <div className="min-h-screen bg-black">
-      <MainNav variant="homepage" />
+      <MainNav />
 
       <main className="mx-auto max-w-7xl space-y-10 px-4 py-24 sm:px-6 lg:px-8">
         <SectionHeader

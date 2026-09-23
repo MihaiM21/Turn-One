@@ -15,6 +15,10 @@ services:
       - APP_BASE_URL=${APP_BASE_URL}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
       - F1_LIVETIMING_URL=${F1_LIVETIMING_URL}
+      # SessionPublishSweepService: every few minutes asks the client to publish
+      # finished F1 sessions to its static pages. Off unless REVALIDATE_SECRET is set.
+      - Revalidation__FrontendUrl=${REVALIDATION_FRONTEND_URL:-http://client:3000}
+      - Revalidation__Secret=${REVALIDATE_SECRET}
       - InfluxDB__Url=${INFLUXDB_URL:-http://influxdb:8086}
       - InfluxDB__Token=${INFLUXDB_TOKEN}
       - InfluxDB__Org=${INFLUXDB_ORG:-TurnOne}
@@ -84,6 +88,9 @@ services:
       # "Missing external API configuration in environment variables".
       - F1_API_URL=${F1_API_URL}
       - F1_API_KEY=${F1_API_KEY}
+      # Bearer secret for POST /api/revalidate/sessions (called by the api
+      # service's SessionPublishSweepService; must match its Revalidation__Secret).
+      - REVALIDATE_SECRET=${REVALIDATE_SECRET}
     depends_on:
       - api
     healthcheck:

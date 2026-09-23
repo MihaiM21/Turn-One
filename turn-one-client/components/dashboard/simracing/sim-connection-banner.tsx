@@ -44,7 +44,7 @@ export function SimConnectionBanner({ status, isActive }: SimConnectionBannerPro
             border: "border-blue-500/30",
             bg: "bg-blue-500/10",
             title: "Waiting for Data...",
-            message: "Turn One Link is connected. Launch ACC and get on track!",
+            message: "Turn One Link is connected. Launch your sim and get on track!",
             showDownload: false,
         },
     };

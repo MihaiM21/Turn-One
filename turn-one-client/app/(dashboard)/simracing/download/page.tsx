@@ -60,7 +60,7 @@ export default function SimracingDownloadPage() {
             <PageHeader
                 label="Sim racing"
                 title="Turn One Link"
-                description="The Windows app that streams your Assetto Corsa Competizione telemetry to Turn One."
+                description="The Windows app that streams your telemetry from ACC, Assetto Corsa, iRacing and EA SPORTS F1 25-26 to Turn One."
                 actions={
                     <Link
                         href="/download"

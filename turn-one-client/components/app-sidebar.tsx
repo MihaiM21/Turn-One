@@ -72,6 +72,10 @@ const data = {
           url: "/simracing/sessions",
         },
         {
+          title: "Analysis",
+          url: "/simracing/analysis",
+        },
+        {
           title: "AI Coach",
           url: "/simracing/coach",
         },

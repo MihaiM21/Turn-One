@@ -17,12 +17,25 @@ function apiBase() {
   return base.replace(/\/$/, "")
 }
 
-async function serverFetch(endpoint: string): Promise<unknown> {
+/**
+ * Cache tag for one session's data. `/api/revalidate/sessions` expires it the
+ * moment the F1 API has the session, so the ISR pages don't sit on a cached
+ * 404 / empty response for the rest of the day.
+ */
+export function sessionTag(year: number, gp: string, session: string) {
+  return `f1-session:${year}:${gp.toLowerCase().replace(/[^a-z0-9]+/g, "-")}:${session}`
+}
+
+type FetchMode = { tag: string; fresh?: boolean }
+
+async function serverFetch(endpoint: string, { tag, fresh = false }: FetchMode): Promise<unknown> {
   const res = await fetch(`${apiBase()}/v2/${endpoint}`, {
     headers: { "X-API-Key": process.env.F1_API_KEY ?? "" },
-    // Finished sessions never change, but a shared cache profile keeps this
-    // simple; revalidating daily is cheap relative to a full rebuild.
-    next: { revalidate: ONE_DAY },
+    // Finished sessions never change, so a day is plenty; newly-published
+    // sessions don't wait for it — the revalidation route expires `tag`.
+    // `fresh` bypasses the cache entirely: that's how the route probes whether
+    // data has appeared without disturbing what the pages currently see.
+    ...(fresh ? { cache: "no-store" as const } : { next: { revalidate: ONE_DAY, tags: [tag] } }),
   })
   if (!res.ok) {
     throw new Error(`F1 API request failed (${res.status}): ${endpoint}`)
@@ -46,7 +59,9 @@ function pickArray<T = unknown>(raw: unknown): T[] {
 }
 
 export async function serverFetchTopSpeeds(year: number, gp: string, session: string) {
-  const raw = await serverFetch(`top-speed-telemetry-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`)
+  const raw = await serverFetch(`top-speed-telemetry-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`, {
+    tag: sessionTag(year, gp, session),
+  })
   let processed: { team: string; speed: number; color: string }[] = []
   if (raw && typeof raw === "object" && "Color" in raw && "Team" in raw && "Top Speed (km/h)" in raw) {
     const colors = (raw as Record<string, Record<string, string>>).Color
@@ -64,7 +79,9 @@ export async function serverFetchTopSpeeds(year: number, gp: string, session: st
 }
 
 export async function serverFetchThrottleAverages(year: number, gp: string, session: string) {
-  const raw = await serverFetch(`throttle-comparison-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`)
+  const raw = await serverFetch(`throttle-comparison-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`, {
+    tag: sessionTag(year, gp, session),
+  })
   const dict = raw as Record<string, { Driver: string; "Average Throttle (%)": number; Color: string }> | unknown[]
   const list = Array.isArray(dict)
     ? (dict as Array<{ Driver: string; "Average Throttle (%)": number; Color: string }>)
@@ -72,7 +89,10 @@ export async function serverFetchThrottleAverages(year: number, gp: string, sess
   return list.map((item) => ({ driver: item.Driver, throttle: item["Average Throttle (%)"], color: item.Color }))
 }
 
-export async function serverFetchSessionResults(year: number, gp: string, session: string) {
-  const raw = await serverFetch(`qualifying-results-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`)
+export async function serverFetchSessionResults(year: number, gp: string, session: string, opts: { fresh?: boolean } = {}) {
+  const raw = await serverFetch(`qualifying-results-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`, {
+    tag: sessionTag(year, gp, session),
+    fresh: opts.fresh,
+  })
   return pickArray<{ Driver: string; LapTime: string; LapTimeDelta: number }>(raw)
 }

@@ -24,6 +24,13 @@ public class CoachingTip
     public string Category { get; set; } = "";
     public CoachingSeverity Severity { get; set; } = CoachingSeverity.Suggestion;
     public int? LapNumber { get; set; }
+
+    /// <summary>Reference corner index (0-based) this tip is about, when it's corner-specific.</summary>
+    public int? CornerIndex { get; set; }
+    /// <summary>Display name for <see cref="CornerIndex"/> — the track profile's reference corner name, or "T{n}".</summary>
+    public string? CornerName { get; set; }
+    /// <summary>Distance (m) along the lap the UI should jump the cursor to, when this tip is corner-specific.</summary>
+    public float? DistanceM { get; set; }
 }
 
 public class CoachingChatMessage
