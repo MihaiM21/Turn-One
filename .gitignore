@@ -61,8 +61,21 @@ turn-one-backend/API/logs/
 
 # Old documentation
 docs/old/
+LANDING_PAGE_REDESIGN_RESEARCH.md
 # TypeScript incremental build cache
 *.tsbuildinfo
 
 # infrastructure things
 infra
+
+.env.production.example
+.env.template
+docker-compose.new.yml
+docker-compose.override.yml
+
+
+# Claude
+launch.json
+settings.local.json
+
+
