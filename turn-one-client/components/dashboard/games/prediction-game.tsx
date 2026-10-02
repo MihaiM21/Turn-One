@@ -81,7 +81,7 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
     const raceSession = selectedRace.sessions.find((s) => s.name === 'Race');
 
     if (selectedRace && raceSession) {
-      const raceId = `2026-R${index + 1}`;
+      const raceId = selectedRace.raceId;
       if (existingPredictions.includes(raceId)) {
         toast({
           title: 'Prediction Already Exists',
@@ -193,8 +193,7 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
                   </SelectItem>
                 ) : (
                   upcomingRaces.map((race) => {
-                    const raceId = `2026-R${race.index + 1}`;
-                    const hasPrediction = existingPredictions.includes(raceId);
+                    const hasPrediction = existingPredictions.includes(race.raceId);
                     return (
                       <SelectItem key={race.index} value={race.index.toString()} disabled={hasPrediction}>
                         {race.grandPrix} — {race.circuit}
