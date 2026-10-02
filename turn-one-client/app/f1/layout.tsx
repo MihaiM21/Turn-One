@@ -6,7 +6,7 @@ import { MainFooter } from "@/components/footer/main-footer"
 export default function F1SessionLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-black">
-      <MainNav variant="homepage" />
+      <MainNav />
       <main>{children}</main>
       <MainFooter />
     </div>

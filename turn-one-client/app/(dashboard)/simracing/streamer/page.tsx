@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links";
 import { SectionCard } from "@/components/dashboard/simracing/section-card";
 import { PlanGate } from "@/components/dashboard/simracing/plan-gate";
-import { simApiBase } from "@/lib/simracing/api";
+import { request, SimApiError } from "@/lib/simracing/api";
 
 interface TokenDto {
     id: string;
@@ -26,11 +26,6 @@ const OVERLAY_KINDS = [
     { key: "leaderboard", label: "Leaderboard", detail: "Top drivers by distance" },
 ] as const;
 
-function authHeaders(): Record<string, string> {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
 export default function StreamerPage() {
     const [tokens, setTokens] = useState<TokenDto[]>([]);
     const [loading, setLoading] = useState(true);
@@ -40,12 +35,15 @@ export default function StreamerPage() {
     const load = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${simApiBase()}/api/simracing/overlay/tokens`, { headers: authHeaders() });
+            const tokens = await request<TokenDto[]>("/api/simracing/overlay/tokens");
+            setTokens(tokens);
+        } catch (err) {
             // 403 is the plan gate — PlanGate already explains it, so just show no tokens.
-            if (res.ok) setTokens(await res.json());
-            else setTokens([]);
-        } catch {
-            toast.error("Couldn't load your overlay tokens.");
+            if (err instanceof SimApiError && err.isPlanGated) {
+                setTokens([]);
+            } else {
+                toast.error("Couldn't load your overlay tokens.");
+            }
         } finally {
             setLoading(false);
         }
@@ -58,22 +56,20 @@ export default function StreamerPage() {
     const create = async () => {
         setCreating(true);
         try {
-            const res = await fetch(`${simApiBase()}/api/simracing/overlay/tokens`, {
+            await request<TokenDto>("/api/simracing/overlay/tokens", {
                 method: "POST",
-                headers: { ...authHeaders(), "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ label: label || "Overlay", scopes: "cockpit,lap,leaderboard" }),
             });
-            if (res.status === 403) {
-                toast.error("Overlay tokens require a PRO or ELITE plan.");
-                return;
-            }
-            if (!res.ok) {
-                toast.error("Couldn't create that token.");
-                return;
-            }
             setLabel("");
             toast.success("Overlay token created.");
             await load();
+        } catch (err) {
+            if (err instanceof SimApiError && err.isPlanGated) {
+                toast.error("Overlay tokens require a PRO or ELITE plan.");
+            } else {
+                toast.error("Couldn't create that token.");
+            }
         } finally {
             setCreating(false);
         }
@@ -82,10 +78,7 @@ export default function StreamerPage() {
     const revoke = async (id: string) => {
         if (!confirm("Revoke this overlay token? Active OBS browser sources will disconnect immediately.")) return;
         try {
-            await fetch(`${simApiBase()}/api/simracing/overlay/tokens/${id}`, {
-                method: "DELETE",
-                headers: authHeaders(),
-            });
+            await request<void>(`/api/simracing/overlay/tokens/${id}`, { method: "DELETE" });
             toast.success("Token revoked.");
             await load();
         } catch {

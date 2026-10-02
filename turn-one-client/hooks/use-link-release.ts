@@ -34,7 +34,7 @@ export function useLinkRelease() {
 }
 
 /**
- * Turn One Link is Windows-only (it reads ACC's Windows shared memory), so non-Windows
+ * Turn One Link is Windows-only (it reads shared memory and UDP), so non-Windows
  * visitors get told that up front instead of downloading something that cannot run.
  */
 export function useIsWindows() {

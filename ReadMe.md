@@ -2,7 +2,7 @@
 
 [![CI/CD Pipeline](https://github.com/MihaiM21/Turn-One/actions/workflows/pipeline.yml/badge.svg)](https://github.com/MihaiM21/Turn-One/actions/workflows/pipeline.yml)
 
-Turn One is a Formula 1 telemetry and sim-racing platform: live F1 timing, sim-racing telemetry analysis and coaching tools, and a gamification layer (predictions, rewards, and a game hub) — built with .NET 9 and Next.js 15.
+Turn One is a Formula 1 telemetry and sim-racing platform: live F1 timing, multi-sim telemetry analysis (ACC, Assetto Corsa, iRacing, EA SPORTS F1 25-26) with AI coaching tools, and a gamification layer (predictions, rewards, and a game hub) — built with .NET 9 and Next.js 15.
 
 > **Unofficial project.** Turn One is a fan-built platform and is not affiliated with, endorsed by, or sponsored by Formula 1, the FIA, or Liberty Media. F1, FORMULA 1, and related marks are trademarks of Formula One Licensing B.V. F1 data shown is sourced from public/community feeds, not an official Formula 1 data license.
 

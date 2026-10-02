@@ -91,6 +91,13 @@ const nextConfig: NextConfig = {
         destination: '/contact',
         permanent: false,
       },
+      // /home was the old hub page; the landing page at / replaced it (2026-09).
+      // Permanent so search engines move its ranking to /.
+      {
+        source: '/home',
+        destination: '/',
+        permanent: true,
+      },
       // Public page consolidation: services merged into features.
       // /about used to redirect to /home#about; it is now a real page
       // (see app/(site)/about/page.tsx) so the legal disclaimer has a home.

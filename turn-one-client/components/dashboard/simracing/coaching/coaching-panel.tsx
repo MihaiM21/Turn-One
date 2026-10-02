@@ -8,6 +8,8 @@ import { useCoaching, type CoachingSeverity } from "@/hooks/use-coaching";
 interface CoachingPanelProps {
     sessionId: string;
     lapNumber: number | null;
+    /** Called with a tip's `distanceM` when the user clicks a corner-specific tip, to jump a chart cursor there. */
+    onJumpTo?: (distanceM: number) => void;
 }
 
 const SEVERITY_META: Record<CoachingSeverity, { icon: React.ComponentType<{ className?: string }>; color: string; ring: string }> = {
@@ -17,7 +19,7 @@ const SEVERITY_META: Record<CoachingSeverity, { icon: React.ComponentType<{ clas
     3: { icon: AlertOctagon, color: "text-red-300", ring: "border-red-500/50" },
 };
 
-export function CoachingPanel({ sessionId, lapNumber }: CoachingPanelProps) {
+export function CoachingPanel({ sessionId, lapNumber, onJumpTo }: CoachingPanelProps) {
     const [tab, setTab] = useState<"tips" | "chat">("tips");
     const { tips, tipsStatus, history, chatStatus, sendMessage } = useCoaching(sessionId, lapNumber);
     const [draft, setDraft] = useState("");
@@ -54,7 +56,7 @@ export function CoachingPanel({ sessionId, lapNumber }: CoachingPanelProps) {
             }
         >
             {tab === "tips" ? (
-                <TipsView tips={tips} status={tipsStatus} />
+                <TipsView tips={tips} status={tipsStatus} onJumpTo={onJumpTo} />
             ) : (
                 <ChatView history={history} status={chatStatus} draft={draft} onDraft={setDraft} onSend={handleSend} />
             )}
@@ -62,7 +64,15 @@ export function CoachingPanel({ sessionId, lapNumber }: CoachingPanelProps) {
     );
 }
 
-function TipsView({ tips, status }: { tips: ReturnType<typeof useCoaching>["tips"]; status: ReturnType<typeof useCoaching>["tipsStatus"] }) {
+function TipsView({
+    tips,
+    status,
+    onJumpTo,
+}: {
+    tips: ReturnType<typeof useCoaching>["tips"];
+    status: ReturnType<typeof useCoaching>["tipsStatus"];
+    onJumpTo?: (distanceM: number) => void;
+}) {
     if (status === "loading") {
         return <p className="animate-pulse font-mono text-sm text-zinc-500">Analysing your laps…</p>;
     }
@@ -81,8 +91,22 @@ function TipsView({ tips, status }: { tips: ReturnType<typeof useCoaching>["tips
             {tips.map(tip => {
                 const meta = SEVERITY_META[tip.severity];
                 const Icon = meta.icon;
+                const jumpable = tip.distanceM != null && !!onJumpTo;
                 return (
-                    <div key={tip.id} className={`border bg-black p-4 ${meta.ring}`}>
+                    <div
+                        key={tip.id}
+                        role={jumpable ? "button" : undefined}
+                        tabIndex={jumpable ? 0 : undefined}
+                        onClick={jumpable ? () => onJumpTo!(tip.distanceM as number) : undefined}
+                        onKeyDown={
+                            jumpable
+                                ? e => {
+                                      if (e.key === "Enter" || e.key === " ") onJumpTo!(tip.distanceM as number);
+                                  }
+                                : undefined
+                        }
+                        className={`border bg-black p-4 ${meta.ring} ${jumpable ? "cursor-pointer transition-colors hover:border-primary/50" : ""}`}
+                    >
                         <div className="flex items-start gap-3">
                             <Icon className={`w-4 h-4 mt-0.5 ${meta.color}`} />
                             <div className="flex-1 min-w-0">
@@ -91,6 +115,11 @@ function TipsView({ tips, status }: { tips: ReturnType<typeof useCoaching>["tips
                                     <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
                                         {tip.category}
                                     </span>
+                                    {tip.cornerName ? (
+                                        <span className="inline-flex items-center rounded-sm border border-primary/40 bg-primary/10 px-1.5 py-0.5 font-mono text-[10px] font-bold text-primary">
+                                            {tip.cornerName}
+                                        </span>
+                                    ) : null}
                                     {tip.lapNumber != null ? (
                                         <span className="font-mono text-[10px] text-zinc-500">L{tip.lapNumber}</span>
                                     ) : null}

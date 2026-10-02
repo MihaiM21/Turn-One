@@ -1,5 +1,7 @@
 using Application.Interfaces;
 using Domain.Enums;
+using Domain.Telemetry;
+using InfluxDB.Client.Core.Flux.Domain;
 using System.Text.Json;
 using InfluxDB.Client;
 using InfluxDB.Client.Api.Domain;
@@ -15,6 +17,9 @@ public class InfluxTickRepository : ITelemetryTickRepository, IDisposable
     private readonly ILogger<InfluxTickRepository> _logger;
     private readonly WriteApiAsync _writeApi;
     private readonly string _org;
+    private readonly string _bucket;
+    /// <summary>Pre-single-bucket per-plan buckets, consulted read-only when the main bucket has no rows for a session.</summary>
+    private readonly string[] _legacyBuckets;
 
     public InfluxTickRepository(IConfiguration configuration, ILogger<InfluxTickRepository> logger)
     {
@@ -22,6 +27,9 @@ public class InfluxTickRepository : ITelemetryTickRepository, IDisposable
         var url = configuration["InfluxDB:Url"] ?? "http://localhost:8086";
         var token = configuration["InfluxDB:Token"] ?? "my-token";
         _org = configuration["InfluxDB:Org"] ?? "TurnOne";
+        _bucket = configuration["InfluxDB:Bucket"] ?? "telemetry";
+        var legacy = configuration.GetSection("InfluxDB:LegacyBuckets").GetChildren().Select(c => c.Value).OfType<string>().ToArray();
+        _legacyBuckets = legacy.Length > 0 ? legacy : new[] { "telemetry_basic", "telemetry_pro", "telemetry_elite" };
         
         var options = new InfluxDBClientOptions.Builder()
             .Url(url)
@@ -32,16 +40,8 @@ public class InfluxTickRepository : ITelemetryTickRepository, IDisposable
         _writeApi = _client.GetWriteApiAsync();
     }
 
-    public async Task BatchWriteTicksAsync(PlanType planType, IEnumerable<TickRecord> ticks)
+    public async Task BatchWriteTicksAsync(IEnumerable<TickRecord> ticks)
     {
-        var bucket = planType switch
-        {
-            PlanType.BASIC => "telemetry_basic",
-            PlanType.PRO => "telemetry_pro",
-            PlanType.ELITE => "telemetry_elite",
-            _ => "telemetry_basic"
-        };
-
         var points = new List<PointData>();
 
         foreach (var tick in ticks)
@@ -94,7 +94,7 @@ public class InfluxTickRepository : ITelemetryTickRepository, IDisposable
 
         if (points.Any())
         {
-            await _writeApi.WritePointsAsync(points, bucket, _org);
+            await _writeApi.WritePointsAsync(points, _bucket, _org);
         }
     }
 
@@ -107,8 +107,8 @@ public class InfluxTickRepository : ITelemetryTickRepository, IDisposable
     {
         var suffixes = array.GetArrayLength() switch
         {
-            4 when TelemetryChannels.CornerArrayFields.Contains(key) => TelemetryChannels.CornerSuffixes,
-            3 when TelemetryChannels.VectorArrayFields.Contains(key) => TelemetryChannels.AxisSuffixes,
+            4 when ChannelRegistry.CornerArrayFields.Contains(key) => ChannelRegistry.CornerSuffixes,
+            3 when ChannelRegistry.VectorArrayFields.Contains(key) => ChannelRegistry.AxisSuffixes,
             _ => null
         };
         if (suffixes == null) return point;
@@ -127,17 +127,9 @@ public class InfluxTickRepository : ITelemetryTickRepository, IDisposable
 
     public async Task<List<ChartPoint>> GetSessionPhysicsChartAsync(PlanType planType, Guid sessionId)
     {
-        var bucket = planType switch
-        {
-            PlanType.BASIC => "telemetry_basic",
-            PlanType.PRO => "telemetry_pro",
-            PlanType.ELITE => "telemetry_elite",
-            _ => "telemetry_basic"
-        };
-
-        var query = $@"
+        string Query(string bucket) => $@"
             from(bucket: ""{bucket}"")
-            |> range(start: 0)
+            |> range(start: 0, stop: 2100-01-01T00:00:00Z)
             |> filter(fn: (r) => r.sessionId == ""{sessionId}"" and r.msgType == ""physics"")
             |> filter(fn: (r) => r._field == ""speedKmh"" or r._field == ""rpms"" or r._field == ""gas"" or r._field == ""brake"" or r._field == ""gear"")
             |> aggregateWindow(every: 1s, fn: mean, createEmpty: false)
@@ -148,8 +140,8 @@ public class InfluxTickRepository : ITelemetryTickRepository, IDisposable
 
         try
         {
-            var tables = await _client.GetQueryApi().QueryAsync(query, _org);
-            foreach (var record in tables.SelectMany(t => t.Records))
+            var records = await QueryWithLegacyFallbackAsync(Query);
+            foreach (var record in records)
             {
                 var pt = new ChartPoint
                 {
@@ -185,12 +177,11 @@ public class InfluxTickRepository : ITelemetryTickRepository, IDisposable
         DateTime? from = null,
         DateTime? to = null)
     {
-        var bucket = BucketFor(planType);
-        var requested = TelemetryChannels.ResolveAllowed(planType, channels);
+        var requested = ChannelRegistry.ResolveAllowed(planType, channels);
         if (requested.Count == 0)
-            requested = TelemetryChannels.ResolveAllowed(planType, TelemetryChannels.AllowedFor(planType).Take(2));
+            requested = ChannelRegistry.ResolveAllowed(planType, ChannelRegistry.AllowedFor(planType).Take(2));
 
-        var windowMs = TelemetryChannels.SampleWindowMs(planType, from, to);
+        var windowMs = ChannelRegistry.SampleWindowMs(planType, from, to);
         var fromExpr = from.HasValue ? from.Value.ToUniversalTime().ToString("o") : "0";
         var toClause = to.HasValue ? $", stop: {to.Value.ToUniversalTime():o}" : "";
 
@@ -211,7 +202,7 @@ public class InfluxTickRepository : ITelemetryTickRepository, IDisposable
             var fieldFilter = string.Join(" or ", keys.Select(c => $"r._field == \"{c}\""));
             var fn = group.Key.Agg == ChannelAggregation.Last ? "last" : "mean";
 
-            var query = $@"
+            string Query(string bucket) => $@"
                 from(bucket: ""{bucket}"")
                 |> range(start: {fromExpr}{toClause})
                 |> filter(fn: (r) => r.sessionId == ""{sessionId}"" and r.msgType == ""{group.Key.MsgType}"")
@@ -222,8 +213,8 @@ public class InfluxTickRepository : ITelemetryTickRepository, IDisposable
 
             try
             {
-                var tables = await _client.GetQueryApi().QueryAsync(query, _org);
-                foreach (var record in tables.SelectMany(t => t.Records))
+                var records = await QueryWithLegacyFallbackAsync(Query);
+                foreach (var record in records)
                 {
                     var time = record.GetTimeInDateTime();
                     if (time == null) continue;
@@ -265,10 +256,9 @@ public class InfluxTickRepository : ITelemetryTickRepository, IDisposable
 
     public async Task<(DateTime? start, DateTime? end)> GetLapBoundsAsync(PlanType planType, Guid sessionId, int lapNumber)
     {
-        var bucket = BucketFor(planType);
-        var query = $@"
+        string Query(string bucket) => $@"
             from(bucket: ""{bucket}"")
-            |> range(start: 0)
+            |> range(start: 0, stop: 2100-01-01T00:00:00Z)
             |> filter(fn: (r) => r.sessionId == ""{sessionId}"" and r.msgType == ""graphics"" and r._field == ""completedLaps"")
             |> filter(fn: (r) => r._value == {lapNumber - 1} or r._value == {lapNumber})
             |> keep(columns: [""_time"", ""_value""])
@@ -276,11 +266,11 @@ public class InfluxTickRepository : ITelemetryTickRepository, IDisposable
 
         try
         {
-            var tables = await _client.GetQueryApi().QueryAsync(query, _org);
+            var records = await QueryWithLegacyFallbackAsync(Query);
             DateTime? start = null;
             DateTime? end = null;
 
-            foreach (var record in tables.SelectMany(t => t.Records).OrderBy(r => r.GetTimeInDateTime()))
+            foreach (var record in records.OrderBy(r => r.GetTimeInDateTime()))
             {
                 var time = record.GetTimeInDateTime();
                 if (time == null) continue;
@@ -299,13 +289,110 @@ public class InfluxTickRepository : ITelemetryTickRepository, IDisposable
         }
     }
 
-    private static string BucketFor(PlanType planType) => planType switch
+    public async Task<List<RawTick>> GetLapTicksRawAsync(Guid sessionId, DateTime from, DateTime to)
     {
-        PlanType.BASIC => "telemetry_basic",
-        PlanType.PRO => "telemetry_pro",
-        PlanType.ELITE => "telemetry_elite",
-        _ => "telemetry_basic"
-    };
+        var fromExpr = from.ToUniversalTime().ToString("o");
+        var toExpr = to.ToUniversalTime().ToString("o");
+
+        string Query(string bucket) => $@"
+            from(bucket: ""{bucket}"")
+            |> range(start: {fromExpr}, stop: {toExpr})
+            |> filter(fn: (r) => r.sessionId == ""{sessionId}"")
+            |> pivot(rowKey:[""_time""], columnKey: [""_field""], valueColumn: ""_value"")
+        ";
+
+        var result = new List<RawTick>();
+        try
+        {
+            var records = await QueryWithLegacyFallbackAsync(Query);
+            foreach (var record in records)
+            {
+                var time = record.GetTimeInDateTime();
+                if (time == null) continue;
+
+                var msgType = record.Values.TryGetValue("msgType", out var mt) ? mt?.ToString() ?? "" : "";
+                var tick = new RawTick { Time = time.Value.ToUniversalTime(), MsgType = msgType };
+                foreach (var (key, value) in record.Values)
+                {
+                    if (key is "_time" or "_start" or "_stop" or "_measurement" or "result" or "table" or "sessionId" or "msgType") continue;
+                    if (value == null) continue;
+                    try { tick.Fields[key] = Convert.ToDouble(value); }
+                    catch { /* non-numeric field (e.g. a string tag) — skip */ }
+                }
+                result.Add(tick);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to query InfluxDB for raw lap ticks");
+        }
+
+        return result.OrderBy(t => t.Time).ToList();
+    }
+
+    public async Task<List<(DateTime start, DateTime end)>> GetV2LapBoundsAsync(Guid sessionId)
+    {
+        string Query(string bucket) => $@"
+            from(bucket: ""{bucket}"")
+            |> range(start: 0, stop: 2100-01-01T00:00:00Z)
+            |> filter(fn: (r) => r.sessionId == ""{sessionId}"" and r.msgType == ""tick"" and r._field == ""lap"")
+            |> keep(columns: [""_time"", ""_value""])
+        ";
+
+        try
+        {
+            var records = await QueryWithLegacyFallbackAsync(Query);
+            var byLap = new SortedDictionary<int, (DateTime min, DateTime max)>();
+            foreach (var record in records)
+            {
+                var time = record.GetTimeInDateTime();
+                if (time == null) continue;
+                int lap;
+                try { lap = Convert.ToInt32(record.GetValue()); }
+                catch { continue; }
+
+                var t = time.Value.ToUniversalTime();
+                if (byLap.TryGetValue(lap, out var range))
+                    byLap[lap] = (range.min < t ? range.min : t, range.max > t ? range.max : t);
+                else
+                    byLap[lap] = (t, t);
+            }
+
+            return byLap.Select(kv => (kv.Value.min, kv.Value.max)).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to query InfluxDB for v2 lap bounds");
+            return new List<(DateTime, DateTime)>();
+        }
+    }
+
+    /// <summary>
+    /// Runs <paramref name="queryFor"/> against the main bucket; if it yields no rows, tries each legacy
+    /// per-plan bucket in turn. Sessions recorded before the single-bucket change live in one of those,
+    /// and a user's plan at read time no longer says which — so we look rather than guess.
+    /// </summary>
+    private async Task<List<FluxRecord>> QueryWithLegacyFallbackAsync(Func<string, string> queryFor)
+    {
+        var api = _client.GetQueryApi();
+        foreach (var bucket in new[] { _bucket }.Concat(_legacyBuckets))
+        {
+            List<FluxRecord> records;
+            try
+            {
+                var tables = await api.QueryAsync(queryFor(bucket), _org);
+                records = tables.SelectMany(t => t.Records).ToList();
+            }
+            catch (Exception ex) when (bucket != _bucket)
+            {
+                // A missing legacy bucket is expected on fresh deployments.
+                _logger.LogDebug(ex, "Legacy bucket {Bucket} unavailable", bucket);
+                continue;
+            }
+            if (records.Count > 0) return records;
+        }
+        return new List<FluxRecord>();
+    }
 
     public void Dispose()
     {

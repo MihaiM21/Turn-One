@@ -14,6 +14,7 @@ import {
   PlayCircle,
   Radio,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { MainNav } from "@/components/navigation/main-nav";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -99,7 +100,7 @@ const trackChartSettings = { ...chartSettings, chartHeight: 460 };
 
 interface ShowcaseSection {
   id: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
   badge: string;
   title: string;
   subtitle: string;
@@ -401,7 +402,7 @@ export default function ExamplesPage() {
 
   return (
     <div className="min-h-screen bg-black">
-      <MainNav variant="homepage" />
+      <MainNav />
 
       <PublicHero
         eyebrow="Live examples · Real F1 data"

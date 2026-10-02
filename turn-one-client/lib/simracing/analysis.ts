@@ -9,7 +9,7 @@
  * laps overlay exactly and a real time-delta can be computed.
  */
 
-import type { MultiChannelChartData } from "@/components/dashboard/simracing/charts/multi-channel-chart";
+import type { MultiChannelChartData } from "@/lib/simracing/protocol";
 
 export interface DistanceSample {
     /** Metres from the start/finish line. */
@@ -26,6 +26,22 @@ export interface DistanceSample {
     steerAngle: number;
     accGx: number;
     accGy: number;
+    /** World-space position, metres — present for server-built (v2) series only. */
+    x?: number;
+    y?: number;
+    /** 0-based sector index — present for server-built (v2) series only. */
+    sector?: number;
+    /** Index into a lap's `corners` array covering this sample, when known. */
+    cornerIndex?: number | null;
+    /** Same, against a reference lap/track profile's corner numbering. */
+    refCornerIndex?: number | null;
+    /** Longitudinal G — present for server-built (v2) series only. */
+    gLong?: number;
+    clutch?: number;
+    fuel?: number;
+    drs?: number;
+    /** Radians — present for server-built (v2) series only. */
+    heading?: number;
 }
 
 export interface DistanceSeries {
@@ -36,6 +52,12 @@ export interface DistanceSeries {
     duration: number;
     /** True when distance came from the track-spline channel rather than integrated speed. */
     fromTrackPosition: boolean;
+    /** Grid spacing, in metres — set when `samples` already sit on a fixed distance grid (v2 server data). */
+    stepM?: number;
+    /** Where this series came from: pre-gridded server data, or client-side integration/resampling. */
+    source?: "server" | "client";
+    lapId?: string;
+    trackProfileId?: string | null;
 }
 
 const num = (v: number | null | undefined) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
@@ -134,6 +156,8 @@ export function resampleByDistance(series: DistanceSeries, stepM = 5): DistanceS
         const span = b.distance - a.distance;
         const t = span > 0 ? (d - a.distance) / span : 0;
         const lerp = (x: number, y: number) => x + (y - x) * t;
+        const lerpOpt = (x: number | undefined, y: number | undefined) =>
+            x == null || y == null ? x : lerp(x, y);
 
         out.push({
             distance: d,
@@ -148,6 +172,17 @@ export function resampleByDistance(series: DistanceSeries, stepM = 5): DistanceS
             steerAngle: lerp(a.steerAngle, b.steerAngle),
             accGx: lerp(a.accGx, b.accGx),
             accGy: lerp(a.accGy, b.accGy),
+            // Optional v2 fields: numeric ones lerp, discrete/flag-like ones are held from `a`.
+            x: lerpOpt(a.x, b.x),
+            y: lerpOpt(a.y, b.y),
+            sector: a.sector,
+            cornerIndex: a.cornerIndex,
+            refCornerIndex: a.refCornerIndex,
+            gLong: lerpOpt(a.gLong, b.gLong),
+            clutch: lerpOpt(a.clutch, b.clutch),
+            fuel: lerpOpt(a.fuel, b.fuel),
+            drs: a.drs,
+            heading: a.heading,
         });
     }
 

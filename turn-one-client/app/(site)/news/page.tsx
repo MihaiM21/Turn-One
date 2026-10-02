@@ -97,7 +97,7 @@ export default async function NewsPage() {
 
     return (
       <div className="min-h-screen bg-black">
-        <MainNav variant="homepage" />
+        <MainNav />
         <div className="flex items-center justify-center min-h-[80vh]">
           <PublicCard className="max-w-md p-6">
             {isNotReady ? (
@@ -155,7 +155,7 @@ export default async function NewsPage() {
 
   return (
     <div className="min-h-screen bg-black">
-      <MainNav variant="homepage" />
+      <MainNav />
 
       <main className="mx-auto max-w-7xl space-y-10 px-4 py-24 sm:px-6 lg:px-8">
         {/* Nav */}

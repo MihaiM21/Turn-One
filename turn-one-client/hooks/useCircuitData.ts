@@ -19,6 +19,8 @@ export interface CircuitData {
 const LOCATION_TO_KEY: Record<string, number> = {
   // Bahrain
   'Bahrain': 63, 'Sakhir': 63,
+  // Sepang (Bahrain GP in Malaysia, 2026): deliberately absent. Multiviewer has no
+  // Sepang layout, so TrackMap shows its fallback for this one weekend.
   // Saudi Arabia
   'Jeddah': 149, 'Saudi Arabia': 149,
   // Australia

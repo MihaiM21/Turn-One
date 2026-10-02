@@ -1,5 +1,6 @@
 using API.Services;
 using Domain.Enums;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.WebSockets;
@@ -11,15 +12,20 @@ namespace API.Middleware;
 
 public class TelemetryWebSocketMiddleware
 {
+    /// <summary>Cap on a reassembled multi-frame message; beyond this the whole message is dropped (with a warning) rather than buffered unbounded.</summary>
+    private const int MaxMessageBytes = 1024 * 1024;
+
     private readonly RequestDelegate _next;
     private readonly IConfiguration _configuration;
     private readonly ILogger<TelemetryWebSocketMiddleware> _logger;
+    private readonly IHostApplicationLifetime _lifetime;
 
-    public TelemetryWebSocketMiddleware(RequestDelegate next, IConfiguration configuration, ILogger<TelemetryWebSocketMiddleware> logger)
+    public TelemetryWebSocketMiddleware(RequestDelegate next, IConfiguration configuration, ILogger<TelemetryWebSocketMiddleware> logger, IHostApplicationLifetime lifetime)
     {
         _next = next;
         _configuration = configuration;
         _logger = logger;
+        _lifetime = lifetime;
     }
 
     public async Task InvokeAsync(HttpContext context, TelemetryIngestionService ingestionService)
@@ -28,25 +34,31 @@ public class TelemetryWebSocketMiddleware
         {
             if (context.WebSockets.IsWebSocketRequest)
             {
+                using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+
+                // Bearer header (the Link) or ?access_token= (browser WebSocket API and scripts
+                // can't set headers — same convention SignalR uses on the hub).
                 var authHeader = context.Request.Headers["Authorization"].ToString();
-                if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+                var token = !string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ")
+                    ? authHeader.Substring("Bearer ".Length).Trim()
+                    : context.Request.Query["access_token"].ToString();
+                if (string.IsNullOrEmpty(token))
                 {
-                    context.Response.StatusCode = 401;
+                    await CloseUnauthorizedAsync(webSocket);
                     return;
                 }
 
-                var token = authHeader.Substring("Bearer ".Length).Trim();
                 var principal = ValidateToken(token);
                 if (principal == null)
                 {
-                    context.Response.StatusCode = 401;
+                    await CloseUnauthorizedAsync(webSocket);
                     return;
                 }
 
                 var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier);
                 if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
                 {
-                    context.Response.StatusCode = 401;
+                    await CloseUnauthorizedAsync(webSocket);
                     return;
                 }
 
@@ -56,7 +68,6 @@ public class TelemetryWebSocketMiddleware
                 var modeQuery = context.Request.Query["mode"].ToString().ToLower();
                 var mode = modeQuery == "live" ? TelemetryMode.ExtremeLive : TelemetryMode.Normal;
 
-                using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
                 await HandleWebSocketAsync(webSocket, userId, plan, mode, ingestionService);
             }
             else
@@ -67,6 +78,21 @@ public class TelemetryWebSocketMiddleware
         else
         {
             await _next(context);
+        }
+    }
+
+    private static async Task CloseUnauthorizedAsync(WebSocket webSocket)
+    {
+        if (webSocket.State == WebSocketState.Open)
+        {
+            try
+            {
+                await webSocket.CloseAsync(WebSocketCloseStatus.PolicyViolation, "unauthorized", CancellationToken.None);
+            }
+            catch (WebSocketException)
+            {
+                // Client already gone; nothing to do.
+            }
         }
     }
 
@@ -96,52 +122,96 @@ public class TelemetryWebSocketMiddleware
     private async Task HandleWebSocketAsync(WebSocket webSocket, Guid userId, PlanType plan, TelemetryMode mode, TelemetryIngestionService ingestionService)
     {
         var buffer = new byte[1024 * 64];
+        var shutdownToken = _lifetime.ApplicationStopping;
+
         try
         {
             while (webSocket.State == WebSocketState.Open)
             {
-                var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                using var ms = new MemoryStream();
+                WebSocketReceiveResult result;
+                var overflowed = false;
 
-                if (result.MessageType == WebSocketMessageType.Text)
+                // Reassemble multi-frame messages: keep receiving until EndOfMessage.
+                do
                 {
-                    var messageStr = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                    result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), shutdownToken);
 
-                    try
+                    if (result.MessageType == WebSocketMessageType.Close)
+                        break;
+
+                    if (!overflowed)
                     {
-                        using var doc = JsonDocument.Parse(messageStr);
-                        var root = doc.RootElement;
-
-                        if (!root.TryGetProperty("type", out var typeProp)) continue;
-                        var msgType = typeProp.GetString() ?? "";
-
-                        // Parse client-supplied sessionId (32-char hex Guid "N" format)
-                        Guid? sessionId = null;
-                        if (root.TryGetProperty("sessionId", out var sidProp) && sidProp.ValueKind == JsonValueKind.String)
+                        if (ms.Length + result.Count > MaxMessageBytes)
                         {
-                            var sidStr = sidProp.GetString();
-                            if (!string.IsNullOrEmpty(sidStr) && Guid.TryParseExact(sidStr, "N", out var sid))
-                                sessionId = sid;
+                            overflowed = true;
+                            _logger.LogWarning("Telemetry message from user {UserId} exceeded the {MaxBytes}-byte cap across frames — dropping", userId, MaxMessageBytes);
                         }
-
-                        // Use client timestamp when provided
-                        long clientTs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                        if (root.TryGetProperty("timestamp", out var tsProp) && tsProp.ValueKind == JsonValueKind.Number)
-                            clientTs = tsProp.GetInt64();
-
-                        root.TryGetProperty("data", out var dataProp);
-                        var data = dataProp.ValueKind != JsonValueKind.Undefined ? dataProp.Clone() : default;
-
-                        await ingestionService.ProcessFrameAsync(userId, plan, mode, sessionId, msgType, data, clientTs);
+                        else
+                        {
+                            ms.Write(buffer, 0, result.Count);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Failed to parse telemetry JSON");
-                    }
-                }
-                else if (result.MessageType == WebSocketMessageType.Close)
+                } while (!result.EndOfMessage);
+
+                if (result.MessageType == WebSocketMessageType.Close)
                 {
                     await webSocket.CloseAsync(result.CloseStatus ?? WebSocketCloseStatus.NormalClosure, result.CloseStatusDescription, CancellationToken.None);
+                    break;
                 }
+
+                if (overflowed || result.MessageType != WebSocketMessageType.Text || ms.Length == 0)
+                    continue;
+
+                var messageStr = Encoding.UTF8.GetString(ms.ToArray());
+
+                try
+                {
+                    using var doc = JsonDocument.Parse(messageStr);
+                    var root = doc.RootElement;
+
+                    if (!root.TryGetProperty("type", out var typeProp)) continue;
+                    var msgType = typeProp.GetString() ?? "";
+
+                    var schemaVersion = root.TryGetProperty("v", out var vProp) && vProp.ValueKind == JsonValueKind.Number
+                        ? vProp.GetInt32()
+                        : 1;
+
+                    // Parse client-supplied sessionId (32-char hex Guid "N" format)
+                    Guid? sessionId = null;
+                    if (root.TryGetProperty("sessionId", out var sidProp) && sidProp.ValueKind == JsonValueKind.String)
+                    {
+                        var sidStr = sidProp.GetString();
+                        if (!string.IsNullOrEmpty(sidStr) && Guid.TryParseExact(sidStr, "N", out var sid))
+                            sessionId = sid;
+                    }
+
+                    // Use client timestamp when provided
+                    long clientTs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                    if (root.TryGetProperty("timestamp", out var tsProp) && tsProp.ValueKind == JsonValueKind.Number)
+                        clientTs = tsProp.GetInt64();
+
+                    root.TryGetProperty("data", out var dataProp);
+                    var data = dataProp.ValueKind != JsonValueKind.Undefined ? dataProp.Clone() : default;
+
+                    await ingestionService.ProcessFrameAsync(userId, plan, mode, sessionId, msgType, data, clientTs, schemaVersion);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to parse telemetry JSON");
+                }
+            }
+        }
+        catch (OperationCanceledException) when (shutdownToken.IsCancellationRequested)
+        {
+            try
+            {
+                if (webSocket.State == WebSocketState.Open)
+                    await webSocket.CloseAsync(WebSocketCloseStatus.EndpointUnavailable, "shutting down", CancellationToken.None);
+            }
+            catch (WebSocketException)
+            {
+                // Client already gone; nothing to do.
             }
         }
         catch (WebSocketException)

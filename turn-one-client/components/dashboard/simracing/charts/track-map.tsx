@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { DistanceSample } from "@/lib/simracing/analysis";
-import type { MultiChannelChartData } from "./multi-channel-chart";
+import type { MultiChannelChartData } from "@/lib/simracing/protocol";
 import { buildTrackPath, buildRibbonPath, pointAtDistance } from "@/lib/simracing/track-map";
 import { speedToColor, gearToColor, deltaToColor } from "@/lib/color-scale";
 import { formatDistance } from "./chart-theme";

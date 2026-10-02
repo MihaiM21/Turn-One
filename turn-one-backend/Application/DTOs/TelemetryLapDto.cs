@@ -19,4 +19,8 @@ public class TelemetryLapDto
     public float? ThrottleScore { get; set; }
     public float? ConsistencyScore { get; set; }
     public DateTime RecordedAt { get; set; }
+    public string Kind { get; set; } = "";
+    public string ProcessingStatus { get; set; } = "";
+    public bool HasTelemetry { get; set; }
+    public int?[] SectorsMs { get; set; } = Array.Empty<int?>();
 }

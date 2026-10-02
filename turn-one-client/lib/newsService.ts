@@ -21,7 +21,20 @@ export type ExternalFetcher = (endpoint: string) => Promise<unknown>;
 export async function getLatestSessionData(
   fetcher: ExternalFetcher = fetchFromExternalAPI,
 ): Promise<SessionDashboardData> {
-  return fetcher(`v2/dashboard`) as Promise<SessionDashboardData>;
+  const raw = (await fetcher(`v2/dashboard`)) as SessionDashboardData;
+  // The row fields aren't guaranteed to arrive as arrays — while a session is
+  // still being published upstream they can be null, an object, or pandas
+  // columnar. Charts call .map on them, so an unexpected shape used to crash
+  // the whole page (and fail `next build` during prerender).
+  const rows = <T,>(v: unknown) => normalizeToRows(v) as unknown as T[];
+  const optionalRows = <T,>(v: unknown) => (v == null ? undefined : rows<T>(v));
+  return {
+    ...raw,
+    top_speed: rows(raw?.top_speed),
+    throttle_comparison: rows(raw?.throttle_comparison),
+    qualifying_results: optionalRows(raw?.qualifying_results),
+    race_results: optionalRows(raw?.race_results),
+  };
 }
 
 export async function getLatestSessionDataClient(): Promise<SessionDashboardData> {

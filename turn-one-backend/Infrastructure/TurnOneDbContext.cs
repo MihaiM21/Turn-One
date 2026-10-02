@@ -26,6 +26,9 @@ public class TurnOneDbContext : DbContext
     public DbSet<SimUser> SimUsers { get; set; } = null!;
     public DbSet<TelemetrySession> TelemetrySessions { get; set; } = null!;
     public DbSet<TelemetryLap> TelemetryLaps { get; set; } = null!;
+    public DbSet<LapTelemetry> LapTelemetries { get; set; } = null!;
+    public DbSet<LapCorner> LapCorners { get; set; } = null!;
+    public DbSet<TrackProfile> TrackProfiles { get; set; } = null!;
     public DbSet<OverlayShareToken> OverlayShareTokens { get; set; } = null!;
 
     // Telemetry token-usage / request log
@@ -155,14 +158,45 @@ public class TurnOneDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId);
             entity.HasMany(e => e.Laps).WithOne(l => l.Session).HasForeignKey(l => l.SessionId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.TrackProfile).WithMany().HasForeignKey(e => e.TrackProfileId).OnDelete(DeleteBehavior.SetNull);
+            entity.Property(e => e.Source).HasDefaultValue(SimSource.Acc);
+            entity.Property(e => e.SessionKind).HasDefaultValue(NormalizedSessionType.Other);
+            entity.Property(e => e.SchemaVersion).HasDefaultValue(1);
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.StartedAt);
+            // "My laps on this track" across sessions.
+            entity.HasIndex(e => new { e.UserId, e.TrackProfileId, e.StartedAt });
         });
 
         modelBuilder.Entity<TelemetryLap>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => new { e.SessionId, e.LapNumber }).IsUnique();
+            entity.HasIndex(e => new { e.SessionId, e.IsValid, e.LapTimeMs });
+            entity.Property(e => e.Kind).HasDefaultValue(LapKind.Flying);
+            entity.Property(e => e.ProcessingStatus).HasDefaultValue(LapProcessingStatus.Legacy);
+            entity.HasOne(e => e.Telemetry).WithOne(t => t.Lap).HasForeignKey<LapTelemetry>(t => t.TelemetryLapId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(e => e.Corners).WithOne(c => c.Lap).HasForeignKey(c => c.TelemetryLapId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<LapTelemetry>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.TelemetryLapId).IsUnique();
+            entity.HasIndex(e => e.SessionId);
+        });
+
+        modelBuilder.Entity<LapCorner>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.TelemetryLapId, e.CornerIndex }).IsUnique();
+            entity.HasIndex(e => new { e.TrackProfileId, e.RefCornerIndex });
+        });
+
+        modelBuilder.Entity<TrackProfile>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.Source, e.TrackId }).IsUnique();
         });
 
         modelBuilder.Entity<OverlayShareToken>(entity =>

@@ -66,12 +66,12 @@ export default function DownloadPage() {
 
     return (
         <div className="min-h-screen bg-black">
-            <MainNav variant="homepage" />
+            <MainNav />
 
             <PublicHero
                 eyebrow="Turn One Link · Free · Windows"
                 title="Your sim. Your data. Your lap time."
-                subtitle="Turn One Link is a small Windows app that streams your Assetto Corsa Competizione telemetry to Turn One in real time — so every lap you drive becomes something you can actually analyse."
+                subtitle="Turn One Link is a small Windows app that streams telemetry from ACC, Assetto Corsa, iRacing and EA SPORTS F1 25-26 to Turn One in real time — so every lap you drive becomes something you can actually analyse."
                 backgroundImage="/turn-one-car/2026-turn-one-car/Cockpit_Image_01.webp"
                 cta={<LinkDownloadButton />}
             />

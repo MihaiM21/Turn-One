@@ -139,6 +139,28 @@ CRUD for the user's own profile. (Exact route table not exhaustively enumerated 
 
 See [`sim-racing-telemetry.md`](./sim-racing-telemetry.md) for what these fields mean.
 
+## Lap telemetry (v2) — `LapTelemetryController`, `api/telemetry` (base: Auth)
+
+Distance-indexed lap telemetry: decoded channel arrays, corner analysis, overlays and track profiles. Query/mapping logic lives in `ILapTelemetryQueryService` (`Infrastructure/Services/LapTelemetryQueryService.cs`); visibility everywhere is owner-or-public (public additionally requires PRO+ to browse). See [`sim-telemetry-protocol-v2.md`](./sim-telemetry-protocol-v2.md).
+
+| Route | Verb | Gate | Returns |
+|---|---|---|---|
+| `/laps/{lapId}/telemetry?channels=&step=2` | GET | Auth + visibility | `LapTelemetryDto` — decoded channel arrays at `step` metres, corners, summary |
+| `/sessions/{sessionId}/laps/{lapNumber}/telemetry?channels=&step=` | GET | Auth + visibility | Same as above, addressed by session + lap number |
+| `/laps/overlay?laps=a,b,c&ref=a&channels=&step=` | GET | Auth + `[RequiresSimFeature("Comparison")]` (PRO+); ≤ 8 laps, BASIC ≤ 2 own-session laps | `LapOverlayDto` — laps resampled to a shared grid with per-lap delta time vs `ref` |
+| `/laps/{lapId}/corners` | GET | Auth + visibility | `LapCornerDto[]` |
+| `/laps/corners/compare?laps=` | GET | Auth + `[RequiresSimFeature("Comparison")]` (PRO+) | `CornerCompareDto` — rows keyed by reference corner index |
+| `/tracks/me` | GET | Auth | `MyTrackDto[]` — tracks the caller has sessions on |
+| `/tracks/{profileId}` | GET | Auth | `TrackProfileDto` (includes decoded centreline) |
+| `/tracks?source=&trackId=` | GET | Auth | `TrackProfileDto` by (sim, track id) |
+| `/tracks/{profileId}/laps/me?valid=&kind=&car=&limit=&cursor=&includePublic=` | GET | Auth | `{ items: TrackLapListItemDto[], nextCursor }` — offset-style keyset cursor over `(sessionStartedAt, lapNumber, sessionId)` |
+| `/sessions/{id}/laps/{lapNumber}/reprocess` | POST | Auth (owner only), 1/min rate limit | `202 { jobId }` |
+| `/sessions/{id}/reprocess` | POST | Auth (owner only), 1/min rate limit | `202 { jobId }` |
+| `/admin/telemetry/reprocess` | POST | Admin | `202 { jobId }` — body `ReprocessRequestDto` |
+| `/admin/telemetry/reprocess/{jobId}` | GET | Admin | `ReprocessStatusDto` |
+
+`GET sessions/{id}/laps` (existing, `TelemetryController`) now also returns `Kind`, `ProcessingStatus`, `HasTelemetry` and `SectorsMs` on each `TelemetryLapDto`.
+
 ## CoachingController — `api/coaching`
 
 LLM/heuristic-based lap coaching feedback (`ICoachingService` — `HeuristicCoachingService` or `StubLlmCoachingService`).

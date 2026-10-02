@@ -67,6 +67,15 @@ See [`realtime-signalr.md`](./realtime-signalr.md) for the full hub/event breakd
 - `lib/f1SignalRLiveDataService.ts` + `hooks/use-f1-signalr-live-data.ts` — F1 live timing.
 - `lib/simTelemetryService.ts` + `hooks/use-overlay-telemetry.ts` — sim racing telemetry, spectating, overlays.
 
+## Sim racing data layer
+
+Core libraries for protocol-v2 telemetry processing and visualization:
+
+- `lib/simracing/protocol.ts` — TypeScript mirror of backend DTOs (`LapTelemetryDto`, `TrackProfileDto`, `LapCornerDto`, etc.) and protocol enums (`SimSource`, `LapKind`, `DistanceSource`). Single source of truth for lap/track/corner shapes passed over the API.
+- `lib/simracing/lap-telemetry.ts` — pure functions for resampling and comparing `LapTelemetry` data: `toDistanceSeries()` (time → distance axis), `overlayDelta()` (compute lap-vs-lap delta), `resampleByDistance()` (resample two laps onto a common grid for comparison).
+- `lib/simracing/plot-catalog.ts` — registry of all available telemetry plots (speed trace, throttle histogram, corner G-force envelope, etc.) and their metadata. Decouples chart definitions from the component tree, enabling dynamic plot composition in the analysis page.
+- `components/dashboard/simracing/charts/uplot/` — uPlot chart wrappers (`UPlotTraces`, `UPlotDelta`, `CornerTable`). uPlot is chosen for its zero-overhead performance with large (500k+ sample) datasets; wrappers handle cursor sync across multiple charts sharing the same reference lap.
+
 ## Naming & folder conventions
 
 | Kind | Convention | Example |
@@ -76,7 +85,7 @@ See [`realtime-signalr.md`](./realtime-signalr.md) for the full hub/event breakd
 | Components | PascalCase folders + files | `dashboard/games/prediction-game.tsx` |
 | Types | `kebab-case-types.ts` | `auth-types.ts`, `game-types.ts`, `news-types.ts` |
 
-Folders: `components/ui/` = Radix/shadcn primitives; `components/site/` = marketing site pieces; `components/dashboard/` = feature UI grouped by domain (games, simracing, store, live); `components/providers/` = Context providers; `lib/constants/` = static data (drivers, races, season fixtures, store items, mocks); `lib/export/` = chart export utilities.
+Folders: `components/ui/` = Radix/shadcn primitives; `components/site/` = marketing site pieces; `components/dashboard/` = feature UI grouped by domain (games, simracing, store, live); `components/providers/` = Context providers; `lib/constants/` = static data (drivers, races, season fixtures, store items, mocks); `lib/export/` = chart export utilities; `lib/simracing/` = telemetry protocol/analysis logic.
 
 ## State management
 

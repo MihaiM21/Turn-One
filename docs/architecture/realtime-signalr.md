@@ -56,8 +56,9 @@ Data originates from a user's sim-racing client (not an external feed) and is in
 
 | Direction | Member | Purpose |
 |---|---|---|
-| Server → Client | `ReceiveTelemetry(type, payload, timestamp)` | Live physics/graphics/static telemetry (`type` is one of `"physics"`, `"graphics"`, `"static"`) |
+| Server → Client | `ReceiveTelemetry(type, payload, timestamp)` | Live physics/graphics/static telemetry (`type` is one of `"physics"`, `"graphics"`, `"static"`, `"tick"` for protocol-v2 frames; `tick` may carry a `session_start` flag) |
 | Server → Client | `SessionEnded(sessionId)` | Session ended notification |
+| Server → Client | `LapProcessed(lapId, lapNumber, lapTimeMs, sessionId)` | Protocol-v2 lap completed and processed (corner detection done, stored) |
 | Server → Client | `ViewerCountChanged(sessionId, count)` | Spectator count update |
 | Client → Server | `SubscribeToOwnTelemetry()` | Joins `telemetry_{userId}` — receive your own session's live updates |
 | Client → Server | `SpectateSession(sessionId)` | Joins `spectate_{sessionId}` — watch someone else's session |

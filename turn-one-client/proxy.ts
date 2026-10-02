@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { ANON_COOKIE_NAME, newAnonId, signAnonCookie } from './lib/server/anon-cookie';
+import { ANON_COOKIE_NAME, newAnonId, signAnonCookie, verifyAnonCookie } from './lib/server/anon-cookie';
 
 export async function proxy(request: NextRequest) {
   // Check if the user is trying to access an admin route
@@ -24,7 +24,16 @@ export async function proxy(request: NextRequest) {
   // visitor's first request. This is what authorizeProxyRequest (see
   // lib/server/proxy-auth.ts) checks to keep the external F1 API proxy from
   // being a fully open relay — identity, not feature permission.
-  if (!request.cookies.get(ANON_COOKIE_NAME)?.value) {
+  //
+  // A cookie can be present but no longer valid (ANON_COOKIE_SECRET rotated,
+  // or it was signed under the pre-rotation dev fallback secret) — that isn't
+  // distinguishable from "missing" to the visitor, so it's re-issued the same
+  // way. Without this check, returning visitors with a stale cookie get stuck
+  // failing authorizeProxyRequest forever, since the middleware never looks
+  // past "a value exists" to plant a fresh one.
+  const existing = request.cookies.get(ANON_COOKIE_NAME)?.value;
+  const validExisting = existing ? await verifyAnonCookie(existing) : null;
+  if (!validExisting) {
     const anonId = newAnonId();
     const signed = await signAnonCookie(anonId);
     response.cookies.set(ANON_COOKIE_NAME, signed, {

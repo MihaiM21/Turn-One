@@ -21,4 +21,13 @@ public class TelemetrySessionDto
     public DateTime StartedAt { get; set; }
     public DateTime? EndedAt { get; set; }
     public DateTime? LastSeenAt { get; set; }
+
+    // Protocol v2 metadata (see Domain.Entities.TelemetrySession). Strings so the client mirror stays simple.
+    public string Source { get; set; } = "Acc";
+    public string? TrackId { get; set; }
+    public Guid? TrackProfileId { get; set; }
+    public float? TrackLengthM { get; set; }
+    public string SessionKind { get; set; } = "Other";
+    public int SchemaVersion { get; set; } = 1;
+    public string? CarId { get; set; }
 }

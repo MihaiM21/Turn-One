@@ -131,6 +131,151 @@ namespace Infrastructure.Migrations
                     b.ToTable("ExportPresets");
                 });
 
+            modelBuilder.Entity("Domain.Entities.LapCorner", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<float>("ApexM")
+                        .HasColumnType("real");
+
+                    b.Property<float?>("BrakeReleaseM")
+                        .HasColumnType("real");
+
+                    b.Property<int?>("BrakeToThrottleMs")
+                        .HasColumnType("integer");
+
+                    b.Property<float?>("BrakingPointM")
+                        .HasColumnType("real");
+
+                    b.Property<short>("CornerIndex")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("Direction")
+                        .HasColumnType("smallint");
+
+                    b.Property<float>("EntryM")
+                        .HasColumnType("real");
+
+                    b.Property<float>("EntrySpeedKmh")
+                        .HasColumnType("real");
+
+                    b.Property<float>("ExitM")
+                        .HasColumnType("real");
+
+                    b.Property<float>("ExitSpeedKmh")
+                        .HasColumnType("real");
+
+                    b.Property<float?>("FullThrottleM")
+                        .HasColumnType("real");
+
+                    b.Property<short>("GearAtApex")
+                        .HasColumnType("smallint");
+
+                    b.Property<bool>("IsKink")
+                        .HasColumnType("boolean");
+
+                    b.Property<short>("MinGear")
+                        .HasColumnType("smallint");
+
+                    b.Property<float>("MinSpeedKmh")
+                        .HasColumnType("real");
+
+                    b.Property<float>("PeakBrake")
+                        .HasColumnType("real");
+
+                    b.Property<float>("PeakGLat")
+                        .HasColumnType("real");
+
+                    b.Property<int?>("ProfileVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<short?>("RefCornerIndex")
+                        .HasColumnType("smallint");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TelemetryLapId")
+                        .HasColumnType("uuid");
+
+                    b.Property<float?>("ThrottleOnM")
+                        .HasColumnType("real");
+
+                    b.Property<int>("TimeInCornerMs")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("TrackProfileId")
+                        .HasColumnType("uuid");
+
+                    b.Property<float?>("TrailBrakeM")
+                        .HasColumnType("real");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TelemetryLapId", "CornerIndex")
+                        .IsUnique();
+
+                    b.HasIndex("TrackProfileId", "RefCornerIndex");
+
+                    b.ToTable("LapCorners");
+                });
+
+            modelBuilder.Entity("Domain.Entities.LapTelemetry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ChannelIndex")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<short>("Codec")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<byte[]>("Data")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<int>("DistanceSource")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ProcessorVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SampleCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<float>("StepM")
+                        .HasColumnType("real");
+
+                    b.Property<Guid>("TelemetryLapId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("UncompressedBytes")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId");
+
+                    b.HasIndex("TelemetryLapId")
+                        .IsUnique();
+
+                    b.ToTable("LapTelemetries");
+                });
+
             modelBuilder.Entity("Domain.Entities.Leaderboard", b =>
                 {
                     b.Property<Guid>("Id")
@@ -526,10 +671,19 @@ namespace Infrastructure.Migrations
                     b.Property<float>("AverageBrake")
                         .HasColumnType("real");
 
+                    b.Property<float?>("AverageSpeedKmh")
+                        .HasColumnType("real");
+
                     b.Property<float>("AverageThrottle")
                         .HasColumnType("real");
 
+                    b.Property<float?>("BrakingPct")
+                        .HasColumnType("real");
+
                     b.Property<float?>("BrakingScore")
+                        .HasColumnType("real");
+
+                    b.Property<float?>("CoastingPct")
                         .HasColumnType("real");
 
                     b.Property<float?>("ConsistencyScore")
@@ -538,11 +692,28 @@ namespace Infrastructure.Migrations
                     b.Property<float>("FuelUsed")
                         .HasColumnType("real");
 
+                    b.Property<float?>("FullThrottlePct")
+                        .HasColumnType("real");
+
+                    b.Property<int?>("GearShifts")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("IsValid")
                         .HasColumnType("boolean");
 
+                    b.Property<int>("Kind")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<float?>("LapDistanceM")
+                        .HasColumnType("real");
+
                     b.Property<int>("LapNumber")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime?>("LapStartedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("LapTimeMs")
                         .HasColumnType("integer");
@@ -552,6 +723,27 @@ namespace Infrastructure.Migrations
 
                     b.Property<float>("MaxSpeedKmh")
                         .HasColumnType("real");
+
+                    b.Property<float?>("MinSpeedKmh")
+                        .HasColumnType("real");
+
+                    b.Property<float?>("PeakGLat")
+                        .HasColumnType("real");
+
+                    b.Property<float?>("PeakGLong")
+                        .HasColumnType("real");
+
+                    b.Property<string>("ProcessingError")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("ProcessingStatus")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<int?>("ProcessorVersion")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("RecordedAt")
                         .HasColumnType("timestamp with time zone");
@@ -575,6 +767,8 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("SessionId", "LapNumber")
                         .IsUnique();
+
+                    b.HasIndex("SessionId", "IsValid", "LapTimeMs");
 
                     b.ToTable("TelemetryLaps");
                 });
@@ -612,6 +806,10 @@ namespace Infrastructure.Migrations
                     b.Property<int>("BestLapMs")
                         .HasColumnType("integer");
 
+                    b.Property<string>("CarId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("CarModel")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -641,10 +839,28 @@ namespace Infrastructure.Migrations
                     b.Property<int>("Mode")
                         .HasColumnType("integer");
 
+                    b.Property<int>("SchemaVersion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.Property<int?>("SectorCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SessionKind")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("SessionType")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<int>("Source")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
                     b.Property<DateTime>("StartedAt")
                         .HasColumnType("timestamp with time zone");
@@ -652,10 +868,23 @@ namespace Infrastructure.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("TickRateHz")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Track")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("TrackId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<float?>("TrackLengthM")
+                        .HasColumnType("real");
+
+                    b.Property<Guid?>("TrackProfileId")
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -667,9 +896,78 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("StartedAt");
 
+                    b.HasIndex("TrackProfileId");
+
                     b.HasIndex("UserId");
 
+                    b.HasIndex("UserId", "TrackProfileId", "StartedAt");
+
                     b.ToTable("TelemetrySessions");
+                });
+
+            modelBuilder.Entity("Domain.Entities.TrackProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<byte[]>("Centerline")
+                        .HasColumnType("bytea");
+
+                    b.Property<string>("CornerSamples")
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DetectorOverrides")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("LapSampleCount")
+                        .HasColumnType("integer");
+
+                    b.Property<float>("LengthM")
+                        .HasColumnType("real");
+
+                    b.Property<string>("ReferenceCorners")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.PrimitiveCollection<float[]>("SectorBoundariesM")
+                        .IsRequired()
+                        .HasColumnType("real[]");
+
+                    b.Property<short>("SectorCount")
+                        .HasColumnType("smallint");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TrackId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Source", "TrackId")
+                        .IsUnique();
+
+                    b.ToTable("TrackProfiles");
                 });
 
             modelBuilder.Entity("Domain.Entities.Trivia", b =>
@@ -921,6 +1219,28 @@ namespace Infrastructure.Migrations
                     b.Navigation("CreatedBy");
                 });
 
+            modelBuilder.Entity("Domain.Entities.LapCorner", b =>
+                {
+                    b.HasOne("Domain.Entities.TelemetryLap", "Lap")
+                        .WithMany("Corners")
+                        .HasForeignKey("TelemetryLapId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Lap");
+                });
+
+            modelBuilder.Entity("Domain.Entities.LapTelemetry", b =>
+                {
+                    b.HasOne("Domain.Entities.TelemetryLap", "Lap")
+                        .WithOne("Telemetry")
+                        .HasForeignKey("Domain.Entities.LapTelemetry", "TelemetryLapId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Lap");
+                });
+
             modelBuilder.Entity("Domain.Entities.Leaderboard", b =>
                 {
                     b.HasOne("Domain.Entities.User", "User")
@@ -999,11 +1319,18 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.TelemetrySession", b =>
                 {
+                    b.HasOne("Domain.Entities.TrackProfile", "TrackProfile")
+                        .WithMany()
+                        .HasForeignKey("TrackProfileId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Domain.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("TrackProfile");
 
                     b.Navigation("User");
                 });
@@ -1049,6 +1376,13 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.Notification", b =>
                 {
                     b.Navigation("UserNotifications");
+                });
+
+            modelBuilder.Entity("Domain.Entities.TelemetryLap", b =>
+                {
+                    b.Navigation("Corners");
+
+                    b.Navigation("Telemetry");
                 });
 
             modelBuilder.Entity("Domain.Entities.TelemetrySession", b =>

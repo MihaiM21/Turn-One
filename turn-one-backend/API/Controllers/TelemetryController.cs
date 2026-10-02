@@ -1,3 +1,4 @@
+using Domain.Telemetry;
 using Application.DTOs;
 using Application.Interfaces;
 using Domain.Enums;
@@ -157,7 +158,7 @@ public class TelemetryController : ControllerBase
         if (session == null) return NotFound();
 
         var requested = string.IsNullOrWhiteSpace(channels)
-            ? TelemetryChannels.AllowedFor(plan)
+            ? ChannelRegistry.AllowedFor(plan)
             : channels.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         var data = await tickRepo.GetSessionChannelsAsync(plan, id, requested.ToList());
@@ -184,7 +185,7 @@ public class TelemetryController : ControllerBase
         if (start == null || end == null) return Ok(new MultiChannelChart());
 
         var requested = string.IsNullOrWhiteSpace(channels)
-            ? TelemetryChannels.AllowedFor(plan)
+            ? ChannelRegistry.AllowedFor(plan)
             : channels.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         var data = await tickRepo.GetSessionChannelsAsync(plan, id, requested.ToList(), start, end);
@@ -221,7 +222,11 @@ public class TelemetryController : ControllerBase
                 BrakingScore = l.BrakingScore,
                 ThrottleScore = l.ThrottleScore,
                 ConsistencyScore = l.ConsistencyScore,
-                RecordedAt = l.RecordedAt
+                RecordedAt = l.RecordedAt,
+                Kind = l.Kind.ToString(),
+                ProcessingStatus = l.ProcessingStatus.ToString(),
+                HasTelemetry = l.ProcessingStatus == Domain.Enums.LapProcessingStatus.Processed,
+                SectorsMs = l.SectorsMs
             })
             .ToListAsync();
 
@@ -345,7 +350,7 @@ public class TelemetryController : ControllerBase
         if (primary == null || secondary == null) return NotFound();
 
         var requested = string.IsNullOrWhiteSpace(channels)
-            ? TelemetryChannels.AllowedFor(plan)
+            ? ChannelRegistry.AllowedFor(plan)
             : channels.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         var primaryBounds = lap.HasValue
