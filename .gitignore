@@ -79,3 +79,6 @@ launch.json
 settings.local.json
 
 
+
+# Test coverage reports
+coverage/
