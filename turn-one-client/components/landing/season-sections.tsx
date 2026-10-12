@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { PendingLink as Link } from "@/components/f1/pending-link";
 import { cn } from "@/lib/utils";
 import { f1_2026_races } from "@/lib/constants/f1_races";
 import { finalSessions, type SeasonCatalog } from "@/lib/f1/catalog";

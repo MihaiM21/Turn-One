@@ -1,4 +1,4 @@
-import Link from "next/link"
+import { PendingLink as Link } from "@/components/f1/pending-link"
 
 export interface Crumb {
   name: string

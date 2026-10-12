@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import Link from "next/link"
+import { PendingLink as Link } from "@/components/f1/pending-link"
 import { notFound } from "next/navigation"
 import { cache } from "react"
 import { Breadcrumbs } from "@/components/f1/breadcrumbs"

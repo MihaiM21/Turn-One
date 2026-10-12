@@ -229,6 +229,11 @@
     scrollbar-width: none;  /* Firefox */
   }
   
+  @keyframes f1-progress {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(300%); }
+  }
+
   @keyframes fadeIn {
     from {
       opacity: 0;

@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
-import Link from "next/link"
+import NextLink from "next/link"
+import { PendingLink as Link } from "@/components/f1/pending-link"
 import { notFound } from "next/navigation"
 import { cache } from "react"
 import { ArrowRight } from "lucide-react"
@@ -192,13 +193,13 @@ export default async function SessionPage({ params }: SessionPageProps) {
 
       <div className="border border-zinc-800 bg-zinc-950 px-6 py-6 text-center">
         <p className="text-sm text-zinc-400">Want to explore this session yourself?</p>
-        <Link
+        <NextLink
           href={buildGeneratorPrefillUrl("session_results")}
           className="mt-3 inline-flex items-center gap-2 bg-primary px-5 py-2.5 text-sm font-medium uppercase tracking-wider text-primary-foreground transition-colors hover:bg-primary/90"
         >
           Open the generator
           <ArrowRight className="h-4 w-4" />
-        </Link>
+        </NextLink>
       </div>
 
       <nav aria-label="Related sessions" className="flex flex-wrap gap-x-6 gap-y-2 border-t border-zinc-800 pt-6 text-sm">

@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import Link from "next/link"
+import { PendingLink as Link } from "@/components/f1/pending-link"
 import { JsonLd } from "@/components/seo/json-ld"
 import { f1_2026_races } from "@/lib/constants/f1_races"
 import { finalSessions } from "@/lib/f1/catalog"
