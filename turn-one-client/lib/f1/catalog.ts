@@ -15,7 +15,7 @@ import { cache } from "react"
 import { apiGet, mapLimit } from "@/lib/f1/api"
 import { definitelyFuture, ttlSeconds } from "@/lib/f1/cache-policy"
 import { findCopied } from "@/lib/f1/integrity"
-import { classifyResponse } from "@/lib/f1/outcome"
+import { classifyResponse, type Outcome } from "@/lib/f1/outcome"
 import { SEO_SESSIONS, eventSlug, findSessionByApiName, type SeoSessionSlug } from "@/lib/f1/session-manifest"
 import { fetchSessionResults, type ResultRow } from "@/lib/plots/server-fetch"
 
@@ -130,26 +130,15 @@ export const getEventSessions = cache(async (ev: CatalogEvent): Promise<CatalogS
 
 export const eventRef = (ev: CatalogEvent) => ({ year: ev.year, key: ev.key })
 
-/**
- * Every event of a season with the status of each public session. Results for
- * finished sessions are carried along (the pages need them anyway) and are
- * served from Next's data cache, so a warm call costs no upstream traffic.
- */
-export const getSeasonCatalog = cache(async (year: number): Promise<SeasonCatalog> => {
-  const events = await getSeasonEvents(year)
-  const sessionLists = await mapLimit(events, CONCURRENCY, (ev) => getEventSessions(ev))
+type Probe = Outcome<ResultRow[]> | null // null: definitely in the future, not probed
+type Slot = { event: CatalogEvent; s: CatalogSession }
 
-  const flat = events.flatMap((event, ei) => sessionLists[ei].map((s) => ({ event, s })))
-  const probes = await mapLimit(flat, CONCURRENCY, async ({ event, s }) =>
-    definitelyFuture(s.start) ? null : fetchSessionResults(eventRef(event), s.code, { ttl: ttlSeconds(s.end) }),
-  )
-  if (probes.length && probes.every((p) => p?.kind === "transient")) {
-    throw new UpstreamUnavailableError(`results ${year}`, "every probe failed")
-  }
+const keyOf = (ev: CatalogEvent, code: string) => `${ev.key}:${code}`
 
+/** Status of every slot from its probe, including the copied-results check. */
+function assess(events: CatalogEvent[], slots: Slot[], probes: Probe[]): Map<string, SeasonSession> {
   const status = new Map<string, SeasonSession>()
-  const keyOf = (ev: CatalogEvent, code: string) => `${ev.key}:${code}`
-  flat.forEach(({ event, s }, i) => {
+  slots.forEach(({ event, s }, i) => {
     const p = probes[i]
     const base: SeasonSession = { ...s, status: "upcoming", results: null }
     if (p === null) {
@@ -168,9 +157,9 @@ export const getSeasonCatalog = cache(async (year: number): Promise<SeasonCatalo
   // Integrity: per session type, in calendar order, flag results copied from an earlier event.
   for (const { code } of SEO_SESSIONS) {
     const entries = events
-      .map((event) => ({ key: keyOf(event, code), rows: status.get(keyOf(event, code)) }))
-      .filter((e): e is { key: string; rows: SeasonSession } => e.rows?.status === "final" && !!e.rows.results)
-      .map((e) => ({ key: e.key, rows: e.rows.results as ResultRow[] }))
+      .map((event) => ({ key: keyOf(event, code), session: status.get(keyOf(event, code)) }))
+      .filter((e): e is { key: string; session: SeasonSession } => e.session?.status === "final" && !!e.session.results)
+      .map((e) => ({ key: e.key, rows: e.session.results as ResultRow[] }))
     for (const key of findCopied(entries).keys()) {
       const s = status.get(key)
       if (s) {
@@ -178,6 +167,46 @@ export const getSeasonCatalog = cache(async (year: number): Promise<SeasonCatalo
         s.results = null
       }
     }
+  }
+  return status
+}
+
+async function buildCatalog(year: number, previous?: SeasonCatalog): Promise<SeasonCatalog> {
+  const events = await getSeasonEvents(year)
+  const sessionLists = await mapLimit(events, CONCURRENCY, (ev) => getEventSessions(ev))
+  const slots: Slot[] = events.flatMap((event, ei) => sessionLists[ei].map((s) => ({ event, s })))
+
+  const probes: Probe[] = await mapLimit(slots, CONCURRENCY, async ({ event, s }) =>
+    definitelyFuture(s.start) ? null : fetchSessionResults(eventRef(event), s.code, { ttl: ttlSeconds(s.end) }),
+  )
+  if (probes.length && probes.every((p) => p?.kind === "transient")) {
+    throw new UpstreamUnavailableError(`results ${year}`, "every probe failed")
+  }
+
+  // A probe that merely failed keeps what we last knew, instead of dropping a
+  // published session from the index for a blip.
+  const lastKnown = new Map<string, SeasonSession>()
+  for (const e of previous?.events ?? []) for (const s of e.sessions) if (s.status === "final") lastKnown.set(keyOf(e.event, s.code), s)
+  slots.forEach(({ event, s }, i) => {
+    const prev = lastKnown.get(keyOf(event, s.code))
+    if (probes[i]?.kind === "transient" && prev?.results) probes[i] = { kind: "ok", data: prev.results }
+  })
+
+  let status = assess(events, slots, probes)
+
+  // Anything not published yet is probed again, bypassing the data cache. Cached
+  // answers for finished sessions live up to an hour, and a stale empty or a
+  // stale copy (from before the API was fixed) would otherwise keep a session
+  // hidden long after the API serves it correctly.
+  const redo = slots
+    .map((slot, i) => ({ slot, i }))
+    .filter(({ slot, i }) => probes[i] !== null && ["pending", "suspect"].includes(status.get(keyOf(slot.event, slot.s.code))?.status ?? ""))
+  if (redo.length) {
+    await mapLimit(redo, CONCURRENCY, async ({ slot, i }) => {
+      const fresh = await fetchSessionResults(eventRef(slot.event), slot.s.code, { fresh: true })
+      if (fresh.kind !== "transient") probes[i] = fresh
+    })
+    status = assess(events, slots, probes)
   }
 
   return {
@@ -187,7 +216,84 @@ export const getSeasonCatalog = cache(async (year: number): Promise<SeasonCatalo
       sessions: sessionLists[ei].map((s) => status.get(keyOf(event, s.code)) as SeasonSession),
     })),
   }
-})
+}
+
+// One catalog build is ~100 upstream calls when the cache is cold, and every
+// page render wants it. Share it process-wide (globalThis, because route
+// bundles can each get their own copy of this module): concurrent renders join
+// one in-flight build instead of each firing their own burst at the API, and a
+// failed refresh keeps serving the last good catalog.
+const MEMO_TTL_MS = 5 * 60 * 1000
+type Memo = { at: number; value?: SeasonCatalog; inflight?: Promise<SeasonCatalog> }
+const g = globalThis as unknown as { __f1CatalogMemo?: Map<number, Memo> }
+const memo = (g.__f1CatalogMemo ??= new Map<number, Memo>())
+
+/** Forget a season's catalog so the next read rebuilds it (used when a session is published). */
+export function invalidateCatalog(year: number) {
+  memo.delete(year)
+}
+
+/** A cold build is paced by the API's rate limit and can take minutes; a page render must not hang that long. */
+const COLD_DEADLINE_MS = 25_000
+
+function ensureCatalog(year: number): Promise<SeasonCatalog> | SeasonCatalog {
+  const m: Memo = memo.get(year) ?? { at: 0 }
+  memo.set(year, m)
+  if (m.value && Date.now() - m.at < MEMO_TTL_MS) return m.value
+
+  if (!m.inflight) {
+    m.inflight = buildCatalog(year, m.value)
+      .then((v) => {
+        m.value = v
+        m.at = Date.now()
+        return v
+      })
+      .finally(() => {
+        m.inflight = undefined
+      })
+    // Nobody may be awaiting a background refresh; its failure must not go unhandled.
+    m.inflight.catch((e) => console.error(`[f1-catalog] refresh ${year} failed:`, e))
+  }
+  // Stale-while-revalidate: with a previous catalog, answer now and refresh behind it.
+  return m.value ?? (m.inflight as Promise<SeasonCatalog>)
+}
+
+async function loadCatalog(year: number): Promise<SeasonCatalog> {
+  const got = ensureCatalog(year)
+  if (!(got instanceof Promise)) return got
+  // No catalog yet: wait for the build, but not forever. It keeps running behind
+  // this call, so the next render finds it ready (or still joins the same build).
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new UpstreamUnavailableError(`season ${year}`, "catalog is still warming up")), COLD_DEADLINE_MS)
+  })
+  try {
+    return await Promise.race([got, deadline])
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+/**
+ * Build the catalogs ahead of any visitor, newest season first. Runs at server
+ * start (instrumentation.ts) and from the publish sweep, so a deploy's cold
+ * cache is filled in the background within the API's rate limit.
+ */
+export async function warmCatalogs(years: number[]): Promise<void> {
+  for (const year of years) {
+    try {
+      await ensureCatalog(year)
+    } catch (e) {
+      console.error(`[f1-catalog] warm ${year} failed:`, e)
+    }
+  }
+}
+
+/**
+ * Every event of a season with the status of each public session. Results for
+ * finished sessions are carried along (the pages need them anyway).
+ */
+export const getSeasonCatalog = cache(loadCatalog)
 
 /** Resolve a URL's {event, session} against a season catalog. */
 export function findInCatalog(cat: SeasonCatalog, eventSlugParam: string, sessionSlug?: string) {
@@ -198,6 +304,18 @@ export function findInCatalog(cat: SeasonCatalog, eventSlugParam: string, sessio
 }
 
 export const finalSessions = (entry: SeasonEvent) => entry.sessions.filter((s) => s.status === "final")
+
+/**
+ * For pages that list the whole season (index, sitemap, landing): refuse a
+ * catalog in which some probe merely failed. Those pages are cached, and a
+ * cached list with sessions missing for a blip is worse than the previous list
+ * (or an error, which ISR answers with the previous list).
+ */
+export function assertComplete(cat: SeasonCatalog) {
+  const failed = cat.events.flatMap((e) => e.sessions.filter((s) => s.status === "error").map((s) => `${e.event.name} ${s.name}`))
+  if (failed.length) throw new UpstreamUnavailableError(`season ${cat.year}`, `${failed.length} results probe(s) failed, e.g. ${failed[0]}`)
+  return cat
+}
 
 /**
  * Hubs 404 when an event has nothing published — unless a probe merely failed,

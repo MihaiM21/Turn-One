@@ -21,7 +21,7 @@
 import { revalidatePath, revalidateTag } from "next/cache"
 import { after } from "next/server"
 import { ageMs } from "@/lib/f1/cache-policy"
-import { catalogTag, eventRef, findInCatalog, getSeasonCatalog, type CatalogEvent, type CatalogSession } from "@/lib/f1/catalog"
+import { catalogTag, eventRef, findInCatalog, getSeasonCatalog, invalidateCatalog, type CatalogEvent, type CatalogSession } from "@/lib/f1/catalog"
 import { eventPath, sessionPath, yearPath, type SeoSessionSlug } from "@/lib/f1/session-manifest"
 import { fetchSessionResults, sessionTag } from "@/lib/plots/server-fetch"
 
@@ -79,6 +79,7 @@ function publish(k: SessionKey, ev: CatalogEvent, session: CatalogSession, origi
   // expire now (not stale-while-revalidate): the stale value is the "no data" response
   revalidateTag(sessionTag(eventRef(ev), session.code), { expire: 0 })
   revalidateTag(catalogTag(ev.year), { expire: 0 })
+  invalidateCatalog(ev.year)
   const paths = [sessionPath(k.year, k.event, k.session), eventPath(k.year, k.event), yearPath(k.year), "/f1", "/"]
   for (const p of paths) revalidatePath(p)
   published.add(keyOf(k))

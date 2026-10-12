@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next'
 import { connection } from 'next/server'
-import { getSeasonCatalog, finalSessions } from '@/lib/f1/catalog'
+import { assertComplete, getSeasonCatalog, finalSessions } from '@/lib/f1/catalog'
 import { parseNaive } from '@/lib/f1/cache-policy'
 import { eventPath, sessionPath, supportedYears, yearPath } from '@/lib/f1/session-manifest'
 
@@ -43,7 +43,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // when the data does, not on every build.
   let f1Entries: Entry[] = []
   try {
-    const seasons = await Promise.all(supportedYears().map((y) => getSeasonCatalog(y)))
+    const seasons = await Promise.all(supportedYears().map(async (y) => assertComplete(await getSeasonCatalog(y))))
     const published = seasons.map((cat) => ({
       year: cat.year,
       events: cat.events.filter((e) => finalSessions(e).length > 0),

@@ -35,6 +35,12 @@ Everything is driven by `lib/f1/catalog.ts`, which reads the external F1 API (`F
 | `suspect` | results duplicate an earlier event's (see below) | 404, heals when the API is fixed |
 | `error` | API unreachable for this probe | the page **throws**, so ISR keeps the last good page instead of caching a 404 |
 
+### Cold vs warm start
+
+The F1 API allows 60 requests/min per key, shared with every other consumer. A cold catalog build is ~100 calls, so `lib/f1/api.ts` paces requests (40/min window, global pause on 429) and the server starts building the catalog at boot (`instrumentation.ts`) and on every sweep. Cold, expect about 1-2 minutes before everything is listed; pages that are asked for earlier fail after 25 s and work on the next try.
+
+The saved API responses live in `/app/.next/cache`, which `docker-compose.yml` mounts as the named volume `client-cache`, so a redeploy starts warm (a restart with the cache kept was ready in ~4 s). Without the volume every deploy is cold. `npm run warm:f1 -- <site url>` fills everything on demand.
+
 ### Cache policy (`lib/f1/cache-policy.ts`)
 
 The API marks even an empty `[]` as `immutable, max-age=86400`, and Next caches any 200, so a "no data yet" answer would otherwise stick for a day. TTL therefore depends on session age: under 3 days 5 min, under 30 days 1 h, older 24 h. Session times from the API are track-local with no offset, so "definitely in the future" allows a 14 h margin.

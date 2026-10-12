@@ -38,5 +38,5 @@ export function ttlSeconds(end: string | null | undefined, now = Date.now()): nu
   const age = ageMs(end, now)
   if (age == null || age < 3 * DAY * 1000) return 5 * 60
   if (age < 30 * DAY * 1000) return HOUR
-  return DAY
+  return 6 * HOUR
 }

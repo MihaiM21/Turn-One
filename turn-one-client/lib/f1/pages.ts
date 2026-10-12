@@ -4,7 +4,7 @@
 import { cache } from "react"
 import { notFound, permanentRedirect } from "next/navigation"
 import { connection } from "next/server"
-import { getSeasonCatalog, type CatalogEvent, type SeasonCatalog, type SeasonEvent } from "@/lib/f1/catalog"
+import { assertComplete, getSeasonCatalog, type CatalogEvent, type SeasonCatalog, type SeasonEvent } from "@/lib/f1/catalog"
 import { canonicalEventSlug, isSupportedYear, supportedYears } from "@/lib/f1/session-manifest"
 
 /** 404 for years the API doesn't cover, so crawlers can't make us probe arbitrary years. */
@@ -21,7 +21,7 @@ export const loadSeason = cache(async (yearParam: string): Promise<SeasonCatalog
  */
 export async function loadSeasonsForStaticPage(): Promise<SeasonCatalog[]> {
   try {
-    return await Promise.all(supportedYears().map((y) => getSeasonCatalog(y)))
+    return (await Promise.all(supportedYears().map((y) => getSeasonCatalog(y)))).map(assertComplete)
   } catch (e) {
     if (process.env.NEXT_PHASE === "phase-production-build") await connection()
     throw e

@@ -25,6 +25,6 @@ describe("ttlSeconds", () => {
   })
   it("lengthens as the session ages", () => {
     expect(ttlSeconds(iso(10), NOW)).toBe(3600)
-    expect(ttlSeconds(iso(90), NOW)).toBe(86400)
+    expect(ttlSeconds(iso(90), NOW)).toBe(21600)
   })
 })

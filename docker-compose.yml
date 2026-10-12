@@ -91,6 +91,11 @@ services:
       # Bearer secret for POST /api/revalidate/sessions (called by the api
       # service's SessionPublishSweepService; must match its Revalidation__Secret).
       - REVALIDATE_SECRET=${REVALIDATE_SECRET}
+    # Next.js data cache. It holds the F1 API responses behind the /f1 pages, so
+    # keeping it across deploys means a new container starts warm instead of
+    # re-fetching ~100 rate-limited API calls (see docs/f1-sessions-pipeline.md).
+    volumes:
+      - client-cache:/app/.next/cache
     depends_on:
       - api
     healthcheck:
@@ -105,6 +110,7 @@ volumes:
   influxdb-data:
   influxdb-config:
   api-uploads:
+  client-cache:
 
 networks:
   default:

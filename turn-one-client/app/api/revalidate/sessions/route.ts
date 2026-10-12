@@ -1,6 +1,8 @@
 import { timingSafeEqual } from "node:crypto"
+import { after } from "next/server"
+import { warmCatalogs } from "@/lib/f1/catalog"
 import { publishIfReady, sweep, type SessionKey } from "@/lib/f1/publish"
-import { SEO_SESSIONS } from "@/lib/f1/session-manifest"
+import { SEO_SESSIONS, supportedYears } from "@/lib/f1/session-manifest"
 
 /**
  * POST /api/revalidate/sessions — publish finished F1 sessions to the SEO pages.
@@ -46,6 +48,8 @@ export async function POST(req: Request) {
   const text = await req.text()
 
   if (!text.trim()) {
+    // Keep every season's catalog warm between visitors (cheap when it already is).
+    after(() => warmCatalogs(supportedYears()))
     try {
       const results = await sweep(origin)
       return Response.json({ swept: results.length, results })
