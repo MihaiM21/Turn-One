@@ -49,5 +49,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/health).*)'],
+  // /f1 is public, fully cacheable SEO content and never calls the F1 API proxy, so it
+  // is left out: a Set-Cookie on every response makes it uncacheable at the CDN.
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/health|f1/|f1$).*)'],
 };

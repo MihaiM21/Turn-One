@@ -5,6 +5,7 @@ import { MainNav } from "@/components/navigation/main-nav";
 import { WindTunnelHero } from "@/components/landing/hero";
 import { ProductBezel, Sectors } from "@/components/landing/product-sections";
 import { LatestSessions, Regs2026, seasonStats } from "@/components/landing/season-sections";
+import { loadSeasonsOrNull } from "@/lib/f1/pages";
 import { Eyebrow, Faq, FinalCta, ProofBand, container, faqJsonLd, softwareJsonLd } from "@/components/landing/sections";
 
 // "Latest from 2026" and the rounds-run stat come from the calendar; refresh hourly.
@@ -19,8 +20,10 @@ export const metadata: Metadata = generateSEO({
   keywords: ["F1 2026 regulations", "F1 active aero", "F1 overtake mode", "F1 telemetry explained"],
 });
 
-export default function RootPage() {
+export default async function RootPage() {
   const now = new Date();
+  // Published sessions from the F1 API; null (section hidden) if it can't be reached.
+  const seasons = await loadSeasonsOrNull();
   return (
     <div className="min-h-screen bg-[#020202] text-white">
       <JsonLd data={[softwareJsonLd(SITE_CONFIG.url), faqJsonLd()]} />
@@ -41,8 +44,8 @@ export default function RootPage() {
 
         <Sectors />
         <Regs2026 />
-        <LatestSessions now={now} />
-        <ProofBand stats={seasonStats(now)} />
+        <LatestSessions seasons={seasons} />
+        <ProofBand stats={seasonStats(now, seasons)} />
         <Faq />
         <FinalCta />
       </main>

@@ -14,7 +14,9 @@
     "audit": "npm audit --audit-level=moderate",
     "security": "npm audit && npm audit fix",
     "seo:check": "node ../scripts/seo-check.js",
-    "seo:validate": "npm run build && npm run seo:check"
+    "seo:validate": "npm run build && npm run seo:check",
+    "audit:f1": "node --env-file=.env.local scripts/audit-f1-sessions.mjs",
+    "warm:f1": "node scripts/warm-f1-pages.mjs"
   },
   "dependencies": {
     "@microsoft/signalr": "^9.0.6",

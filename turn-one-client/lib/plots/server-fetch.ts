@@ -1,46 +1,62 @@
-// Server-only fetchers for the SEO session pages (app/f1/[year]/[event]/[session]).
-// These call F1_API_URL directly with the API key — bypassing the browser
-// catch-all proxy entirely, since a static/ISR page has no request-scoped
-// cookies or JWT to satisfy that proxy's auth gate. Cost control comes from
-// Next's own fetch cache (`next: { revalidate }`) rather than a bespoke
-// on-disk cache: simpler, and already persisted the same way every other
-// `fetch()` call in this app is.
+// Server-only fetchers for the SEO session pages (app/f1/**).
 //
 // Deliberately narrow: only the three SHAREABLE_PLOTS endpoints. Widening the
 // SEO pages to more plot types means adding a fetcher here to match.
+//
+// Every fetcher returns an Outcome (lib/f1/outcome.ts) instead of throwing, and
+// addresses the event by its numeric key — the API's name lookup is brittle
+// ("Barcelona Grand Prix" 404s, "Italian Grand Prix" works, "Monza" doesn't)
+// whereas keys resolve every event.
 
-const ONE_DAY = 60 * 60 * 24
+import { apiGet, type CacheMode } from "@/lib/f1/api"
+import { classifyResponse, type Outcome } from "@/lib/f1/outcome"
 
-function apiBase() {
-  const base = process.env.F1_API_URL
-  if (!base) throw new Error("F1_API_URL is not configured")
-  return base.replace(/\/$/, "")
+export interface EventRef {
+  year: number
+  key: number
+}
+
+export interface ResultRow {
+  Driver: string
+  Team?: string
+  LapTime: string
+  LapTimeDelta: number
+  Color?: string
+}
+export interface TopSpeedRow {
+  team: string
+  speed: number
+  color: string
+}
+export interface ThrottleRow {
+  driver: string
+  throttle: number
+  color: string
 }
 
 /**
  * Cache tag for one session's data. `/api/revalidate/sessions` expires it the
- * moment the F1 API has the session, so the ISR pages don't sit on a cached
- * 404 / empty response for the rest of the day.
+ * moment the F1 API has the session, so ISR pages don't sit on a cached
+ * "no data" response.
  */
-export function sessionTag(year: number, gp: string, session: string) {
-  return `f1-session:${year}:${gp.toLowerCase().replace(/[^a-z0-9]+/g, "-")}:${session}`
+export function sessionTag(ev: EventRef, code: string) {
+  return `f1-session:${ev.year}:${ev.key}:${code}`
 }
 
-type FetchMode = { tag: string; fresh?: boolean }
+export type FetchOpts = { ttl: number } | { fresh: true }
 
-async function serverFetch(endpoint: string, { tag, fresh = false }: FetchMode): Promise<unknown> {
-  const res = await fetch(`${apiBase()}/v2/${endpoint}`, {
-    headers: { "X-API-Key": process.env.F1_API_KEY ?? "" },
-    // Finished sessions never change, so a day is plenty; newly-published
-    // sessions don't wait for it — the revalidation route expires `tag`.
-    // `fresh` bypasses the cache entirely: that's how the route probes whether
-    // data has appeared without disturbing what the pages currently see.
-    ...(fresh ? { cache: "no-store" as const } : { next: { revalidate: ONE_DAY, tags: [tag] } }),
-  })
-  if (!res.ok) {
-    throw new Error(`F1 API request failed (${res.status}): ${endpoint}`)
+function cacheFor(ev: EventRef, code: string, opts: FetchOpts): CacheMode {
+  return "fresh" in opts ? "no-store" : { revalidate: opts.ttl, tags: [sessionTag(ev, code)] }
+}
+
+const query = (ev: EventRef, code: string) => `year=${ev.year}&gp=${ev.key}&session=${code}`
+
+function pickArray<T>(raw: unknown): T[] {
+  if (Array.isArray(raw)) return raw as T[]
+  if (raw && typeof raw === "object" && Array.isArray((raw as Record<string, unknown>).data)) {
+    return (raw as { data: T[] }).data
   }
-  return res.json()
+  return []
 }
 
 // Deliberately duplicates the shaping logic in lib/plots/catalog/*.tsx rather
@@ -49,50 +65,53 @@ async function serverFetch(endpoint: string, { tag, fresh = false }: FetchMode):
 // server component's module graph is exactly the boundary-crossing this file
 // exists to avoid. Keep both in sync when either changes.
 
-function pickArray<T = unknown>(raw: unknown): T[] {
-  if (Array.isArray(raw)) return raw as T[]
-  if (raw && typeof raw === "object") {
-    const obj = raw as Record<string, unknown>
-    if (Array.isArray(obj.data)) return obj.data as T[]
-  }
-  return []
-}
+// The API has two row shapes for top speeds: older sessions use "Top Speed (km/h)",
+// newer ones plain "Speed". Either may also arrive column-oriented (one object per field).
+const SPEED_KEYS = ["Top Speed (km/h)", "Speed"] as const
 
-export async function serverFetchTopSpeeds(year: number, gp: string, session: string) {
-  const raw = await serverFetch(`top-speed-telemetry-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`, {
-    tag: sessionTag(year, gp, session),
-  })
-  let processed: { team: string; speed: number; color: string }[] = []
-  if (raw && typeof raw === "object" && "Color" in raw && "Team" in raw && "Top Speed (km/h)" in raw) {
+export function shapeTopSpeeds(raw: unknown): TopSpeedRow[] {
+  let rows: TopSpeedRow[] = []
+  const speedKey = raw && typeof raw === "object" ? SPEED_KEYS.find((k) => k in (raw as object)) : undefined
+  if (raw && typeof raw === "object" && "Color" in raw && "Team" in raw && speedKey) {
     const colors = (raw as Record<string, Record<string, string>>).Color
     const teams = (raw as Record<string, Record<string, string>>).Team
-    const speeds = (raw as Record<string, Record<string, number>>)["Top Speed (km/h)"]
-    processed = Object.keys(teams).map((key) => ({ team: teams[key], speed: speeds[key], color: colors[key] }))
+    const speeds = (raw as Record<string, Record<string, number>>)[speedKey]
+    rows = Object.keys(teams).map((key) => ({ team: teams[key], speed: speeds[key], color: colors[key] }))
   } else if (raw && typeof raw === "object") {
-    processed = Object.values(raw as Record<string, { Team: string; "Top Speed (km/h)": number; Color: string }>).map((item) => ({
-      team: item.Team,
-      speed: item["Top Speed (km/h)"],
-      color: item.Color,
+    rows = (Object.values(raw) as Array<Record<string, unknown>>).map((item) => ({
+      team: item?.Team as string,
+      speed: (item?.["Top Speed (km/h)"] ?? item?.Speed) as number,
+      color: (item?.Color as string) ?? "#ffffff",
     }))
   }
-  return processed.filter((d) => Number.isFinite(d.speed)).sort((a, b) => b.speed - a.speed)
+  return rows.filter((d) => typeof d.team === "string" && Number.isFinite(d.speed)).sort((x, y) => y.speed - x.speed)
 }
 
-export async function serverFetchThrottleAverages(year: number, gp: string, session: string) {
-  const raw = await serverFetch(`throttle-comparison-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`, {
-    tag: sessionTag(year, gp, session),
-  })
-  const dict = raw as Record<string, { Driver: string; "Average Throttle (%)": number; Color: string }> | unknown[]
-  const list = Array.isArray(dict)
-    ? (dict as Array<{ Driver: string; "Average Throttle (%)": number; Color: string }>)
-    : Object.values(dict)
-  return list.map((item) => ({ driver: item.Driver, throttle: item["Average Throttle (%)"], color: item.Color }))
+export function shapeThrottle(raw: unknown): ThrottleRow[] {
+  const list = Array.isArray(raw) ? raw : raw && typeof raw === "object" ? Object.values(raw) : []
+  return (list as Array<{ Driver?: string; "Average Throttle (%)"?: number; Color?: string }>)
+    .filter((item) => typeof item?.Driver === "string" && Number.isFinite(item["Average Throttle (%)"]))
+    .map((item) => ({ driver: item.Driver as string, throttle: item["Average Throttle (%)"] as number, color: item.Color ?? "#ffffff" }))
 }
 
-export async function serverFetchSessionResults(year: number, gp: string, session: string, opts: { fresh?: boolean } = {}) {
-  const raw = await serverFetch(`qualifying-results-data?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`, {
-    tag: sessionTag(year, gp, session),
-    fresh: opts.fresh,
-  })
-  return pickArray<{ Driver: string; LapTime: string; LapTimeDelta: number }>(raw)
+/** Map an `ok` outcome through a shaper; shaping to nothing counts as `empty`. */
+function shaped<T>(o: Outcome<unknown>, shape: (raw: unknown) => T[]): Outcome<T[]> {
+  if (o.kind !== "ok") return o
+  const rows = shape(o.data)
+  return rows.length ? { kind: "ok", data: rows } : { kind: "empty" }
+}
+
+export async function fetchSessionResults(ev: EventRef, code: string, opts: FetchOpts): Promise<Outcome<ResultRow[]>> {
+  const res = await apiGet(`qualifying-results-data?${query(ev, code)}`, cacheFor(ev, code, opts))
+  return shaped(classifyResponse(res), (raw) => pickArray<ResultRow>(raw).filter((r) => typeof r?.Driver === "string" && typeof r?.LapTime === "string"))
+}
+
+export async function fetchTopSpeeds(ev: EventRef, code: string, opts: FetchOpts): Promise<Outcome<TopSpeedRow[]>> {
+  const res = await apiGet(`top-speed-telemetry-data?${query(ev, code)}`, cacheFor(ev, code, opts))
+  return shaped(classifyResponse(res), shapeTopSpeeds)
+}
+
+export async function fetchThrottleAverages(ev: EventRef, code: string, opts: FetchOpts): Promise<Outcome<ThrottleRow[]>> {
+  const res = await apiGet(`throttle-comparison-data?${query(ev, code)}`, cacheFor(ev, code, opts))
+  return shaped(classifyResponse(res), shapeThrottle)
 }

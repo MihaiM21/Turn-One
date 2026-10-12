@@ -7,9 +7,9 @@ import { SEO_SESSIONS } from "@/lib/f1/session-manifest"
  *
  *   Authorization: Bearer <REVALIDATE_SECRET>
  *
- *   (no body)                                   sweep every Qualifying/Race that ended in the last 72 h
+ *   (no body)                                   sweep every session still waiting for data, or finished in the last 72 h
  *   { "year": "2026", "event": "italian-gp",    publish that one session now, if the F1 API has it
- *     "session": "race" }
+ *     "session": "race" }                       (session: qualifying | race | sprint-qualifying | sprint)
  *
  * The .NET API calls the sweep on a timer (SessionPublishSweepService); the F1
  * data service can call the single-session form when its ingestion finishes.
@@ -46,8 +46,13 @@ export async function POST(req: Request) {
   const text = await req.text()
 
   if (!text.trim()) {
-    const results = await sweep(origin)
-    return Response.json({ swept: results.length, results })
+    try {
+      const results = await sweep(origin)
+      return Response.json({ swept: results.length, results })
+    } catch (e) {
+      console.error("[f1-publish] sweep failed", e)
+      return Response.json({ error: "F1 API unavailable" }, { status: 502 })
+    }
   }
 
   let body: unknown
@@ -58,7 +63,7 @@ export async function POST(req: Request) {
   }
   const key = parseKey(body)
   if (!key) {
-    return Response.json({ error: "expected { year: 'YYYY', event: '<slug>', session: 'qualifying' | 'race' }" }, { status: 400 })
+    return Response.json({ error: "expected { year: 'YYYY', event: '<slug>', session: 'qualifying' | 'race' | 'sprint-qualifying' | 'sprint' }" }, { status: 400 })
   }
   const outcome = await publishIfReady(key, origin)
   const status = outcome === "unknown-session" ? 404 : outcome === "pending" ? 409 : outcome === "error" ? 502 : 200

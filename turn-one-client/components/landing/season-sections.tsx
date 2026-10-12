@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { f1_2026_races } from "@/lib/constants/f1_races";
-import { buildManifest, eventSlug, findGrandPrix } from "@/lib/f1/session-manifest";
-import { hasResults } from "@/lib/f1/publish";
+import { finalSessions, type SeasonCatalog } from "@/lib/f1/catalog";
+import { formatSessionDate } from "@/lib/f1/pages";
+import { eventPath, sessionPath } from "@/lib/f1/session-manifest";
 import { Eyebrow, container, type Stat } from "./sections";
 import { REGS_2026 } from "./data";
 
@@ -20,14 +21,15 @@ type Race = { grandPrix: string; circuit: string; country: string; cancelled: bo
 const RACES = (f1_2026_races as Race[]).filter((r) => !r.cancelled);
 const raceEnd = (r: Race) => r.sessions.find((s) => s.name === "Race")?.endTime;
 
-export function seasonStats(now = new Date()): Stat[] {
+export function seasonStats(now = new Date(), seasons: SeasonCatalog[] | null = null): Stat[] {
   const done = RACES.filter((r) => {
     const end = raceEnd(r);
     return end && end < now;
   }).length;
+  const pages = (seasons ?? []).reduce((n, s) => n + s.events.reduce((m, e) => m + finalSessions(e).length, 0), 0);
   return [
     { value: `${done}/${RACES.length}`, label: "2026 rounds run" },
-    { value: String(buildManifest().length), label: "free session pages" },
+    ...(pages > 0 ? [{ value: String(pages), label: "free session pages" }] : []),
     { value: "2020→", label: "seasons of telemetry" },
     { value: "$0", label: "to watch live" },
   ];
@@ -70,27 +72,20 @@ export function Regs2026() {
   );
 }
 
-const DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
-
 /**
- * The four most recent rounds whose race results actually exist — a card is
- * never a link to a page that isn't published yet. Reads the same tagged cache
- * as the session pages, so /api/revalidate/sessions publishing a race updates
- * this list too. Without F1_API_URL (local dev) it falls back to the schedule.
+ * The four most recent rounds whose race results are published — a card is
+ * never a link to a page that isn't there. Reads the same catalog as the /f1
+ * pages, so publishing a session (lib/f1/publish.ts) updates this list too.
+ * Hidden when the F1 API can't be reached.
  */
-export async function LatestSessions({ now = new Date() }: { now?: Date }) {
-  const candidates = RACES.map((r, i) => ({ r, round: i + 1, end: raceEnd(r) }))
-    .filter((x): x is typeof x & { end: Date } => !!x.end && x.end < now)
-    .reverse()
-    .slice(0, 8)
-    .map((x) => ({ ...x, slug: eventSlug(x.r.grandPrix), gp: findGrandPrix("2026", eventSlug(x.r.grandPrix)) }))
-    .filter((x) => x.gp);
+export function LatestSessions({ seasons }: { seasons: SeasonCatalog[] | null }) {
+  const current = seasons?.find((s) => s.year === 2026);
+  const latest = (current?.events ?? [])
+    .filter((e) => e.sessions.some((s) => s.slug === "race" && s.status === "final"))
+    .slice(-4)
+    .reverse();
 
-  const apiOn = !!process.env.F1_API_URL;
-  const ready = await Promise.all(candidates.map((x) => (apiOn ? hasResults(2026, x.gp!.name, "R") : Promise.resolve(true))));
-  const latest = candidates.filter((_, i) => ready[i] === true).slice(0, 4);
-
-  if (!latest.length) return null;
+  if (!latest.length || !current) return null;
 
   return (
     <section aria-labelledby="latest-title" className="border-t border-zinc-800 bg-[#060606]">
@@ -107,23 +102,36 @@ export async function LatestSessions({ now = new Date() }: { now?: Date }) {
           </Link>
         </div>
         <ol className="mt-8 grid gap-px border border-zinc-800 bg-zinc-800 sm:grid-cols-2 lg:grid-cols-4">
-          {latest.map(({ r, round, end, slug }) => (
-            <li key={slug} className="flex flex-col bg-[#060606] p-5">
-              <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-zinc-500">
-                Round {String(round).padStart(2, "0")} · <time dateTime={end.toISOString()}>{DATE.format(end)}</time>
-              </p>
-              <h3 className="mt-2 text-lg font-black leading-tight text-white">{r.grandPrix}</h3>
-              <p className="mt-1 text-xs text-zinc-500">{r.circuit}</p>
-              <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold">
-                <Link href={`/f1/2026/${slug}/race`} className="text-red-400 underline-offset-4 hover:underline">
-                  Race results &amp; telemetry
-                </Link>
-                <Link href={`/f1/2026/${slug}/qualifying`} className="text-zinc-300 underline-offset-4 hover:underline">
-                  Qualifying
-                </Link>
-              </div>
-            </li>
-          ))}
+          {latest.map((entry) => {
+            const { event, sessions } = entry;
+            const race = sessions.find((s) => s.slug === "race");
+            const when = formatSessionDate(race?.start ?? null);
+            const others = finalSessions(entry).filter((s) => s.slug !== "race");
+            return (
+              <li key={event.key} className="flex flex-col bg-[#060606] p-5">
+                <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-zinc-500">
+                  Round {String(event.round).padStart(2, "0")}
+                  {when ? ` · ${when}` : ""}
+                </p>
+                <h3 className="mt-2 text-lg font-black leading-tight text-white">
+                  <Link href={eventPath(2026, event.slug)} className="underline-offset-4 hover:underline">
+                    {event.name}
+                  </Link>
+                </h3>
+                <p className="mt-1 text-xs text-zinc-500">{event.location}, {event.country}</p>
+                <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold">
+                  <Link href={sessionPath(2026, event.slug, "race")} className="text-red-400 underline-offset-4 hover:underline">
+                    Race results &amp; telemetry
+                  </Link>
+                  {others.map((s) => (
+                    <Link key={s.slug} href={sessionPath(2026, event.slug, s.slug)} className="text-zinc-300 underline-offset-4 hover:underline">
+                      {s.name}
+                    </Link>
+                  ))}
+                </div>
+              </li>
+            );
+          })}
         </ol>
       </div>
     </section>

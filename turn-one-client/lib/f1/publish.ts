@@ -1,16 +1,18 @@
 // Publishing finished F1 sessions to the SEO pages as soon as the F1 API has them.
 //
-// The /f1/{year}/{event}/{session} pages are ISR (revalidate: 1 day) and are
-// prerendered at build time — before most sessions have happened — so a new
-// session's page starts life as a cached 404, and without help would stay one
-// for up to a day after the data lands. This module closes that gap:
+// The /f1 pages are ISR and are rendered on first request (nothing is
+// prerendered at build, so a build never depends on the F1 API). A session that
+// hasn't been published yet is a 404, and without help a freshly finished
+// session would stay one until its page's revalidate window ran out. This
+// module closes that gap:
 //
-//   sweep()   — every Qualifying/Race whose scheduled end is in the last 72 h:
-//               probe the F1 API (uncached); if results exist and we haven't
-//               published it yet, publish it.
-//   publish() — expire the session's data tag, mark its page + the landing
-//               page + the /f1 index for revalidation, then (after the response)
-//               warm them so the first real visitor gets the fresh render.
+//   sweep()   — every session that is still waiting for data, or finished in
+//               the last 72 h: probe the F1 API (uncached); if results exist
+//               and we haven't published it yet, publish it.
+//   publish() — expire the session's data tag and the season catalog, mark its
+//               page, event hub, year hub, the /f1 index and the landing page
+//               for revalidation, then (after the response) warm them so the
+//               first real visitor gets the fresh render.
 //
 // Triggered by POST /api/revalidate/sessions (the .NET API calls it every few
 // minutes; the external F1 API can call it with a specific session when its
@@ -18,19 +20,15 @@
 
 import { revalidatePath, revalidateTag } from "next/cache"
 import { after } from "next/server"
-import { f1_2025_races, f1_2026_races } from "@/lib/constants/f1_races"
-import { eventSlug, findGrandPrix, findSession, type SeoSessionSlug } from "@/lib/f1/session-manifest"
-import { serverFetchSessionResults, sessionTag } from "@/lib/plots/server-fetch"
+import { ageMs } from "@/lib/f1/cache-policy"
+import { catalogTag, eventRef, findInCatalog, getSeasonCatalog, type CatalogEvent, type CatalogSession } from "@/lib/f1/catalog"
+import { eventPath, sessionPath, yearPath, type SeoSessionSlug } from "@/lib/f1/session-manifest"
+import { fetchSessionResults, sessionTag } from "@/lib/plots/server-fetch"
 
 export type SessionKey = { year: string; event: string; session: SeoSessionSlug }
 export type PublishOutcome = "published" | "already-published" | "pending" | "unknown-session" | "error"
 
-type CalSession = { name: string; startTime: Date; endTime: Date }
-type CalRace = { grandPrix: string; cancelled: boolean; sessions: CalSession[] }
-
-const CALENDARS = { "2025": f1_2025_races, "2026": f1_2026_races } as unknown as Record<string, CalRace[]>
-const SESSION_BY_NAME: Record<string, SeoSessionSlug> = { Qualifying: "qualifying", Race: "race" }
-const WINDOW_MS = 72 * 60 * 60 * 1000
+const RECENT_MS = 72 * 60 * 60 * 1000
 
 /**
  * Sessions published by this server process. Keeps each sweep to a probe of the
@@ -39,63 +37,52 @@ const WINDOW_MS = 72 * 60 * 60 * 1000
  */
 const published = new Set<string>()
 const keyOf = (k: SessionKey) => `${k.year}/${k.event}/${k.session}`
-export const sessionPath = (k: SessionKey) => `/f1/${keyOf(k)}`
 
-/** Qualifying and Race sessions whose scheduled end falls in the last 72 h. */
-export function recentSessions(now = new Date()): SessionKey[] {
+/** Sessions worth probing now: still waiting for data, or finished recently and not yet published. */
+export async function sweepCandidates(now = new Date()): Promise<SessionKey[]> {
+  const year = now.getUTCFullYear()
+  const cat = await getSeasonCatalog(year)
   const out: SessionKey[] = []
-  for (const [year, races] of Object.entries(CALENDARS)) {
-    for (const race of races) {
-      if (race.cancelled) continue
-      for (const s of race.sessions) {
-        const slug = SESSION_BY_NAME[s.name]
-        if (!slug) continue
-        const age = now.getTime() - s.endTime.getTime()
-        if (age >= 0 && age <= WINDOW_MS) out.push({ year, event: eventSlug(race.grandPrix), session: slug })
-      }
+  for (const { event, sessions } of cat.events) {
+    for (const s of sessions) {
+      const key: SessionKey = { year: String(year), event: event.slug, session: s.slug }
+      const age = ageMs(s.end, now.getTime())
+      const recent = age != null && age >= 0 && age <= RECENT_MS
+      if (s.status === "pending" || (s.status === "final" && recent)) out.push(key)
     }
   }
   return out
 }
 
-function resolve(k: SessionKey) {
-  const gp = findGrandPrix(k.year, k.event)
-  const s = findSession(k.session)
-  return gp && s ? { gpName: gp.name, code: s.code } : null
-}
-
-/**
- * Whether the F1 API has results for a session. `fresh` skips Next's data cache
- * (for probing); without it this reads the same cached, tagged response the
- * pages use. `null` means the API isn't configured or didn't answer.
- */
-export async function hasResults(year: number, gpName: string, code: string, fresh = false): Promise<boolean | null> {
-  if (!process.env.F1_API_URL) return null
-  try {
-    return (await serverFetchSessionResults(year, gpName, code, { fresh })).length > 0
-  } catch {
-    return null
-  }
-}
-
 /** Probe one session and publish it if its data has appeared. */
 export async function publishIfReady(k: SessionKey, origin: string): Promise<PublishOutcome> {
-  const r = resolve(k)
-  if (!r) return "unknown-session"
+  let found: ReturnType<typeof findInCatalog>
+  try {
+    found = findInCatalog(await getSeasonCatalog(Number(k.year)), k.event, k.session)
+  } catch (e) {
+    console.error("[f1-publish] catalog unavailable", e)
+    return "error"
+  }
+  if (!found?.session) return "unknown-session"
   if (published.has(keyOf(k))) return "already-published"
-  const ready = await hasResults(Number(k.year), r.gpName, r.code, true)
-  if (ready === null) return "error"
-  if (!ready) return "pending"
-  publish(k, r.gpName, r.code, origin)
+  const { session } = found
+  if (session.status === "upcoming" || session.status === "suspect") return "pending"
+
+  const probe = await fetchSessionResults(eventRef(found.entry.event), session.code, { fresh: true })
+  if (probe.kind === "transient") return "error"
+  if (probe.kind !== "ok") return "pending"
+  publish(k, found.entry.event, session, origin)
   return "published"
 }
 
-function publish(k: SessionKey, gpName: string, code: string, origin: string) {
+function publish(k: SessionKey, ev: CatalogEvent, session: CatalogSession, origin: string) {
   // expire now (not stale-while-revalidate): the stale value is the "no data" response
-  revalidateTag(sessionTag(Number(k.year), gpName, code), { expire: 0 })
-  const paths = [sessionPath(k), "/", "/f1"]
+  revalidateTag(sessionTag(eventRef(ev), session.code), { expire: 0 })
+  revalidateTag(catalogTag(ev.year), { expire: 0 })
+  const paths = [sessionPath(k.year, k.event, k.session), eventPath(k.year, k.event), yearPath(k.year), "/f1", "/"]
   for (const p of paths) revalidatePath(p)
   published.add(keyOf(k))
+  console.info(`[f1-publish] published ${keyOf(k)}`)
   // The page render happens on the next visit; make that visit ours rather than
   // a searcher's. A route handler's revalidations are only applied once it has
   // returned, so warm from after() — and give the invalidation a moment to land.
@@ -108,8 +95,9 @@ function publish(k: SessionKey, gpName: string, code: string, origin: string) {
 }
 
 export async function sweep(origin: string, now = new Date()) {
-  const results = await Promise.all(
-    recentSessions(now).map(async (k) => ({ ...k, outcome: await publishIfReady(k, origin) })),
-  )
+  const candidates = await sweepCandidates(now)
+  // Sequential: a publish invalidates the shared catalog, and each probe is one cheap call.
+  const results: (SessionKey & { outcome: PublishOutcome })[] = []
+  for (const k of candidates) results.push({ ...k, outcome: await publishIfReady(k, origin) })
   return results
 }
