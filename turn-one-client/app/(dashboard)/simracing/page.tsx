@@ -29,25 +29,29 @@ import {
     getMyStats,
     getMySessions,
     getLeaderboards,
+    getMyTracks,
     formatLapTime,
     formatPlayTime,
     type SimStats,
     type SimSession,
     type SimLeaderboardRow,
 } from "@/lib/simracing/api";
+import { SIM_SOURCE_LABEL, type MyTrackDto } from "@/lib/simracing/protocol";
 
 export default function SimracingDashboard() {
     const [stats, setStats] = useState<SimStats | null>(null);
     const [sessions, setSessions] = useState<SimSession[]>([]);
     const [leaderboard, setLeaderboard] = useState<SimLeaderboardRow[]>([]);
+    const [tracks, setTracks] = useState<MyTrackDto[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        Promise.allSettled([getMyStats(), getMySessions(), getLeaderboards()])
-            .then(([s, sess, lb]) => {
+        Promise.allSettled([getMyStats(), getMySessions(), getLeaderboards(), getMyTracks()])
+            .then(([s, sess, lb, trk]) => {
                 if (s.status === "fulfilled") setStats(s.value);
                 if (sess.status === "fulfilled") setSessions(sess.value);
                 if (lb.status === "fulfilled") setLeaderboard(lb.value.slice(0, 5));
+                if (trk.status === "fulfilled") setTracks(trk.value);
             })
             .finally(() => setLoading(false));
     }, []);
@@ -214,6 +218,16 @@ export default function SimracingDashboard() {
                 </SectionCard>
             ) : null}
 
+            {tracks.length > 0 ? (
+                <SectionCard label="By track" title="Best laps by track" icon={Route} flush>
+                    <div className="grid grid-cols-1 divide-y divide-zinc-800/60 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
+                        {tracks.map(t => (
+                            <TrackTile key={t.profile.id} track={t} />
+                        ))}
+                    </div>
+                </SectionCard>
+            ) : null}
+
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-[3fr_2fr]">
                 <SectionCard
                     label="Recent sessions"
@@ -222,7 +236,7 @@ export default function SimracingDashboard() {
                     loading={loading}
                     empty={
                         !loading && sessions.length === 0
-                            ? "No sessions yet. Start a session in ACC with Link running and it'll show up here."
+                            ? "No sessions yet. Start a session in your sim with Link running and it'll show up here."
                             : undefined
                     }
                     emptyIcon={Flag}
@@ -314,6 +328,27 @@ export default function SimracingDashboard() {
 
             <ExploreMoreLinks currentPage="/simracing" />
         </main>
+    );
+}
+
+function TrackTile({ track }: { track: MyTrackDto }) {
+    const href = track.bestLapId
+        ? `/simracing/analysis?track=${track.profile.id}&ref=${track.bestLapId}`
+        : `/simracing/analysis?track=${track.profile.id}`;
+    return (
+        <Link href={href} className="block bg-zinc-950 px-5 py-4 transition-colors hover:bg-zinc-900/60">
+            <div className="flex items-center justify-between gap-2">
+                <p className="truncate text-sm font-bold text-white">{track.profile.displayName}</p>
+                <span className="shrink-0 border border-zinc-800 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-zinc-500">
+                    {SIM_SOURCE_LABEL[track.profile.source as keyof typeof SIM_SOURCE_LABEL] ?? track.profile.source}
+                </span>
+            </div>
+            <p className="mt-1.5 font-mono text-xl font-bold tabular-nums text-primary">{formatLapTime(track.bestLapMs)}</p>
+            <p className="mt-0.5 text-[11px] text-zinc-500">
+                {track.lapCount} lap{track.lapCount === 1 ? "" : "s"}
+                {track.lastDrivenAt ? ` · ${formatDistanceToNow(new Date(track.lastDrivenAt))} ago` : ""}
+            </p>
+        </Link>
     );
 }
 

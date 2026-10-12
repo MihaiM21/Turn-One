@@ -24,6 +24,8 @@ WORKDIR /app
 # Accept build arguments
 ARG NEXT_PUBLIC_BACKEND_URL
 ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
+ARG NEXT_PUBLIC_F1_PROXY_URL
+ENV NEXT_PUBLIC_F1_PROXY_URL=$NEXT_PUBLIC_F1_PROXY_URL
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY turn-one-client/ ./
@@ -42,6 +44,11 @@ WORKDIR /app
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 
+# curl is needed by the HEALTHCHECK below (and compose's healthcheck). node:20-slim
+# doesn't ship it, and the copy in the deps stage doesn't carry over to this stage.
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 # Create non-root user for security
 RUN mkdir -p /app/node_modules && \
     chown -R node:node /app && \
@@ -51,8 +58,10 @@ RUN mkdir -p /app/node_modules && \
 # Copy built application
 COPY --from=builder /app/public ./public
 
-# Set the correct permission for prerender cache
-RUN mkdir .next && chown nextjs:nodejs .next
+# Set the correct permission for prerender cache. .next/cache is a mount point
+# (named volume client-cache in docker-compose.yml); creating it here, owned by
+# the runtime user, is what makes the volume writable by that user.
+RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next
 
 # Copy standalone output for smaller runtime image
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./

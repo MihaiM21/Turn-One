@@ -1,5 +1,7 @@
 using System.Text;
+using Application.DTOs;
 using Application.Interfaces;
+using Application.Telemetry;
 using Infrastructure;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -19,6 +21,10 @@ Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
     .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
     .MinimumLevel.Override("System", LogEventLevel.Warning)
+    // LOG_EF_COMMANDS=true echoes every SQL statement — for diagnosing persistence issues locally.
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command",
+        string.Equals(Environment.GetEnvironmentVariable("LOG_EF_COMMANDS"), "true", StringComparison.OrdinalIgnoreCase)
+            ? LogEventLevel.Information : LogEventLevel.Warning)
     .Enrich.FromLogContext()
     .Enrich.WithThreadId()
     .Enrich.WithProperty("Application", "TurnOne-API")
@@ -82,6 +88,13 @@ builder.Services.AddControllers()
     });
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
+
+// Compress JSON responses (lap telemetry payloads are large channel arrays).
+builder.Services.AddResponseCompression(o =>
+{
+    o.EnableForHttps = true;
+    o.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
+});
 
 // Add SignalR
 builder.Services.AddSignalR();
@@ -219,6 +232,11 @@ builder.Services.AddSingleton<F1WebSocketService>();
 // Add background services
 builder.Services.AddHostedService<TokenRefillBackgroundService>();
 
+// Publishes finished F1 sessions to the frontend's static SEO pages as soon as their data exists
+// (no-op unless Revalidation:FrontendUrl and Revalidation:Secret are configured)
+builder.Services.AddHttpClient(SessionPublishSweepService.HttpClientName, c => c.Timeout = TimeSpan.FromSeconds(60));
+builder.Services.AddHostedService<SessionPublishSweepService>();
+
 // Add HttpClient for F1 API proxy
 builder.Services.AddHttpClient();
 
@@ -299,10 +317,22 @@ builder.Services.AddScoped<ICoachingService>(sp =>
         : sp.GetRequiredService<HeuristicCoachingService>();
 });
 builder.Services.AddSingleton<ITelemetryTickRepository, InfluxTickRepository>();
+builder.Services.AddSingleton<LapBufferRegistry>();
 builder.Services.AddSingleton<TelemetryIngestionService>();
 builder.Services.AddSingleton(System.Threading.Channels.Channel.CreateUnbounded<TickItem>());
+builder.Services.AddSingleton(System.Threading.Channels.Channel.CreateBounded<LapJob>(
+    new System.Threading.Channels.BoundedChannelOptions(512) { FullMode = System.Threading.Channels.BoundedChannelFullMode.DropOldest }));
 builder.Services.AddHostedService<TelemetryPersistenceWorker>();
 builder.Services.AddHostedService<TelemetrySweeperWorker>();
+builder.Services.AddHostedService<LapProcessingWorker>();
+builder.Services.AddScoped<ILapProcessor, Infrastructure.Services.LapProcessor>();
+builder.Services.AddScoped<ILapTelemetryQueryService, LapTelemetryQueryService>();
+
+// Lap reprocess / backfill pipeline
+builder.Services.AddSingleton<LapReprocessJobStore>();
+builder.Services.AddSingleton(System.Threading.Channels.Channel.CreateUnbounded<ReprocessJob>());
+builder.Services.AddScoped<ILapReprocessService, LapReprocessService>();
+builder.Services.AddHostedService<API.Services.LapReprocessWorker>();
 
 // Telemetry token-usage / request log
 builder.Services.AddScoped<ITelemetryUsageService, TelemetryUsageService>();
@@ -363,6 +393,14 @@ try
         Log.Information("Seeding trivia questions...");
         await TriviaSeeder.SeedTriviaQuestions(db);
         Log.Information("Trivia questions seeded successfully");
+
+        // Optional one-shot backfill of legacy (protocol v1) laps into processed telemetry on startup.
+        if (builder.Configuration.GetValue<bool>("LapProcessing:BackfillOnStartup"))
+        {
+            var reprocess = scope.ServiceProvider.GetRequiredService<ILapReprocessService>();
+            var jobId = reprocess.Enqueue(new ReprocessRequestDto { OnlyLegacy = true }, restrictToUser: null);
+            Log.Information("Enqueued startup legacy backfill job {JobId}", jobId);
+        }
     }
 }
 catch (Exception ex)
@@ -389,6 +427,9 @@ else
     // Add security headers middleware
     app.UseMiddleware<SecurityHeadersMiddleware>();
 }
+
+// Compress responses (before anything writes to the body).
+app.UseResponseCompression();
 
 // Use CORS
 app.UseCors("AllowSpecificOrigin");

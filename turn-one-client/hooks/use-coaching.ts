@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { request, SimApiError } from "@/lib/simracing/api";
 
 export type CoachingSeverity = 0 | 1 | 2 | 3;
 
@@ -11,6 +12,12 @@ export interface CoachingTip {
     category: string;
     severity: CoachingSeverity;
     lapNumber: number | null;
+    /** Reference corner index (0-based) this tip is about, when it's corner-specific. */
+    cornerIndex?: number | null;
+    /** Display name for `cornerIndex` — the track profile's reference corner name, or "T{n}". */
+    cornerName?: string | null;
+    /** Distance (m) along the lap to jump the cursor to, when this tip is corner-specific. */
+    distanceM?: number | null;
 }
 
 export interface CoachingChatMessage {
@@ -23,15 +30,6 @@ export interface CoachingChatReply {
     provider: string;
 }
 
-function apiBase() {
-    return (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5271/api").replace(/\/api\/?$/, "");
-}
-
-function authHeaders(): Record<string, string> {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
 export function useCoaching(sessionId: string | undefined, lapNumber: number | null) {
     const [tips, setTips] = useState<CoachingTip[]>([]);
     const [tipsStatus, setTipsStatus] = useState<"idle" | "loading" | "ok" | "locked" | "error">("idle");
@@ -42,24 +40,17 @@ export function useCoaching(sessionId: string | undefined, lapNumber: number | n
         if (!sessionId) return;
         setTipsStatus("loading");
         try {
-            const url = apiBase();
             const qs = lapNumber != null ? `?lap=${lapNumber}` : "";
-            const res = await fetch(`${url}/api/coaching/sessions/${sessionId}/tips${qs}`, {
-                headers: authHeaders(),
-            });
-            if (res.status === 403) {
+            const tips = await request<CoachingTip[]>(`/api/coaching/sessions/${sessionId}/tips${qs}`);
+            setTips(tips);
+            setTipsStatus("ok");
+        } catch (err) {
+            if (err instanceof SimApiError && err.isPlanGated) {
                 setTipsStatus("locked");
                 setTips([]);
-                return;
-            }
-            if (!res.ok) {
+            } else {
                 setTipsStatus("error");
-                return;
             }
-            setTips(await res.json());
-            setTipsStatus("ok");
-        } catch {
-            setTipsStatus("error");
         }
     }, [sessionId, lapNumber]);
 
@@ -76,25 +67,19 @@ export function useCoaching(sessionId: string | undefined, lapNumber: number | n
             setChatStatus("sending");
 
             try {
-                const url = apiBase();
-                const res = await fetch(`${url}/api/coaching/sessions/${sessionId}/chat`, {
+                const reply = await request<CoachingChatReply>(`/api/coaching/sessions/${sessionId}/chat`, {
                     method: "POST",
-                    headers: { ...authHeaders(), "Content-Type": "application/json" },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ message, history }),
                 });
-                if (res.status === 403) {
-                    setChatStatus("locked");
-                    return;
-                }
-                if (!res.ok) {
-                    setChatStatus("error");
-                    return;
-                }
-                const reply: CoachingChatReply = await res.json();
                 setHistory([...nextHistory, { role: "assistant", content: reply.content }]);
                 setChatStatus("idle");
-            } catch {
-                setChatStatus("error");
+            } catch (err) {
+                if (err instanceof SimApiError && err.isPlanGated) {
+                    setChatStatus("locked");
+                } else {
+                    setChatStatus("error");
+                }
             }
         },
         [sessionId, history]

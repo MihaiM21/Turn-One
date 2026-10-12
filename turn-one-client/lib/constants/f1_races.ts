@@ -844,6 +844,7 @@ export const f1_2025_races = [
 export const f1_2026_races = [
   // Australia
   {
+    raceId: "2026-R1",
     grandPrix: "Australian Grand Prix",
     circuit: "Albert Park Circuit",
     country: "Australia",
@@ -879,6 +880,7 @@ export const f1_2026_races = [
   },
   // China (Sprint)
   {
+    raceId: "2026-R2",
     grandPrix: "Chinese Grand Prix",
     circuit: "Shanghai International Circuit",
     country: "China",
@@ -914,6 +916,7 @@ export const f1_2026_races = [
   },
   // Japan
   {
+    raceId: "2026-R3",
     grandPrix: "Japanese Grand Prix",
     circuit: "Suzuka International Racing Course",
     country: "Japan",
@@ -949,6 +952,7 @@ export const f1_2026_races = [
   },
   // Bahrain
   {
+    raceId: "2026-R4",
     grandPrix: "Bahrain Grand Prix",
     circuit: "Bahrain International Circuit",
     country: "Bahrain",
@@ -984,6 +988,7 @@ export const f1_2026_races = [
   },
   // Saudi Arabia
   {
+    raceId: "2026-R5",
     grandPrix: "Saudi Arabian Grand Prix",
     circuit: "Jeddah Corniche Circuit",
     country: "Saudi Arabia",
@@ -1019,6 +1024,7 @@ export const f1_2026_races = [
   },
   // Miami (Sprint)
   {
+    raceId: "2026-R6",
     grandPrix: "Miami Grand Prix",
     circuit: "Miami International Autodrome",
     country: "USA",
@@ -1054,6 +1060,7 @@ export const f1_2026_races = [
   },
   // Canada (Sprint - NEW)
   {
+    raceId: "2026-R7",
     grandPrix: "Canadian Grand Prix",
     circuit: "Circuit Gilles-Villeneuve",
     country: "Canada",
@@ -1089,6 +1096,7 @@ export const f1_2026_races = [
   },
   // Monaco
   {
+    raceId: "2026-R8",
     grandPrix: "Monaco Grand Prix",
     circuit: "Circuit de Monaco",
     country: "Monaco",
@@ -1124,6 +1132,7 @@ export const f1_2026_races = [
   },
   // Barcelona-Catalunya
   {
+    raceId: "2026-R9",
     grandPrix: "Gran Premio de Barcelona-Catalunya",
     circuit: "Circuit de Barcelona-Catalunya",
     country: "Spain",
@@ -1159,6 +1168,7 @@ export const f1_2026_races = [
   },
   // Austria
   {
+    raceId: "2026-R10",
     grandPrix: "Austrian Grand Prix",
     circuit: "Red Bull Ring",
     country: "Austria",
@@ -1194,6 +1204,7 @@ export const f1_2026_races = [
   },
   // Great Britain (Sprint)
   {
+    raceId: "2026-R11",
     grandPrix: "British Grand Prix",
     circuit: "Silverstone Circuit",
     country: "United Kingdom",
@@ -1229,6 +1240,7 @@ export const f1_2026_races = [
   },
   // Belgium
   {
+    raceId: "2026-R12",
     grandPrix: "Belgian Grand Prix",
     circuit: "Spa-Francorchamps",
     country: "Belgium",
@@ -1264,6 +1276,7 @@ export const f1_2026_races = [
   },
   // Hungary
   {
+    raceId: "2026-R13",
     grandPrix: "Hungarian Grand Prix",
     circuit: "Hungaroring",
     country: "Hungary",
@@ -1299,6 +1312,7 @@ export const f1_2026_races = [
   },
   // Netherlands (Sprint - NEW)
   {
+    raceId: "2026-R14",
     grandPrix: "Dutch Grand Prix",
     circuit: "Zandvoort Circuit",
     country: "Netherlands",
@@ -1334,6 +1348,7 @@ export const f1_2026_races = [
   },
   // Italy
   {
+    raceId: "2026-R15",
     grandPrix: "Italian Grand Prix",
     circuit: "Monza Circuit",
     country: "Italy",
@@ -1369,6 +1384,7 @@ export const f1_2026_races = [
   },
   // Spain (Madrid - NEW)
   {
+    raceId: "2026-R16",
     grandPrix: "Spanish Grand Prix",
     circuit: "Madring",
     country: "Spain",
@@ -1404,6 +1420,7 @@ export const f1_2026_races = [
   },
   // Azerbaijan (Saturday Race)
   {
+    raceId: "2026-R17",
     grandPrix: "Azerbaijan Grand Prix",
     circuit: "Baku City Circuit",
     country: "Azerbaijan",
@@ -1437,8 +1454,49 @@ export const f1_2026_races = [
       },
     ],
   },
+  // Bahrain GP relocated to Sepang, Malaysia (round 16). The original Bahrain
+  // International Circuit round (10-12 April) was cancelled; F1, the FIA and the
+  // Bahrain and Malaysian governments reinstated the race under the Bahrain name.
+  // raceId stays R25 (not R16): R1-R24 key the original 24-round calendar, and
+  // stored predictions reference those ids, so existing rounds must not re-key.
+  {
+    raceId: "2026-R25",
+    grandPrix: "Bahrain Grand Prix",
+    circuit: "Sepang International Circuit",
+    country: "Malaysia",
+    hasSprint: false,
+    cancelled: false,
+    sessions: [
+      {
+        name: "Free Practice 1",
+        startTime: new Date("2026-10-02T04:30:00+00:00"),
+        endTime: new Date("2026-10-02T05:30:00+00:00"),
+      },
+      {
+        name: "Free Practice 2",
+        startTime: new Date("2026-10-02T08:00:00+00:00"),
+        endTime: new Date("2026-10-02T09:00:00+00:00"),
+      },
+      {
+        name: "Free Practice 3",
+        startTime: new Date("2026-10-03T04:30:00+00:00"),
+        endTime: new Date("2026-10-03T05:30:00+00:00"),
+      },
+      {
+        name: "Qualifying",
+        startTime: new Date("2026-10-03T08:00:00+00:00"),
+        endTime: new Date("2026-10-03T09:00:00+00:00"),
+      },
+      {
+        name: "Race",
+        startTime: new Date("2026-10-04T07:00:00+00:00"),
+        endTime: new Date("2026-10-04T09:00:00+00:00"),
+      },
+    ],
+  },
   // Singapore (Sprint - NEW)
   {
+    raceId: "2026-R18",
     grandPrix: "Singapore Grand Prix",
     circuit: "Marina Bay Street Circuit",
     country: "Singapore",
@@ -1474,6 +1532,7 @@ export const f1_2026_races = [
   },
   // United States
   {
+    raceId: "2026-R19",
     grandPrix: "USA Grand Prix",
     circuit: "Circuit of the Americas",
     country: "USA",
@@ -1509,6 +1568,7 @@ export const f1_2026_races = [
   },
   // Mexico
   {
+    raceId: "2026-R20",
     grandPrix: "Mexico City Grand Prix",
     circuit: "Autódromo Hermanos Rodríguez",
     country: "Mexico",
@@ -1544,6 +1604,7 @@ export const f1_2026_races = [
   },
   // Brazil
   {
+    raceId: "2026-R21",
     grandPrix: "São Paulo Grand Prix",
     circuit: "Interlagos Circuit",
     country: "Brazil",
@@ -1579,6 +1640,7 @@ export const f1_2026_races = [
   },
   // Las Vegas (Saturday Race)
   {
+    raceId: "2026-R22",
     grandPrix: "Las Vegas Grand Prix",
     circuit: "Las Vegas Street Circuit",
     country: "USA",
@@ -1614,6 +1676,7 @@ export const f1_2026_races = [
   },
   // Qatar
   {
+    raceId: "2026-R23",
     grandPrix: "Qatar Grand Prix",
     circuit: "Lusail International Circuit",
     country: "Qatar",
@@ -1649,6 +1712,7 @@ export const f1_2026_races = [
   },
   // Abu Dhabi
   {
+    raceId: "2026-R24",
     grandPrix: "Abu Dhabi Grand Prix",
     circuit: "Yas Marina Circuit",
     country: "UAE",

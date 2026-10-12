@@ -12,7 +12,7 @@
  */
 
 import type { DistanceSample } from "./analysis";
-import type { MultiChannelChartData } from "@/components/dashboard/simracing/charts/multi-channel-chart";
+import type { MultiChannelChartData } from "./protocol";
 
 export interface TrackPoint {
     x: number;

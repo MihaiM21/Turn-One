@@ -145,9 +145,9 @@ export default function AdminPredictionsPage() {
   // Build the full list of 2026 races from the local calendar
   const allRaces: RaceOption[] = useMemo(() => {
     const now = new Date();
-    return f1_2026_races.map((race, index) => {
+    return f1_2026_races.map((race) => {
       const raceSession = race.sessions.find(s => s.name === 'Race');
-      const raceId = `2026-R${index + 1}`;
+      const raceId = race.raceId;
       const raceDateTime = raceSession ? new Date(raceSession.startTime).toISOString() : '';
       const count = pendingRaceMap.get(raceId) || 0;
       return {

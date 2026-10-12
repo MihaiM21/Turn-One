@@ -18,7 +18,8 @@ export function StickySignupBar() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (isAuthenticated()) return;
-    if (HIDE_ON_PATHS.some((p) => pathname?.startsWith(p))) return;
+    // the landing page carries its own CTAs in the hero and at the foot; a bar over the 3D stage is clutter
+    if (pathname === "/" || HIDE_ON_PATHS.some((p) => pathname?.startsWith(p))) return;
 
     try {
       if (sessionStorage.getItem(SESSION_DISMISS_KEY)) return;

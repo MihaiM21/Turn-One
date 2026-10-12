@@ -1,25 +1,31 @@
 #!/bin/bash
 # Runs once, on first initialisation of the InfluxDB volume.
 #
-# InfluxTickRepository partitions telemetry ticks across one bucket per plan
-# tier (see the `planType switch` in Infrastructure/Services/InfluxTickRepository.cs).
-# The image's DOCKER_INFLUXDB_INIT_BUCKET only creates the first of them, so the
-# other two are created here. Without all three, writes and every chart/lap/
-# analytics query for that tier fail silently — the repository catches Influx
-# errors and returns empty lists.
+# Raw sim-telemetry ticks live in ONE bucket (`telemetry`, created by
+# DOCKER_INFLUXDB_INIT_BUCKET). Plan gating happens at read time via
+# Domain/Telemetry/ChannelRegistry.cs, not by partitioning storage. This script
+# only exists so that an operator overriding INFLUXDB_BUCKET still gets the
+# bucket the API expects, and to document the legacy layout.
+#
+# Legacy: before September 2026 ticks were split across telemetry_basic /
+# telemetry_pro / telemetry_elite. InfluxTickRepository still reads those as a
+# fallback (InfluxDB:LegacyBuckets) so old sessions stay visible and can be
+# reprocessed into Postgres lap records. They are NOT created on fresh volumes.
 set -euo pipefail
 
 ORG="${DOCKER_INFLUXDB_INIT_ORG}"
 TOKEN="${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN}"
+BUCKET="${INFLUXDB_BUCKET:-telemetry}"
 
-# Retention is left unlimited (0) deliberately. Per-tier retention windows are a
-# product decision — set them here once that policy exists, rather than letting a
-# default quietly delete users' sessions.
-for bucket in telemetry_basic telemetry_pro telemetry_elite; do
-  if influx bucket list --org "$ORG" --token "$TOKEN" --name "$bucket" >/dev/null 2>&1; then
-    echo "Bucket $bucket already exists, skipping."
-  else
-    echo "Creating bucket $bucket..."
-    influx bucket create --org "$ORG" --token "$TOKEN" --name "$bucket" --retention 0
-  fi
-done
+# Raw ticks are an archive: processed laps are persisted in Postgres by the
+# lap processor, so a bounded retention here does not lose analysis data.
+# 0 = unlimited; set INFLUXDB_RETENTION (e.g. 2160h = 90 days) once the
+# backfill of pre-existing sessions has run.
+RETENTION="${INFLUXDB_RETENTION:-0}"
+
+if influx bucket list --org "$ORG" --token "$TOKEN" --name "$BUCKET" >/dev/null 2>&1; then
+  echo "Bucket $BUCKET already exists, skipping."
+else
+  echo "Creating bucket $BUCKET (retention $RETENTION)..."
+  influx bucket create --org "$ORG" --token "$TOKEN" --name "$BUCKET" --retention "$RETENTION"
+fi

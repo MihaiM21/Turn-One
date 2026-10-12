@@ -125,7 +125,7 @@ const faqs = [
 export default function PricingPage() {
   return (
     <div className="min-h-screen bg-black">
-      <MainNav variant="homepage" />
+      <MainNav />
 
       <PublicHero
         eyebrow="100% free forever · No credit card"

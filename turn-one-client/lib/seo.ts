@@ -291,45 +291,124 @@ export function generateWebsiteSchema() {
   }
 }
 
+const abs = (path: string) => (path.startsWith('http') ? path : `${SITE_CONFIG.url}${path}`)
+
 interface SportsEventSchemaProps {
   name: string
   url: string
   eventName: string
-  sessionName: string
+  /** Hub page of the parent Grand Prix, used as the superEvent URL. */
+  eventUrl?: string
   year: number
-  circuit?: string
+  /** ISO 8601 date-time. The F1 API gives track-local times with no offset; that is passed through as is. */
+  startDate?: string | null
+  endDate?: string | null
+  locality?: string
   country?: string
+  description: string
+  image?: string
 }
 
-/** JSON-LD SportsEvent for an SEO session page (app/f1/[year]/[event]/[session]). */
+/** JSON-LD SportsEvent for one session page (app/f1/[year]/[event]/[session]). */
 export function generateSportsEventSchema({
   name,
   url,
   eventName,
-  sessionName,
+  eventUrl,
   year,
-  circuit,
+  startDate,
+  endDate,
+  locality,
   country,
+  description,
+  image,
 }: SportsEventSchemaProps) {
   return {
     '@context': 'https://schema.org',
     '@type': 'SportsEvent',
     name,
-    url: `${SITE_CONFIG.url}${url}`,
+    url: abs(url),
     sport: 'Formula 1',
-    startDate: `${year}`,
-    location: circuit
-      ? {
-          '@type': 'Place',
-          name: circuit,
-          ...(country && { address: { '@type': 'PostalAddress', addressCountry: country } }),
-        }
-      : undefined,
+    description,
+    ...(startDate && { startDate }),
+    ...(endDate && { endDate }),
+    eventStatus: 'https://schema.org/EventScheduled',
+    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+    ...(image && { image: [abs(image)] }),
+    ...((locality || country) && {
+      location: {
+        '@type': 'Place',
+        name: [locality, country].filter(Boolean).join(', '),
+        address: {
+          '@type': 'PostalAddress',
+          ...(locality && { addressLocality: locality }),
+          ...(country && { addressCountry: country }),
+        },
+      },
+    }),
     superEvent: {
       '@type': 'SportsEvent',
       name: `${eventName} ${year}`,
+      ...(eventUrl && { url: abs(eventUrl) }),
     },
-    description: `${eventName} ${year} — ${sessionName} results, top speeds, and telemetry on TurnOne.`,
   }
 }
 
+/** JSON-LD BreadcrumbList. The last crumb is the current page. */
+export function generateBreadcrumbSchema(crumbs: { name: string; url: string }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: crumbs.map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: c.name,
+      item: abs(c.url),
+    })),
+  }
+}
+
+interface CollectionPageSchemaProps {
+  name: string
+  url: string
+  description: string
+  items: { name: string; url: string }[]
+}
+
+/** JSON-LD CollectionPage whose mainEntity is an ItemList of the linked pages (hubs and the /f1 index). */
+export function generateCollectionPageSchema({ name, url, description, items }: CollectionPageSchemaProps) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name,
+    url: abs(url),
+    description,
+    isPartOf: { '@type': 'WebSite', name: SITE_CONFIG.name, url: SITE_CONFIG.url },
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: items.length,
+      itemListElement: items.map((it, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: it.name,
+        url: abs(it.url),
+      })),
+    },
+  }
+}
+
+/** JSON-LD ItemList for a session's classification (position -> driver and team). */
+export function generateResultsListSchema({ name, items }: { name: string; items: { name: string; team?: string; time: string }[] }) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name,
+    numberOfItems: items.length,
+    itemListOrder: 'https://schema.org/ItemListOrderAscending',
+    itemListElement: items.map((it, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: `${it.name}${it.team ? ` (${it.team})` : ''} — ${it.time}`,
+    })),
+  }
+}

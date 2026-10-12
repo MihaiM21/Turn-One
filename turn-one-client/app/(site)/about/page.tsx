@@ -25,7 +25,7 @@ const timeline = [
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-black">
-      <MainNav variant="homepage" />
+      <MainNav />
 
       <main className="mx-auto max-w-5xl space-y-16 px-4 py-16 sm:px-6 lg:px-8">
         <section className="space-y-6">

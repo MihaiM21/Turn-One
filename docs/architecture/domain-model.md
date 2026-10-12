@@ -17,6 +17,9 @@ All under `turn-one-backend/Domain/Entities/` unless noted.
 | **SimUser** | `Id`, `UserId` (1:1), `TotalSessions`, `TotalLaps`, `TotalDistanceKm`, `TotalPlayTimeSeconds`, `HighestSpeedKmh`, `LastSessionAt` | Aggregate sim-racing stats per user. |
 | **TelemetrySession** | `Id`, `UserId`, `CarModel`, `Track`, `DriverName`, `SessionType`, `Mode` (`TelemetryMode`), `Visibility` (`TelemetryVisibility`), `Status` (`TelemetrySessionStatus`), `IsActive`, `LapCount`, `BestLapMs`, `ClientVersion`, `StartedAt`, `EndedAt`, `LastSeenAt`; has many `TelemetryLap` | See [`sim-racing-telemetry.md`](./sim-racing-telemetry.md). |
 | **TelemetryLap** | `Id`, `SessionId` (cascade delete), `LapNumber`, `LapTimeMs`, `Sector1/2/3Ms`, `IsValid`, `MaxSpeedKmh`, `MaxRpm`, `AverageThrottle`, `AverageBrake`, `FuelUsed`, nullable `BrakingScore`/`ThrottleScore`/`ConsistencyScore`, `RecordedAt` | Unique composite index on `(SessionId, LapNumber)`. Scores are computed by `ILapAnalyticsService`, not always populated. |
+| **LapTelemetry** | `Id`, `LapId` (cascade delete), `SessionId`, `LapNumber`, `StepM` (distance grid spacing), `SampleCount`, `LapLengthM`, `DistanceSource` (`DistanceSource`), `Quality` (null or `"legacy"` for decimated v1 ticks), `TrackProfileId`, `ProfileVersion`, `Channels` (JSON: channel key → compressed float32 array), `CreatedAt` | Protocol-v2 processed lap, resampled to a fixed distance grid (2m typical). See [`sim-telemetry-protocol-v2.md`](./sim-telemetry-protocol-v2.md) §7. |
+| **LapCorner** | `Id`, `LapTelemetryId` (cascade delete), `Index`, `RefIndex` (reference corner in track profile, nullable), `Name`, `Direction`, `IsKink`, entry/apex/exit distance markers, braking-point/throttle-on distance markers, entry/min/exit speeds, peak brake/G-Lat, gear at apex, time in corner, brake-to-throttle time | One row per detected corner in a lap. Linked to `TrackProfile` via `RefIndex`. |
+| **TrackProfile** | `Id`, `Source` (`SimSource`), `TrackId` (sim-authoritative), `DisplayName`, `Status` (`TrackProfileStatus`: Provisional/Stable/Curated), `LengthM`, `SectorCount`, `SectorBoundariesM` (JSON), `Corners` (JSON: reference corner list), `Version`, `LapSampleCount`, `Centerline` (JSON: [x0, y0, x1, y1, ...] at 5m spacing, nullable), `CreatedAt`, `UpdatedAt` | Shared across sessions as users ground-truth corner detection. Status reflects confidence in corner accuracy. |
 | **OverlayShareToken** | `Id`, `UserId` (cascade delete), `Token` (unique), `Label`, `Scopes` (comma-separated: `cockpit`, `lap`, `leaderboard`), `CreatedAt`, `ExpiresAt`, `RevokedAt` | Backs `/overlay/[token]/...` streaming overlay routes. |
 | **Notification** | `Id`, `Title`, `Message`, `Type` (INFO/SUCCESS/WARNING/ERROR), `TargetAudience` (ALL/PLAN/ROLE), `TargetPlans`, `TargetRoles`, `CreatedById`, `IsActive`, `CreatedAt`; has many `UserNotification` | Admin-authored broadcast notifications. |
 | **UserNotification** | `Id`, `UserId`, `NotificationId`, `IsRead`, `ReadAt`, `ReceivedAt` | Per-user delivery/read-state record. |
@@ -38,6 +41,11 @@ All under `turn-one-backend/Domain/Entities/` unless noted.
 | `TelemetryVisibility` | `Private`, `Public` | `TelemetrySession.Visibility` — public sessions require PRO/ELITE |
 | `TelemetrySessionStatus` | `Active`, `Paused`, `Ended` | `TelemetrySession.Status` |
 | `SessionType` | `PRACTICE`, `QUALIFYING`, `RACE` | `TelemetrySession.SessionType` |
+| `DistanceSource` | `LapDistance`, `NormalizedPosition`, `SpeedIntegrated` | `LapTelemetry.DistanceSource` — how the distance grid was computed |
+| `SimSource` | `Acc`, `Ac`, `IRacing`, `F1_25`, `F1_26`, `Unknown` | `TrackProfile.Source` — which sim the telemetry came from |
+| `LapKind` | `Flying`, `OutLap`, `InLap`, `Pit`, `Partial`, `Aborted` | `LapTelemetry.Kind`/`TelemetryLap.Kind` — lap type classification |
+| `LapProcessingStatus` | `Pending`, `Processing`, `Completed`, `Failed` | `LapTelemetry.ProcessingStatus` — async lap-cut → corner-detection pipeline state |
+| `TrackProfileStatus` | `Provisional`, `Stable`, `Curated` | `TrackProfile.Status` — confidence in corner accuracy as more laps ground-truth it |
 
 ## Plan features (`Domain/PlanFeatures.cs`)
 

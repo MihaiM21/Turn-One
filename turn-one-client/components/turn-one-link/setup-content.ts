@@ -22,9 +22,9 @@ export const SETUP_STEPS: SetupStep[] = [
     },
     {
         icon: Gauge,
-        title: "Launch Assetto Corsa Competizione",
+        title: "Launch your sim",
         description:
-            "Link detects ACC automatically and starts reading its shared memory. No in-game settings to change.",
+            "Link detects ACC, Assetto Corsa, iRacing or F1 25/26 automatically. For F1 UDP mode: enable telemetry, set port 20777, format 2025/2026.",
     },
     {
         icon: Flag,
@@ -37,7 +37,7 @@ export const SETUP_STEPS: SetupStep[] = [
 export const REQUIREMENTS = [
     { label: "Operating system", value: "Windows 10 (build 19041) or Windows 11" },
     { label: "Runtime", value: ".NET 9 Desktop Runtime (bundled with the installer)" },
-    { label: "Game", value: "Assetto Corsa Competizione" },
+    { label: "Game", value: "ACC, Assetto Corsa, iRacing, or EA SPORTS F1 25/26 (UDP telemetry on, port 20777, format 2025/2026)" },
     { label: "Connection", value: "Broadband — Link streams roughly 40 KB/s while you're on track" },
     { label: "Account", value: "A free Turn One account" },
 ];
@@ -61,7 +61,7 @@ export const TROUBLESHOOTING = [
     {
         question: "Link says \"Waiting for data\" but I'm on track",
         answer:
-            "ACC only writes to shared memory while a session is actually running — not in the menus or on the setup screen. Head out of the pits and the cockpit will fill in. If it still doesn't, restart Link after ACC is already running.",
+            "Make sure your sim is running and sending telemetry. For ACC/AC/iRacing, the session must be active (not in menus). For F1 25/26, check that UDP telemetry is enabled in settings. If it still doesn't appear, restart Link.",
     },
     {
         question: "Windows SmartScreen blocked the installer",
@@ -74,9 +74,9 @@ export const TROUBLESHOOTING = [
             "Only completed laps are recorded — the lap you're on mid-session won't appear until you cross the line. Also check that Link still shows Connected; if your network dropped, it reconnects automatically but the in-progress lap may be lost.",
     },
     {
-        question: "Can I use it with iRacing, Assetto Corsa or Le Mans Ultimate?",
+        question: "Can I use it with iRacing, Assetto Corsa or F1 25/26?",
         answer:
-            "Not yet. Turn One Link currently reads Assetto Corsa Competizione's shared memory format. Support for more sims is on the roadmap — tell us which one you want next on Discord.",
+            "Yes. Turn One Link supports ACC, Assetto Corsa, iRacing, and EA SPORTS F1 25/26 over UDP. Le Mans Ultimate and rFactor 2 are not yet supported — tell us if you want them next on Discord.",
     },
     {
         question: "Does it affect my frame rate?",

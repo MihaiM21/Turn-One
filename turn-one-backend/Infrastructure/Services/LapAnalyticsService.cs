@@ -1,3 +1,4 @@
+using Domain.Telemetry;
 using Application.Interfaces;
 using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -36,9 +37,9 @@ public class LapAnalyticsService : ILapAnalyticsService
 
         var channels = new[]
         {
-            TelemetryChannels.Brake,
-            TelemetryChannels.Gas,
-            TelemetryChannels.SpeedKmh
+            ChannelRegistry.V1Brake,
+            ChannelRegistry.V1Gas,
+            ChannelRegistry.V1SpeedKmh
         };
 
         var data = (start != null && end != null)
@@ -93,7 +94,7 @@ public class LapAnalyticsService : ILapAnalyticsService
     private static float ComputeBrakingScore(MultiChannelChart data)
     {
         var brakes = data.Points
-            .Select(p => p.Values.TryGetValue(TelemetryChannels.Brake, out var v) ? v : null)
+            .Select(p => p.Values.TryGetValue(ChannelRegistry.V1Brake, out var v) ? v : null)
             .Where(v => v.HasValue)
             .Select(v => v!.Value)
             .ToList();
@@ -111,7 +112,7 @@ public class LapAnalyticsService : ILapAnalyticsService
     private static float ComputeThrottleScore(MultiChannelChart data)
     {
         var gas = data.Points
-            .Select(p => p.Values.TryGetValue(TelemetryChannels.Gas, out var v) ? v : null)
+            .Select(p => p.Values.TryGetValue(ChannelRegistry.V1Gas, out var v) ? v : null)
             .Where(v => v.HasValue)
             .Select(v => v!.Value)
             .ToList();
@@ -129,7 +130,7 @@ public class LapAnalyticsService : ILapAnalyticsService
     private static float ComputeConsistencyScore(MultiChannelChart data)
     {
         var speed = data.Points
-            .Select(p => p.Values.TryGetValue(TelemetryChannels.SpeedKmh, out var v) ? v : null)
+            .Select(p => p.Values.TryGetValue(ChannelRegistry.V1SpeedKmh, out var v) ? v : null)
             .Where(v => v.HasValue)
             .Select(v => v!.Value)
             .ToList();

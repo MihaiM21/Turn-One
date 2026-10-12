@@ -13,6 +13,7 @@ import {
     Lock,
     Globe,
     GitCompareArrows,
+    LineChart as LineChartAnalysis,
     Gauge,
     Map as MapIcon,
     LineChart,
@@ -23,6 +24,7 @@ import {
     TrendingDown,
     CircleDot,
     Cog,
+    RefreshCw,
 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { SectionCard, StatStrip, Stat } from "@/components/dashboard/simracing/section-card";
@@ -32,6 +34,8 @@ import { CoachingPanel } from "@/components/dashboard/simracing/coaching/coachin
 import { DistanceTraceChart } from "@/components/dashboard/simracing/charts/distance-trace-chart";
 import { DeltaTraceChart } from "@/components/dashboard/simracing/charts/delta-trace-chart";
 import { TrackMap } from "@/components/dashboard/simracing/charts/track-map";
+import { TrackMapV2 } from "@/components/dashboard/simracing/charts/track-map-v2";
+import { UPlotTraces, type TraceLap } from "@/components/dashboard/simracing/charts/uplot";
 import { FrictionCircleChart } from "@/components/dashboard/simracing/charts/friction-circle";
 import { DrivingStylePanel } from "@/components/dashboard/simracing/charts/driving-style-panel";
 import { ShiftHistogram } from "@/components/dashboard/simracing/charts/shift-histogram";
@@ -39,20 +43,25 @@ import { LapEvolutionChart } from "@/components/dashboard/simracing/charts/lap-e
 import { SectorMatrixTable } from "@/components/dashboard/simracing/charts/sector-matrix";
 import { TimeLossList } from "@/components/dashboard/simracing/charts/time-loss-list";
 import { ShareCardButton } from "@/components/dashboard/simracing/share-card";
-import type { MultiChannelChartData } from "@/components/dashboard/simracing/charts/multi-channel-chart";
+import type { LapTelemetryDto, MultiChannelChartData } from "@/lib/simracing/protocol";
+import { fromLapTelemetryDto } from "@/lib/simracing/lap-telemetry";
+import type { DistanceSeries } from "@/lib/simracing/analysis";
 import {
     getSession,
     getLaps,
     getSummary,
     getLapChart,
     getChannels,
+    getSessionLapTelemetry,
     setVisibility as setVisibilityApi,
+    reprocessSession,
     formatLapTime,
     SimApiError,
     type SimSession,
     type SimLap,
     type SimSessionSummary,
 } from "@/lib/simracing/api";
+import { simTelemetryService, type LapProcessedEvent } from "@/lib/simTelemetryService";
 import { toDistanceSeries, resampleByDistance, deltaTrace, biggestLoss } from "@/lib/simracing/analysis";
 
 type Tab = "overview" | "traces" | "analysis" | "coach";
@@ -65,6 +74,17 @@ const TABS: { key: Tab; label: string; icon: typeof Gauge }[] = [
 ];
 
 const EMPTY_CHART: MultiChannelChartData = { channels: [], points: [] };
+
+/** The processed lap record, or null when the lap has none yet (404) so callers fall back to the raw chart. */
+async function tryLapRecord(sessionId: string, lap: number): Promise<LapTelemetryDto | null> {
+    try {
+        const dto = await getSessionLapTelemetry(sessionId, lap);
+        return dto.sampleCount > 1 ? dto : null;
+    } catch (err) {
+        if (err instanceof SimApiError && (err.status === 404 || err.isPlanGated)) return null;
+        throw err;
+    }
+}
 
 export default function SessionDetailPage() {
     const params = useParams();
@@ -79,6 +99,9 @@ export default function SessionDetailPage() {
     const [selectedLap, setSelectedLap] = useState<number | null>(null);
     const [lapChart, setLapChart] = useState<MultiChannelChartData>(EMPTY_CHART);
     const [referenceChart, setReferenceChart] = useState<MultiChannelChartData>(EMPTY_CHART);
+    // Protocol-v2 lap records (2 m grid, corners, XY). Preferred over the raw Influx chart when present.
+    const [lapRecord, setLapRecord] = useState<LapTelemetryDto | null>(null);
+    const [refRecord, setRefRecord] = useState<LapTelemetryDto | null>(null);
     const [chartLoading, setChartLoading] = useState(false);
     const [cursor, setCursor] = useState<number | null>(null);
 
@@ -93,6 +116,25 @@ export default function SessionDetailPage() {
             })
             .finally(() => setLoading(false));
     }, [id]);
+
+    // ---- refetch laps as they're processed, while the session is still live --------
+    useEffect(() => {
+        if (!id || !session?.isActive) return;
+
+        const handleLapProcessed = (e: LapProcessedEvent) => {
+            if (e.sessionId !== id) return;
+            getLaps(id).then(setLaps).catch(() => {});
+            getSummary(id).then(setSummary).catch(() => {});
+        };
+
+        simTelemetryService.onLapProcessed(handleLapProcessed);
+        simTelemetryService.connect();
+
+        return () => {
+            simTelemetryService.offLapProcessed(handleLapProcessed);
+            simTelemetryService.disconnect();
+        };
+    }, [id, session?.isActive]);
 
     const lapSummaries: LapSummary[] = useMemo(
         () => laps.map(l => ({ lapNumber: l.lapNumber, lapTimeMs: l.lapTimeMs, isValid: l.isValid })),
@@ -117,13 +159,19 @@ export default function SessionDetailPage() {
             if (!id) return;
             setChartLoading(true);
             try {
-                const primary = lap == null ? await getChannels(id) : await getLapChart(id, lap);
+                // Processed lap records first; the raw Influx chart is the fallback for legacy / unprocessed laps.
+                const record = lap == null ? null : await tryLapRecord(id, lap);
+                setLapRecord(record);
+                const primary = record ? EMPTY_CHART : lap == null ? await getChannels(id) : await getLapChart(id, lap);
                 setLapChart(primary);
 
                 // Fetch the reference lap too, unless it *is* the selected lap.
                 if (bestLapNumber != null && bestLapNumber !== lap) {
-                    setReferenceChart(await getLapChart(id, bestLapNumber));
+                    const ref = await tryLapRecord(id, bestLapNumber);
+                    setRefRecord(ref);
+                    setReferenceChart(ref ? EMPTY_CHART : await getLapChart(id, bestLapNumber));
                 } else {
+                    setRefRecord(null);
                     setReferenceChart(EMPTY_CHART);
                 }
             } catch (err) {
@@ -148,11 +196,54 @@ export default function SessionDetailPage() {
     // ---- derived analysis ------------------------------------------------
     const trackLengthM = undefined; // Not exposed by the API yet; distance falls back to speed integration.
 
-    const lapSeries = useMemo(() => toDistanceSeries(lapChart, trackLengthM), [lapChart]);
-    const refSeries = useMemo(() => toDistanceSeries(referenceChart, trackLengthM), [referenceChart]);
+    const lapParsed = useMemo(() => (lapRecord ? fromLapTelemetryDto(lapRecord) : null), [lapRecord]);
+    const refParsed = useMemo(() => (refRecord ? fromLapTelemetryDto(refRecord) : null), [refRecord]);
 
-    const lapSamples = useMemo(() => resampleByDistance(lapSeries, 5), [lapSeries]);
-    const refSamples = useMemo(() => resampleByDistance(refSeries, 5), [refSeries]);
+    const lapSeries: DistanceSeries = useMemo(
+        () => lapParsed?.series ?? toDistanceSeries(lapChart, trackLengthM),
+        [lapParsed, lapChart]
+    );
+    const refSeries: DistanceSeries = useMemo(
+        () => refParsed?.series ?? toDistanceSeries(referenceChart, trackLengthM),
+        [refParsed, referenceChart]
+    );
+
+    // Server records are already on a uniform grid; only the raw Influx path needs resampling.
+    const lapSamples = useMemo(() => (lapParsed ? lapSeries.samples : resampleByDistance(lapSeries, 5)), [lapParsed, lapSeries]);
+    const refSamples = useMemo(() => (refParsed ? refSeries.samples : resampleByDistance(refSeries, 5)), [refParsed, refSeries]);
+
+    // uPlot trace stack inputs (v2 only): selected lap solid, best lap dashed, shared distance axis.
+    const traceLaps: TraceLap[] = useMemo(() => {
+        if (!lapParsed || selectedLap == null) return [];
+        const out: TraceLap[] = [
+            {
+                id: lapParsed.series.lapId ?? "lap",
+                label: `Lap ${selectedLap}`,
+                color: "#ef4444",
+                channels: lapParsed.columnar.channels,
+                corners: lapParsed.corners,
+                lapTimeMs: laps.find(l => l.lapNumber === selectedLap)?.lapTimeMs,
+            },
+        ];
+        if (refParsed && bestLapNumber != null && bestLapNumber !== selectedLap) {
+            out.push({
+                id: refParsed.series.lapId ?? "ref",
+                label: `Lap ${bestLapNumber}`,
+                color: "#3b82f6",
+                channels: refParsed.columnar.channels,
+                corners: refParsed.corners,
+                dashed: true,
+                lapTimeMs: laps.find(l => l.lapNumber === bestLapNumber)?.lapTimeMs,
+            });
+        }
+        return out;
+    }, [lapParsed, refParsed, selectedLap, bestLapNumber, laps]);
+    const traceX = useMemo(() => {
+        if (!lapParsed) return new Float32Array(0);
+        const n = Math.max(lapParsed.columnar.n, refParsed?.columnar.n ?? 0);
+        const step = lapParsed.columnar.stepM;
+        return Float32Array.from({ length: n }, (_, i) => i * step);
+    }, [lapParsed, refParsed]);
 
     const delta = useMemo(
         () => (refSeries.samples.length ? deltaTrace(lapSeries, refSeries, 5) : []),
@@ -164,12 +255,63 @@ export default function SessionDetailPage() {
         [delta, lapSamples]
     );
 
+    // Real-XY track map input (v2 only). The delta trace is on a 5 m grid; resample it onto the lap's grid.
+    const trackMapV2Laps = useMemo(() => {
+        if (!lapParsed || selectedLap == null) return [];
+        const c = lapParsed.columnar;
+        const deltaS = delta.length
+            ? Float32Array.from({ length: c.n }, (_, i) => {
+                  const d = delta[Math.min(delta.length - 1, Math.round((i * c.stepM) / 5))];
+                  return d ? d.delta : NaN;
+              })
+            : null;
+        return [
+            {
+                id: lapParsed.series.lapId ?? "lap",
+                label: `Lap ${selectedLap}`,
+                color: "#ef4444",
+                x: c.channels.posX ?? null,
+                y: c.channels.posY ?? null,
+                stepM: c.stepM,
+                speed: c.channels.speed ?? null,
+                gear: c.channels.gear ?? null,
+                throttle: c.channels.throttle ?? null,
+                brake: c.channels.brake ?? null,
+                deltaS,
+                corners: lapParsed.corners,
+            },
+        ];
+    }, [lapParsed, selectedLap, delta]);
+
     const maxRpm = useMemo(() => {
         const rpms = laps.map(l => l.maxRpm).filter(r => r > 0);
         return rpms.length ? Math.max(...rpms) : null;
     }, [laps]);
 
     // ---- visibility ------------------------------------------------------
+    const [reprocessing, setReprocessing] = useState(false);
+    const handleReprocess = async () => {
+        setReprocessing(true);
+        try {
+            await reprocessSession(id, true);
+            toast.success("Reprocessing from the raw archive — laps refresh as they finish.");
+            // Laps land one by one; poll a few times so a finished (non-live) session updates too.
+            for (let i = 0; i < 6; i++) {
+                await new Promise(r => setTimeout(r, 2500));
+                getLaps(id).then(setLaps).catch(() => {});
+                getSummary(id).then(setSummary).catch(() => {});
+            }
+        } catch (err) {
+            toast.error(
+                err instanceof SimApiError && err.status === 429
+                    ? "One reprocess per minute — try again shortly."
+                    : "Couldn't start reprocessing."
+            );
+        } finally {
+            setReprocessing(false);
+        }
+    };
+
     const handleVisibility = async (next: number) => {
         const previous = session?.visibility;
         setSession(s => (s ? { ...s, visibility: next } : s));
@@ -214,6 +356,19 @@ export default function SessionDetailPage() {
 
     const selectedLapData = laps.find(l => l.lapNumber === selectedLap) ?? null;
     const isReferenceLap = selectedLap != null && selectedLap === bestLapNumber;
+    const bestLapData = bestLapNumber != null ? (laps.find(l => l.lapNumber === bestLapNumber) ?? null) : null;
+
+    const analysisHref = (() => {
+        const params = new URLSearchParams();
+        params.set("track", session.trackProfileId ?? "");
+        const refId = selectedLapData?.id ?? bestLapData?.id;
+        if (refId) params.set("ref", refId);
+        const lapIds = [selectedLapData?.id, bestLapData?.id].filter(
+            (v, i, arr): v is string => v != null && arr.indexOf(v) === i
+        );
+        if (lapIds.length) params.set("laps", lapIds.join(","));
+        return `/simracing/analysis?${params.toString()}`;
+    })();
 
     return (
         <main className="w-full space-y-4 px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
@@ -242,6 +397,25 @@ export default function SessionDetailPage() {
                 actions={
                     <div className="flex flex-wrap items-center gap-2">
                         <ShareCardButton session={session} summary={summary} laps={laps} />
+
+                        <Link
+                            href={analysisHref}
+                            className="inline-flex h-8 items-center gap-1.5 border border-zinc-800 bg-zinc-900/60 px-3 text-xs text-zinc-300 transition-colors hover:border-primary/40 hover:text-primary"
+                        >
+                            <LineChartAnalysis className="h-3.5 w-3.5" />
+                            Open in Analysis
+                        </Link>
+
+                        <button
+                            type="button"
+                            onClick={handleReprocess}
+                            disabled={reprocessing}
+                            title="Re-run lap processing from the raw telemetry archive"
+                            className="inline-flex h-8 items-center gap-1.5 border border-zinc-800 bg-zinc-900/60 px-3 text-xs text-zinc-300 transition-colors hover:border-primary/40 hover:text-primary disabled:opacity-50"
+                        >
+                            <RefreshCw className={`h-3.5 w-3.5 ${reprocessing ? "animate-spin" : ""}`} />
+                            Reprocess
+                        </button>
 
                         <Link
                             href={`/simracing/sessions/${id}/compare`}
@@ -383,14 +557,24 @@ export default function SessionDetailPage() {
                             icon={MapIcon}
                             loading={chartLoading}
                         >
-                            <TrackMap
-                                samples={lapSamples}
-                                raw={lapChart}
-                                deltaByDistance={delta}
-                                cursorDistance={cursor}
-                                onCursorChange={setCursor}
-                                height={300}
-                            />
+                            {trackMapV2Laps.length ? (
+                                <TrackMapV2
+                                    laps={trackMapV2Laps}
+                                    referenceLapId={trackMapV2Laps[0].id}
+                                    height={300}
+                                    fallbackSamples={lapSamples}
+                                    fallbackRaw={lapChart}
+                                />
+                            ) : (
+                                <TrackMap
+                                    samples={lapSamples}
+                                    raw={lapChart}
+                                    deltaByDistance={delta}
+                                    cursorDistance={cursor}
+                                    onCursorChange={setCursor}
+                                    height={300}
+                                />
+                            )}
                         </SectionCard>
                     </div>
 
@@ -441,24 +625,37 @@ export default function SessionDetailPage() {
                             ) : null
                         }
                     >
-                        <DistanceTraceChart
-                            samples={lapSamples}
-                            compareSamples={isReferenceLap ? null : refSamples}
-                            compareLabel={`Lap ${bestLapNumber}`}
-                            availableChannels={lapChart.channels}
-                            cursorDistance={cursor}
-                            onCursorChange={setCursor}
-                        />
+                        {traceLaps.length ? (
+                            <UPlotTraces x={traceX} laps={traceLaps} cornerSource={traceLaps.find(l => l.dashed) ?? traceLaps[0]} />
+                        ) : (
+                            <DistanceTraceChart
+                                samples={lapSamples}
+                                compareSamples={isReferenceLap ? null : refSamples}
+                                compareLabel={`Lap ${bestLapNumber}`}
+                                availableChannels={lapChart.channels}
+                                cursorDistance={cursor}
+                                onCursorChange={setCursor}
+                            />
+                        )}
                     </SectionCard>
 
                     <SectionCard label="Circuit" title="Racing line" icon={MapIcon} loading={chartLoading}>
-                        <TrackMap
-                            samples={lapSamples}
-                            raw={lapChart}
-                            deltaByDistance={delta}
-                            cursorDistance={cursor}
-                            onCursorChange={setCursor}
-                        />
+                        {trackMapV2Laps.length ? (
+                            <TrackMapV2
+                                laps={trackMapV2Laps}
+                                referenceLapId={trackMapV2Laps[0].id}
+                                fallbackSamples={lapSamples}
+                                fallbackRaw={lapChart}
+                            />
+                        ) : (
+                            <TrackMap
+                                samples={lapSamples}
+                                raw={lapChart}
+                                deltaByDistance={delta}
+                                cursorDistance={cursor}
+                                onCursorChange={setCursor}
+                            />
+                        )}
                     </SectionCard>
 
                     {!lapSeries.fromTrackPosition && lapSamples.length ? (
