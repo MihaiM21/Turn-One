@@ -98,6 +98,13 @@ const nextConfig: NextConfig = {
         destination: '/',
         permanent: true,
       },
+      // The landing page once linked here; the route never existed. The
+      // predictions UI is the first tab of the game hub.
+      {
+        source: '/dashboard/predictions',
+        destination: '/games',
+        permanent: true,
+      },
       // Public page consolidation: services merged into features.
       // /about used to redirect to /home#about; it is now a real page
       // (see app/(site)/about/page.tsx) so the legal disclaimer has a home.

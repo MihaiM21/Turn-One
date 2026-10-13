@@ -50,7 +50,7 @@ export const PILLARS: Pillar[] = [
     eyebrow: "Cockpit · Your inputs",
     title: "Predict & play",
     body: "Call the podium, beat the trivia clock, climb the leaderboard. Coins, tokens and daily gifts keep the weekend alive.",
-    href: "/dashboard/predictions",
+    href: "/games",
     cta: "Make a prediction",
   },
   {
