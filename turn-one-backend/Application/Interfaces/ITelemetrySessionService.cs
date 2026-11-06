@@ -15,6 +15,9 @@ public interface ITelemetrySessionService
     /// <summary>Protocol-v2 <c>session_start</c>: sets the v2 session columns and upserts the (Source, TrackId) <see cref="TrackProfile"/>.</summary>
     Task<TelemetrySession> StartOrUpsertSessionV2Async(StartSessionV2Request request);
 
+    /// <summary>Owner of the session, or null when no session with that id exists yet.</summary>
+    Task<Guid?> GetSessionOwnerAsync(Guid sessionId);
+
     Task EndSessionAsync(Guid sessionId, DateTime endedAt, int completedLaps, int bestLapMs);
     Task SetSessionStatusAsync(Guid sessionId, TelemetrySessionStatus status);
     Task TouchHeartbeatAsync(Guid sessionId, string? clientVersion, DateTime at);

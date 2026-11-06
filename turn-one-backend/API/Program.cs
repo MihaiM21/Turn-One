@@ -70,6 +70,12 @@ if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("JWT__Key")))
     builder.Configuration["JWT:Key"] = Environment.GetEnvironmentVariable("JWT__Key");
 }
 
+// HS256 needs a 256-bit key; refuse to start outside Development with a short or missing one.
+if (!builder.Environment.IsDevelopment() && (builder.Configuration["JWT:Key"]?.Length ?? 0) < 32)
+{
+    throw new InvalidOperationException("JWT:Key must be set (JWT__Key) and at least 32 characters outside Development.");
+}
+
 // Override SMTP settings from environment variables if present
 if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SmtpSettings__Password")))
 {
@@ -293,7 +299,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             },
             OnTokenValidated = context =>
             {
-                Console.WriteLine("Token was successfully validated");
+                // Scoped tokens (overlay) are only valid on the paths their scope allows.
+                if (context.Principal != null)
+                {
+                    var scope = API.Security.TokenScopes.GetScope(context.Principal);
+                    if (scope != null && !API.Security.TokenScopes.IsAllowedPath(scope, context.HttpContext.Request.Path))
+                    {
+                        context.Fail($"Token scope '{scope}' is not valid for this endpoint.");
+                    }
+                }
                 return Task.CompletedTask;
             }
         };
@@ -365,28 +379,50 @@ try
         
         Log.Information("Database migrations applied successfully");
 
-        // Seed admin user
-        if (!db.Users.Any(u => u.Email == "mihai@t1f1.com"))
+        // Bootstrap the first admin only from configuration (Admin__BootstrapEmail /
+        // Admin__BootstrapPassword), and only while no admin exists. No credentials in code.
+        var bootstrapEmail = builder.Configuration["Admin:BootstrapEmail"];
+        var bootstrapPassword = builder.Configuration["Admin:BootstrapPassword"];
+        if (!db.Users.Any(u => u.Role == Role.ADMIN)
+            && !string.IsNullOrWhiteSpace(bootstrapEmail)
+            && !string.IsNullOrWhiteSpace(bootstrapPassword))
         {
-            Log.Information("Seeding admin user...");
-            db.Users.Add(new User
+            if (bootstrapPassword.Length < 16)
             {
-                Id = Guid.NewGuid(),
-                Email = "mihai@t1f1.com",
-                Username = "Mihai",
-                Password = BCrypt.Net.BCrypt.HashPassword("default123"),
-                Role = Role.ADMIN,
-                Plan = PlanType.ELITE,
-                PlanStartDate = DateTime.UtcNow,
-                PlanEndDate = DateTime.UtcNow.AddYears(15),
-                AutoRenew = true,
-                CreatedAt = DateTime.UtcNow,
-                LastLogin = DateTime.UtcNow,
-                Tokens = 30,
-                LastTokenRefillDate = DateTime.UtcNow
-            });
-            db.SaveChanges();
-            Log.Information("Admin user seeded successfully");
+                Log.Error("Admin:BootstrapPassword must be at least 16 characters — admin not created");
+            }
+            else if (!db.Users.Any(u => u.Email == bootstrapEmail))
+            {
+                Log.Information("Bootstrapping admin user from configuration...");
+                db.Users.Add(new User
+                {
+                    Id = Guid.NewGuid(),
+                    Email = bootstrapEmail,
+                    Username = bootstrapEmail.Split('@')[0],
+                    Password = BCrypt.Net.BCrypt.HashPassword(bootstrapPassword),
+                    Role = Role.ADMIN,
+                    Plan = PlanType.ELITE,
+                    PlanStartDate = DateTime.UtcNow,
+                    PlanEndDate = DateTime.UtcNow.AddYears(15),
+                    AutoRenew = true,
+                    IsEmailConfirmed = true,
+                    CreatedAt = DateTime.UtcNow,
+                    Tokens = 30,
+                    LastTokenRefillDate = DateTime.UtcNow
+                });
+                db.SaveChanges();
+                Log.Information("Admin user bootstrapped");
+            }
+        }
+
+        // Earlier builds seeded an admin with a hardcoded password; shout if one still uses it.
+        foreach (var admin in db.Users.Where(u => u.Role == Role.ADMIN).Select(u => new { u.Email, u.Password }).ToList())
+        {
+            bool usesOldDefault;
+            try { usesOldDefault = BCrypt.Net.BCrypt.Verify("default123", admin.Password); }
+            catch (BCrypt.Net.SaltParseException) { usesOldDefault = false; }
+            if (usesOldDefault)
+                Log.Fatal("Admin account {Email} still has the old default password — change it now", admin.Email);
         }
 
         // Seed trivia questions

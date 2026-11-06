@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Domain.Enums;
 
 namespace Domain.Entities;
@@ -7,6 +8,8 @@ public class User
     public Guid Id { get; set; }
     public string Email { get; set; } = null!;
     public string Username { get; set; } = null!;
+    // Credential material is never serialised, whichever endpoint returns the entity.
+    [JsonIgnore]
     public string Password { get; set; } = null!;
     public string? AvatarUrl { get; set; }
     public Role Role { get; set; } = Role.USER;
@@ -37,10 +40,14 @@ public class User
     
     // Email confirmation
     public bool IsEmailConfirmed { get; set; } = false;
+    [JsonIgnore]
     public string? EmailConfirmationToken { get; set; }
+    [JsonIgnore]
     public DateTime? EmailConfirmationTokenExpires { get; set; }
     
     // Password reset
+    [JsonIgnore]
     public string? PasswordResetToken { get; set; }
+    [JsonIgnore]
     public DateTime? PasswordResetTokenExpires { get; set; }
 }

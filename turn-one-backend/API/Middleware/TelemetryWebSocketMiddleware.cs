@@ -55,6 +55,13 @@ public class TelemetryWebSocketMiddleware
                     return;
                 }
 
+                // Scoped tokens (overlay) are read-only and never allowed to ingest telemetry.
+                if (API.Security.TokenScopes.IsScoped(principal))
+                {
+                    await CloseUnauthorizedAsync(webSocket);
+                    return;
+                }
+
                 var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier);
                 if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
                 {
@@ -194,7 +201,13 @@ public class TelemetryWebSocketMiddleware
                     root.TryGetProperty("data", out var dataProp);
                     var data = dataProp.ValueKind != JsonValueKind.Undefined ? dataProp.Clone() : default;
 
-                    await ingestionService.ProcessFrameAsync(userId, plan, mode, sessionId, msgType, data, clientTs, schemaVersion);
+                    var accepted = await ingestionService.ProcessFrameAsync(userId, plan, mode, sessionId, msgType, data, clientTs, schemaVersion);
+                    if (!accepted)
+                    {
+                        // Frame for someone else's session — drop the connection.
+                        await CloseUnauthorizedAsync(webSocket);
+                        return;
+                    }
                 }
                 catch (Exception ex)
                 {

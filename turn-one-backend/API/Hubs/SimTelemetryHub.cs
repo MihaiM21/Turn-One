@@ -40,6 +40,7 @@ public class SimTelemetryHub : Hub
 
     public async Task SpectateSession(Guid sessionId)
     {
+        RejectScopedToken();
         await Groups.AddToGroupAsync(Context.ConnectionId, $"spectate_{sessionId}");
 
         var set = _spectators.GetOrAdd(sessionId, _ => new ConcurrentDictionary<string, byte>());
@@ -76,6 +77,13 @@ public class SimTelemetryHub : Hub
     public Task<int> GetViewerCount(Guid sessionId)
     {
         return Task.FromResult(_spectators.TryGetValue(sessionId, out var set) ? set.Count : 0);
+    }
+
+    // An overlay token may only follow its owner's own feed (SubscribeToOwnTelemetry).
+    private void RejectScopedToken()
+    {
+        if (Context.User != null && API.Security.TokenScopes.IsScoped(Context.User))
+            throw new HubException("This token can't spectate sessions.");
     }
 
     private Task BroadcastViewerCount(Guid sessionId, int count)
