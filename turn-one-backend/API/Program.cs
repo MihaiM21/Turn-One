@@ -327,6 +327,7 @@ builder.Services.AddScoped<ITelemetrySessionService, TelemetrySessionService>();
 builder.Services.AddScoped<ILapAnalyticsService, LapAnalyticsService>();
 builder.Services.AddScoped<IOverlayTokenService, OverlayTokenService>();
 builder.Services.AddScoped<IDeviceAuthService, DeviceAuthService>();
+builder.Services.AddScoped<LapUploadService>();
 builder.Services.AddScoped<HeuristicCoachingService>();
 builder.Services.AddScoped<ICoachingService>(sp =>
 {
