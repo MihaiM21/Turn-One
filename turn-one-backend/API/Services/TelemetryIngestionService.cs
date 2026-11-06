@@ -90,43 +90,50 @@ public class TelemetryIngestionService
         _logger = logger;
     }
 
-    public async Task ProcessFrameAsync(Guid userId, PlanType plan, TelemetryMode mode, Guid? sessionId, string messageType, JsonElement payload, long clientTs, int schemaVersion = 1)
+    /// <summary>Handles one frame. Returns false when the frame targets a session owned by another user (the caller should drop the connection).</summary>
+    public async Task<bool> ProcessFrameAsync(Guid userId, PlanType plan, TelemetryMode mode, Guid? sessionId, string messageType, JsonElement payload, long clientTs, int schemaVersion = 1)
     {
+        if (sessionId.HasValue && !await IsOwnerOrUnclaimedAsync(userId, sessionId.Value))
+        {
+            _logger.LogWarning("Rejected {MessageType} from user {UserId} for session {SessionId} owned by another user", messageType, userId, sessionId);
+            return false;
+        }
+
         // Always push to the private user SignalR group
         await _hubContext.Clients.Group($"telemetry_{userId}").SendAsync("ReceiveTelemetry", messageType, payload, clientTs);
 
         if (schemaVersion == 2)
         {
             await ProcessV2FrameAsync(userId, plan, mode, sessionId, messageType, payload, clientTs);
-            return;
+            return true;
         }
 
         switch (messageType)
         {
             case "session_start":
                 await HandleSessionStartAsync(userId, plan, mode, sessionId, payload, clientTs);
-                return;
+                return true;
 
             case "session_end":
                 await HandleSessionEndAsync(userId, sessionId, payload, clientTs);
-                return;
+                return true;
 
             case "session_pause":
                 await HandleSessionPauseAsync(sessionId, clientTs);
-                return;
+                return true;
 
             case "session_resume":
                 await HandleSessionResumeAsync(sessionId, clientTs);
-                return;
+                return true;
 
             case "client_heartbeat":
                 await HandleHeartbeatAsync(sessionId, payload, clientTs);
-                return;
+                return true;
         }
 
         // physics / graphics / static frames
         var context = await GetOrCreateContextAsync(userId, plan, mode, sessionId, messageType, payload);
-        if (context == null) return;
+        if (context == null) return true;
 
         // Spectator push
         if (context.Visibility == TelemetryVisibility.Public)
@@ -164,7 +171,7 @@ public class TelemetryIngestionService
             {
                 var now = DateTimeOffset.UtcNow.DateTime;
                 await EndSessionInternalAsync(context, now, context.LapCount, context.BestLapMs);
-                return;
+                return true;
             }
         }
         else if (messageType == "physics")
@@ -189,6 +196,22 @@ public class TelemetryIngestionService
             };
             await _tickChannel.Writer.WriteAsync(new TickItem { Plan = plan, Record = record });
         }
+        return true;
+    }
+
+    /// <summary>
+    /// Session ids are client-chosen and public sessions are listed, so every frame is checked
+    /// against the session's owner: the in-memory context first, then the database.
+    /// </summary>
+    private async Task<bool> IsOwnerOrUnclaimedAsync(Guid userId, Guid sessionId)
+    {
+        if (_activeSessions.TryGetValue(sessionId, out var active))
+            return active.UserId == userId;
+
+        using var scope = _scopeFactory.CreateScope();
+        var svc = scope.ServiceProvider.GetRequiredService<ITelemetrySessionService>();
+        var owner = await svc.GetSessionOwnerAsync(sessionId);
+        return owner == null || owner == userId;
     }
 
     // ==================================================================================

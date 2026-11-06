@@ -22,6 +22,8 @@ async function verifyBackendJwt(token: string): Promise<string | null> {
     // API quota on the caller's behalf. Full claim validation (issuer,
     // audience, roles) belongs to the backend endpoints those claims gate.
     const { payload } = await jwtVerify(token, key)
+    // Scoped tokens (OBS overlay) are not a user login.
+    if (payload["Scope"] ?? payload["scope"]) return null
     // JwtSecurityTokenHandler's default outbound claim map serializes
     // ClaimTypes.NameIdentifier as "nameid", not "sub" — see AuthService.GenerateJwtToken.
     const subject = payload["nameid"] ?? payload.sub

@@ -23,6 +23,7 @@ public class TelemetrySessionService : ITelemetrySessionService
         DateTime startedAt)
     {
         var existing = await _context.TelemetrySessions.FindAsync(sessionId);
+        EnsureOwner(existing, userId);
 
         if (existing != null)
         {
@@ -96,6 +97,7 @@ public class TelemetrySessionService : ITelemetrySessionService
     public async Task<TelemetrySession> StartOrUpsertSessionV2Async(StartSessionV2Request request)
     {
         var existing = await _context.TelemetrySessions.FindAsync(request.SessionId);
+        EnsureOwner(existing, request.UserId);
         TelemetrySession session;
 
         if (existing != null)
@@ -165,6 +167,13 @@ public class TelemetrySessionService : ITelemetrySessionService
         return session;
     }
 
+    // Session ids are chosen by the client, so a known id must never be taken over by another user.
+    private static void EnsureOwner(TelemetrySession? existing, Guid userId)
+    {
+        if (existing != null && existing.UserId != userId)
+            throw new UnauthorizedAccessException($"Session {existing.Id} belongs to another user.");
+    }
+
     private static void ApplyV2Fields(TelemetrySession session, StartSessionV2Request request)
     {
         session.Source = request.Source;
@@ -216,6 +225,14 @@ public class TelemetrySessionService : ITelemetrySessionService
         }
 
         return profile;
+    }
+
+    public async Task<Guid?> GetSessionOwnerAsync(Guid sessionId)
+    {
+        return await _context.TelemetrySessions
+            .Where(s => s.Id == sessionId)
+            .Select(s => (Guid?)s.UserId)
+            .FirstOrDefaultAsync();
     }
 
     public async Task EndSessionAsync(Guid sessionId, DateTime endedAt, int completedLaps, int bestLapMs)
