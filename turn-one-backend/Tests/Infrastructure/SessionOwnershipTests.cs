@@ -85,4 +85,25 @@ public class SessionOwnershipTests
         (await svc.GetSessionOwnerAsync(session.Id)).Should().Be(owner.Id);
         (await svc.GetSessionOwnerAsync(Guid.NewGuid())).Should().BeNull();
     }
+
+    [Fact]
+    public async Task New_Sessions_Never_Delete_Older_Ones_On_Any_Plan()
+    {
+        using var db = NewDb(nameof(New_Sessions_Never_Delete_Older_Ones_On_Any_Plan));
+        var (_, owner) = await SeedEndedSessionAsync(db);
+        var svc = new TelemetrySessionService(db);
+
+        for (var i = 0; i < 3; i++)
+        {
+            await svc.StartOrUpsertSessionAsync(Guid.NewGuid(), owner.Id, PlanType.BASIC,
+                "car", "track", "d", "practice", TelemetryMode.Normal, DateTime.UtcNow.AddMinutes(i));
+            await svc.StartOrUpsertSessionV2Async(new StartSessionV2Request
+            {
+                SessionId = Guid.NewGuid(), UserId = owner.Id, Plan = PlanType.BASIC, Mode = TelemetryMode.Normal,
+                Source = SimSource.Acc, StartedAt = DateTime.UtcNow.AddMinutes(i),
+            });
+        }
+
+        (await db.TelemetrySessions.CountAsync(s => s.UserId == owner.Id)).Should().Be(7);
+    }
 }

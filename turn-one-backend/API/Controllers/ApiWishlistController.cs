@@ -1,3 +1,5 @@
+using API.Security;
+using Microsoft.AspNetCore.RateLimiting;
 using Application.DTOs;
 using Domain.Entities;
 using Infrastructure;
@@ -22,6 +24,7 @@ public class ApiWishlistController : ControllerBase
         _logger = logger;
     }
 
+    [EnableRateLimiting(RateLimits.Forms)]
     [HttpPost]
     public async Task<IActionResult> SubscribeToWishlist([FromBody] ApiWishlistDto dto)
     {

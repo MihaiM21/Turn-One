@@ -28,7 +28,7 @@ public class CoachingController : ControllerBase
 
         var planStr = User.FindFirstValue("Plan");
         if (!Enum.TryParse<PlanType>(planStr, out var plan)) plan = PlanType.BASIC;
-        if (plan == PlanType.BASIC) return Forbid("AI tips require PRO or ELITE plan.");
+        if (plan == PlanType.BASIC) return StatusCode(403, new { message = "AI tips require PRO or ELITE plan.", upgradeRequired = true });
 
         var session = await _sessionService.GetSessionDetailAsync(id, userId);
         if (session == null) return NotFound();
@@ -53,7 +53,7 @@ public class CoachingController : ControllerBase
 
         var planStr = User.FindFirstValue("Plan");
         if (!Enum.TryParse<PlanType>(planStr, out var plan)) plan = PlanType.BASIC;
-        if (plan != PlanType.ELITE) return Forbid("Coaching chat requires ELITE plan.");
+        if (plan != PlanType.ELITE) return StatusCode(403, new { message = "Coaching chat requires ELITE plan.", upgradeRequired = true });
 
         var session = await _sessionService.GetSessionDetailAsync(id, userId);
         if (session == null) return NotFound();

@@ -94,7 +94,7 @@ public class TelemetryController : ControllerBase
         var planStr = User.FindFirstValue("Plan");
         if (Enum.TryParse<PlanType>(planStr, out var plan) && plan == PlanType.BASIC)
         {
-            return Forbid("Public sessions require PRO or ELITE plan.");
+            return StatusCode(403, new { message = "Public sessions require PRO or ELITE plan.", upgradeRequired = true });
         }
 
         var sessions = await _sessionService.GetPublicSessionsAsync();
@@ -107,7 +107,7 @@ public class TelemetryController : ControllerBase
         var planStr = User.FindFirstValue("Plan");
         if (Enum.TryParse<PlanType>(planStr, out var plan) && plan == PlanType.BASIC)
         {
-            return Forbid("Spectating requires PRO or ELITE plan.");
+            return StatusCode(403, new { message = "Spectating requires PRO or ELITE plan.", upgradeRequired = true });
         }
 
         var sessions = await _sessionService.GetPublicLiveSessionsAsync();
@@ -343,7 +343,7 @@ public class TelemetryController : ControllerBase
 
         var planStr = User.FindFirstValue("Plan");
         if (!Enum.TryParse<PlanType>(planStr, out var plan)) plan = PlanType.BASIC;
-        if (plan == PlanType.BASIC) return Forbid("Session comparison requires PRO or ELITE plan.");
+        if (plan == PlanType.BASIC) return StatusCode(403, new { message = "Session comparison requires PRO or ELITE plan.", upgradeRequired = true });
 
         var primary = await _sessionService.GetSessionDetailAsync(id, userId);
         var secondary = await _sessionService.GetSessionDetailAsync(against, userId);
@@ -379,7 +379,7 @@ public class TelemetryController : ControllerBase
         var planStr = User.FindFirstValue("Plan");
         if (Enum.TryParse<PlanType>(planStr, out var plan) && plan == PlanType.BASIC && visibility == TelemetryVisibility.Public)
         {
-            return Forbid("Public sessions require PRO or ELITE plan.");
+            return StatusCode(403, new { message = "Public sessions require PRO or ELITE plan.", upgradeRequired = true });
         }
 
         await _sessionService.UpdateVisibilityAsync(id, userId, visibility);

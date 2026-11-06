@@ -40,26 +40,7 @@ public class TelemetrySessionService : ITelemetrySessionService
             return existing;
         }
 
-        // Enforce plan-based session limit (active sessions only)
-        int sessionLimit = plan switch
-        {
-            PlanType.BASIC => 1,
-            PlanType.PRO => 5,
-            PlanType.ELITE => 15,
-            _ => 1
-        };
-
-        var userSessions = await _context.TelemetrySessions
-            .Where(s => s.UserId == userId)
-            .OrderByDescending(s => s.StartedAt)
-            .ToListAsync();
-
-        if (userSessions.Count >= sessionLimit)
-        {
-            var toDelete = userSessions.Skip(sessionLimit - 1).ToList();
-            _context.TelemetrySessions.RemoveRange(toDelete);
-        }
-
+        // A user's sessions are never deleted to make room for a new one (plan decision D5).
         var newSession = new TelemetrySession
         {
             Id = sessionId,
@@ -111,25 +92,7 @@ public class TelemetrySessionService : ITelemetrySessionService
         }
         else
         {
-            int sessionLimit = request.Plan switch
-            {
-                PlanType.BASIC => 1,
-                PlanType.PRO => 5,
-                PlanType.ELITE => 15,
-                _ => 1
-            };
-
-            var userSessions = await _context.TelemetrySessions
-                .Where(s => s.UserId == request.UserId)
-                .OrderByDescending(s => s.StartedAt)
-                .ToListAsync();
-
-            if (userSessions.Count >= sessionLimit)
-            {
-                var toDelete = userSessions.Skip(sessionLimit - 1).ToList();
-                _context.TelemetrySessions.RemoveRange(toDelete);
-            }
-
+            // A user's sessions are never deleted to make room for a new one (plan decision D5).
             var newSession = new TelemetrySession
             {
                 Id = request.SessionId,

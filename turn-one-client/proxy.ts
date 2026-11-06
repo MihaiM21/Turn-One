@@ -3,19 +3,13 @@ import type { NextRequest } from 'next/server';
 import { ANON_COOKIE_NAME, newAnonId, signAnonCookie, verifyAnonCookie } from './lib/server/anon-cookie';
 
 export async function proxy(request: NextRequest) {
-  // Check if the user is trying to access an admin route
+  // Admin pages can't be gated here: the login token lives in localStorage, so a page
+  // navigation carries no credential. Every admin API is enforced by the backend
+  // ([Authorize(Roles = "ADMIN")]); the pages themselves are just kept out of search engines.
   if (request.nextUrl.pathname.startsWith('/admin')) {
-    // For now, we'll rely on client-side checks
-    // In production, you'd want to verify the JWT token server-side
-    const token = request.cookies.get('token')?.value ||
-                 request.headers.get('authorization') ||
-                 request.headers.get('x-token');
-
-    // if (!token) {
-    //   return NextResponse.redirect(new URL('/auth/login', request.url));
-    // }
-
-    return NextResponse.next();
+    const response = NextResponse.next();
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+    return response;
   }
 
   const response = NextResponse.next();

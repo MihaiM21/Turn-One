@@ -58,7 +58,7 @@ public class OverlayController : ControllerBase
         var planStr = User.FindFirstValue("Plan");
         if (!Enum.TryParse<PlanType>(planStr, out var plan)) plan = PlanType.BASIC;
         if (!PlanFeatures.SimRacing(plan).OverlayTokens)
-            return Forbid("Overlay tokens require PRO or ELITE plan.");
+            return StatusCode(403, new { message = "Overlay tokens require PRO or ELITE plan.", upgradeRequired = true });
 
         var lifetime = body.LifetimeHours.HasValue ? TimeSpan.FromHours(body.LifetimeHours.Value) : (TimeSpan?)null;
         var token = await _tokens.CreateAsync(userId, body.Label, body.Scopes, lifetime);

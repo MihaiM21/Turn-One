@@ -49,7 +49,9 @@ namespace API.Controllers
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
-        
+
+        // XP is awarded by the server (predictions, trivia, sim laps); clients can't grant it to themselves.
+        [Authorize(Roles = "ADMIN")]
         [HttpPost("add-experience")]
         public async Task<ActionResult> AddExperience([FromBody] AddExperienceRequest request)
         {

@@ -1,3 +1,5 @@
+using API.Security;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 using Application.DTOs;
 using Application.Interfaces;
@@ -29,6 +31,7 @@ public class AuthController : ControllerBase
         _emailService = emailService;
     }
 
+    [EnableRateLimiting(RateLimits.Auth)]
     [HttpPost("register")]
     public async Task<ActionResult<AuthResponseDto>> Register(RegisterDto registerDto)
     {
@@ -42,6 +45,7 @@ public class AuthController : ControllerBase
         return Ok(response);
     }
 
+    [EnableRateLimiting(RateLimits.Auth)]
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponseDto>> Login(LoginDto loginDto)
     {
@@ -119,6 +123,7 @@ public class AuthController : ControllerBase
         return Ok(new { success = true, message = "Email confirmed successfully" });
     }
     
+    [EnableRateLimiting(RateLimits.PasswordReset)]
     [HttpPost("forgot-password")]
     public async Task<ActionResult> ForgotPassword([FromBody] ForgotPasswordDto forgotPasswordDto)
     {
@@ -136,6 +141,7 @@ public class AuthController : ControllerBase
         });
     }
     
+    [EnableRateLimiting(RateLimits.PasswordReset)]
     [HttpPost("reset-password")]
     public async Task<ActionResult> ResetPassword([FromBody] ResetPasswordDto resetPasswordDto)
     {

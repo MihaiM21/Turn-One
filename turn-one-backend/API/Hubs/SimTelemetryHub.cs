@@ -1,6 +1,10 @@
+using Application.Interfaces;
+using Domain;
+using Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
+using System.Security.Claims;
 
 namespace API.Hubs;
 
@@ -10,6 +14,13 @@ public class SimTelemetryHub : Hub
     // Tracks viewer counts per spectated session. Owner heartbeats are excluded.
     private static readonly ConcurrentDictionary<Guid, ConcurrentDictionary<string, byte>> _spectators = new();
     private static readonly ConcurrentDictionary<string, HashSet<Guid>> _connectionSessions = new();
+
+    private readonly ITelemetrySessionService _sessionService;
+
+    public SimTelemetryHub(ITelemetrySessionService sessionService)
+    {
+        _sessionService = sessionService;
+    }
 
     public override Task OnConnectedAsync() => base.OnConnectedAsync();
 
@@ -41,6 +52,7 @@ public class SimTelemetryHub : Hub
     public async Task SpectateSession(Guid sessionId)
     {
         RejectScopedToken();
+        await EnsureCanSpectateAsync(sessionId);
         await Groups.AddToGroupAsync(Context.ConnectionId, $"spectate_{sessionId}");
 
         var set = _spectators.GetOrAdd(sessionId, _ => new ConcurrentDictionary<string, byte>());
@@ -84,6 +96,28 @@ public class SimTelemetryHub : Hub
     {
         if (Context.User != null && API.Security.TokenScopes.IsScoped(Context.User))
             throw new HubException("This token can't spectate sessions.");
+    }
+
+    // The owner can always watch their own session; anyone else needs a public session and a plan
+    // that includes spectating.
+    private async Task EnsureCanSpectateAsync(Guid sessionId)
+    {
+        if (!Guid.TryParse(Context.UserIdentifier, out var userId))
+            throw new HubException("Not signed in.");
+
+        var session = await _sessionService.GetSessionDetailAsync(sessionId, userId);
+        if (session == null)
+            throw new HubException("Session not found.");
+        if (session.UserId == userId)
+            return;
+
+        if (session.Visibility != TelemetryVisibility.Public)
+            throw new HubException("Session not found.");
+
+        var planClaim = Context.User?.FindFirstValue("Plan");
+        var plan = Enum.TryParse<PlanType>(planClaim, out var p) ? p : PlanType.BASIC;
+        if (!PlanFeatures.SimRacing(plan).SpectatePublic)
+            throw new HubException("Spectating requires PRO or ELITE plan.");
     }
 
     private Task BroadcastViewerCount(Guid sessionId, int count)
