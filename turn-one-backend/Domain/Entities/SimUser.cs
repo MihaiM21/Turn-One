@@ -14,6 +14,9 @@ public class SimUser
     [ForeignKey("UserId")]
     public User User { get; set; } = null!;
     
+    /// <summary>How this driver appears on lap-time leaderboards (HCR-009). Public by default (plan D12).</summary>
+    public LeaderboardVisibility LeaderboardVisibility { get; set; } = LeaderboardVisibility.Public;
+
     public int TotalSessions { get; set; } = 0;
     public int TotalLaps { get; set; } = 0;
     public double TotalDistanceKm { get; set; } = 0;

@@ -6,6 +6,7 @@ import { Trophy, Users, Route, Timer, Zap } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links";
 import { SectionCard } from "@/components/dashboard/simracing/section-card";
+import { LapTimeLeaderboard } from "@/components/dashboard/simracing/lap-time-leaderboard";
 import { useAuth } from "@/components/auth/auth-provider";
 import {
     getLeaderboards,
@@ -73,7 +74,7 @@ export default function LeaderboardsPage() {
             <PageHeader
                 label="Sim racing"
                 title="Global leaderboards"
-                description="Every driver streaming through Turn One Link, ranked."
+                description="Fastest valid laps per track and car, plus lifetime totals for every Turn One Link driver."
                 stats={[
                     { icon: Users, label: "Drivers", value: rows.length },
                     {
@@ -85,6 +86,9 @@ export default function LeaderboardsPage() {
                 ]}
             />
 
+            <LapTimeLeaderboard signedIn={!!user} />
+
+            <p className="pt-2 text-[10px] uppercase tracking-[0.3em] text-zinc-500">Lifetime totals</p>
             <div className="flex gap-px overflow-x-auto bg-zinc-800 p-px">
                 {BOARDS.map(({ key, label, icon: Icon }) => (
                     <button
