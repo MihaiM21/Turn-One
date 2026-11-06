@@ -59,12 +59,14 @@ jobs:
       - name: Run ESLint
         working-directory: ./turn-one-client
         run: npm run lint
-        continue-on-error: true
 
       - name: TypeScript type check
         working-directory: ./turn-one-client
         run: npm run type-check
-        continue-on-error: true
+
+      - name: Unit tests (Vitest)
+        working-directory: ./turn-one-client
+        run: npm test
 
   # ============================================
   # LINT — BACKEND
@@ -135,7 +137,6 @@ jobs:
             --collect:"XPlat Code Coverage" \
             --results-directory ./test-results \
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
-        continue-on-error: true
 
       - name: Upload test results
         uses: actions/upload-artifact@v4

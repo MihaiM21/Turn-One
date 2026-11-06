@@ -6,26 +6,24 @@ import { messageForStatus, sanitizeErrorMessage } from '@/lib/api-error-message'
 /** Upstream can be slow preparing a session; beyond this it is hung, not slow. */
 const UPSTREAM_TIMEOUT_MS = 20_000;
 
+/**
+ * Only the T1API path families the site actually uses (lib/data-fetcher.ts) are relayed; anything
+ * else is refused before the server's API key is attached.
+ */
+const ALLOWED_ROOTS = new Set(['v1', 'v2', 'static']);
+
+const isAllowedEndpoint = (segments: string[]) =>
+  segments.length > 1 &&
+  ALLOWED_ROOTS.has(segments[0]) &&
+  segments.every((s) => s.length > 0 && s !== '.' && s !== '..' && !s.includes('\\'));
+
 const getContentType = (response: Response) => response.headers.get('content-type') || '';
 
 /** True for the abort raised when the upstream request exceeds its timeout. */
 const isTimeout = (error: unknown) =>
   error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError');
 
-const parseErrorMessage = async (response: Response, fallback: string) => {
-  const contentType = getContentType(response);
-
-  if (contentType.includes('application/json')) {
-    const errorData = await response.json().catch(() => ({}));
-    const message = errorData.message || errorData.error;
-    return message ? sanitizeErrorMessage(message, response.status) : fallback;
-  }
-
-  const text = await response.text().catch(() => '');
-  return text ? sanitizeErrorMessage(text, response.status) : fallback;
-};
-
-// Like parseErrorMessage, but preserves the full structured error body (e.g.
+// Preserves the full structured error body (e.g.
 // { error: "data_not_available", detail, retry_after_seconds }) instead of
 // flattening it to a single string, so the client can distinguish transient
 // "not ready yet" states from real failures.
@@ -122,6 +120,9 @@ export async function GET(
 
     // Await params in Next.js 15+
     const resolvedParams = await params;
+    if (!isAllowedEndpoint(resolvedParams.endpoint)) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404, headers: { 'Cache-Control': NO_STORE } });
+    }
 
     // Get the API configuration from environment variables
     const EXTERNAL_API_URL = process.env.F1_API_URL;
@@ -230,70 +231,4 @@ export async function GET(
   }
 }
 
-// Optional: Support POST requests if needed
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ endpoint: string[] }> }
-) {
-  try {
-    const auth = await authorizeProxyRequest(request);
-    if (auth.mode === 'deny') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Await params in Next.js 15+
-    const resolvedParams = await params;
-
-    const EXTERNAL_API_URL = process.env.F1_API_URL;
-    const EXTERNAL_API_KEY = process.env.F1_API_KEY;
-
-    if (!EXTERNAL_API_URL || !EXTERNAL_API_KEY) {
-      return NextResponse.json(
-        { error: 'API configuration error' },
-        { status: 500 }
-      );
-    }
-
-    const endpoint = resolvedParams.endpoint.join('/');
-    const body = await request.json();
-    
-    const apiUrl = `${EXTERNAL_API_URL}/${endpoint}`;
-
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'X-API-Key': EXTERNAL_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-    });
-
-    if (!response.ok) {
-      const errorMessage = await parseErrorMessage(response, 'External API request failed');
-      return NextResponse.json(
-        { error: errorMessage },
-        { status: response.status, headers: { 'Cache-Control': NO_STORE } }
-      );
-    }
-
-    const data = await response.json();
-    // POSTs are mutations; never cacheable.
-    return NextResponse.json(data, { headers: { 'Cache-Control': NO_STORE } });
-
-  } catch (error) {
-    if (isTimeout(error)) {
-      console.error('[External API Proxy] POST upstream timed out');
-      return NextResponse.json(
-        { error: 'upstream_timeout', detail: 'The F1 data service did not respond in time.' },
-        { status: 504, headers: { 'Cache-Control': NO_STORE } }
-      );
-    }
-
-    console.error('[External API Proxy] POST Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to process request' },
-      { status: 500, headers: { 'Cache-Control': NO_STORE } }
-    );
-  }
-}
+// No POST: the site only reads from T1API, so the proxy relays GETs only (other methods get 405).

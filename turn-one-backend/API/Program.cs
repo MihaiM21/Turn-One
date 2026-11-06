@@ -12,6 +12,7 @@ using Domain.Enums;
 using API.Services;
 using API.Middleware;
 using API.Hubs;
+using API.Security;
 using Serilog;
 using Serilog.Events;
 
@@ -318,6 +319,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Add authorization policies if needed
 builder.Services.AddAuthorization();
 
+// Per-IP limits on login, password reset, contact forms and telemetry socket connects.
+builder.Services.AddTurnOneRateLimits();
+
 // === SIMRACING TELEMETRY DI ===
 builder.Services.AddScoped<ITelemetrySessionService, TelemetrySessionService>();
 builder.Services.AddScoped<ILapAnalyticsService, LapAnalyticsService>();
@@ -333,7 +337,9 @@ builder.Services.AddScoped<ICoachingService>(sp =>
 builder.Services.AddSingleton<ITelemetryTickRepository, InfluxTickRepository>();
 builder.Services.AddSingleton<LapBufferRegistry>();
 builder.Services.AddSingleton<TelemetryIngestionService>();
-builder.Services.AddSingleton(System.Threading.Channels.Channel.CreateUnbounded<TickItem>());
+// Bounded so a burst of raw ticks can't grow memory without limit; oldest ticks are dropped first.
+builder.Services.AddSingleton(System.Threading.Channels.Channel.CreateBounded<TickItem>(
+    new System.Threading.Channels.BoundedChannelOptions(50_000) { FullMode = System.Threading.Channels.BoundedChannelFullMode.DropOldest }));
 builder.Services.AddSingleton(System.Threading.Channels.Channel.CreateBounded<LapJob>(
     new System.Threading.Channels.BoundedChannelOptions(512) { FullMode = System.Threading.Channels.BoundedChannelFullMode.DropOldest }));
 builder.Services.AddHostedService<TelemetryPersistenceWorker>();
@@ -479,6 +485,7 @@ app.UseMiddleware<RequestLoggingMiddleware>();
 // Add authentication and authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 // app.UseHttpsRedirection();
 

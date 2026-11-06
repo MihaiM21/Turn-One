@@ -1,3 +1,5 @@
+using API.Security;
+using Microsoft.AspNetCore.RateLimiting;
 using Application.DTOs;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +19,7 @@ public class ContactController : ControllerBase
         _logger = logger;
     }
 
+    [EnableRateLimiting(RateLimits.Forms)]
     [HttpPost]
     public async Task<ActionResult> SendContactForm([FromBody] ContactFormDto contactForm)
     {
