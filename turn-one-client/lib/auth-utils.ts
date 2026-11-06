@@ -21,6 +21,15 @@ export const isAuthenticated = () => {
 };
 
 /**
+ * Where to go after signing in: the `next` path a protected page sent the visitor here with, or
+ * the dashboard. Only same-site paths are accepted ("/link?code=…"), never "//host" or "https://…".
+ */
+export const safeNextPath = (next: string | null | undefined, fallback = '/dashboard') => {
+  if (!next || !next.startsWith('/') || next.startsWith('//') || next.startsWith('/\\')) return fallback;
+  return next;
+};
+
+/**
  * Session-expiry plumbing.
  *
  * There is no token refresh: once the JWT expires every authenticated request

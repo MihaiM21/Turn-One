@@ -55,8 +55,10 @@ public class TelemetryWebSocketMiddleware
                     return;
                 }
 
-                // Scoped tokens (overlay) are read-only and never allowed to ingest telemetry.
-                if (API.Security.TokenScopes.IsScoped(principal))
+                // Scoped tokens may ingest only if their scope allows this path (Link's device token
+                // does; an overlay token never does).
+                var scope = API.Security.TokenScopes.GetScope(principal);
+                if (scope != null && !API.Security.TokenScopes.IsAllowedPath(scope, context.Request.Path))
                 {
                     await CloseUnauthorizedAsync(webSocket);
                     return;

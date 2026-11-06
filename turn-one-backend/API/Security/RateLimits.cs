@@ -7,13 +7,15 @@ namespace API.Security;
 
 /// <summary>
 /// Per-client-IP rate limits for the endpoints that are worth brute-forcing or spamming
-/// (login, registration, password reset, contact forms) and for telemetry WebSocket connects.
+/// (login, registration, password reset, contact forms, device pairing) and for telemetry WebSocket connects.
 /// </summary>
 public static class RateLimits
 {
     public const string Auth = "auth";
     public const string PasswordReset = "password-reset";
     public const string Forms = "forms";
+    public const string PairingStart = "pairing-start";
+    public const string DeviceTokens = "device-tokens";
 
     private const string TelemetrySocketPath = "/api/ws/telemetry";
 
@@ -47,6 +49,9 @@ public static class RateLimits
             options.AddPolicy(Auth, ctx => Window(ClientIp(ctx), permits: 10, TimeSpan.FromMinutes(1)));
             options.AddPolicy(PasswordReset, ctx => Window(ClientIp(ctx), permits: 5, TimeSpan.FromMinutes(15)));
             options.AddPolicy(Forms, ctx => Window(ClientIp(ctx), permits: 5, TimeSpan.FromHours(1)));
+            options.AddPolicy(PairingStart, ctx => Window(ClientIp(ctx), permits: 10, TimeSpan.FromHours(1)));
+            // Link polls every 5 s while a code is shown and refreshes every ~15 min.
+            options.AddPolicy(DeviceTokens, ctx => Window(ClientIp(ctx), permits: 30, TimeSpan.FromMinutes(1)));
 
             // The telemetry socket is plain middleware (no endpoint), so it is limited globally by path.
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
