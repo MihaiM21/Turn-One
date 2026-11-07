@@ -22,10 +22,23 @@ public class UploadsController : ControllerBase
     public const int MaxUncompressedBytes = 64 * 1024 * 1024;
 
     private readonly LapUploadService _uploads;
+    private readonly IConfiguration _config;
 
-    public UploadsController(LapUploadService uploads)
+    public UploadsController(LapUploadService uploads, IConfiguration config)
     {
         _uploads = uploads;
+        _config = config;
+    }
+
+    /// <summary>
+    /// HCR-014: Link builds below <c>TurnOneLink:MinUploadVersion</c> (sent as <c>X-Client-Version</c>) have
+    /// known timing bugs, so their laps are refused with 426 and Link asks the user to update.
+    /// </summary>
+    public static bool IsBelowMinUploadVersion(string? clientVersion, string? minimum)
+    {
+        if (!SimracingLinkController.TryParseVersion(minimum, out _)) return false; // no minimum configured
+        return !SimracingLinkController.TryParseVersion(clientVersion, out var current)
+               || !SimracingLinkController.IsAtLeast(current, minimum);
     }
 
     public sealed class EndSessionRequest
@@ -53,6 +66,8 @@ public class UploadsController : ControllerBase
     public async Task<IActionResult> UploadLap()
     {
         if (!TryGetUser(out var userId, out var plan, out var deviceId)) return Unauthorized();
+        if (IsBelowMinUploadVersion(Request.Headers["X-Client-Version"].ToString(), _config["TurnOneLink:MinUploadVersion"]))
+            return StatusCode(StatusCodes.Status426UpgradeRequired, new { message = "Update Turn One Link to keep uploading laps." });
 
         byte[] body;
         try
