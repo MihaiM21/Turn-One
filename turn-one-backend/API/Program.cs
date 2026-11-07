@@ -327,6 +327,9 @@ builder.Services.AddScoped<ITelemetrySessionService, TelemetrySessionService>();
 builder.Services.AddScoped<ILapAnalyticsService, LapAnalyticsService>();
 builder.Services.AddScoped<IOverlayTokenService, OverlayTokenService>();
 builder.Services.AddScoped<IDeviceAuthService, DeviceAuthService>();
+builder.Services.AddScoped<LapUploadService>();
+builder.Services.AddScoped<CatalogService>();
+builder.Services.AddScoped<SimLeaderboardService>();
 builder.Services.AddScoped<HeuristicCoachingService>();
 builder.Services.AddScoped<ICoachingService>(sp =>
 {
@@ -431,6 +434,9 @@ try
             if (usesOldDefault)
                 Log.Fatal("Admin account {Email} still has the old default password — change it now", admin.Email);
         }
+
+        // Curated track / car catalog for leaderboards (idempotent)
+        await CatalogService.SeedAsync(db);
 
         // Seed trivia questions
         Log.Information("Seeding trivia questions...");

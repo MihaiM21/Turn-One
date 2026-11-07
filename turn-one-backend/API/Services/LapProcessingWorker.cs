@@ -92,6 +92,17 @@ public class LapProcessingWorker : BackgroundService
 
         job.Completion?.TrySetResult(result);
 
+        // File the lap under its leaderboard (HCR-009). A failure here must not affect the lap itself.
+        try
+        {
+            var leaderboards = scope.ServiceProvider.GetRequiredService<Infrastructure.Services.SimLeaderboardService>();
+            await leaderboards.OnLapProcessedAsync(result.LapId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Leaderboard validation failed for lap {LapId}", result.LapId);
+        }
+
         try
         {
             await _hubContext.Clients.Group($"telemetry_{job.Track.UserId}").SendAsync("LapProcessed", new
