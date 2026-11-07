@@ -36,6 +36,9 @@ public class TurnOneDbContext : DbContext
     public DbSet<DevicePairing> DevicePairings { get; set; } = null!;
     public DbSet<DeviceRefreshToken> DeviceRefreshTokens { get; set; } = null!;
 
+    // Lap uploads from Turn One Link (HCR-007)
+    public DbSet<LapUpload> LapUploads { get; set; } = null!;
+
     // Telemetry token-usage / request log
     public DbSet<TelemetryGenerationRequest> TelemetryGenerationRequests { get; set; } = null!;
     public DbSet<TelemetryLogSettings> TelemetryLogSettings { get; set; } = null!;
@@ -233,6 +236,13 @@ public class TurnOneDbContext : DbContext
             entity.HasOne(e => e.Device).WithMany().HasForeignKey(e => e.DeviceId).OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(e => e.TokenHash).IsUnique();
             entity.HasIndex(e => e.DeviceId);
+        });
+
+        modelBuilder.Entity<LapUpload>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.UserId, e.IdempotencyKey }).IsUnique();
+            entity.HasIndex(e => new { e.SessionId, e.LapNumber });
         });
 
         modelBuilder.Entity<TelemetryGenerationRequest>(entity =>

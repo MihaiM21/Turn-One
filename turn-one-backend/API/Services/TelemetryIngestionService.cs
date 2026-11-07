@@ -257,14 +257,12 @@ public class TelemetryIngestionService
         }
     }
 
-    private async Task HandleSessionStartV2Async(Guid userId, PlanType plan, TelemetryMode mode, Guid? sessionId, JsonElement payload, long clientTs)
+    /// <summary>
+    /// Parses a v2 <c>session_start</c> payload into the request the session service upserts. Shared by
+    /// the live socket and lap uploads (HCR-007) so both create identical sessions.
+    /// </summary>
+    public static StartSessionV2Request BuildSessionStartV2(Guid sessionId, Guid userId, PlanType plan, TelemetryMode mode, JsonElement payload, long clientTs)
     {
-        if (sessionId == null)
-        {
-            _logger.LogWarning("v2 session_start received with no sessionId from user {UserId}", userId);
-            return;
-        }
-
         string? source = payload.TryGetProperty("source", out var srcProp) ? srcProp.GetString() : null;
         string? trackId = payload.TryGetProperty("trackId", out var tidProp) ? tidProp.GetString() : null;
         string? trackName = payload.TryGetProperty("trackName", out var tnProp) ? tnProp.GetString() : null;
@@ -300,30 +298,49 @@ public class TelemetryIngestionService
         if (trackLengthM is null or <= 0 && simSource == SimSource.Acc)
             trackLengthM = Infrastructure.Data.AccTrackLengths.Lookup(trackId);
 
+        return new StartSessionV2Request
+        {
+            SessionId = sessionId,
+            UserId = userId,
+            Plan = plan,
+            Mode = mode,
+            Source = simSource,
+            TrackId = trackId,
+            TrackName = trackName,
+            TrackLengthM = trackLengthM,
+            SectorCount = sectorCount,
+            SectorBoundariesM = sectorBoundariesM,
+            CarId = carId,
+            CarName = carName,
+            SessionKind = normalizedType,
+            SessionTypeRaw = sessionTypeRaw ?? sessionType,
+            Driver = driver,
+            TickRateHz = tickRateHz,
+            StartedAt = startedAt
+        };
+    }
+
+    private async Task HandleSessionStartV2Async(Guid userId, PlanType plan, TelemetryMode mode, Guid? sessionId, JsonElement payload, long clientTs)
+    {
+        if (sessionId == null)
+        {
+            _logger.LogWarning("v2 session_start received with no sessionId from user {UserId}", userId);
+            return;
+        }
+
+        var request = BuildSessionStartV2(sessionId.Value, userId, plan, mode, payload, clientTs);
+        var simSource = request.Source;
+        var trackId = request.TrackId;
+        var trackName = request.TrackName;
+        var trackLengthM = request.TrackLengthM;
+        var sectorCount = request.SectorCount;
+        var carId = request.CarId;
+
         try
         {
             using var scope = _scopeFactory.CreateScope();
             var svc = scope.ServiceProvider.GetRequiredService<ITelemetrySessionService>();
-            var session = await svc.StartOrUpsertSessionV2Async(new StartSessionV2Request
-            {
-                SessionId = sessionId.Value,
-                UserId = userId,
-                Plan = plan,
-                Mode = mode,
-                Source = simSource,
-                TrackId = trackId,
-                TrackName = trackName,
-                TrackLengthM = trackLengthM,
-                SectorCount = sectorCount,
-                SectorBoundariesM = sectorBoundariesM,
-                CarId = carId,
-                CarName = carName,
-                SessionKind = normalizedType,
-                SessionTypeRaw = sessionTypeRaw ?? sessionType,
-                Driver = driver,
-                TickRateHz = tickRateHz,
-                StartedAt = startedAt
-            });
+            var session = await svc.StartOrUpsertSessionV2Async(request);
 
             var context = new TelemetrySessionContext
             {
@@ -579,7 +596,7 @@ public class TelemetryIngestionService
         context.CurrentLapStartedAt = DateTimeOffset.FromUnixTimeMilliseconds(firstTick.T).UtcDateTime;
     }
 
-    private static LapCompleteInfo ParseLapCompleteInfo(JsonElement payload)
+    public static LapCompleteInfo ParseLapCompleteInfo(JsonElement payload)
     {
         int lap = payload.TryGetProperty("lap", out var lapProp) && lapProp.ValueKind == JsonValueKind.Number ? lapProp.GetInt32() : 0;
         int lapTimeMs = payload.TryGetProperty("lapTimeMs", out var ltProp) && ltProp.ValueKind == JsonValueKind.Number ? ltProp.GetInt32() : 0;
@@ -613,6 +630,9 @@ public class TelemetryIngestionService
     // ==================================================================================
     // Shared (v1 + v2) session lifecycle
     // ==================================================================================
+
+    /// <summary>Queues an uploaded lap (HCR-007) for the same processor live laps go through.</summary>
+    public bool EnqueueUploadedLap(LapJob job) => _lapJobChannel.Writer.TryWrite(job);
 
     /// <summary>Called by <see cref="LapProcessingWorker"/> once a lap job is done (or given up on) so a lap_complete that never showed up doesn't leak a PendingJobs entry.</summary>
     public void RemovePendingJob(Guid sessionId, int lapNumber)
