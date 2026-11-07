@@ -196,6 +196,10 @@ export interface LinkReleaseInfo {
     sizeBytes: number | null;
     minWindowsBuild: string;
     changelog: { version: string; date: string | null; changes: string[] }[];
+    /** HCR-014: "stable" or "beta" — the channel this release belongs to. */
+    channel?: "stable" | "beta";
+    minSupportedVersion?: string | null;
+    velopackFeedUrl?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -242,7 +246,8 @@ export const setVisibility = (id: string, visibility: number) =>
 export const deleteSession = (id: string) =>
     request<void>(`/api/telemetry/sessions/${id}`, { method: "DELETE" });
 
-export const getLinkRelease = () => request<LinkReleaseInfo>("/api/simracing/link/release");
+export const getLinkRelease = (channel: "stable" | "beta" = "stable") =>
+    request<LinkReleaseInfo>(`/api/simracing/link/release${channel === "beta" ? "?channel=beta" : ""}`);
 
 // ---------------------------------------------------------------------------
 // Lap-telemetry API v2
