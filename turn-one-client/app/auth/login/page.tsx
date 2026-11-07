@@ -13,6 +13,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { useAuth } from "@/components/auth/auth-provider"
+import { safeNextPath } from "@/lib/auth-utils"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -34,7 +35,7 @@ export default function LoginPage() {
       const response = await login(email, password)
 
       if (response.success) {
-        router.push("/dashboard")
+        router.push(safeNextPath(new URLSearchParams(window.location.search).get("next")))
       } else {
         throw new Error(response.message || "Login failed")
       }

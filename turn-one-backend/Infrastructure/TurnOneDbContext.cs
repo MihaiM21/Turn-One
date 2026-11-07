@@ -31,6 +31,11 @@ public class TurnOneDbContext : DbContext
     public DbSet<TrackProfile> TrackProfiles { get; set; } = null!;
     public DbSet<OverlayShareToken> OverlayShareTokens { get; set; } = null!;
 
+    // Turn One Link device pairing (HCR-006)
+    public DbSet<Device> Devices { get; set; } = null!;
+    public DbSet<DevicePairing> DevicePairings { get; set; } = null!;
+    public DbSet<DeviceRefreshToken> DeviceRefreshTokens { get; set; } = null!;
+
     // Telemetry token-usage / request log
     public DbSet<TelemetryGenerationRequest> TelemetryGenerationRequests { get; set; } = null!;
     public DbSet<TelemetryLogSettings> TelemetryLogSettings { get; set; } = null!;
@@ -205,6 +210,29 @@ public class TurnOneDbContext : DbContext
             entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(e => e.Token).IsUnique();
             entity.HasIndex(e => e.UserId);
+        });
+
+        modelBuilder.Entity<Device>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => e.UserId);
+        });
+
+        modelBuilder.Entity<DevicePairing>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.DeviceCodeHash).IsUnique();
+            entity.HasIndex(e => e.UserCode);
+            entity.HasIndex(e => e.ExpiresAt);
+        });
+
+        modelBuilder.Entity<DeviceRefreshToken>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.Device).WithMany().HasForeignKey(e => e.DeviceId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => e.TokenHash).IsUnique();
+            entity.HasIndex(e => e.DeviceId);
         });
 
         modelBuilder.Entity<TelemetryGenerationRequest>(entity =>

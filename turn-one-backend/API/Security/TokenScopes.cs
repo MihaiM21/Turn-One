@@ -13,6 +13,20 @@ public static class TokenScopes
 {
     public const string ClaimType = "Scope";
     public const string Overlay = "overlay";
+    public const string Link = "link";
+
+    // What a Turn One Link device token may do (HCR-006): upload and stream its own telemetry,
+    // read its own sessions and profile, use setups and the release feed. Not profile edits,
+    // password, billing or admin.
+    private static readonly string[] LinkPaths =
+    {
+        "/api/ws/telemetry",
+        "/api/simracing/uploads",
+        "/api/simracing/link",
+        "/api/setups",
+        "/api/telemetry/sessions/me",
+        "/api/auth/me",
+    };
 
     // JWT handlers may remap or lower-case the claim type on the way in; accept all spellings.
     private static readonly string[] ClaimTypes =
@@ -39,6 +53,7 @@ public static class TokenScopes
     {
         // The overlay only connects to the sim telemetry hub and subscribes to the owner's feed.
         Overlay => path.StartsWithSegments("/api/hubs/simtelemetry"),
+        Link => LinkPaths.Any(p => path.StartsWithSegments(p)),
         _ => false,
     };
 }

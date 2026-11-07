@@ -15,7 +15,9 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      router.push('/auth/login');
+      // Come back here after signing in (e.g. /link?code=… from Turn One Link).
+      const here = window.location.pathname + window.location.search;
+      router.push(`/auth/login?next=${encodeURIComponent(here)}`);
     }
   }, [isAuthenticated, loading, router]);
 
