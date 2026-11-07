@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { CheckCircle2, Laptop, Link2, ShieldAlert, Trash2 } from "lucide-react";
+import { CheckCircle2, Laptop, Link2, ShieldAlert, Sparkles, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { SectionCard } from "@/components/dashboard/simracing/section-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SimApiError } from "@/lib/simracing/api";
+import { getAiConsent, setAiConsent, type AiConsent } from "@/lib/simracing/leaderboards";
 import {
     approvePairing,
     getPairing,
@@ -34,6 +35,7 @@ export default function LinkDevicePage() {
     const [step, setStep] = useState<Step>({ kind: "enter" });
     const [busy, setBusy] = useState(false);
     const [devices, setDevices] = useState<LinkDevice[] | null>(null);
+    const [consent, setConsent] = useState<AiConsent | null>(null);
 
     const refreshDevices = useCallback(() => {
         listDevices()
@@ -64,6 +66,21 @@ export default function LinkDevicePage() {
             setBusy(false);
         }
     }, []);
+
+    useEffect(() => {
+        getAiConsent().then(setConsent).catch(() => setConsent(null));
+    }, []);
+
+    const toggleConsent = async (granted: boolean) => {
+        if (!consent) return;
+        const previous = consent;
+        setConsent({ ...consent, granted });
+        try {
+            await setAiConsent(granted, consent.version);
+        } catch {
+            setConsent(previous);
+        }
+    };
 
     useEffect(() => {
         refreshDevices();
@@ -200,6 +217,26 @@ export default function LinkDevicePage() {
                     ))}
                 </ul>
             </SectionCard>
+
+            {consent ? (
+                <SectionCard label="Your data" title="Help train the Turn One coach" icon={Sparkles}>
+                    <label className="flex cursor-pointer items-start gap-3">
+                        <input
+                            type="checkbox"
+                            className="mt-1 h-4 w-4 accent-[var(--primary)]"
+                            checked={consent.granted}
+                            onChange={e => toggleConsent(e.target.checked)}
+                        />
+                        <span className="text-sm text-zinc-300">
+                            Use my laps and my 👍/👎 on coaching tips to train Turn One&apos;s own coaching model.
+                            <span className="mt-1 block text-xs text-zinc-500">
+                                Optional and off unless you turn it on. Exports are pseudonymised; turning it off removes your
+                                data from future training sets. Your laps are stored and analysed either way.
+                            </span>
+                        </span>
+                    </label>
+                </SectionCard>
+            ) : null}
         </main>
     );
 }

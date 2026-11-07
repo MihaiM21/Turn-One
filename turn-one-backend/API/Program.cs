@@ -327,6 +327,12 @@ builder.Services.AddScoped<ITelemetrySessionService, TelemetrySessionService>();
 builder.Services.AddScoped<ILapAnalyticsService, LapAnalyticsService>();
 builder.Services.AddScoped<IOverlayTokenService, OverlayTokenService>();
 builder.Services.AddScoped<IDeviceAuthService, DeviceAuthService>();
+
+// H-12: every request sees the user's current plan, not the one baked into the JWT.
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<API.Security.PlanLookup>();
+builder.Services.AddSingleton<API.Security.TurnstileVerifier>();
+builder.Services.AddScoped<Microsoft.AspNetCore.Authentication.IClaimsTransformation, API.Security.PlanClaimsTransformation>();
 builder.Services.AddScoped<LapUploadService>();
 builder.Services.AddScoped<CatalogService>();
 builder.Services.AddScoped<SimLeaderboardService>();

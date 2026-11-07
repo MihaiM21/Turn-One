@@ -71,8 +71,10 @@ public class TelemetryWebSocketMiddleware
                     return;
                 }
 
-                var planClaim = principal.FindFirst("Plan")?.Value;
-                var plan = Enum.TryParse<PlanType>(planClaim, out var p) ? p : PlanType.BASIC;
+                // The plan as it is now (H-12), not as it was when the token was issued.
+                var plans = context.RequestServices.GetRequiredService<API.Security.PlanLookup>();
+                var plan = await plans.GetAsync(userId)
+                           ?? (Enum.TryParse<PlanType>(principal.FindFirst("Plan")?.Value, out var p) ? p : PlanType.BASIC);
 
                 var modeQuery = context.Request.Query["mode"].ToString().ToLower();
                 var mode = modeQuery == "live" ? TelemetryMode.ExtremeLive : TelemetryMode.Normal;

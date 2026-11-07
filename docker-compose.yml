@@ -12,6 +12,8 @@ services:
       - JWT__Key=${JWT__Key}
       - SmtpSettings__Username=${SmtpSettings__Username}
       - SmtpSettings__Password=${SmtpSettings__Password}
+      # H-17: sign-up requires a Turnstile token only when this is set (keep it in step with the site key below).
+      - Turnstile__SecretKey=${Turnstile__SecretKey:-}
       - APP_BASE_URL=${APP_BASE_URL}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
       - F1_LIVETIMING_URL=${F1_LIVETIMING_URL}
@@ -71,6 +73,7 @@ services:
       args:
         - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
         - NEXT_PUBLIC_F1_PROXY_URL=${NEXT_PUBLIC_F1_PROXY_URL}
+        - NEXT_PUBLIC_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
     ports:
       - "${CLIENT_PORT:-3000}:3000"
     environment:

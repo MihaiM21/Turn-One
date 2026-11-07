@@ -43,6 +43,7 @@ import { LapEvolutionChart } from "@/components/dashboard/simracing/charts/lap-e
 import { SectorMatrixTable } from "@/components/dashboard/simracing/charts/sector-matrix";
 import { TimeLossList } from "@/components/dashboard/simracing/charts/time-loss-list";
 import { ShareCardButton } from "@/components/dashboard/simracing/share-card";
+import { LapEligibility } from "@/components/dashboard/simracing/lap-eligibility";
 import type { LapTelemetryDto, MultiChannelChartData } from "@/lib/simracing/protocol";
 import { fromLapTelemetryDto } from "@/lib/simracing/lap-telemetry";
 import type { DistanceSeries } from "@/lib/simracing/analysis";
@@ -503,6 +504,7 @@ export default function SessionDetailPage() {
             {/* ---------------- Overview ---------------- */}
             {tab === "overview" ? (
                 <div className="space-y-4">
+                    <LapEligibility sessionId={id} />
                     <StatStrip>
                         <Stat icon={Flag} label="Laps" value={summary?.totalLaps ?? session.lapCount} sub={summary ? `${summary.validLaps} valid` : undefined} />
                         <Stat icon={Timer} label="Best lap" value={formatLapTime(summary?.bestLapMs ?? session.bestLapMs)} valueClassName="text-primary" />

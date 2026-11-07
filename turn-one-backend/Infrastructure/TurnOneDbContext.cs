@@ -47,6 +47,9 @@ public class TurnOneDbContext : DbContext
     public DbSet<CarAlias> CarAliases { get; set; } = null!;
     public DbSet<LapValidation> LapValidations { get; set; } = null!;
 
+    // AI dataset consent (HCR-015)
+    public DbSet<AiConsent> AiConsents { get; set; } = null!;
+
     // Telemetry token-usage / request log
     public DbSet<TelemetryGenerationRequest> TelemetryGenerationRequests { get; set; } = null!;
     public DbSet<TelemetryLogSettings> TelemetryLogSettings { get; set; } = null!;
@@ -273,6 +276,11 @@ public class TurnOneDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.HasOne(e => e.Car).WithMany().HasForeignKey(e => e.CarId).OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(e => new { e.Source, e.SimCarId }).IsUnique();
+        });
+        modelBuilder.Entity<AiConsent>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UserId).IsUnique();
         });
         modelBuilder.Entity<LapValidation>(entity =>
         {

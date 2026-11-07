@@ -16,6 +16,7 @@ import { register } from "@/lib/auth"
 import { setAuthToken } from "@/lib/auth-utils"
 import { useAuth } from "@/components/auth/auth-provider"
 import { RegisterData } from "@/types/auth-types"
+import { Turnstile, turnstileEnabled } from "@/components/auth/turnstile"
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("")
@@ -24,6 +25,7 @@ export default function SignUpPage() {
   const [username, setUsername] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const router = useRouter()
   const { refresh } = useAuth()
 
@@ -39,7 +41,7 @@ export default function SignUpPage() {
     }
 
     try {
-      const registerData: RegisterData = { email, username, password, confirmPassword }
+      const registerData: RegisterData = { email, username, password, confirmPassword, turnstileToken: turnstileToken ?? undefined }
       const response = await register(registerData)
 
       if (response.success) {
@@ -158,9 +160,11 @@ export default function SignUpPage() {
             </p>
           )}
 
+          {turnstileEnabled() && <Turnstile onToken={setTurnstileToken} />}
+
           <Button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || (turnstileEnabled() && !turnstileToken)}
             className="w-full h-11 text-sm font-semibold"
           >
             {isLoading ? "Creating account..." : "Create free account"}
