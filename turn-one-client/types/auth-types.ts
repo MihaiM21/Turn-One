@@ -8,6 +8,8 @@ export interface RegisterData {
     username: string;
     password: string;
     confirmPassword: string;
+    /** Cloudflare Turnstile response (H-17). */
+    turnstileToken?: string;
 }
 
 export interface AuthResponse {

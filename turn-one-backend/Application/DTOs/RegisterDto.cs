@@ -19,4 +19,7 @@ public class RegisterDto
     [Required]
     [Compare("Password")]
     public string ConfirmPassword { get; set; } = string.Empty;
+
+    /// <summary>Cloudflare Turnstile response from the sign-up form (H-17); checked when Turnstile is configured.</summary>
+    public string? TurnstileToken { get; set; }
 }

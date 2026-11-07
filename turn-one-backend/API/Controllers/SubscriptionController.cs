@@ -13,9 +13,11 @@ namespace API.Controllers;
 public class SubscriptionController : ControllerBase
 {
     private readonly ISubscriptionService _subscriptionService;
+    private readonly API.Security.PlanLookup _plans;
 
-    public SubscriptionController(ISubscriptionService subscriptionService)
+    public SubscriptionController(ISubscriptionService subscriptionService, API.Security.PlanLookup plans)
     {
+        _plans = plans;
         _subscriptionService = subscriptionService;
     }
 
@@ -30,6 +32,7 @@ public class SubscriptionController : ControllerBase
         {
             var userId = GetUserId();
             var user = await _subscriptionService.UpgradePlanAsync(userId, newPlan);
+            _plans.Forget(userId); // the new plan applies on the next request, not after re-login
             return Ok(user);
         }
         catch (InvalidOperationException ex)
@@ -50,6 +53,7 @@ public class SubscriptionController : ControllerBase
         {
             var userId = GetUserId();
             var user = await _subscriptionService.DowngradePlanAsync(userId, newPlan);
+            _plans.Forget(userId);
             return Ok(user);
         }
         catch (InvalidOperationException ex)

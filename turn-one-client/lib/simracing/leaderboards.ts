@@ -98,3 +98,49 @@ export const setMyVisibility = (mode: LeaderboardVisibility) =>
 export function classesOf(cars: CatalogCar[]): string[] {
     return [...new Set(cars.map(c => c.class).filter((c): c is string => !!c))].sort();
 }
+
+// ---------------------------------------------------------------------------
+// Lap eligibility (session page) and AI dataset consent (HCR-015)
+// ---------------------------------------------------------------------------
+
+export interface LapEligibility {
+    lapNumber: number;
+    lapId: string;
+    eligible: boolean;
+    reasons: string[];
+}
+
+export const getSessionValidations = (sessionId: string) =>
+    request<LapEligibility[]>(`/api/simracing/sessions/${encodeURIComponent(sessionId)}/validations`);
+
+const REASONS: Record<string, string> = {
+    not_processed: "not processed yet",
+    sim_invalid: "invalid in the game (track limits / cut)",
+    not_flying_lap: "not a flying lap (out-lap, in-lap or pit)",
+    no_lap_time: "no lap time",
+    sector_sum_mismatch: "sectors don't add up to the lap time",
+    distance_short: "lap shorter than the track",
+    distance_long: "lap longer than the track",
+    speed_implausible: "implausible top speed",
+    unknown_track: "unknown track",
+    unknown_car: "unknown car",
+    excluded_by_admin: "removed by a moderator",
+};
+
+/** Human wording for a validator reason code; unknown codes are shown as-is. */
+export const reasonLabel = (code: string) => REASONS[code] ?? code.replace(/_/g, " ");
+
+export interface AiConsent {
+    granted: boolean;
+    version: string;
+    grantedAt: string | null;
+}
+
+export const getAiConsent = () => request<AiConsent>("/api/me/ai-consent");
+
+export const setAiConsent = (granted: boolean, version: string) =>
+    request<void>("/api/me/ai-consent", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ granted, version }),
+    });

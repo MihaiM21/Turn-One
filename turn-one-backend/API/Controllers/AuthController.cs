@@ -33,8 +33,11 @@ public class AuthController : ControllerBase
 
     [EnableRateLimiting(RateLimits.Auth)]
     [HttpPost("register")]
-    public async Task<ActionResult<AuthResponseDto>> Register(RegisterDto registerDto)
+    public async Task<ActionResult<AuthResponseDto>> Register(RegisterDto registerDto, [FromServices] TurnstileVerifier turnstile)
     {
+        if (!await turnstile.VerifyAsync(registerDto.TurnstileToken, RateLimits.ClientIp(HttpContext)))
+            return BadRequest(new AuthResponseDto { Success = false, Message = "Please complete the security check and try again." });
+
         var response = await _authService.Register(registerDto);
         
         if (!response.Success)
@@ -127,6 +130,7 @@ public class AuthController : ControllerBase
     [HttpPost("forgot-password")]
     public async Task<ActionResult> ForgotPassword([FromBody] ForgotPasswordDto forgotPasswordDto)
     {
+        // No Turnstile here: the mobile app calls this endpoint natively; the rate limit protects it.
         if (string.IsNullOrEmpty(forgotPasswordDto.Email))
         {
             return BadRequest(new { success = false, message = "Email is required" });

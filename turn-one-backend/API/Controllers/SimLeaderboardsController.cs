@@ -63,6 +63,31 @@ public class SimLeaderboardsController : ControllerBase
         });
     }
 
+    /// <summary>Per-lap leaderboard eligibility for a whole session (session page, HF-02/HF-04).</summary>
+    [HttpGet("sessions/{sessionId:guid}/validations")]
+    [AllowAnonymous]
+    public async Task<IActionResult> SessionValidations(Guid sessionId)
+    {
+        var session = await _db.TelemetrySessions.AsNoTracking()
+            .Where(s => s.Id == sessionId).Select(s => new { s.UserId, s.Visibility }).FirstOrDefaultAsync();
+        if (session == null) return NotFound();
+        if (session.Visibility != Domain.Enums.TelemetryVisibility.Public && session.UserId != ViewerId()) return NotFound();
+
+        var rows = await _db.LapValidations.AsNoTracking()
+            .Where(v => v.Lap.SessionId == sessionId)
+            .Select(v => new { v.Lap.LapNumber, v.LapId, v.Eligible, v.Reasons })
+            .OrderBy(v => v.LapNumber)
+            .ToListAsync();
+
+        return Ok(rows.Select(v => new
+        {
+            lapNumber = v.LapNumber,
+            lapId = v.LapId,
+            eligible = v.Eligible,
+            reasons = v.Reasons.Split(',', StringSplitOptions.RemoveEmptyEntries),
+        }));
+    }
+
     [HttpGet("drivers/{username}/pbs")]
     [AllowAnonymous]
     public async Task<IActionResult> PersonalBests(string username)
