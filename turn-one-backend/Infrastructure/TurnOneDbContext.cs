@@ -39,6 +39,14 @@ public class TurnOneDbContext : DbContext
     // Lap uploads from Turn One Link (HCR-007)
     public DbSet<LapUpload> LapUploads { get; set; } = null!;
 
+    // Track / car catalog (HCR-008) and lap-time leaderboards (HCR-009)
+    public DbSet<TrackLayout> TrackLayouts { get; set; } = null!;
+    public DbSet<TrackAlias> TrackAliases { get; set; } = null!;
+    public DbSet<CarClass> CarClasses { get; set; } = null!;
+    public DbSet<Car> Cars { get; set; } = null!;
+    public DbSet<CarAlias> CarAliases { get; set; } = null!;
+    public DbSet<LapValidation> LapValidations { get; set; } = null!;
+
     // Telemetry token-usage / request log
     public DbSet<TelemetryGenerationRequest> TelemetryGenerationRequests { get; set; } = null!;
     public DbSet<TelemetryLogSettings> TelemetryLogSettings { get; set; } = null!;
@@ -236,6 +244,44 @@ public class TurnOneDbContext : DbContext
             entity.HasOne(e => e.Device).WithMany().HasForeignKey(e => e.DeviceId).OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(e => e.TokenHash).IsUnique();
             entity.HasIndex(e => e.DeviceId);
+        });
+
+        modelBuilder.Entity<TrackLayout>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Slug).IsUnique();
+        });
+        modelBuilder.Entity<TrackAlias>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.TrackLayout).WithMany().HasForeignKey(e => e.TrackLayoutId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.Source, e.SimTrackId }).IsUnique();
+        });
+        modelBuilder.Entity<CarClass>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Slug).IsUnique();
+        });
+        modelBuilder.Entity<Car>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Slug).IsUnique();
+            entity.HasOne(e => e.CarClass).WithMany().HasForeignKey(e => e.CarClassId).OnDelete(DeleteBehavior.SetNull);
+        });
+        modelBuilder.Entity<CarAlias>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.Car).WithMany().HasForeignKey(e => e.CarId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.Source, e.SimCarId }).IsUnique();
+        });
+        modelBuilder.Entity<LapValidation>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.Lap).WithMany().HasForeignKey(e => e.LapId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => e.LapId).IsUnique();
+            entity.HasIndex(e => new { e.Source, e.TrackLayoutId, e.CarId, e.Eligible, e.LapTimeMs });
+            entity.HasIndex(e => new { e.Source, e.TrackLayoutId, e.CarClassId, e.Eligible, e.LapTimeMs });
+            entity.HasIndex(e => e.UserId);
         });
 
         modelBuilder.Entity<LapUpload>(entity =>

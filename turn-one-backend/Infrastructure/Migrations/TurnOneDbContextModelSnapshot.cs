@@ -53,6 +53,89 @@ namespace Infrastructure.Migrations
                     b.ToTable("ApiWishlists");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Car", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CarClassId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CarClassId");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("Cars");
+                });
+
+            modelBuilder.Entity("Domain.Entities.CarAlias", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CarId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SimCarId")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CarId");
+
+                    b.HasIndex("Source", "SimCarId")
+                        .IsUnique();
+
+                    b.ToTable("CarAliases");
+                });
+
+            modelBuilder.Entity("Domain.Entities.CarClass", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("CarClasses");
+                });
+
             modelBuilder.Entity("Domain.Entities.CoinTransaction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -467,6 +550,69 @@ namespace Infrastructure.Migrations
                     b.ToTable("LapUploads");
                 });
 
+            modelBuilder.Entity("Domain.Entities.LapValidation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CarClassId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CarId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CheckedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ConditionKey")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<bool>("Eligible")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("LapId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("LapTimeMs")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reasons")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTime>("RecordedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("TrackLayoutId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ValidatorVersion")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LapId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("Source", "TrackLayoutId", "CarClassId", "Eligible", "LapTimeMs");
+
+                    b.HasIndex("Source", "TrackLayoutId", "CarId", "Eligible", "LapTimeMs");
+
+                    b.ToTable("LapValidations");
+                });
+
             modelBuilder.Entity("Domain.Entities.Leaderboard", b =>
                 {
                     b.Property<Guid>("Id")
@@ -778,6 +924,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<DateTime>("LastSessionAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("LeaderboardVisibility")
+                        .HasColumnType("integer");
 
                     b.Property<double>("TotalDistanceKm")
                         .HasColumnType("double precision");
@@ -1096,6 +1245,67 @@ namespace Infrastructure.Migrations
                     b.ToTable("TelemetrySessions");
                 });
 
+            modelBuilder.Entity("Domain.Entities.TrackAlias", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SimTrackId")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TrackLayoutId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TrackLayoutId");
+
+                    b.HasIndex("Source", "SimTrackId")
+                        .IsUnique();
+
+                    b.ToTable("TrackAliases");
+                });
+
+            modelBuilder.Entity("Domain.Entities.TrackLayout", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<float?>("LengthM")
+                        .HasColumnType("real");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("TrackLayouts");
+                });
+
             modelBuilder.Entity("Domain.Entities.TrackProfile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1388,6 +1598,27 @@ namespace Infrastructure.Migrations
                     b.ToTable("UserNotifications");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Car", b =>
+                {
+                    b.HasOne("Domain.Entities.CarClass", "CarClass")
+                        .WithMany()
+                        .HasForeignKey("CarClassId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("CarClass");
+                });
+
+            modelBuilder.Entity("Domain.Entities.CarAlias", b =>
+                {
+                    b.HasOne("Domain.Entities.Car", "Car")
+                        .WithMany()
+                        .HasForeignKey("CarId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Car");
+                });
+
             modelBuilder.Entity("Domain.Entities.CoinTransaction", b =>
                 {
                     b.HasOne("Domain.Entities.User", "User")
@@ -1448,6 +1679,17 @@ namespace Infrastructure.Migrations
                     b.HasOne("Domain.Entities.TelemetryLap", "Lap")
                         .WithOne("Telemetry")
                         .HasForeignKey("Domain.Entities.LapTelemetry", "TelemetryLapId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Lap");
+                });
+
+            modelBuilder.Entity("Domain.Entities.LapValidation", b =>
+                {
+                    b.HasOne("Domain.Entities.TelemetryLap", "Lap")
+                        .WithMany()
+                        .HasForeignKey("LapId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1546,6 +1788,17 @@ namespace Infrastructure.Migrations
                     b.Navigation("TrackProfile");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Domain.Entities.TrackAlias", b =>
+                {
+                    b.HasOne("Domain.Entities.TrackLayout", "TrackLayout")
+                        .WithMany()
+                        .HasForeignKey("TrackLayoutId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TrackLayout");
                 });
 
             modelBuilder.Entity("Domain.Entities.TriviaAttempt", b =>
