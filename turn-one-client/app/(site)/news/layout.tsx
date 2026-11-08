@@ -4,7 +4,7 @@ import { generateSEO } from '@/lib/seo'
 
 export const metadata: Metadata = generateSEO({
   title: 'Latest F1 News & Session Data',
-  description: 'Stay updated with the latest Formula 1 session data, race statistics, qualifying results, and real-time F1 news. Comprehensive coverage of current F1 season events.',
+  description: 'Qualifying results, top speeds, standings and race statistics from the most recent Formula 1 session in the Turn One archive.',
   url: '/news',
   keywords: [
     'F1 news',

@@ -98,11 +98,11 @@ export const REGS_2026 = [
 export const FAQ = [
   {
     q: "Is Turn One free?",
-    a: "Yes. Live timing, current-season analysis, predictions and trivia are free on the Enthusiast plan. Professional adds the 2020–2025 archive, exports and deeper AI insights.",
+    a: "Yes. Session analysis, predictions, trivia and sim-lap analysis are free on the Enthusiast plan. Professional adds the full archive, exports and deeper AI insights.",
   },
   {
-    q: "Does it work during a live session?",
-    a: "That's the point. Timing, gaps, tyre stints and sector times update in real time over a WebSocket connection while the session runs.",
+    q: "Does it work during a live F1 session?",
+    a: "Not at the moment. Since October 2026 F1's timing feeds need a paid F1 TV login, so live F1 timing on Turn One is paused. Sim racing laps from Turn One Link still stream live.",
   },
   {
     q: "Is Turn One updated for the 2026 regulations?",
@@ -110,7 +110,7 @@ export const FAQ = [
   },
   {
     q: "Where does the data come from?",
-    a: "Official live timing feeds during sessions, and the FastF1/OpenF1 archives for every session from 2020 onwards. Turn One is not affiliated with Formula 1.",
+    a: "F1 sessions we processed before October 2026, when F1 put its timing archive behind F1 TV, plus your own sim laps from Turn One Link. Turn One is not affiliated with Formula 1 and has no data licence from it.",
   },
   {
     q: "Do I need to install anything?",

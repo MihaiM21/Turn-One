@@ -12,7 +12,7 @@ import { generateSEO } from "@/lib/seo";
 export const metadata: Metadata = generateSEO({
   title: "Pricing — Free F1 Telemetry Analysis",
   description:
-    "Turn One is free to use. Optional paid plans support the platform and unlock historical data, advanced AI insights and API access.",
+    "Turn One is free to use. Optional paid plans support the platform and unlock the historical archive, more tokens and advanced AI insights.",
   url: "/pricing",
   keywords: [
     "F1 telemetry pricing",
@@ -32,7 +32,6 @@ const plans = [
     cta: { label: "Start free", href: "/auth/signup" },
     popular: false,
     features: [
-      { name: "Live race telemetry & timing", on: true },
       { name: "Lap time analysis & compare", on: true },
       { name: "Speed traces & sector times", on: true },
       { name: "Track maps (current season)", on: true },
@@ -42,7 +41,6 @@ const plans = [
       { name: "Data export (CSV)", on: false },
       { name: "Historical 2020-2025", on: false },
       { name: "Priority processing", on: false },
-      { name: "API access", on: false },
     ],
   },
   {
@@ -63,7 +61,6 @@ const plans = [
       { name: "Priority email support", on: true },
       { name: "Custom analysis reports", on: true },
       { name: "Early access", on: true },
-      { name: "API access", on: false },
       { name: "Dedicated account manager", on: false },
     ],
   },
@@ -71,22 +68,18 @@ const plans = [
     name: "Elite",
     price: "19.99",
     period: "month",
-    tagline: "Unlimited tokens + full API + white-glove service.",
+    tagline: "Unlimited tokens, the complete archive and first access to new features.",
     icon: Crown,
     cta: { label: "Join waitlist", href: "/contact" },
     popular: false,
     features: [
       { name: "Everything in Professional", on: true },
       { name: "Unlimited tokens", on: true },
-      { name: "Full REST API access", on: true },
-      { name: "Complete historical DB", on: true },
-      { name: "Real-time WebSocket feeds", on: true },
+      { name: "Complete historical archive", on: true },
       { name: "Top priority processing", on: true },
-      { name: "24/7 priority support", on: true },
-      { name: "Custom integrations", on: true },
+      { name: "Priority support", on: true },
       { name: "Dedicated account manager", on: true },
       { name: "Beta features", on: true },
-      { name: "Commercial usage", on: true },
     ],
   },
   {
@@ -114,12 +107,12 @@ const plans = [
 ];
 
 const faqs = [
-  { q: "Can I change plans anytime?", a: "Yes. Upgrades and downgrades take effect immediately." },
-  { q: "What data sources do you use?", a: "Official F1 timing, FIA databases and verified telemetry feeds." },
+  { q: "Can I buy a paid plan today?", a: "Not yet. Paid plans aren't open, so join the waitlist and we'll tell you when they are." },
+  { q: "Where does the data come from?", a: "F1 session data we processed and archived, plus your own laps from Turn One Link. Turn One is unofficial and has no data licence from Formula 1." },
   { q: "Is Turn One really free forever?", a: "Yes. Paid plans are optional — they unlock perks and help fund the platform." },
   { q: "Do you offer team discounts?", a: "Yes — special pricing for teams and education. Contact us for details." },
-  { q: "How accurate is the data?", a: "Sourced directly from official channels and verified within milliseconds." },
-  { q: "What does paying get me?", a: "More tokens, faster processing, historical archive, priority support, API access." },
+  { q: "Why are recent F1 sessions missing?", a: "Since October 2026 F1's timing archive needs a paid F1 TV login, and its terms don't allow reuse on other sites. Sessions processed before then stay available." },
+  { q: "What does paying get me?", a: "More tokens, faster processing, the historical archive and priority support." },
 ];
 
 export default function PricingPage() {
@@ -130,7 +123,7 @@ export default function PricingPage() {
       <PublicHero
         eyebrow="100% free forever · No credit card"
         title="Professional F1 telemetry, free."
-        subtitle="The same tooling racing analysts and broadcasters use. No paywalls. Paid plans just unlock perks and support the platform."
+        subtitle="Lap, speed and sector analysis for F1 fans and sim racers. No paywalls. Paid plans just unlock perks and support the platform."
         backgroundImage="/turn-one-car/2026-turn-one-car/0002.webp"
         cta={
           <CtaRow

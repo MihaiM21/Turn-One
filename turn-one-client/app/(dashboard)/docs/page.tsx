@@ -10,9 +10,7 @@ import {
   MapPin,
   Gauge,
   Wind,
-  FileJson,
   Mail,
-  ExternalLink,
   Play,
   BookOpen,
   type LucideIcon,
@@ -117,10 +115,6 @@ export default function DocumentationPage() {
     router.push('/contact');
   };
 
-  const handleApiDocs = () => {
-    window.open('https://docs.t1f1.com/', '_blank');
-  };
-
   const handleTutorials = () => {
     window.open('https://www.youtube.com/channel/UCg-DYx-XQUFeEol-IHmCi_Q', '_blank');
   };
@@ -139,7 +133,7 @@ export default function DocumentationPage() {
         {/* Quick actions */}
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <ActionButton icon={Signal} label="Live dashboard" onClick={() => router.push('/live')} />
-          <ActionButton icon={FileJson} label="API documentation" onClick={handleApiDocs} />
+          <ActionButton icon={Gauge} label="Turn One Link" onClick={() => router.push('/simracing/download')} />
           <ActionButton icon={Play} label="Video tutorials" onClick={handleTutorials} />
         </div>
 
@@ -257,23 +251,6 @@ export default function DocumentationPage() {
           />
         </div>
 
-        {/* Advanced features */}
-        <section className="border border-zinc-800 bg-zinc-950">
-          <SectionHeader label="Advanced features" title="API & integration" />
-          <div className="space-y-4 px-5 py-5">
-            <div className="border border-zinc-800 bg-zinc-900/40 px-4 py-3">
-              <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">API authentication</p>
-              <code className="mt-2 block font-mono text-xs tabular-nums text-zinc-300">
-                Authorization: Bearer {'{your_api_key}'}
-              </code>
-            </div>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <ActionButton icon={FileJson} label="API documentation" onClick={handleApiDocs} />
-              <ActionButton icon={ExternalLink} label="Code examples" onClick={handleApiDocs} />
-            </div>
-          </div>
-        </section>
-
         {/* Support */}
         <section className="border border-zinc-800 bg-zinc-950">
           <SectionHeader label="Support" title="Need help?" />
@@ -281,9 +258,8 @@ export default function DocumentationPage() {
             <p className="mb-4 text-xs text-zinc-500">
               Get support from our team of F1 data experts.
             </p>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <ActionButton icon={Mail} label="Contact support" onClick={handleContact} />
-              <ActionButton icon={FileJson} label="API docs" onClick={handleApiDocs} />
               <ActionButton icon={BookOpen} label="Tutorials" onClick={handleTutorials} />
             </div>
           </div>

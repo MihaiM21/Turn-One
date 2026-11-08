@@ -439,9 +439,8 @@ export default function LiveDashboard() {
             <div className="text-center space-y-2">
               <h2 className="text-xl font-bold">Live Feed Unavailable</h2>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                F1&apos;s live-timing feed blocks connections from hosting-provider IPs, which can make
-                web live timing unreliable. We&apos;re building a desktop app that connects directly
-                from your machine to avoid this entirely.
+                Since October 2026 F1&apos;s live-timing feed requires a paid F1 TV login, so live F1
+                timing on Turn One is paused. Sim racing sessions from Turn One Link still stream live.
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3">
@@ -453,10 +452,10 @@ export default function LiveDashboard() {
                 Retry Connection
               </button>
               <Link
-                href="/live-desktop-app"
+                href="/simracing/live"
                 className="flex items-center gap-2 px-4 py-2 rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/15 text-primary transition-colors text-sm font-medium"
               >
-                About the desktop app
+                Sim racing live
               </Link>
             </div>
           </CardContent>

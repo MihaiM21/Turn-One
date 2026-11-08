@@ -70,8 +70,7 @@ export function ProofBand({ stats }: { stats: Stat[] }) {
         <div className="hidden bg-zinc-800 md:block" />
         <div className="flex flex-col justify-center">
           <p className="text-balance text-lg leading-snug text-zinc-100 sm:text-xl">
-            Built on the official live timing feed and the FastF1 / OpenF1 archives — the same numbers the teams see,
-            with the reasoning written next to them.
+            Real session numbers and your own sim laps, with the reasoning written next to them.
           </p>
           <p className="mt-3 text-[11px] uppercase tracking-[0.25em] text-zinc-500">
             Independent · Not affiliated with Formula 1

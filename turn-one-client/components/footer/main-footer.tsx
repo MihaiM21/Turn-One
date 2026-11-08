@@ -105,7 +105,7 @@ export function MainFooter() {
             <h3 className="text-foreground font-semibold text-lg">Resources</h3>
             <div className="space-y-2">
               {[
-                { href: "/docs", label: "API Documentation" },
+                { href: "/docs", label: "Documentation" },
                 { href: "/contact", label: "Contact Support" },
               ].map((link) => (
                 <Link

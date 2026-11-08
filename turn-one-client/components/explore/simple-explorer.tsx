@@ -206,7 +206,8 @@ export function SimpleExplorer() {
       })
       .catch((error: unknown) => {
         if (cancelled) return
-        // A session that just finished is a wait, not a failure.
+        // No upstream data for this session (since 2026-10 that's every session after
+        // F1's timing paywall) — not a failure on our side.
         const notReady =
           error instanceof ExternalApiError &&
           (error.code === "data_not_available" || error.status === 404 || error.status === 503)
@@ -460,10 +461,10 @@ function StatusPanel({
     return (
       <div className={`${base} text-zinc-400`}>
         <Clock className="h-5 w-5 text-primary" />
-        <p className="text-sm font-medium">Data on the way</p>
+        <p className="text-sm font-medium">No data for this session</p>
         <p className="max-w-sm text-xs text-zinc-500">
-          This session finished recently and the timing data is still being processed. It usually
-          takes a few minutes.
+          Sessions after mid-October 2026 can&apos;t be analysed: F1&apos;s timing data now requires a
+          paid F1 TV login. Earlier sessions are in the archive.
         </p>
         <RetryButton onRetry={onRetry} />
       </div>

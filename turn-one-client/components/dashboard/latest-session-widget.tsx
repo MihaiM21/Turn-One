@@ -97,7 +97,7 @@ export function LatestSessionWidget({ previewData }: LatestSessionWidgetProps = 
             )}
             <span>
               {isNotReady
-                ? "Latest session data is still processing — check back shortly."
+                ? "No new session data: F1's timing archive needs a paid F1 TV login since October 2026."
                 : "Couldn't load the latest session data."}
             </span>
           </div>

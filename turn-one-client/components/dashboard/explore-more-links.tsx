@@ -29,7 +29,7 @@ const allPages: PageLink[] = [
   { href: "/rewards", label: "Rewards", description: "Earn XP and Turn One Coins", icon: Coins },
   { href: "/predictions", label: "Predictions", description: "Make Formula 1 race predictions", icon: Trophy },
   { href: "/account", label: "Account", description: "Manage your profile and preferences", icon: User },
-  { href: "/docs", label: "Docs", description: "API docs, guides and tutorials", icon: FileText },
+  { href: "/docs", label: "Docs", description: "Guides and tutorials", icon: FileText },
 ];
 
 interface ExploreMoreLinksProps {

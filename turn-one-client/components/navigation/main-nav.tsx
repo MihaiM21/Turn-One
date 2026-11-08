@@ -32,7 +32,6 @@ const ITEMS: Item[] = [
   { href: "/pricing", label: "Pricing" },
   { href: "/examples", label: "Examples", secondary: true },
   { href: "/how-it-works", label: "How it works", secondary: true },
-  { href: "/api-launch", label: "API", secondary: true },
 ]
 
 const isActive = (pathname: string | null, href: string) => !!pathname && (pathname === href || pathname.startsWith(`${href}/`))

@@ -80,8 +80,6 @@ const getFeaturesByPlan = (planType: string): string[] => {
         'All PRO features',
         'Exclusive data insights',
         'Custom analytics',
-        'API access',
-        'White-label options',
         'Dedicated support',
       ];
     default:
@@ -467,7 +465,7 @@ export default function AccountPage() {
                         {profileData.plan === 'PRO'
                           ? 'More tokens, faster responses and historical data.'
                           : profileData.plan === 'ELITE'
-                            ? 'Unlimited tokens, API access and priority processing.'
+                            ? 'Unlimited tokens, the complete archive and priority processing.'
                             : 'Full access to the platform, completely free.'}
                       </p>
                     </div>

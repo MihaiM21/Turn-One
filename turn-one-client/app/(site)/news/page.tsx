@@ -104,15 +104,12 @@ export default async function NewsPage() {
               <>
                 <div className="flex items-center gap-2 text-primary">
                   <Clock className="h-4 w-4" />
-                  <p className="text-sm font-bold uppercase tracking-tight">Data on the way</p>
+                  <p className="text-sm font-bold uppercase tracking-tight">No new session data</p>
                 </div>
                 <p className="mt-2 text-sm text-zinc-400">
-                  This session just finished — timing data is still being processed upstream.
-                  This usually takes a few minutes. It&apos;s not an error on our end, just a
-                  quick wait.
-                  {status.retryAfterSeconds
-                    ? ` Try checking back in about ${Math.round(status.retryAfterSeconds / 60)} min.`
-                    : ""}
+                  Since October 2026 F1&apos;s timing archive requires a paid F1 TV login, and its
+                  terms don&apos;t allow the data to be reused on other sites. Sessions from before
+                  then are still available in the archive.
                 </p>
               </>
             ) : isUnavailable ? (
@@ -137,7 +134,16 @@ export default async function NewsPage() {
               </>
             )}
             <div className="mt-4 flex gap-2">
-              <RefreshButton />
+              {isNotReady ? (
+                <Button asChild className="flex-1 rounded-none">
+                  <Link href="/f1">
+                    <Flag className="mr-2 h-4 w-4" />
+                    Browse sessions
+                  </Link>
+                </Button>
+              ) : (
+                <RefreshButton />
+              )}
               <Button asChild variant="ghost" className="flex-1 rounded-none">
                 <Link href="/">
                   <Home className="mr-2 h-4 w-4" />
@@ -174,12 +180,13 @@ export default async function NewsPage() {
 
         {/* Header */}
         <header className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-primary">Latest session analysis</p>
+          <p className="text-[10px] uppercase tracking-[0.3em] text-primary">Most recent archived session</p>
           <h1 className="text-4xl font-black uppercase tracking-tight sm:text-5xl">
             {sessionName(session.session_name)}
           </h1>
           <p className="text-sm text-zinc-400">
-            Live data from the latest F1 session. Free for everyone — sign up to unlock the deeper analytics.
+            Free for everyone — sign up to unlock the deeper analytics. Sessions after October 2026
+            aren&apos;t covered: F1&apos;s timing data now requires a paid F1 TV login.
           </p>
         </header>
 
