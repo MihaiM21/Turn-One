@@ -302,7 +302,7 @@ export default function ExamplesPage() {
       title: "Top speed by constructor",
       subtitle: "2025 British GP · Qualifying",
       description: "Instantly compare every constructor's maximum recorded speed. Spot the aerodynamic and power-unit pecking order at a glance.",
-      bullets: ["Official F1 timing data", "Constructor livery colors", "All 10 teams in one chart", "Every session, every weekend"],
+      bullets: ["Real session speed-trap data", "Constructor livery colors", "Every team in one chart", "Every archived session"],
       chart: topSpeeds ? <TopSpeedGraph data={topSpeeds} advancedSettings={{ ...chartSettings, chartHeight: 460 }} /> : <PlotSkeleton height={460} />,
     },
     {

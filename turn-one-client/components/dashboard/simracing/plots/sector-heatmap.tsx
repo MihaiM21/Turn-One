@@ -40,7 +40,7 @@ export function SectorHeatmapPlot({ ctx }: { ctx: SimPlotContext }) {
 
     if (!rows.length || !sectorCount) {
         return (
-            <div className="flex h-32 items-center justify-center font-mono text-sm text-zinc-600">
+            <div className="flex h-32 items-center justify-center font-mono text-sm text-muted-foreground/70">
                 No sector data for these laps
             </div>
         );
@@ -48,15 +48,15 @@ export function SectorHeatmapPlot({ ctx }: { ctx: SimPlotContext }) {
 
     return (
         <div className="space-y-3">
-            <div className="overflow-x-auto border border-zinc-800">
+            <div className="overflow-x-auto border border-border">
                 <table className="w-full border-collapse text-xs">
                     <thead>
-                        <tr className="border-b border-zinc-800 text-left">
-                            <th className="bg-zinc-950 px-3 py-2 text-[10px] uppercase tracking-[0.2em] font-normal text-zinc-500">
+                        <tr className="border-b border-border text-left">
+                            <th className="bg-card px-3 py-2 text-[10px] uppercase tracking-[0.2em] font-normal text-muted-foreground">
                                 Lap
                             </th>
                             {Array.from({ length: sectorCount }, (_, i) => (
-                                <th key={i} className="bg-zinc-950 px-3 py-2 text-right text-[10px] uppercase tracking-[0.2em] font-normal text-zinc-500">
+                                <th key={i} className="bg-card px-3 py-2 text-right text-[10px] uppercase tracking-[0.2em] font-normal text-muted-foreground">
                                     S{i + 1}
                                 </th>
                             ))}
@@ -64,7 +64,7 @@ export function SectorHeatmapPlot({ ctx }: { ctx: SimPlotContext }) {
                     </thead>
                     <tbody>
                         {rows.map(row => (
-                            <tr key={row.lapId} className="border-b border-zinc-900">
+                            <tr key={row.lapId} className="border-b border-border/60">
                                 <td className="px-3 py-1.5 font-mono font-bold" style={{ color: colors[row.lapId] }}>
                                     {labels[row.lapId] ?? `Lap ${row.lapNumber}`}
                                 </td>
@@ -93,7 +93,7 @@ export function SectorHeatmapPlot({ ctx }: { ctx: SimPlotContext }) {
                 </table>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 text-[11px] text-zinc-500">
+            <div className="flex flex-wrap items-center gap-4 text-[11px] text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                     <span className="inline-block h-2.5 w-2.5" style={{ backgroundColor: deltaToColor(-maxAbs, maxAbs) }} />
                     Fastest

@@ -52,7 +52,7 @@ export function DriverRadarGraph({ data, title, subtitle, advancedSettings }: Dr
     <div className="space-y-2">
       <div>
         <p className="text-sm font-semibold">{title}</p>
-        {subtitle && <p className="text-xs text-zinc-500">{subtitle}</p>}
+        {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
       </div>
       <div style={{ height: `${settings.chartHeight}px` }}>
         <ResponsiveContainer width="100%" height="100%">

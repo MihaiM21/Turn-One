@@ -367,12 +367,12 @@ export function TelemetryPlotGenerator() {
     const stats = selectedPlot.stats(generated.data, generated.ctx)
     if (!stats) return null
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y divide-zinc-800 border border-zinc-800">
+      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y divide-border border border-border">
         {stats.map((s) => (
           <div key={s.label} className="px-5 py-4">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-500">{s.label}</p>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">{s.label}</p>
             <p className="mt-1 font-mono text-lg font-black tabular-nums">{s.value}</p>
-            {s.sub && <p className="mt-0.5 text-xs text-zinc-500 truncate">{s.sub}</p>}
+            {s.sub && <p className="mt-0.5 text-xs text-muted-foreground truncate">{s.sub}</p>}
           </div>
         ))}
       </div>
@@ -405,15 +405,15 @@ export function TelemetryPlotGenerator() {
 
   return (
     <TooltipProvider delayDuration={150}>
-      <div className="border border-zinc-800 bg-zinc-950 animate-in fade-in duration-500">
+      <div className="border border-border bg-card animate-in fade-in duration-500">
         {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/70 px-5 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 px-5 py-4">
           <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-500">Telemetry</p>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Telemetry</p>
             <h2 className="mt-0.5 text-2xl font-bold tracking-tight">
               {selectedPlot.title}
             </h2>
-            <p className="mt-1 text-sm text-zinc-400">{selectedPlot.description}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{selectedPlot.description}</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             {isAuthenticated && userProfile && (
@@ -422,7 +422,7 @@ export function TelemetryPlotGenerator() {
                 {tokenCount} tokens
               </Badge>
             )}
-            <Badge variant="outline" className="border-zinc-700 text-zinc-400 text-[10px] uppercase tracking-wider">
+            <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground text-[10px] uppercase tracking-wider">
               v2 API
             </Badge>
             <Tooltip>
@@ -430,7 +430,7 @@ export function TelemetryPlotGenerator() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-zinc-500 hover:text-foreground"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
                   onClick={restartTour}
                   aria-label="Show tour"
                 >
@@ -490,12 +490,12 @@ export function TelemetryPlotGenerator() {
 
           {/* Plot options card */}
           {showPlotOptions && (
-            <div data-tour="drivers" className="border border-zinc-800">
-              <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-3">
+            <div data-tour="drivers" className="border border-border">
+              <div className="flex items-center gap-2 border-b border-border px-5 py-3">
                 <Users className="h-4 w-4 text-primary" />
                 <div>
                   <p className="text-sm font-medium leading-none">Plot options</p>
-                  <p className="mt-0.5 text-xs text-zinc-500">Configure the inputs for this plot type.</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Configure the inputs for this plot type.</p>
                 </div>
               </div>
               <div className="space-y-4 px-5 py-4">
@@ -590,7 +590,7 @@ export function TelemetryPlotGenerator() {
                 <TooltipTrigger asChild>
                   <Button
                     variant="outline"
-                    className="border-zinc-800 bg-transparent hover:bg-zinc-900"
+                    className="border-border bg-transparent hover:bg-secondary"
                     onClick={() => setPinned(generated)}
                   >
                     <Pin className="mr-2 h-4 w-4" />
@@ -614,7 +614,7 @@ export function TelemetryPlotGenerator() {
             ) : (
               <Button
                 variant="outline"
-                className="border-zinc-800 bg-transparent hover:bg-zinc-900 transition-colors"
+                className="border-border bg-transparent hover:bg-secondary transition-colors"
                 onClick={() => toast.info("Export coming soon", { description: "Plot export will be available in a future update." })}
               >
                 <Download className="h-4 w-4 mr-2" />
@@ -630,7 +630,7 @@ export function TelemetryPlotGenerator() {
               <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
               <span>
                 You don&apos;t have enough tokens to generate plots. Each plot costs 1 token.{" "}
-                <span className="text-zinc-500">Tokens refill monthly or you can purchase more in your account settings.</span>
+                <span className="text-muted-foreground">Tokens refill monthly or you can purchase more in your account settings.</span>
               </span>
             </div>
           )}
@@ -668,7 +668,7 @@ export function TelemetryPlotGenerator() {
                 onClear={() => setPinned(null)}
               />
             ) : (
-              <div className="border border-zinc-800 p-4">
+              <div className="border border-border p-4">
                 <ChartViewport
                   title={selectedPlot.title}
                   domainZoomable={selectedPlot.domainZoomable}
@@ -685,7 +685,7 @@ export function TelemetryPlotGenerator() {
             <Code2 className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
             <div className="min-w-0">
               <p className="text-sm font-medium text-blue-300">Developer Mode — coming soon</p>
-              <p className="mt-0.5 text-xs text-zinc-400 leading-relaxed">
+              <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
                 Bring your own API key and unlock unlimited plot generation, direct endpoint access, and programmatic usage — built for analysts, teams, and developers integrating F1 telemetry into their own tools.
               </p>
             </div>

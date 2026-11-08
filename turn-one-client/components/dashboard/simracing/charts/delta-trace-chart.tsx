@@ -55,7 +55,7 @@ export function DeltaTraceChart({
 
     if (!data.length) {
         return (
-            <div className="flex h-48 items-center justify-center font-mono text-sm text-zinc-600">
+            <div className="flex h-48 items-center justify-center font-mono text-sm text-muted-foreground/70">
                 Not enough telemetry to build a delta
             </div>
         );
@@ -65,7 +65,7 @@ export function DeltaTraceChart({
         <div className="space-y-3">
             <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
                 <div>
-                    <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Lap delta</p>
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Lap delta</p>
                     <p
                         className={`font-mono text-2xl font-black tabular-nums ${
                             finalDelta <= 0 ? "text-green-500" : "text-red-500"
@@ -75,7 +75,7 @@ export function DeltaTraceChart({
                         {finalDelta.toFixed(3)}s
                     </p>
                 </div>
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-muted-foreground">
                     {lapLabel} vs {referenceLabel}
                 </p>
             </div>
@@ -152,7 +152,7 @@ export function DeltaTraceChart({
                 </ResponsiveContainer>
             </div>
 
-            <div className="flex flex-wrap gap-4 text-[11px] text-zinc-500">
+            <div className="flex flex-wrap gap-4 text-[11px] text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                     <span className="h-2 w-3" style={{ background: CHART.faster, opacity: 0.5 }} />
                     Gaining

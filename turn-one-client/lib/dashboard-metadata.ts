@@ -18,16 +18,14 @@ interface DashboardPageConfig {
 
 export const dashboardPagesMetadata: Record<string, DashboardPageConfig> = {
   dashboard: {
-    title: 'F1 Dashboard - Live Timing & Telemetry',
-    description: 'Your personalized Formula 1 dashboard with live timing, telemetry data, race statistics, and real-time F1 updates. Track your favorite drivers, manage predictions, and access comprehensive F1 analytics.',
+    title: 'Home - Sim Racing Telemetry',
+    description: 'Your Turn One home: your Turn One Link rig, your last session, personal bests and leaderboard ranks across ACC, EA SPORTS F1 25/26 and iRacing.',
     keywords: [
-      'F1 dashboard',
-      'Formula 1 dashboard',
-      'F1 live timing dashboard',
-      'F1 user dashboard',
-      'F1 telemetry dashboard',
-      'personal F1 hub',
-      'F1 race dashboard',
+      'sim racing dashboard',
+      'sim racing telemetry',
+      'ACC telemetry',
+      'F1 25 telemetry',
+      'iRacing telemetry',
     ],
     url: '/dashboard',
     noIndex: true,
@@ -75,20 +73,6 @@ export const dashboardPagesMetadata: Record<string, DashboardPageConfig> = {
       'F1 live updates',
     ],
     url: '/live',
-    noIndex: true,
-  },
-  live2: {
-    title: 'F1 Live Timing Screen - Advanced Race Tracking',
-    description: 'Advanced Formula 1 live timing screen with comprehensive race data, gap analysis, pit stop information, and detailed driver positions. Professional F1 timing for serious racing fans.',
-    keywords: [
-      'F1 live timing screen',
-      'Formula 1 timing tower',
-      'F1 gap analysis',
-      'live pit stops',
-      'F1 timing data',
-      'professional F1 timing',
-    ],
-    url: '/live2',
     noIndex: true,
   },
   rewards: {

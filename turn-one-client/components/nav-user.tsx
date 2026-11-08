@@ -2,16 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
-  LogOut,
-  Sparkles,
-  Coins,
-  Zap,
-} from "lucide-react"
+import { BadgeCheck, Bell, ChevronsUpDown, Coins, LogOut, Sparkles, Zap } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -23,127 +14,117 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { SidebarMenu, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar"
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar"
+import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/components/auth/auth-provider"
 import { useBalance } from "@/components/providers/balance-provider"
 import { useNotificationStats } from "@/hooks/use-notification-stats"
-import { Badge as BadgeUI } from "@/components/ui/badge"
+import { usePlan } from "@/hooks/use-plan"
 
-export function NavUser({
-  user,
-}: {
-  user: { name: string; email: string; avatar: string }
-}) {
+function Balance({ coins, tokens }: { coins: number; tokens: number }) {
+  return (
+    <span className="flex items-center gap-2 font-mono text-[11px] tabular-nums">
+      <span className="flex items-center gap-1 text-instrument">
+        <Coins className="size-3" aria-hidden />
+        {coins.toLocaleString()}
+      </span>
+      <span className="flex items-center gap-1 text-primary">
+        <Zap className="size-3" aria-hidden />
+        {tokens}
+      </span>
+    </span>
+  )
+}
+
+export function NavUser({ user }: { user: { name: string; email: string; avatar: string } }) {
   const { isMobile } = useSidebar()
   const { logout } = useAuth()
   const { coins, tokens } = useBalance()
   const { stats } = useNotificationStats()
+  const { plan } = usePlan()
   const router = useRouter()
+
+  const initials = (user.name || "T1").substring(0, 2).toUpperCase()
 
   const handleLogout = () => {
     logout()
     router.push("/")
   }
 
-  const displayName = user.name
-  const initials = (displayName || "T1").substring(0, 2).toUpperCase()
-
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              className="flex w-full items-center gap-3 rounded-xl border border-zinc-800/80 bg-zinc-950/80 px-3 py-2.5 text-left transition-colors hover:border-zinc-700 hover:bg-zinc-900/70 data-[state=open]:border-zinc-700 data-[state=open]:bg-zinc-900/70"
+            <SidebarMenuButton
+              size="lg"
+              className="border border-sidebar-border data-[state=open]:bg-sidebar-accent"
+              tooltip={user.name}
             >
-              <Avatar className="h-8 w-8 shrink-0 rounded-lg border border-zinc-800">
-                <AvatarImage src={user.avatar} alt={displayName} />
-                <AvatarFallback className="rounded-lg bg-zinc-900 text-[11px] font-semibold text-zinc-300">
-                  {initials}
-                </AvatarFallback>
+              <Avatar className="size-8 rounded-md border border-sidebar-border">
+                <AvatarImage src={user.avatar} alt="" />
+                <AvatarFallback className="rounded-md bg-surface text-[11px] font-semibold">{initials}</AvatarFallback>
               </Avatar>
-              <div className="grid min-w-0 flex-1 leading-tight">
-                <span className="truncate text-sm font-bold tracking-tight">{displayName}</span>
-                <div className="mt-1 flex items-center gap-1.5 text-[11px]">
-                  <span className="flex items-center gap-1 rounded-md bg-yellow-400/10 px-1.5 py-0.5 text-yellow-400">
-                    <Coins className="h-3 w-3" />
-                    <span className="font-mono tabular-nums">{coins.toLocaleString()}</span>
-                  </span>
-                  <span className="flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 text-primary">
-                    <Zap className="h-3 w-3" />
-                    <span className="font-mono tabular-nums">{tokens}</span>
-                  </span>
-                </div>
+              <div className="grid min-w-0 flex-1 text-left leading-tight">
+                <span className="flex items-center gap-2 truncate text-sm font-semibold">
+                  {user.name}
+                  <span className="font-display text-[10px] tracking-wider text-muted-foreground">{plan}</span>
+                </span>
+                <Balance coins={coins} tokens={tokens} />
               </div>
-              <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 text-zinc-600" />
-            </button>
+              <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
+            </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-xl border-zinc-800 bg-zinc-950/95 p-1 backdrop-blur"
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
             side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={6}
           >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-3 border-b border-zinc-800 px-3 py-3">
-                <Avatar className="h-8 w-8 rounded-lg border border-zinc-800">
-                  <AvatarImage src={user.avatar} alt={displayName} />
-                  <AvatarFallback className="rounded-lg bg-zinc-900 text-[11px] font-semibold text-zinc-300">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="grid min-w-0 flex-1 leading-tight">
-                  <span className="truncate text-sm font-bold tracking-tight">{displayName}</span>
-                  <span className="truncate text-[11px] text-zinc-500">{user.email}</span>
-                  <div className="mt-1.5 grid grid-cols-2 gap-1.5 text-[11px]">
-                    <span className="flex items-center gap-1 rounded-md bg-yellow-400/10 px-2 py-1 text-yellow-400">
-                      <Coins className="h-3 w-3" />
-                      <span className="font-mono tabular-nums">{coins.toLocaleString()}</span>
-                    </span>
-                    <span className="flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-primary">
-                      <Zap className="h-3 w-3" />
-                      <span className="font-mono tabular-nums">{tokens}</span>
-                    </span>
-                  </div>
-                </div>
+            <DropdownMenuLabel className="font-normal">
+              <div className="grid leading-tight">
+                <span className="truncate text-sm font-semibold">{user.name}</span>
+                {user.email ? <span className="truncate text-[11px] text-muted-foreground">{user.email}</span> : null}
               </div>
             </DropdownMenuLabel>
+            {plan === "BASIC" ? (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild className="text-xs">
+                    <Link href="/pricing">
+                      <Sparkles className="size-3.5" />
+                      See Pro features
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </>
+            ) : null}
+            <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem className="rounded-lg text-xs">
-                <Sparkles className="h-3.5 w-3.5" />
-                Upgrade to Pro
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator className="bg-zinc-800" />
-            <DropdownMenuGroup>
-              <Link href="/account">
-                <DropdownMenuItem className="rounded-lg text-xs">
-                  <BadgeCheck className="h-3.5 w-3.5" />
+              <DropdownMenuItem asChild className="text-xs">
+                <Link href="/account">
+                  <BadgeCheck className="size-3.5" />
                   Account
-                </DropdownMenuItem>
-              </Link>
-              <DropdownMenuItem className="rounded-lg text-xs">
-                <CreditCard className="h-3.5 w-3.5" />
-                Billing
+                </Link>
               </DropdownMenuItem>
-              <Link href="/notifications">
-                <DropdownMenuItem className="flex items-center justify-between rounded-lg text-xs">
-                  <div className="flex items-center gap-2">
-                    <Bell className="h-3.5 w-3.5" />
+              <DropdownMenuItem asChild className="text-xs">
+                <Link href="/notifications" className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Bell className="size-3.5" />
                     Notifications
-                  </div>
+                  </span>
                   {stats.unreadCount > 0 && (
-                    <BadgeUI variant="destructive" className="ml-auto h-4 px-1.5 text-[10px]">
+                    <Badge variant="destructive" className="ml-auto h-4 px-1.5 text-[10px]">
                       {stats.unreadCount}
-                    </BadgeUI>
+                    </Badge>
                   )}
-                </DropdownMenuItem>
-              </Link>
+                </Link>
+              </DropdownMenuItem>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator className="bg-zinc-800" />
-            <DropdownMenuItem onClick={handleLogout} className="rounded-lg text-xs">
-              <LogOut className="h-3.5 w-3.5" />
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout} className="text-xs">
+              <LogOut className="size-3.5" />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

@@ -10,15 +10,15 @@ import { generateSEO } from "@/lib/seo";
 
 
 export const metadata: Metadata = generateSEO({
-  title: "Pricing — Free F1 Telemetry Analysis",
+  title: "Pricing — Free Sim Racing Telemetry",
   description:
-    "Turn One is free to use. Optional paid plans support the platform and unlock historical data, advanced AI insights and API access.",
+    "Recording and analysing your own sim laps is free. Paid plans add comparing against other drivers, corner-by-corner coaching tips, OBS overlays and spectating.",
   url: "/pricing",
   keywords: [
-    "F1 telemetry pricing",
-    "free F1 analysis",
-    "Formula 1 data pricing",
-    "F1 subscription",
+    "sim racing telemetry pricing",
+    "free lap analysis",
+    "ACC telemetry",
+    "iRacing telemetry",
   ],
 });
 
@@ -27,66 +27,57 @@ const plans = [
     name: "Enthusiast",
     price: "0",
     period: "forever",
-    tagline: "Everything to get started. No credit card.",
+    tagline: "Record and analyse your own laps. No credit card.",
     icon: Zap,
-    cta: { label: "Start free", href: "/auth/signup" },
+    cta: { label: "Join the beta", href: "/auth/signup?intent=beta" },
     popular: false,
+    // Sim features mirror Domain/PlanFeatures.cs (SimRacingPlanFeatures) — keep them in step.
     features: [
-      { name: "Live race telemetry & timing", on: true },
-      { name: "Lap time analysis & compare", on: true },
-      { name: "Speed traces & sector times", on: true },
-      { name: "Track maps (current season)", on: true },
-      { name: "Basic AI insights", on: true },
-      { name: "Community support", on: true },
+      { name: "Every lap recorded with Turn One Link", on: true },
+      { name: "Sessions, lap and sector times, track maps", on: true },
+      { name: "Overlay two of your own laps", on: true },
+      { name: "Verified leaderboards and your driver page", on: true },
+      { name: "F1 Archive: past session telemetry", on: true },
       { name: "30 tokens / month", on: true },
-      { name: "Data export (CSV)", on: false },
-      { name: "Historical 2020-2025", on: false },
-      { name: "Priority processing", on: false },
-      { name: "API access", on: false },
+      { name: "Compare against other drivers' laps", on: false },
+      { name: "Corner-by-corner comparison and coaching tips", on: false },
+      { name: "OBS overlays and spectating", on: false },
     ],
   },
   {
     name: "Professional",
     price: "9.99",
     period: "month",
-    tagline: "Support the mission and unlock 500 tokens + historical archive.",
+    tagline: "Find the time: compare against anyone and get corner-by-corner tips.",
     icon: Trophy,
     cta: { label: "Join waitlist", href: "/contact" },
     popular: true,
     features: [
       { name: "Everything in Enthusiast", on: true },
+      { name: "Compare up to 8 laps, including other drivers'", on: true },
+      { name: "Corner-by-corner comparison", on: true },
+      { name: "Coaching tips per lap", on: true },
+      { name: "Multi-channel traces and replay scrubber", on: true },
+      { name: "OBS overlays for streaming", on: true },
+      { name: "Spectate public live sessions", on: true },
       { name: "500 tokens / month", on: true },
-      { name: "Historical 2020-2025", on: true },
-      { name: "Advanced AI insights", on: true },
-      { name: "Multi-format export", on: true },
-      { name: "Priority queue", on: true },
       { name: "Priority email support", on: true },
-      { name: "Custom analysis reports", on: true },
-      { name: "Early access", on: true },
-      { name: "API access", on: false },
-      { name: "Dedicated account manager", on: false },
     ],
   },
   {
     name: "Elite",
     price: "19.99",
     period: "month",
-    tagline: "Unlimited tokens + full API + white-glove service.",
+    tagline: "Everything, plus the coach chat when it launches and first access to new features.",
     icon: Crown,
     cta: { label: "Join waitlist", href: "/contact" },
     popular: false,
     features: [
       { name: "Everything in Professional", on: true },
+      { name: "Coach chat about any lap (coming)", on: true },
       { name: "Unlimited tokens", on: true },
-      { name: "Full REST API access", on: true },
-      { name: "Complete historical DB", on: true },
-      { name: "Real-time WebSocket feeds", on: true },
-      { name: "Top priority processing", on: true },
-      { name: "24/7 priority support", on: true },
-      { name: "Custom integrations", on: true },
-      { name: "Dedicated account manager", on: true },
-      { name: "Beta features", on: true },
-      { name: "Commercial usage", on: true },
+      { name: "Priority support", on: true },
+      { name: "Beta features first", on: true },
     ],
   },
   {
@@ -114,12 +105,12 @@ const plans = [
 ];
 
 const faqs = [
-  { q: "Can I change plans anytime?", a: "Yes. Upgrades and downgrades take effect immediately." },
-  { q: "What data sources do you use?", a: "Official F1 timing, FIA databases and verified telemetry feeds." },
+  { q: "Can I buy a paid plan today?", a: "Not yet. Paid plans aren't open, so join the waitlist and we'll tell you when they are." },
+  { q: "Where does the data come from?", a: "F1 session data we processed and archived, plus your own laps from Turn One Link. Turn One is unofficial and has no data licence from Formula 1." },
   { q: "Is Turn One really free forever?", a: "Yes. Paid plans are optional — they unlock perks and help fund the platform." },
   { q: "Do you offer team discounts?", a: "Yes — special pricing for teams and education. Contact us for details." },
-  { q: "How accurate is the data?", a: "Sourced directly from official channels and verified within milliseconds." },
-  { q: "What does paying get me?", a: "More tokens, faster processing, historical archive, priority support, API access." },
+  { q: "Why are recent F1 sessions missing?", a: "Since October 2026 F1's timing archive needs a paid F1 TV login, and its terms don't allow reuse on other sites. Sessions processed before then stay available." },
+  { q: "What does paying get me?", a: "More tokens, faster processing, the historical archive and priority support." },
 ];
 
 export default function PricingPage() {
@@ -130,7 +121,7 @@ export default function PricingPage() {
       <PublicHero
         eyebrow="100% free forever · No credit card"
         title="Professional F1 telemetry, free."
-        subtitle="The same tooling racing analysts and broadcasters use. No paywalls. Paid plans just unlock perks and support the platform."
+        subtitle="Lap, speed and sector analysis for F1 fans and sim racers. No paywalls. Paid plans just unlock perks and support the platform."
         backgroundImage="/turn-one-car/2026-turn-one-car/0002.webp"
         cta={
           <CtaRow

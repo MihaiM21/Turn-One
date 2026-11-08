@@ -20,7 +20,6 @@ import {
   StopCircle,
   AlertCircle
 } from 'lucide-react';
-import { DashboardHeader } from "@/components/dashboard/live dashboard/dashboard-header"
 import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links"
 import { TrackMap } from '@/components/dashboard/track-map';
 import { SessionTimer } from '@/components/dashboard/session-timer';
@@ -287,7 +286,6 @@ export default function LiveDashboard() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <DashboardHeader />
       <div className="container mx-auto px-4 py-8 lg:px-8 space-y-6">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -378,13 +376,6 @@ export default function LiveDashboard() {
                 Updated {lastUpdate.toLocaleTimeString()}
               </div>
             )}
-            <Link
-              href="/live2"
-              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/15 text-primary transition-colors"
-              title="Try our experimental live dashboard with enhanced features"
-            >
-              <span>Try Experimental</span>
-            </Link>
           </div>
         </div>
 
@@ -439,9 +430,8 @@ export default function LiveDashboard() {
             <div className="text-center space-y-2">
               <h2 className="text-xl font-bold">Live Feed Unavailable</h2>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                F1&apos;s live-timing feed blocks connections from hosting-provider IPs, which can make
-                web live timing unreliable. We&apos;re building a desktop app that connects directly
-                from your machine to avoid this entirely.
+                Since October 2026 F1&apos;s live-timing feed requires a paid F1 TV login, so live F1
+                timing on Turn One is paused. Sim racing sessions from Turn One Link still stream live.
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3">
@@ -453,10 +443,10 @@ export default function LiveDashboard() {
                 Retry Connection
               </button>
               <Link
-                href="/live-desktop-app"
+                href="/simracing/live"
                 className="flex items-center gap-2 px-4 py-2 rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/15 text-primary transition-colors text-sm font-medium"
               >
-                About the desktop app
+                Sim racing live
               </Link>
             </div>
           </CardContent>

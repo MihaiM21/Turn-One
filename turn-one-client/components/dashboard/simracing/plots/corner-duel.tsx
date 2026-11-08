@@ -71,7 +71,7 @@ export function CornerDuelPlot({ ctx }: { ctx: SimPlotContext }) {
 
     if (!corners || !nonRefLapIds.length) {
         return (
-            <div className="flex h-32 items-center justify-center font-mono text-sm text-zinc-600">
+            <div className="flex h-32 items-center justify-center font-mono text-sm text-muted-foreground/70">
                 No matched corners for these laps
             </div>
         );
@@ -80,7 +80,7 @@ export function CornerDuelPlot({ ctx }: { ctx: SimPlotContext }) {
     return (
         <div className="space-y-4">
             <div>
-                <p className="mb-1 text-[11px] uppercase tracking-[0.2em] text-zinc-500">Apex speed Δ (km/h)</p>
+                <p className="mb-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Apex speed Δ (km/h)</p>
                 <div style={{ height: 220 }}>
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart
@@ -116,7 +116,7 @@ export function CornerDuelPlot({ ctx }: { ctx: SimPlotContext }) {
             </div>
 
             <div>
-                <p className="mb-1 text-[11px] uppercase tracking-[0.2em] text-zinc-500">Time gained / lost (ms)</p>
+                <p className="mb-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Time gained / lost (ms)</p>
                 <div style={{ height: 220 }}>
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart
@@ -148,7 +148,7 @@ export function CornerDuelPlot({ ctx }: { ctx: SimPlotContext }) {
                 </div>
             </div>
 
-            <p className="text-[11px] text-zinc-600">
+            <p className="text-[11px] text-muted-foreground/70">
                 Click a bar to zoom every synced chart into that corner. Positive = faster / gained time vs the reference.
             </p>
         </div>

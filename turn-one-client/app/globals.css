@@ -4,82 +4,71 @@
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
-  /* Modern minimalist theme - Black, White, Grey with Red accent */
-  --background: oklch(0.08 0 0); /* Pure black background #0a0a0a */
-  --foreground: oklch(0.98 0 0); /* Pure white text #fafafa */
-  --card: oklch(0.12 0 0); /* Very dark grey for cards #1a1a1a */
-  --card-foreground: oklch(0.98 0 0); /* White text on cards */
-  --popover: oklch(0.12 0 0); /* Dark grey popover */
-  --popover-foreground: oklch(0.98 0 0); /* White popover text */
-  --primary: oklch(0.55 0.22 25); /* Pure red accent #e11d48 */
-  --primary-foreground: oklch(1 0 0); /* Pure white on red */
-  --secondary: oklch(0.15 0 0); /* Dark grey secondary #212121 */
-  --secondary-foreground: oklch(0.98 0 0); /* White text on secondary */
-  --muted: oklch(0.18 0 0); /* Muted dark grey #262626 */
-  --muted-foreground: oklch(0.62 0 0); /* Light grey text #9ca3af */
-  --accent: oklch(0.55 0.22 25); /* Red accent #e11d48 */
-  --accent-foreground: oklch(1 0 0); /* White on accent */
-  --destructive: oklch(0.55 0.22 25); /* Red for destructive */
-  --destructive-foreground: oklch(1 0 0); /* White on destructive */
-  --border: oklch(0.22 0 0); /* Subtle grey border #333333 */
-  --input: oklch(0.15 0 0); /* Dark input background #212121 */
-  --ring: oklch(0.55 0.22 25 / 0.5); /* Red focus ring */
-  --chart-1: oklch(0.55 0.22 25); /* Red */
-  --chart-2: oklch(0.70 0 0); /* Light grey */
-  --chart-3: oklch(0.50 0 0); /* Medium grey */
-  --chart-4: oklch(0.98 0 0); /* White */
-  --chart-5: oklch(0.30 0 0); /* Dark grey */
-  --radius: 0.5rem; /* Subtle rounded corners for modern look */
-  --sidebar: oklch(0.08 0 0); /* Black sidebar */
-  --sidebar-foreground: oklch(0.98 0 0); /* White sidebar text */
-  --sidebar-primary: oklch(0.55 0.22 25); /* Red in sidebar */
-  --sidebar-primary-foreground: oklch(1 0 0); /* White on red */
-  --sidebar-accent: oklch(0.55 0.22 25); /* Red accent in sidebar */
-  --sidebar-accent-foreground: oklch(1 0 0); /* White on red */
-  --sidebar-border: oklch(0.22 0 0); /* Grey sidebar border */
-  --sidebar-ring: oklch(0.55 0.22 25 / 0.5); /* Red focus ring */
-}
+/*
+ * Design tokens - Turn One house style ("t1-style").
+ * Semantic names only: components read these, never raw hex. A second theme
+ * (see styles/themes/hud.css) can redefine the same names under its own
+ * [data-theme] without touching components.
+ */
+:root,
+[data-theme="t1"] {
+  --background: #020202;
+  --foreground: #f8f8f8;
+  --card: #060606;
+  --card-foreground: #f8f8f8;
+  --popover: #090909;
+  --popover-foreground: #f8f8f8;
+  --surface: #090909;
+  --primary: #d40924;
+  --primary-foreground: #ffffff;
+  --secondary: #111111;
+  --secondary-foreground: #f8f8f8;
+  --muted: #111111;
+  --muted-foreground: #868686;
+  --accent: #141414;
+  --accent-foreground: #f8f8f8;
+  --destructive: #d40924;
+  --destructive-foreground: #ffffff;
+  --border: #1b1b1b;
+  --input: #1b1b1b;
+  --ring: #d40924;
 
-.dark {
-  /* Keep same values for explicit dark mode */
-  --background: oklch(0.08 0 0);
-  --foreground: oklch(0.98 0 0);
-  --card: oklch(0.12 0 0);
-  --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.12 0 0);
-  --popover-foreground: oklch(0.98 0 0);
-  --primary: oklch(0.55 0.22 25);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.15 0 0);
-  --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.18 0 0);
-  --muted-foreground: oklch(0.62 0 0);
-  --accent: oklch(0.55 0.22 25);
-  --accent-foreground: oklch(1 0 0);
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.22 0 0);
-  --input: oklch(0.15 0 0);
-  --ring: oklch(0.55 0.22 25 / 0.5);
-  --chart-1: oklch(0.55 0.22 25);
-  --chart-2: oklch(0.70 0 0);
-  --chart-3: oklch(0.50 0 0);
-  --chart-4: oklch(0.98 0 0);
-  --chart-5: oklch(0.30 0 0);
-  --sidebar: oklch(0.08 0 0);
-  --sidebar-foreground: oklch(0.98 0 0);
-  --sidebar-primary: oklch(0.55 0.22 25);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.55 0.22 25);
-  --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.22 0 0);
-  --sidebar-ring: oklch(0.55 0.22 25 / 0.5);
+  /* Timing colours: only for deltas and lap times. */
+  --timing-fastest: #b24bf3;
+  --timing-pb: #00e436;
+  --timing-slower: #ffc61a;
+  /* Airflow cyan: lines only, never a fill. */
+  --airflow: #6fe9ff;
+  /* Gold: the instrument (coins, SCREEN) only. */
+  --instrument: #ffc61a;
+
+  --chart-1: #d40924;
+  --chart-2: #f8f8f8;
+  --chart-3: #868686;
+  --chart-4: #6fe9ff;
+  --chart-5: #3a3a3a;
+  --radius: 0.5rem;
+
+  --sidebar: #040404;
+  --sidebar-foreground: #f8f8f8;
+  --sidebar-primary: #d40924;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #111111;
+  --sidebar-accent-foreground: #f8f8f8;
+  --sidebar-border: #1b1b1b;
+  --sidebar-ring: #d40924;
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-barlow), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-barlow-condensed), var(--font-barlow), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --color-surface: var(--surface);
+  --color-timing-fastest: var(--timing-fastest);
+  --color-timing-pb: var(--timing-pb);
+  --color-timing-slower: var(--timing-slower);
+  --color-airflow: var(--airflow);
+  --color-instrument: var(--instrument);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -118,6 +107,22 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+@utility font-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+@utility eyebrow {
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -129,8 +134,8 @@
   /* Subtle, modern glowing effects - scoped to site pages */
   .site-pages .glow-effect {
     position: relative;
-    background: linear-gradient(135deg, #e11d48 0%, #dc2626 100%);
-    box-shadow: 0 4px 15px rgba(225, 29, 72, 0.25), 0 2px 6px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(135deg, #d40924 0%, #dc2626 100%);
+    box-shadow: 0 4px 15px rgba(212, 9, 36, 0.25), 0 2px 6px rgba(0, 0, 0, 0.3);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
   }
@@ -151,19 +156,19 @@
   }
 
   .site-pages .glow-effect:hover {
-    box-shadow: 0 8px 30px rgba(225, 29, 72, 0.4), 0 4px 12px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 30px rgba(212, 9, 36, 0.4), 0 4px 12px rgba(0, 0, 0, 0.4);
     transform: translateY(-2px);
   }
 
   .site-pages .glow-effect:active {
     transform: translateY(0px);
-    box-shadow: 0 2px 10px rgba(225, 29, 72, 0.3), 0 1px 4px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 10px rgba(212, 9, 36, 0.3), 0 1px 4px rgba(0, 0, 0, 0.3);
   }
 
   .site-pages .accent-glow {
     position: relative;
-    border: 2px solid rgba(225, 29, 72, 0.5);
-    background: rgba(225, 29, 72, 0.05);
+    border: 2px solid rgba(212, 9, 36, 0.5);
+    background: rgba(212, 9, 36, 0.05);
     backdrop-filter: blur(10px);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
@@ -173,7 +178,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(225, 29, 72, 0.1) 0%, transparent 50%, rgba(225, 29, 72, 0.1) 100%);
+    background: linear-gradient(135deg, rgba(212, 9, 36, 0.1) 0%, transparent 50%, rgba(212, 9, 36, 0.1) 100%);
     opacity: 0;
     transition: opacity 0.4s;
   }
@@ -183,9 +188,9 @@
   }
 
   .site-pages .accent-glow:hover {
-    border-color: rgba(225, 29, 72, 0.8);
-    background: rgba(225, 29, 72, 0.1);
-    box-shadow: 0 4px 20px rgba(225, 29, 72, 0.2), 0 0 40px rgba(225, 29, 72, 0.1);
+    border-color: rgba(212, 9, 36, 0.8);
+    background: rgba(212, 9, 36, 0.1);
+    box-shadow: 0 4px 20px rgba(212, 9, 36, 0.2), 0 0 40px rgba(212, 9, 36, 0.1);
     transform: translateY(-2px);
   }
 
@@ -195,13 +200,13 @@
 
   /* Minimalist gradient text */
   .gradient-text {
-    color: oklch(0.55 0.22 25);
+    color: var(--primary);
     font-weight: 700;
   }
 
   /* Very subtle background gradient */
   .modern-gradient {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(225, 29, 72, 0.02) 50%, rgba(0, 0, 0, 0.95));
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(212, 9, 36, 0.02) 50%, rgba(0, 0, 0, 0.95));
   }
 
   .site-pages .card-hover {
@@ -213,8 +218,8 @@
 
   .site-pages .card-hover:hover {
     transform: translateY(-4px);
-    border-color: rgba(225, 29, 72, 0.4);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(225, 29, 72, 0.1);
+    border-color: rgba(212, 9, 36, 0.4);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(212, 9, 36, 0.1);
     background: linear-gradient(145deg, rgba(20, 20, 20, 0.95), rgba(12, 12, 12, 1));
   }
   

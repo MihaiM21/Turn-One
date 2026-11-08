@@ -1,19 +1,25 @@
-/** Shared Recharts styling so every simracing chart reads as one system. */
-
+/**
+ * Shared chart styling so every simracing chart reads as one system.
+ * Canvas (uPlot) and SVG attributes can't read CSS variables, so these mirror the
+ * t1-style tokens in app/globals.css by value — keep the two in step.
+ * Faster/slower use the timing colours (PB green, slower gold), which t1-style
+ * reserves for deltas.
+ */
 export const CHART = {
-    grid: "#374151",
-    axis: "#9CA3AF",
-    primary: "#DC2626",
-    reference: "#71717a",
-    faster: "#22c55e",
-    slower: "#ef4444",
+    grid: "#1b1b1b",
+    axis: "#868686",
+    primary: "#d40924",
+    reference: "#868686",
+    faster: "#00e436",
+    slower: "#ffc61a",
+    fastest: "#b24bf3",
 } as const;
 
 export const TOOLTIP_STYLE = {
-    backgroundColor: "#1F2937",
-    border: "1px solid #374151",
-    borderRadius: 0,
-    color: "#F9FAFB",
+    backgroundColor: "#090909",
+    border: "1px solid #1b1b1b",
+    borderRadius: 6,
+    color: "#f8f8f8",
     fontSize: 12,
 } as const;
 

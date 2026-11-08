@@ -49,7 +49,7 @@ export default function DriverPage({ params }: { params: Promise<{ username: str
             >
                 <table className="w-full text-sm">
                     <thead>
-                        <tr className="border-b border-zinc-800 text-left text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                        <tr className="border-b border-border text-left text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                             <th className="px-5 py-2 font-normal">Track</th>
                             <th className="px-2 py-2 font-normal">Car</th>
                             <th className="px-2 py-2 text-right font-normal">Time</th>
@@ -58,13 +58,13 @@ export default function DriverPage({ params }: { params: Promise<{ username: str
                     </thead>
                     <tbody>
                         {pbs?.map(p => (
-                            <tr key={p.lapId} className="border-b border-zinc-900">
+                            <tr key={p.lapId} className="border-b border-border/60">
                                 <td className="px-5 py-2 text-white">
-                                    {p.trackName} <span className="text-xs text-zinc-500">· {simLabel(p.source)}</span>
+                                    {p.trackName} <span className="text-xs text-muted-foreground">· {simLabel(p.source)}</span>
                                 </td>
-                                <td className="px-2 py-2 text-zinc-300">{p.carName}</td>
+                                <td className="px-2 py-2 text-foreground/85">{p.carName}</td>
                                 <td className="px-2 py-2 text-right font-mono tabular-nums text-white">{formatLapTime(p.lapTimeMs)}</td>
-                                <td className="px-5 py-2 text-right font-mono tabular-nums text-zinc-400">
+                                <td className="px-5 py-2 text-right font-mono tabular-nums text-muted-foreground">
                                     {p.rank > 0 ? `#${p.rank} / ${p.total}` : "—"}
                                 </td>
                             </tr>

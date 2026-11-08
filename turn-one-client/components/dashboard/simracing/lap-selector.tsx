@@ -19,7 +19,7 @@ interface LapSelectorProps {
 
 export function LapSelector({ laps, selected, onSelect, requireLap = false }: LapSelectorProps) {
     if (!laps.length) {
-        return <p className="font-mono text-xs text-zinc-600">No laps recorded for this session yet.</p>;
+        return <p className="font-mono text-xs text-muted-foreground/70">No laps recorded for this session yet.</p>;
     }
 
     const best = laps
@@ -27,7 +27,7 @@ export function LapSelector({ laps, selected, onSelect, requireLap = false }: La
         .reduce<number | null>((acc, l) => (acc === null || l.lapTimeMs! < acc ? l.lapTimeMs! : acc), null);
 
     return (
-        <div className="flex gap-px overflow-x-auto bg-zinc-800 p-px">
+        <div className="flex gap-px overflow-x-auto bg-border p-px">
             {!requireLap ? (
                 <button
                     onClick={() => onSelect(null)}
@@ -35,7 +35,7 @@ export function LapSelector({ laps, selected, onSelect, requireLap = false }: La
                     className={`shrink-0 px-4 py-2 text-xs font-bold transition-colors ${
                         selected === null
                             ? "bg-primary/15 text-primary"
-                            : "bg-zinc-950 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+                            : "bg-card text-muted-foreground hover:bg-secondary hover:text-foreground/85"
                     }`}
                 >
                     All laps
@@ -53,7 +53,7 @@ export function LapSelector({ laps, selected, onSelect, requireLap = false }: La
                         className={`flex shrink-0 flex-col items-start gap-0.5 px-4 py-2 transition-colors ${
                             active
                                 ? "bg-primary/15 text-primary"
-                                : "bg-zinc-950 text-zinc-400 hover:bg-zinc-900 hover:text-white"
+                                : "bg-card text-muted-foreground hover:bg-secondary hover:text-white"
                         }`}
                     >
                         <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest">

@@ -23,7 +23,7 @@ function statusBadgeClasses(status: PredictionStatus) {
     case PredictionStatus.PARTIAL:
       return 'border-yellow-500/40 text-yellow-400';
     case PredictionStatus.CANCELLED:
-      return 'border-zinc-700 text-zinc-500';
+      return 'border-muted-foreground/30 text-muted-foreground';
     case PredictionStatus.PENDING:
     default:
       return 'border-blue-500/40 text-blue-400';
@@ -32,8 +32,8 @@ function statusBadgeClasses(status: PredictionStatus) {
 
 function StatTile({ label, value, valueClassName }: { label: string; value: number | string; valueClassName?: string }) {
   return (
-    <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
-      <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{label}</p>
+    <div className="border border-border bg-card px-4 py-3">
+      <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{label}</p>
       <p className={`mt-0.5 font-mono text-2xl font-black tabular-nums leading-none ${valueClassName ?? ''}`}>
         {value}
       </p>
@@ -44,8 +44,8 @@ function StatTile({ label, value, valueClassName }: { label: string; value: numb
 function DetailRow({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="flex items-center justify-between gap-3 text-[12px]">
-      <span className="text-zinc-500">{label}</span>
-      <span className="truncate font-medium text-zinc-200">{value}</span>
+      <span className="text-muted-foreground">{label}</span>
+      <span className="truncate font-medium text-foreground/95">{value}</span>
     </div>
   );
 }
@@ -95,10 +95,10 @@ export function MyPredictions({ onMakePrediction }: MyPredictionsProps) {
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-16 bg-zinc-800/60" />
+            <Skeleton key={i} className="h-16 bg-border/60" />
           ))}
         </div>
-        <Skeleton className="h-32 bg-zinc-800/60" />
+        <Skeleton className="h-32 bg-border/60" />
       </div>
     );
   }
@@ -115,7 +115,7 @@ export function MyPredictions({ onMakePrediction }: MyPredictionsProps) {
       )}
 
       {/* Filter row */}
-      <div className="flex flex-wrap gap-2 border-b border-zinc-800/70 pb-3">
+      <div className="flex flex-wrap gap-2 border-b border-border/70 pb-3">
         {(['all', 'pending', 'settled'] as const).map((f) => (
           <button
             key={f}
@@ -124,21 +124,21 @@ export function MyPredictions({ onMakePrediction }: MyPredictionsProps) {
             className={`flex items-center gap-2 rounded-sm border px-3 py-1.5 text-[11px] uppercase tracking-wider transition-colors ${
               filter === f
                 ? 'border-primary/50 bg-primary/10 text-primary'
-                : 'border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-zinc-200'
+                : 'border-border bg-secondary/60 text-muted-foreground hover:text-foreground/95'
             }`}
           >
             {f}
-            <span className="font-mono tabular-nums text-zinc-500">{counts[f]}</span>
+            <span className="font-mono tabular-nums text-muted-foreground">{counts[f]}</span>
           </button>
         ))}
       </div>
 
       {filteredPredictions.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 border border-zinc-800 bg-zinc-950 px-5 py-12 text-center">
-          <Target className="h-8 w-8 text-zinc-700" />
+        <div className="flex flex-col items-center gap-3 border border-border bg-card px-5 py-12 text-center">
+          <Target className="h-8 w-8 text-muted-foreground/50" />
           <div>
             <p className="font-bold">No predictions {filter !== 'all' ? `(${filter})` : ''}</p>
-            <p className="mt-0.5 text-xs text-zinc-500">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               {filter === 'all' ? 'Start your prediction journey.' : 'Try another filter.'}
             </p>
           </div>
@@ -153,14 +153,14 @@ export function MyPredictions({ onMakePrediction }: MyPredictionsProps) {
           )}
         </div>
       ) : (
-        <div className="border border-zinc-800 bg-zinc-950 divide-y divide-zinc-800/60">
+        <div className="border border-border bg-card divide-y divide-border/60">
           {filteredPredictions.map((pred) => (
             <article key={pred.id} className="px-5 py-4">
               <header className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{pred.season}</p>
+                  <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{pred.season}</p>
                   <h3 className="mt-0.5 truncate text-base font-bold tracking-tight">{pred.raceName}</h3>
-                  <div className="mt-1 flex items-center gap-1.5 text-[11px] text-zinc-500">
+                  <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
                     <Calendar className="h-3 w-3" />
                     <span className="font-mono tabular-nums">
                       {new Date(pred.raceDateTime).toLocaleDateString('en-GB', {
@@ -177,10 +177,10 @@ export function MyPredictions({ onMakePrediction }: MyPredictionsProps) {
                   >
                     {pred.status}
                   </span>
-                  <span className="flex items-center gap-1 text-[11px] text-zinc-400">
+                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                     <Coins className="h-3 w-3 text-yellow-400" />
                     <span className="font-mono tabular-nums">{pred.coinsWagered}</span>
-                    <span className="text-zinc-600">wagered</span>
+                    <span className="text-muted-foreground/70">wagered</span>
                   </span>
                 </div>
               </header>
@@ -201,13 +201,13 @@ export function MyPredictions({ onMakePrediction }: MyPredictionsProps) {
               </div>
 
               {pred.status !== PredictionStatus.PENDING && (
-                <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-zinc-800/60 pt-3 text-[11px]">
+                <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border/60 pt-3 text-[11px]">
                   <div>
-                    <span className="uppercase tracking-wider text-zinc-500">Points</span>
-                    <span className="ml-2 font-mono tabular-nums text-zinc-200">{pred.pointsEarned || 0}</span>
+                    <span className="uppercase tracking-wider text-muted-foreground">Points</span>
+                    <span className="ml-2 font-mono tabular-nums text-foreground/95">{pred.pointsEarned || 0}</span>
                   </div>
                   <div>
-                    <span className="uppercase tracking-wider text-zinc-500">Coins</span>
+                    <span className="uppercase tracking-wider text-muted-foreground">Coins</span>
                     <span
                       className={`ml-2 font-mono tabular-nums ${
                         pred.coinsEarned && pred.coinsEarned > 0 ? 'text-green-400' : 'text-red-400'
@@ -219,7 +219,7 @@ export function MyPredictions({ onMakePrediction }: MyPredictionsProps) {
                   </div>
                   {pred.accuracyPercentage !== undefined && (
                     <div>
-                      <span className="uppercase tracking-wider text-zinc-500">Accuracy</span>
+                      <span className="uppercase tracking-wider text-muted-foreground">Accuracy</span>
                       <span className="ml-2 font-mono tabular-nums text-primary">{pred.accuracyPercentage}%</span>
                     </div>
                   )}

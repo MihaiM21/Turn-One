@@ -71,7 +71,7 @@ export function DailyGiftWidget({ onGiftClaimed }: DailyGiftWidgetProps) {
 
   if (isChecking) {
     return (
-      <div className="flex h-full min-h-[120px] items-center justify-center border border-zinc-800 bg-zinc-950 px-5 py-6 text-sm text-zinc-500">
+      <div className="flex h-full min-h-[120px] items-center justify-center border border-border bg-card px-5 py-6 text-sm text-muted-foreground">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         Checking...
       </div>
@@ -80,21 +80,21 @@ export function DailyGiftWidget({ onGiftClaimed }: DailyGiftWidgetProps) {
 
   if (!authToken) {
     return (
-      <div className="border border-zinc-800 bg-zinc-950 px-5 py-5">
-        <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Daily Reward</p>
+      <div className="border border-border bg-card px-5 py-5">
+        <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Daily Reward</p>
         <div className="mt-2 flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-zinc-600" />
-          <p className="text-sm font-semibold text-zinc-400">Login to claim</p>
+          <AlertTriangle className="h-4 w-4 text-muted-foreground/70" />
+          <p className="text-sm font-semibold text-muted-foreground">Login to claim</p>
         </div>
-        <p className="mt-1 text-xs text-zinc-600">50 coins + 25 XP daily</p>
+        <p className="mt-1 text-xs text-muted-foreground/70">50 coins + 25 XP daily</p>
       </div>
     );
   }
 
   if (hasError) {
     return (
-      <div className="border border-zinc-800 bg-zinc-950 px-5 py-5">
-        <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Daily Reward</p>
+      <div className="border border-border bg-card px-5 py-5">
+        <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Daily Reward</p>
         <div className="mt-2 flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-red-500/70" />
           <p className="text-sm font-semibold">Connection error</p>
@@ -103,7 +103,7 @@ export function DailyGiftWidget({ onGiftClaimed }: DailyGiftWidgetProps) {
           onClick={() => window.location.reload()}
           size="sm"
           variant="outline"
-          className="mt-3 w-full rounded-sm border-zinc-700 text-xs hover:border-zinc-600"
+          className="mt-3 w-full rounded-sm border-muted-foreground/30 text-xs hover:border-muted-foreground/40"
         >
           Retry
         </Button>
@@ -112,19 +112,19 @@ export function DailyGiftWidget({ onGiftClaimed }: DailyGiftWidgetProps) {
   }
 
   return (
-    <div className={`h-full border border-zinc-800 bg-zinc-950 transition-colors ${
+    <div className={`h-full border border-border bg-card transition-colors ${
       canClaim ? 'border-l-4 border-l-yellow-500' : ''
     }`}>
       <div className="flex h-full flex-col px-5 py-5">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Daily Reward</p>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Daily Reward</p>
             <p className="mt-0.5 font-bold">{canClaim ? 'Available' : 'Claimed'}</p>
           </div>
-          <Gift className={`h-5 w-5 ${canClaim ? 'text-yellow-400' : 'text-zinc-700'}`} />
+          <Gift className={`h-5 w-5 ${canClaim ? 'text-yellow-400' : 'text-muted-foreground/50'}`} />
         </div>
 
-        <p className="mt-2 text-xs text-zinc-400">
+        <p className="mt-2 text-xs text-muted-foreground">
           {canClaim ? '50 coins + 25 XP waiting for you' : 'Come back tomorrow for your next reward'}
         </p>
 
@@ -136,7 +136,7 @@ export function DailyGiftWidget({ onGiftClaimed }: DailyGiftWidgetProps) {
             className={`w-full rounded-sm text-xs font-semibold ${
               canClaim
                 ? 'bg-yellow-500 text-black hover:bg-yellow-400'
-                : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                : 'bg-border text-muted-foreground cursor-not-allowed'
             }`}
           >
             {isLoading ? (
@@ -148,7 +148,7 @@ export function DailyGiftWidget({ onGiftClaimed }: DailyGiftWidgetProps) {
             )}
           </Button>
           <div className="text-center">
-            <a href="/rewards" className="text-[11px] text-zinc-600 transition-colors hover:text-zinc-400">
+            <a href="/rewards" className="text-[11px] text-muted-foreground/70 transition-colors hover:text-muted-foreground">
               View all rewards →
             </a>
           </div>

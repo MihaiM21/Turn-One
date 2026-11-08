@@ -4,8 +4,8 @@
   "description": "Experience Formula 1 like never before with Turn One - your ultimate F1 gaming hub featuring live race tracking, real-time telemetry, predictions, trivia games and comprehensive F1 statistics. Join the fastest-growing F1 community online.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#e10600",
+  "background_color": "#020202",
+  "theme_color": "#d40924",
   "orientation": "portrait-primary",
   "icons": [
     {

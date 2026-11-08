@@ -34,7 +34,6 @@ import {
   ArrowLeft, Zap, Activity, Timer, Trash2, Loader2, Save, Users2, BarChart3,
   Check, ChevronsUpDown, Search, Filter, Clock,
 } from 'lucide-react';
-import { DashboardHeader } from '@/components/dashboard/live dashboard/dashboard-header';
 import { PageHeader } from '@/components/dashboard/page-header';
 import * as adminService from '@/lib/adminService';
 import type {
@@ -200,8 +199,7 @@ export default function AdminUsagePage() {
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   return (
-    <div className="min-h-screen bg-black">
-      <DashboardHeader />
+    <div>
       <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6 space-y-4">
         <PageHeader
           label="Admin"
@@ -222,16 +220,16 @@ export default function AdminUsagePage() {
         />
 
         {/* Filters */}
-        <section className="border border-zinc-800 bg-zinc-950">
-          <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-3">
+        <section className="border border-border bg-card">
+          <div className="flex items-center gap-2 border-b border-border px-5 py-3">
             <Filter className="h-3.5 w-3.5 text-primary" />
-            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Filters</p>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Filters</p>
           </div>
           <div className="flex flex-wrap items-end gap-3 px-5 py-4">
             <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Time period</Label>
+              <Label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Time period</Label>
               <Select value={rangeKey} onValueChange={setRangeKey}>
-                <SelectTrigger className="w-[180px] bg-zinc-900/60 border-zinc-800">
+                <SelectTrigger className="w-[180px] bg-secondary/60 border-border">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -242,14 +240,14 @@ export default function AdminUsagePage() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">User</Label>
+              <Label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">User</Label>
               <Popover open={userPickerOpen} onOpenChange={setUserPickerOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     role="combobox"
                     aria-expanded={userPickerOpen}
-                    className="w-[240px] justify-between bg-zinc-900/60 border-zinc-800 font-normal"
+                    className="w-[240px] justify-between bg-secondary/60 border-border font-normal"
                   >
                     <span className="truncate">{selectedUsername}</span>
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -285,14 +283,14 @@ export default function AdminUsagePage() {
               </Popover>
             </div>
             <div className="min-w-[240px] flex-1 space-y-1.5">
-              <Label className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Search requests</Label>
+              <Label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Search requests</Label>
               <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Search by user, plot type, event, session or driver..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-zinc-900/60 border-zinc-800"
+                  className="pl-10 bg-secondary/60 border-border"
                 />
               </div>
             </div>
@@ -300,18 +298,18 @@ export default function AdminUsagePage() {
         </section>
 
         {/* Usage chart */}
-        <section className="border border-zinc-800 bg-zinc-950">
-          <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-3">
+        <section className="border border-border bg-card">
+          <div className="flex items-center gap-2 border-b border-border px-5 py-3">
             <BarChart3 className="h-3.5 w-3.5 text-primary" />
-            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Tokens used over time</p>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Tokens used over time</p>
           </div>
           <div className="px-5 py-4">
             {loading ? (
-              <div className="flex h-[300px] items-center justify-center text-zinc-500">
+              <div className="flex h-[300px] items-center justify-center text-muted-foreground">
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             ) : chartData.length === 0 ? (
-              <div className="flex h-[300px] items-center justify-center text-sm text-zinc-500">
+              <div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground">
                 No usage in this period.
               </div>
             ) : (
@@ -339,19 +337,19 @@ export default function AdminUsagePage() {
 
         {/* Summary breakdowns */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <section className="border border-zinc-800 bg-zinc-950">
-            <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-3">
+          <section className="border border-border bg-card">
+            <div className="flex items-center gap-2 border-b border-border px-5 py-3">
               <BarChart3 className="h-3.5 w-3.5 text-primary" />
-              <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Top plot types</p>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Top plot types</p>
             </div>
             <div className="px-5 py-4">
               <BreakdownList items={summary?.topPlotTypes ?? []} unit="requests" />
             </div>
           </section>
-          <section className="border border-zinc-800 bg-zinc-950">
-            <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-3">
+          <section className="border border-border bg-card">
+            <div className="flex items-center gap-2 border-b border-border px-5 py-3">
               <Users2 className="h-3.5 w-3.5 text-primary" />
-              <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Top users by tokens</p>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Top users by tokens</p>
             </div>
             <div className="px-5 py-4">
               <BreakdownList items={summary?.topUsers ?? []} unit="tokens" />
@@ -360,13 +358,13 @@ export default function AdminUsagePage() {
         </div>
 
         {/* Request log */}
-        <section className="border border-zinc-800 bg-zinc-950">
-          <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-3">
+        <section className="border border-border bg-card">
+          <div className="flex items-center justify-between border-b border-border px-5 py-3">
             <div className="flex items-center gap-2">
               <Activity className="h-3.5 w-3.5 text-primary" />
-              <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Generation requests</p>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Generation requests</p>
             </div>
-            <span className="font-mono text-[11px] tabular-nums text-zinc-500">
+            <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
               {debouncedSearch ? `${totalCount} matching “${debouncedSearch}”` : `${totalCount} total`}
             </span>
           </div>
@@ -374,7 +372,7 @@ export default function AdminUsagePage() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-zinc-800">
+                  <TableRow className="border-border">
                     <TableHead>User</TableHead>
                     <TableHead>Plot</TableHead>
                     <TableHead>Session</TableHead>
@@ -388,17 +386,17 @@ export default function AdminUsagePage() {
                 <TableBody>
                   {requests.length === 0 && !loading ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center text-sm text-zinc-500 py-8">
+                      <TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-8">
                         {debouncedSearch ? `No requests match “${debouncedSearch}”.` : 'No requests in this period.'}
                       </TableCell>
                     </TableRow>
                   ) : (
                     requests.map((r) => (
-                      <TableRow key={r.id} className="border-zinc-800">
+                      <TableRow key={r.id} className="border-border">
                         <TableCell className="font-medium">{r.username}</TableCell>
                         <TableCell><span className="font-mono text-xs">{r.plotType}</span></TableCell>
-                        <TableCell className="text-xs text-zinc-400">{r.year} · {r.eventName} · {r.session}</TableCell>
-                        <TableCell className="text-xs text-zinc-400">{r.drivers ?? '—'}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{r.year} · {r.eventName} · {r.session}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{r.drivers ?? '—'}</TableCell>
                         <TableCell className="text-right font-mono text-xs tabular-nums">{r.durationMs} ms</TableCell>
                         <TableCell>
                           {r.success ? (
@@ -407,12 +405,12 @@ export default function AdminUsagePage() {
                             <Badge variant="outline" className="border-red-500/30 text-red-400 bg-red-500/10" title={r.errorMessage ?? undefined}>failed</Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-xs text-zinc-400">{new Date(r.createdAt).toLocaleString()}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{new Date(r.createdAt).toLocaleString()}</TableCell>
                         <TableCell>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 w-7 p-0 text-zinc-500 hover:text-red-400"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400"
                             onClick={() => setDeleteTarget(r)}
                             aria-label="Delete log entry"
                           >
@@ -427,7 +425,7 @@ export default function AdminUsagePage() {
             </div>
             {/* Pagination */}
             <div className="mt-4 flex items-center justify-between">
-              <span className="text-xs text-zinc-500">Page {page} of {totalPages}</span>
+              <span className="text-xs text-muted-foreground">Page {page} of {totalPages}</span>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Prev</Button>
                 <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Next</Button>
@@ -437,26 +435,26 @@ export default function AdminUsagePage() {
         </section>
 
         {/* Retention settings */}
-        <section className="border border-zinc-800 bg-zinc-950">
-          <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-3">
+        <section className="border border-border bg-card">
+          <div className="flex items-center gap-2 border-b border-border px-5 py-3">
             <Clock className="h-3.5 w-3.5 text-primary" />
-            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Automatic log retention</p>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Automatic log retention</p>
           </div>
           <div className="px-5 py-4">
-            <p className="mb-4 text-xs text-zinc-500">
+            <p className="mb-4 text-xs text-muted-foreground">
               Logs older than the retention window are pruned hourly when auto-delete is enabled.
               {settings && ` Last updated ${new Date(settings.updatedAt).toLocaleString()}.`}
             </p>
             <div className="flex flex-wrap items-end gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="retention" className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Retention (days)</Label>
+                <Label htmlFor="retention" className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Retention (days)</Label>
                 <Input
                   id="retention"
                   type="number"
                   min={1}
                   value={retentionInput}
                   onChange={(e) => setRetentionInput(Math.max(1, Number(e.target.value) || 1))}
-                  className="w-32 bg-zinc-900/60 border-zinc-800"
+                  className="w-32 bg-secondary/60 border-border"
                 />
               </div>
               <div className="flex items-center gap-2 pb-2">
@@ -492,7 +490,7 @@ export default function AdminUsagePage() {
 
 function BreakdownList({ items, unit }: { items: { label: string; count: number }[]; unit: string }) {
   if (items.length === 0) {
-    return <p className="text-sm text-zinc-500">No data.</p>;
+    return <p className="text-sm text-muted-foreground">No data.</p>;
   }
   const max = Math.max(...items.map((i) => i.count), 1);
   return (
@@ -500,10 +498,10 @@ function BreakdownList({ items, unit }: { items: { label: string; count: number 
       {items.map((item) => (
         <div key={item.label} className="space-y-1">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-mono text-zinc-300">{item.label}</span>
-            <span className="text-zinc-500">{item.count} {unit}</span>
+            <span className="font-mono text-foreground/85">{item.label}</span>
+            <span className="text-muted-foreground">{item.count} {unit}</span>
           </div>
-          <div className="h-1.5 w-full bg-zinc-900">
+          <div className="h-1.5 w-full bg-secondary">
             <div className="h-1.5 bg-primary" style={{ width: `${(item.count / max) * 100}%` }} />
           </div>
         </div>

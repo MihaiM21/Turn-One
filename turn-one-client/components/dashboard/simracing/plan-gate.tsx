@@ -33,7 +33,7 @@ export function PlanGate({ required, title, description, preview, children, clas
 
     if (loading) {
         return (
-            <div className={cn("flex items-center justify-center border border-zinc-800 bg-zinc-950 px-5 py-12", className)}>
+            <div className={cn("flex items-center justify-center border border-border bg-card px-5 py-12", className)}>
                 <DiamondLoader size={40} tone="flat" />
             </div>
         );
@@ -42,7 +42,7 @@ export function PlanGate({ required, title, description, preview, children, clas
     if (atLeast(required)) return <>{children}</>;
 
     return (
-        <div className={cn("relative overflow-hidden border border-zinc-800 bg-zinc-950", className)}>
+        <div className={cn("relative overflow-hidden border border-border bg-card", className)}>
             {preview ? (
                 <div className="pointer-events-none select-none opacity-30 blur-[6px]" aria-hidden>
                     {preview}
@@ -62,7 +62,7 @@ export function PlanGate({ required, title, description, preview, children, clas
                 <div>
                     <p className="text-[10px] uppercase tracking-[0.3em] text-primary">{required} feature</p>
                     <p className="mt-1 text-sm font-bold text-white">{title}</p>
-                    <p className="mx-auto mt-1 max-w-sm text-xs text-zinc-500">{description}</p>
+                    <p className="mx-auto mt-1 max-w-sm text-xs text-muted-foreground">{description}</p>
                 </div>
 
                 <Link

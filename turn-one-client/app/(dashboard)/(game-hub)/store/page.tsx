@@ -13,7 +13,6 @@ import {
   History,
   ArrowRight,
 } from 'lucide-react';
-import { DashboardHeader } from '@/components/dashboard/live dashboard/dashboard-header';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { ExploreMoreLinks } from '@/components/dashboard/explore-more-links';
 import { coinService } from '@/lib/gameService';
@@ -167,8 +166,7 @@ export default function StorePage() {
   const starterClaimed = starterPack ? purchasedItems.includes(starterPack.id) : true;
 
   return (
-    <div className="min-h-screen bg-black">
-      <DashboardHeader />
+    <div>
 
       <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6 space-y-4">
         <PageHeader
@@ -185,16 +183,16 @@ export default function StorePage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 gap-1.5 rounded-sm border-zinc-800 bg-zinc-900/60 px-3 text-xs text-zinc-300 transition-colors hover:border-primary/40 hover:bg-zinc-900 hover:text-primary"
+                  className="h-8 gap-1.5 rounded-sm border-border bg-secondary/60 px-3 text-xs text-foreground/85 transition-colors hover:border-primary/40 hover:bg-secondary hover:text-primary"
                 >
                   <History className="h-3.5 w-3.5" />
                   History
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-full sm:max-w-md border-zinc-800 bg-zinc-950 overflow-y-auto">
+              <SheetContent side="right" className="w-full sm:max-w-md border-border bg-card overflow-y-auto">
                 <SheetHeader>
                   <SheetTitle>
-                    <span className="block text-[10px] uppercase tracking-[0.3em] text-zinc-500">Transactions</span>
+                    <span className="block text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Transactions</span>
                     <span className="mt-0.5 block text-xl font-bold tracking-tight">History</span>
                   </SheetTitle>
                 </SheetHeader>
@@ -217,7 +215,7 @@ export default function StorePage() {
         <section className="space-y-3">
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-500">Token packs</p>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Token packs</p>
               <h2 className="mt-0.5 text-lg font-bold tracking-tight">Top up your tokens</h2>
             </div>
           </div>
@@ -286,15 +284,15 @@ function StarterPackBanner({
 }) {
   const Icon = item.icon;
   return (
-    <section className="border border-zinc-800 border-l-4 border-l-yellow-500 bg-zinc-950 animate-in fade-in duration-500">
+    <section className="border border-border border-l-4 border-l-yellow-500 bg-card animate-in fade-in duration-500">
       <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center border border-yellow-500/40 bg-yellow-500/10">
           <Icon className="h-6 w-6 text-yellow-400" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Welcome gift</p>
+          <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Welcome gift</p>
           <h3 className="mt-0.5 text-xl font-bold tracking-tight">{item.name}</h3>
-          <p className="mt-0.5 text-sm text-zinc-400">{item.benefit} — claim once to get started.</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">{item.benefit} — claim once to get started.</p>
         </div>
         <Button
           onClick={onClaim}
@@ -329,7 +327,7 @@ function StoreItemCard({
 
   return (
     <div
-      className={`relative flex h-full flex-col border border-zinc-800 bg-zinc-950 transition-colors hover:border-zinc-700 ${
+      className={`relative flex h-full flex-col border border-border bg-card transition-colors hover:border-muted-foreground/30 ${
         item.popular ? 'border-l-4 border-l-primary' : ''
       } ${unavailable ? 'opacity-60' : ''}`}
     >
@@ -346,18 +344,18 @@ function StoreItemCard({
           <Icon className="h-5 w-5 text-primary" />
         </div>
         <div className="min-w-0 flex-1 pr-16">
-          <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Token pack</p>
+          <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Token pack</p>
           <h3 className="mt-0.5 truncate text-base font-bold tracking-tight">{item.name}</h3>
-          <p className="mt-0.5 line-clamp-2 text-xs text-zinc-400">{item.description}</p>
+          <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{item.description}</p>
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between border-t border-zinc-800/60 px-5 py-3">
-        <span className="text-[11px] uppercase tracking-wider text-zinc-500">Includes</span>
+      <div className="mt-4 flex items-center justify-between border-t border-border/60 px-5 py-3">
+        <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Includes</span>
         <span className="font-mono text-xs font-semibold tabular-nums text-foreground">{item.benefit}</span>
       </div>
 
-      <div className="mt-auto flex items-center justify-between gap-3 border-t border-zinc-800 px-5 py-4">
+      <div className="mt-auto flex items-center justify-between gap-3 border-t border-border px-5 py-4">
         <div className="flex items-baseline gap-1.5">
           {item.price === 0 ? (
             <span className="text-xl font-black tracking-tight text-primary">FREE</span>
@@ -376,7 +374,7 @@ function StoreItemCard({
           variant={isPurchased ? 'outline' : 'default'}
           className={`gap-1.5 rounded-sm text-xs font-semibold ${
             isPurchased
-              ? 'border-zinc-800 bg-zinc-900/60 text-zinc-400'
+              ? 'border-border bg-secondary/60 text-muted-foreground'
               : unavailable
                 ? ''
                 : 'bg-primary text-white hover:bg-primary/90'
@@ -407,7 +405,7 @@ function StoreItemCard({
       </div>
 
       {!canAfford && item.available && !isPurchased && item.price > 0 && (
-        <p className="border-t border-zinc-800/60 px-5 py-2 text-center text-[11px] text-red-400/80">
+        <p className="border-t border-border/60 px-5 py-2 text-center text-[11px] text-red-400/80">
           Not enough coins
         </p>
       )}
@@ -425,15 +423,15 @@ function InfoPanel({
   bullets: string[];
 }) {
   return (
-    <div className="border border-zinc-800 bg-zinc-950">
-      <div className="border-b border-zinc-800 px-5 py-4">
-        <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{label}</p>
+    <div className="border border-border bg-card">
+      <div className="border-b border-border px-5 py-4">
+        <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{label}</p>
         <p className="mt-0.5 font-bold">{title}</p>
       </div>
-      <ul className="divide-y divide-zinc-800/60">
+      <ul className="divide-y divide-border/60">
         {bullets.map((b) => (
-          <li key={b} className="flex items-start gap-3 px-5 py-3 text-sm text-zinc-400">
-            <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zinc-700" />
+          <li key={b} className="flex items-start gap-3 px-5 py-3 text-sm text-muted-foreground">
+            <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
             <span>{b}</span>
           </li>
         ))}

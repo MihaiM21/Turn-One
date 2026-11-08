@@ -348,7 +348,7 @@ export function TrackMapV2({
             return <TrackMap samples={fallbackSamples} raw={fallbackRaw} height={height} />;
         }
         return (
-            <div className="flex h-48 items-center justify-center font-mono text-sm text-zinc-600">
+            <div className="flex h-48 items-center justify-center font-mono text-sm text-muted-foreground/70">
                 No position data for this lap
             </div>
         );
@@ -370,8 +370,8 @@ export function TrackMapV2({
                             aria-pressed={activeMode === m.key}
                             className={`h-7 border px-2.5 text-[11px] font-bold transition-colors ${
                                 activeMode === m.key
-                                    ? "border-zinc-700 bg-zinc-800 text-white"
-                                    : "border-zinc-800 bg-zinc-950 text-zinc-500 hover:text-zinc-300"
+                                    ? "border-muted-foreground/30 bg-border text-white"
+                                    : "border-border bg-card text-muted-foreground hover:text-foreground/85"
                             }`}
                         >
                             {m.label}
@@ -380,7 +380,7 @@ export function TrackMapV2({
                 </div>
 
                 {hoverIdx != null ? (
-                    <div className="flex gap-3 font-mono text-[11px] tabular-nums text-zinc-400">
+                    <div className="flex gap-3 font-mono text-[11px] tabular-nums text-muted-foreground">
                         <span>{formatDistance(sync.distance ?? 0)}</span>
                         {toArray(refLap?.speed) ? (
                             <span className="text-white">{Math.round(toArray(refLap!.speed)![hoverIdx] ?? 0)} km/h</span>
@@ -513,7 +513,7 @@ export function TrackMapV2({
                 </svg>
             </div>
 
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-zinc-400">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
                 {laps.map(l => (
                     <span key={l.id} className="inline-flex items-center gap-1.5">
                         <span
@@ -524,10 +524,10 @@ export function TrackMapV2({
                             }}
                         />
                         {l.label}
-                        {l.id === referenceLapId ? <span className="text-zinc-600">(reference)</span> : null}
+                        {l.id === referenceLapId ? <span className="text-muted-foreground/70">(reference)</span> : null}
                     </span>
                 ))}
-                <span className="ml-auto text-zinc-600">hover for cursor · click to zoom ±150 m</span>
+                <span className="ml-auto text-muted-foreground/70">hover for cursor · click to zoom ±150 m</span>
             </div>
         </div>
     );

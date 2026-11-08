@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSimFilter } from "@/lib/simracing/sim-filter";
+import { boardSimForFilter } from "@/lib/simracing/sims";
 import Link from "next/link";
 import { Timer } from "lucide-react";
 import { SectionCard } from "@/components/dashboard/simracing/section-card";
@@ -21,17 +23,22 @@ import {
     type LeaderboardVisibility,
 } from "@/lib/simracing/leaderboards";
 
-const RANK_STYLES = ["text-yellow-400 font-black", "text-zinc-300 font-black", "text-orange-500 font-black"];
+const RANK_STYLES = ["text-yellow-400 font-black", "text-foreground/85 font-black", "text-orange-500 font-black"];
 
 const selectClass =
-    "h-9 border border-zinc-800 bg-zinc-950 px-2 text-sm text-zinc-200 focus:border-primary focus:outline-none";
+    "h-9 border border-border bg-card px-2 text-sm text-foreground/95 focus:border-primary focus:outline-none";
 
 /**
  * Lap-time leaderboard (HCR-009): best valid lap per driver for a sim × track × car (or class),
  * all-time / month / week. Laps only rank when the sim marked them valid and they passed server checks.
  */
 export function LapTimeLeaderboard({ signedIn }: { signedIn: boolean }) {
+    const { filter: simFilter } = useSimFilter();
     const [sim, setSim] = useState<BoardSim>("acc");
+    // Follow the dashboard sim filter; the local select still picks between F1 25 and F1 26.
+    useEffect(() => {
+        setSim(current => boardSimForFilter(simFilter, current));
+    }, [simFilter]);
     const [tracks, setTracks] = useState<CatalogTrack[]>([]);
     const [cars, setCars] = useState<CatalogCar[]>([]);
     const [track, setTrack] = useState("");
@@ -108,7 +115,7 @@ export function LapTimeLeaderboard({ signedIn }: { signedIn: boolean }) {
             iconClassName="text-primary"
             actions={
                 signedIn && visibility ? (
-                    <label className="flex items-center gap-2 text-xs text-zinc-500">
+                    <label className="flex items-center gap-2 text-xs text-muted-foreground">
                         Show me as
                         <select
                             className={selectClass}
@@ -125,7 +132,7 @@ export function LapTimeLeaderboard({ signedIn }: { signedIn: boolean }) {
             }
             flush
         >
-            <div className="flex flex-wrap gap-2 border-b border-zinc-800 px-5 py-3">
+            <div className="flex flex-wrap gap-2 border-b border-border px-5 py-3">
                 <select className={selectClass} value={sim} onChange={e => setSim(e.target.value as BoardSim)} aria-label="Sim">
                     {BOARD_SIMS.map(s => (
                         <option key={s.value} value={s.value}>{s.label}</option>
@@ -158,15 +165,15 @@ export function LapTimeLeaderboard({ signedIn }: { signedIn: boolean }) {
             </div>
 
             {loading ? (
-                <p className="px-5 py-10 text-center text-sm text-zinc-500">Loading…</p>
+                <p className="px-5 py-10 text-center text-sm text-muted-foreground">Loading…</p>
             ) : !board || board.entries.length === 0 ? (
-                <p className="px-5 py-10 text-center text-sm text-zinc-500">
+                <p className="px-5 py-10 text-center text-sm text-muted-foreground">
                     No valid laps here yet. Drive one with Turn One Link and it shows up after processing.
                 </p>
             ) : (
                 <table className="w-full text-sm">
                     <thead>
-                        <tr className="border-b border-zinc-800 text-left text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                        <tr className="border-b border-border text-left text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                             <th className="px-5 py-2 font-normal">#</th>
                             <th className="px-2 py-2 font-normal">Driver</th>
                             <th className="px-2 py-2 text-right font-normal">Time</th>
@@ -178,12 +185,12 @@ export function LapTimeLeaderboard({ signedIn }: { signedIn: boolean }) {
                         {[...board.entries, ...(board.me && !board.entries.some(e => e.isViewer) ? [board.me] : [])].map(e => (
                             <tr
                                 key={e.lapId}
-                                className={`border-b border-zinc-900 ${e.isViewer ? "bg-primary/10" : ""}`}
+                                className={`border-b border-border/60 ${e.isViewer ? "bg-primary/10" : ""}`}
                             >
-                                <td className={`px-5 py-2 font-mono tabular-nums ${RANK_STYLES[e.rank - 1] ?? "text-zinc-500"}`}>{e.rank}</td>
+                                <td className={`px-5 py-2 font-mono tabular-nums ${RANK_STYLES[e.rank - 1] ?? "text-muted-foreground"}`}>{e.rank}</td>
                                 <td className="px-2 py-2 text-white">
                                     {e.driver.startsWith("Anonymous driver") ? (
-                                        <span className="text-zinc-400">{e.driver}</span>
+                                        <span className="text-muted-foreground">{e.driver}</span>
                                     ) : (
                                         <Link href={`/simracing/drivers/${encodeURIComponent(e.driver)}`} className="hover:text-primary">
                                             {e.driver}
@@ -191,10 +198,10 @@ export function LapTimeLeaderboard({ signedIn }: { signedIn: boolean }) {
                                     )}
                                 </td>
                                 <td className="px-2 py-2 text-right font-mono tabular-nums text-white">{formatLapTime(e.lapTimeMs)}</td>
-                                <td className="hidden px-2 py-2 text-right font-mono tabular-nums text-zinc-500 sm:table-cell">
+                                <td className="hidden px-2 py-2 text-right font-mono tabular-nums text-muted-foreground sm:table-cell">
                                     {e.gapMs > 0 ? `+${(e.gapMs / 1000).toFixed(3)}` : "—"}
                                 </td>
-                                <td className="hidden px-5 py-2 text-right font-mono text-xs tabular-nums text-zinc-500 md:table-cell">
+                                <td className="hidden px-5 py-2 text-right font-mono text-xs tabular-nums text-muted-foreground md:table-cell">
                                     {e.sectorsMs.map(s => (s ? (s / 1000).toFixed(3) : "—")).join(" · ")}
                                 </td>
                             </tr>

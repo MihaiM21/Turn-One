@@ -68,7 +68,7 @@ export function TyreStintGraph({ data, advancedSettings }: TyreStintGraphProps) 
             {lapTicks.map((lap) => (
               <div
                 key={lap}
-                className="absolute text-[9px] text-zinc-500 -translate-x-1/2"
+                className="absolute text-[9px] text-muted-foreground -translate-x-1/2"
                 style={{ left: `${(lap / totalLaps) * 100}%` }}
               >
                 {lap > 0 ? lap : ""}
@@ -77,7 +77,7 @@ export function TyreStintGraph({ data, advancedSettings }: TyreStintGraphProps) 
             {lapTicks.filter((l) => l > 0).map((lap) => (
               <div
                 key={`tick-${lap}`}
-                className="absolute bottom-0 w-px bg-zinc-800"
+                className="absolute bottom-0 w-px bg-border"
                 style={{ left: `${(lap / totalLaps) * 100}%`, top: 14 }}
               />
             ))}
@@ -102,7 +102,7 @@ export function TyreStintGraph({ data, advancedSettings }: TyreStintGraphProps) 
             return (
               <div key={driver} style={{ display: "flex", alignItems: "center", gap: 8, height: rowHeight }}>
                 <div
-                  className="text-right font-mono text-zinc-500 tabular-nums shrink-0"
+                  className="text-right font-mono text-muted-foreground tabular-nums shrink-0"
                   style={{ width: 36, fontSize: labelFontSize }}
                 >
                   P{position}
@@ -113,7 +113,7 @@ export function TyreStintGraph({ data, advancedSettings }: TyreStintGraphProps) 
                 >
                   {driver}
                 </div>
-                <div className="relative flex-1 bg-zinc-900" style={{ height: "100%" }}>
+                <div className="relative flex-1 bg-secondary" style={{ height: "100%" }}>
                   {stints.map((s, i) => {
                     const startPct = ((s.start_lap - 1) / totalLaps) * 100;
                     const widthPct = (s.lap_count / totalLaps) * 100;
@@ -147,7 +147,7 @@ export function TyreStintGraph({ data, advancedSettings }: TyreStintGraphProps) 
                   ))}
                 </div>
                 <div
-                  className="text-right font-mono text-zinc-400 tabular-nums shrink-0"
+                  className="text-right font-mono text-muted-foreground tabular-nums shrink-0"
                   style={{ width: 36, fontSize: labelFontSize }}
                 >
                   {stops}x
@@ -158,21 +158,21 @@ export function TyreStintGraph({ data, advancedSettings }: TyreStintGraphProps) 
         </div>
 
         {settings.showLegend && (
-          <div className="flex flex-wrap items-center gap-4 border-t border-zinc-800 ml-[100px] shrink-0" style={{ paddingTop: 10, marginTop: 6 }}>
+          <div className="flex flex-wrap items-center gap-4 border-t border-border ml-[100px] shrink-0" style={{ paddingTop: 10, marginTop: 6 }}>
             {usedCompounds.map((compound) => (
               <div key={compound} className="flex items-center gap-1.5">
                 <span
                   className="inline-block shrink-0"
                   style={{ width: 12, height: 12, backgroundColor: COMPOUND_COLORS[compound] ?? "#71717a" }}
                 />
-                <span className="text-xs text-zinc-400">
+                <span className="text-xs text-muted-foreground">
                   {compound.charAt(0) + compound.slice(1).toLowerCase()}
                 </span>
               </div>
             ))}
             <div className="flex items-center gap-1.5">
               <span className="inline-block bg-zinc-600" style={{ width: 2, height: 12 }} />
-              <span className="text-xs text-zinc-400">Pit stop</span>
+              <span className="text-xs text-muted-foreground">Pit stop</span>
             </div>
           </div>
         )}

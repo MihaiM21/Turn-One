@@ -333,6 +333,96 @@ export const reprocessSession = (sessionId: string, force = false) =>
     });
 
 // ---------------------------------------------------------------------------
+// Closed beta (Jan 2027)
+// ---------------------------------------------------------------------------
+
+/** Wire names, same as protocol-v2 `source`. */
+export type BetaSim = "acc" | "ac" | "iracing" | "f1_25" | "f1_26";
+export type BetaPlatform = "pc" | "ps5" | "xbox";
+export type BetaInput = "wheel" | "pad";
+export type BetaStatus = "pending" | "accepted" | "declined";
+
+export const BETA_SIMS: { value: BetaSim; label: string }[] = [
+    { value: "acc", label: "ACC" },
+    { value: "f1_25", label: "EA F1 25" },
+    { value: "f1_26", label: "EA F1 26" },
+    { value: "iracing", label: "iRacing" },
+    { value: "ac", label: "Assetto Corsa" },
+];
+
+export const BETA_PLATFORMS: { value: BetaPlatform; label: string }[] = [
+    { value: "pc", label: "PC" },
+    { value: "ps5", label: "PS5" },
+    { value: "xbox", label: "Xbox" },
+];
+
+export const BETA_INPUTS: { value: BetaInput; label: string }[] = [
+    { value: "wheel", label: "Wheel" },
+    { value: "pad", label: "Pad" },
+];
+
+export const BETA_NOTE_MAX = 500;
+
+export interface BetaApplicationInput {
+    sims: BetaSim[];
+    platform: BetaPlatform;
+    input: BetaInput;
+    note?: string | null;
+}
+
+export interface BetaApplication extends BetaApplicationInput {
+    id: string;
+    note: string | null;
+    status: BetaStatus;
+    createdAt: string;
+    updatedAt: string;
+    reviewedAt: string | null;
+}
+
+export interface AdminBetaApplication extends BetaApplication {
+    userId: string;
+    username: string;
+    email: string;
+}
+
+export interface AdminBetaApplicationList {
+    items: AdminBetaApplication[];
+    pending: number;
+    accepted: number;
+    declined: number;
+}
+
+/** The signed-in user's application, or `null` if they haven't applied yet. */
+export async function getMyBetaApplication(): Promise<BetaApplication | null> {
+    try {
+        return await request<BetaApplication>("/api/simracing/beta/me");
+    } catch (e) {
+        if (e instanceof SimApiError && e.status === 404) return null;
+        throw e;
+    }
+}
+
+/** Create or update the application. Status is never sent: only an admin changes it. */
+export const saveMyBetaApplication = (body: BetaApplicationInput) =>
+    request<BetaApplication>("/api/simracing/beta/me", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    });
+
+/** Admin only. */
+export const listBetaApplications = (status?: BetaStatus) =>
+    request<AdminBetaApplicationList>(`/api/simracing/beta${status ? `?status=${status}` : ""}`);
+
+/** Admin only. `pending` moves a reviewed application back to the queue. */
+export const setBetaApplicationStatus = (id: string, status: BetaStatus) =>
+    request<AdminBetaApplication>(`/api/simracing/beta/${id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+    });
+
+// ---------------------------------------------------------------------------
 // Formatting helpers (were duplicated inline across the section)
 // ---------------------------------------------------------------------------
 

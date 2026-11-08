@@ -74,7 +74,7 @@ export function ShareCardButton({ session, summary, laps }: ShareCardButtonProps
         <>
             <button
                 onClick={() => setOpen(true)}
-                className="inline-flex h-8 items-center gap-1.5 border border-zinc-800 bg-zinc-900/60 px-3 text-xs text-zinc-300 transition-colors hover:border-primary/40 hover:text-primary"
+                className="inline-flex h-8 items-center gap-1.5 border border-border bg-secondary/60 px-3 text-xs text-foreground/85 transition-colors hover:border-primary/40 hover:text-primary"
             >
                 <Share2 className="h-3.5 w-3.5" />
                 Share
@@ -87,22 +87,22 @@ export function ShareCardButton({ session, summary, laps }: ShareCardButtonProps
                     aria-modal="true"
                     onClick={e => e.target === e.currentTarget && setOpen(false)}
                 >
-                    <div className="w-full max-w-sm border border-zinc-800 bg-zinc-950">
-                        <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-3">
+                    <div className="w-full max-w-sm border border-border bg-card">
+                        <div className="flex items-center justify-between border-b border-border px-5 py-3">
                             <div>
-                                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Share card</p>
+                                <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Share card</p>
                                 <p className="mt-0.5 text-sm font-bold text-white">Pick a size</p>
                             </div>
                             <button
                                 onClick={() => setOpen(false)}
                                 aria-label="Close"
-                                className="text-zinc-600 transition-colors hover:text-white"
+                                className="text-muted-foreground/70 transition-colors hover:text-white"
                             >
                                 <X className="h-4 w-4" />
                             </button>
                         </div>
 
-                        <div className="divide-y divide-zinc-800">
+                        <div className="divide-y divide-border">
                             {OUTPUT_SIZE_ORDER.map(key => {
                                 const size = OUTPUT_SIZES[key];
                                 return (
@@ -110,11 +110,11 @@ export function ShareCardButton({ session, summary, laps }: ShareCardButtonProps
                                         key={key}
                                         onClick={() => handleExport(key)}
                                         disabled={exporting !== null}
-                                        className="flex w-full items-center justify-between gap-3 px-5 py-3 text-left transition-colors hover:bg-zinc-900 disabled:opacity-50"
+                                        className="flex w-full items-center justify-between gap-3 px-5 py-3 text-left transition-colors hover:bg-secondary disabled:opacity-50"
                                     >
                                         <div>
                                             <p className="text-sm font-bold text-white">{size.label}</p>
-                                            <p className="text-[11px] text-zinc-500">{size.description}</p>
+                                            <p className="text-[11px] text-muted-foreground">{size.description}</p>
                                         </div>
                                         {exporting === key ? (
                                             <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />

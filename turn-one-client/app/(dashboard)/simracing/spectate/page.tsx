@@ -5,7 +5,6 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Eye, MapPin, Car, Flag, Radio, ArrowRight } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links";
 import { SectionCard } from "@/components/dashboard/simracing/section-card";
 import { PlanGate } from "@/components/dashboard/simracing/plan-gate";
 import { getLiveSessions, SimApiError, type SimSession } from "@/lib/simracing/api";
@@ -50,7 +49,7 @@ export default function SpectatePage() {
                         icon: Radio,
                         label: "Live now",
                         value: sessions.length,
-                        iconClassName: sessions.length ? "text-primary" : "text-zinc-600",
+                        iconClassName: sessions.length ? "text-primary" : "text-muted-foreground/70",
                     },
                 ]}
             />
@@ -68,7 +67,7 @@ export default function SpectatePage() {
                         empty={
                             <div className="space-y-1">
                                 <p className="text-sm font-bold text-white">Nobody&apos;s live right now</p>
-                                <p className="text-xs text-zinc-500">
+                                <p className="text-xs text-muted-foreground">
                                     Check back later — or make your own session public and let others watch you.
                                 </p>
                             </div>
@@ -80,14 +79,14 @@ export default function SpectatePage() {
                             <Link
                                 key={s.id}
                                 href={`/simracing/spectate/${s.id}`}
-                                className="group flex flex-col border border-zinc-800 bg-zinc-950 transition-colors hover:border-primary/40"
+                                className="group flex flex-col border border-border bg-card transition-colors hover:border-primary/40"
                             >
-                                <div className="flex items-start justify-between gap-2 border-b border-zinc-800 px-5 py-4">
+                                <div className="flex items-start justify-between gap-2 border-b border-border px-5 py-4">
                                     <div className="min-w-0">
                                         <h3 className="truncate text-sm font-bold text-white">
                                             {s.driverName || s.track}
                                         </h3>
-                                        <p className="mt-0.5 text-xs text-zinc-500">
+                                        <p className="mt-0.5 text-xs text-muted-foreground">
                                             Started {formatDistanceToNow(new Date(s.startedAt))} ago
                                         </p>
                                     </div>
@@ -99,27 +98,27 @@ export default function SpectatePage() {
 
                                 <dl className="space-y-2 px-5 py-4">
                                     <div className="flex items-center gap-3 text-sm">
-                                        <MapPin className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
-                                        <dt className="w-10 text-[11px] uppercase tracking-wider text-zinc-500">Track</dt>
+                                        <MapPin className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
+                                        <dt className="w-10 text-[11px] uppercase tracking-wider text-muted-foreground">Track</dt>
                                         <dd className="truncate font-semibold text-white">{s.track}</dd>
                                     </div>
                                     <div className="flex items-center gap-3 text-sm">
-                                        <Car className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
-                                        <dt className="w-10 text-[11px] uppercase tracking-wider text-zinc-500">Car</dt>
+                                        <Car className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
+                                        <dt className="w-10 text-[11px] uppercase tracking-wider text-muted-foreground">Car</dt>
                                         <dd className="truncate font-semibold text-white">{s.carModel}</dd>
                                     </div>
                                     <div className="flex items-center gap-3 text-sm">
-                                        <Flag className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
-                                        <dt className="w-10 text-[11px] uppercase tracking-wider text-zinc-500">Laps</dt>
+                                        <Flag className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
+                                        <dt className="w-10 text-[11px] uppercase tracking-wider text-muted-foreground">Laps</dt>
                                         <dd className="font-mono font-bold tabular-nums text-primary">{s.lapCount}</dd>
                                     </div>
                                 </dl>
 
-                                <div className="mt-auto flex items-center justify-between border-t border-zinc-800 px-5 py-3">
-                                    <span className="text-xs font-bold text-zinc-400 transition-colors group-hover:text-primary">
+                                <div className="mt-auto flex items-center justify-between border-t border-border px-5 py-3">
+                                    <span className="text-xs font-bold text-muted-foreground transition-colors group-hover:text-primary">
                                         Watch cockpit
                                     </span>
-                                    <ArrowRight className="h-3.5 w-3.5 text-zinc-700 transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
+                                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/50 transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
                                 </div>
                             </Link>
                         ))}
@@ -127,7 +126,6 @@ export default function SpectatePage() {
                 )}
             </PlanGate>
 
-            <ExploreMoreLinks currentPage="/simracing/spectate" />
         </main>
     );
 }

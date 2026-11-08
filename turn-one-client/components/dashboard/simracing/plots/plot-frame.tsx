@@ -36,7 +36,7 @@ export function PlotFrame({ definition, ctx, className }: PlotFrameProps) {
                         "flex h-6 w-6 items-center justify-center border transition-colors",
                         showExplainer
                             ? "border-primary/50 bg-primary/15 text-primary"
-                            : "border-zinc-800 text-zinc-500 hover:text-zinc-300"
+                            : "border-border text-muted-foreground hover:text-foreground/85"
                     )}
                 >
                     <CircleHelp className="h-3.5 w-3.5" />
@@ -44,20 +44,20 @@ export function PlotFrame({ definition, ctx, className }: PlotFrameProps) {
             }
         >
             <div className="space-y-3">
-                <p className="text-[11px] text-zinc-500">{definition.description}</p>
+                <p className="text-[11px] text-muted-foreground">{definition.description}</p>
 
                 {showExplainer ? (
-                    <div className="space-y-2 border border-zinc-800 bg-zinc-900/40 px-4 py-3 text-[11px] text-zinc-400">
+                    <div className="space-y-2 border border-border bg-secondary/40 px-4 py-3 text-[11px] text-muted-foreground">
                         <p>
-                            <span className="font-bold text-zinc-300">What it shows </span>
+                            <span className="font-bold text-foreground/85">What it shows </span>
                             {definition.explainer.what}
                         </p>
                         <p>
-                            <span className="font-bold text-zinc-300">How to read it </span>
+                            <span className="font-bold text-foreground/85">How to read it </span>
                             {definition.explainer.howToRead}
                         </p>
                         <div>
-                            <span className="font-bold text-zinc-300">Look for</span>
+                            <span className="font-bold text-foreground/85">Look for</span>
                             <ul className="mt-1 list-disc space-y-0.5 pl-4">
                                 {definition.explainer.lookFor.map((item, i) => (
                                     <li key={i}>{item}</li>
@@ -68,7 +68,7 @@ export function PlotFrame({ definition, ctx, className }: PlotFrameProps) {
                 ) : null}
 
                 {empty ? (
-                    <div className="flex h-32 items-center justify-center font-mono text-sm text-zinc-600">
+                    <div className="flex h-32 items-center justify-center font-mono text-sm text-muted-foreground/70">
                         Not enough data for this plot — pick more laps or check the required channels.
                     </div>
                 ) : (

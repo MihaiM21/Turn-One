@@ -59,7 +59,7 @@ export function SimConnectionBanner({ status, isActive }: SimConnectionBannerPro
             <div className={`w-full max-w-md border ${cfg.border} ${cfg.bg} px-8 py-10 text-center`}>
                 <div className="mb-4 flex justify-center">{cfg.icon}</div>
                 <h2 className="mb-2 text-xl font-bold tracking-tight text-white">{cfg.title}</h2>
-                <p className="text-sm leading-relaxed text-zinc-400">{cfg.message}</p>
+                <p className="text-sm leading-relaxed text-muted-foreground">{cfg.message}</p>
                 {cfg.showDownload && (
                     <Link
                         href="/simracing/download"

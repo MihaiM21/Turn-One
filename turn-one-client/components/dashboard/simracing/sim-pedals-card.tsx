@@ -28,7 +28,7 @@ function PedalBar({ label, value, color }: { label: string; value: number; color
     return (
         <div className="flex flex-1 flex-col items-center justify-end gap-2">
             <span className="font-mono text-xs font-bold tabular-nums text-white">{Math.round(value)}%</span>
-            <div className="relative h-36 w-full max-w-[40px] overflow-hidden border border-zinc-800 bg-black">
+            <div className="relative h-36 w-full max-w-[40px] overflow-hidden border border-border bg-black">
                 {[25, 50, 75].map(tick => (
                     <div
                         key={tick}
@@ -41,7 +41,7 @@ function PedalBar({ label, value, color }: { label: string; value: number; color
                     style={{ height: `${value}%` }}
                 />
             </div>
-            <span className="text-[10px] font-black tracking-widest text-zinc-500">{label}</span>
+            <span className="text-[10px] font-black tracking-widest text-muted-foreground">{label}</span>
         </div>
     );
 }

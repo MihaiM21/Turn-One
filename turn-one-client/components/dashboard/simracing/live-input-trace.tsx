@@ -104,7 +104,7 @@ export function LiveInputTrace({ latest, isActive }: LiveInputTraceProps) {
                 </ResponsiveContainer>
             </div>
 
-            <div className="mt-2 flex gap-4 text-[11px] text-zinc-500">
+            <div className="mt-2 flex gap-4 text-[11px] text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                     <span className="h-2 w-3" style={{ background: "#22c55e" }} />
                     Throttle

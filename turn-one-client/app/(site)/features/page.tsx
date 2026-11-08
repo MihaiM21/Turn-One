@@ -75,18 +75,18 @@ const coreFeatures = [
 ];
 
 const technicalFeatures = [
-  { icon: Database, title: "Historical archive", description: "Full F1 data from 2020 onwards with advanced filters." },
+  { icon: Database, title: "Historical archive", description: "Every F1 session we processed before October 2026, with advanced filters." },
   { icon: Cpu, title: "AI-powered insights", description: "Machine learning surfaces patterns and optimization wins." },
   { icon: Eye, title: "Multi-driver compare", description: "Synchronized telemetry across as many drivers as you want." },
   { icon: Settings, title: "Custom analysis", description: "Build your own workflows on top of our processing engine." },
-  { icon: Download, title: "Advanced export", description: "CSV, JSON, PDF reports and full API access." },
-  { icon: Shield, title: "Enterprise security", description: "Encrypted transmission, secure cloud storage." },
+  { icon: Download, title: "Share cards", description: "Turn a sim lap into an image card, ready for social posts." },
+  { icon: Shield, title: "Secure accounts", description: "Encrypted transmission and hashed passwords." },
 ];
 
 const platformFeatures = [
   { icon: Smartphone, title: "Mobile responsive", description: "Full functionality on every device, optimized for trackside use." },
-  { icon: Globe, title: "Global coverage", description: "Every circuit on the F1 calendar plus support series." },
-  { icon: Clock, title: "24/7 updates", description: "Continuous sync with official timing and live session feeds." },
+  { icon: Globe, title: "Every circuit", description: "Every circuit on the F1 calendar, plus the tracks in the sims Turn One Link supports." },
+  { icon: Clock, title: "Your laps, instantly", description: "Turn One Link streams each sim lap as you drive, ready to analyse when you pit." },
 ];
 
 const services = [
@@ -143,7 +143,7 @@ export default function FeaturesPage() {
       <PublicHero
         eyebrow="Features · Professional F1 telemetry"
         title="The whole paddock, on your screen."
-        subtitle="Comprehensive analysis tools trusted by content creators, broadcasters and serious F1 fans. Every millisecond, surfaced."
+        subtitle="Analysis tools for serious F1 fans, creators and sim racers. Every millisecond, surfaced."
         backgroundImage="/turn-one-car/2026-turn-one-car/0001.webp"
         cta={
           <CtaRow
@@ -223,7 +223,7 @@ export default function FeaturesPage() {
           <SectionHeader
             eyebrow="Services"
             title="Professional services suite"
-            subtitle="Beyond features — the full set of services teams, broadcasters and creators rely on."
+            subtitle="Beyond features — the analysis services behind every chart."
           />
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {services.map((s) => (
@@ -264,27 +264,6 @@ export default function FeaturesPage() {
                   </div>
                 </div>
               </PublicCard>
-            ))}
-          </div>
-        </section>
-
-        {/* Stats */}
-        <section id="services-content" className="border border-zinc-800 bg-zinc-950">
-          <div className="grid grid-cols-2 divide-x divide-zinc-800 md:grid-cols-4">
-            {[
-              { value: "50+", label: "Content creators" },
-              { value: "1M+", label: "Data points / day" },
-              { value: "99.9%", label: "Uptime" },
-              { value: "24/7", label: "Live updates" },
-            ].map((s) => (
-              <div key={s.label} className="px-6 py-8 text-center">
-                <div className="font-mono text-3xl font-black tabular-nums text-primary sm:text-4xl">
-                  {s.value}
-                </div>
-                <div className="mt-2 text-[10px] uppercase tracking-[0.25em] text-zinc-500">
-                  {s.label}
-                </div>
-              </div>
             ))}
           </div>
         </section>

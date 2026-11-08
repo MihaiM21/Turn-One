@@ -147,7 +147,7 @@ public class SimLeaderboardsController : ControllerBase
         var cars = query.Select(a => a.Car).Distinct();
         if (!string.IsNullOrWhiteSpace(carClass)) cars = cars.Where(c => c.CarClass != null && c.CarClass.Slug == carClass);
         return Ok(await cars.OrderBy(c => c.Name)
-            .Select(c => new { c.Slug, c.Name, @class = c.CarClass == null ? null : c.CarClass.Slug })
+            .Select(c => new { c.Slug, c.Name, @class = c.CarClass == null ? null : c.CarClass.Slug, curated = c.Status == CatalogStatus.Curated })
             .ToListAsync());
     }
 

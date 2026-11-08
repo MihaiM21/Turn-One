@@ -94,8 +94,8 @@ export function UPlotTraces({
                                 className={cn(
                                     "border px-2 py-0.5 text-[11px] font-medium transition-colors",
                                     on
-                                        ? "border-zinc-700 bg-zinc-800 text-white"
-                                        : "border-zinc-800 bg-zinc-950 text-zinc-500 hover:text-zinc-300"
+                                        ? "border-muted-foreground/30 bg-border text-white"
+                                        : "border-border bg-card text-muted-foreground hover:text-foreground/85"
                                 )}
                                 style={on ? { borderColor: PANE_META[k].color } : undefined}
                             >
@@ -105,7 +105,7 @@ export function UPlotTraces({
                     })}
                     <span className="ml-auto flex items-center gap-2">
                         {sync.zoom ? (
-                            <span className="font-mono text-[10px] text-zinc-500">
+                            <span className="font-mono text-[10px] text-muted-foreground">
                                 {formatDistance(sync.zoom[0])} – {formatDistance(sync.zoom[1])}
                             </span>
                         ) : null}
@@ -113,7 +113,7 @@ export function UPlotTraces({
                             type="button"
                             onClick={() => sync.resetZoom()}
                             disabled={!sync.zoom}
-                            className="border border-zinc-800 px-2 py-0.5 text-[11px] text-zinc-400 hover:text-white disabled:opacity-40"
+                            className="border border-border px-2 py-0.5 text-[11px] text-muted-foreground hover:text-white disabled:opacity-40"
                         >
                             Fit lap
                         </button>
@@ -122,11 +122,11 @@ export function UPlotTraces({
             ) : null}
 
             {active.length === 0 ? (
-                <div className="flex h-32 items-center justify-center font-mono text-sm text-zinc-600">
+                <div className="flex h-32 items-center justify-center font-mono text-sm text-muted-foreground/70">
                     No channels to plot
                 </div>
             ) : (
-                <div className="border border-zinc-800 bg-zinc-950">
+                <div className="border border-border bg-card">
                     {ribbon ? <CornerRibbon x={x} corners={corners} sectorBoundariesM={sectorBoundariesM} /> : null}
                     {active.map((key, i) => (
                         <TracePane
@@ -147,7 +147,7 @@ export function UPlotTraces({
                 </div>
             )}
 
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-zinc-400">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
                 {laps.map(l => (
                     <span key={l.id} className="inline-flex items-center gap-1.5">
                         <span
@@ -155,11 +155,11 @@ export function UPlotTraces({
                             style={{ background: l.dashed ? "transparent" : l.color, borderTop: l.dashed ? `2px dashed ${l.color}` : undefined }}
                         />
                         <span style={{ color: l.color }}>{l.label}</span>
-                        {l.lapTimeMs ? <span className="font-mono tabular-nums text-zinc-500">{fmtLapTime(l.lapTimeMs)}</span> : null}
-                        {l === reference && laps.length > 1 ? <span className="text-zinc-600">reference</span> : null}
+                        {l.lapTimeMs ? <span className="font-mono tabular-nums text-muted-foreground">{fmtLapTime(l.lapTimeMs)}</span> : null}
+                        {l === reference && laps.length > 1 ? <span className="text-muted-foreground/70">reference</span> : null}
                     </span>
                 ))}
-                <span className="ml-auto text-zinc-600">drag to zoom · ctrl+wheel zoom · shift+wheel pan · double-click to fit</span>
+                <span className="ml-auto text-muted-foreground/70">drag to zoom · ctrl+wheel zoom · shift+wheel pan · double-click to fit</span>
             </div>
         </div>
     );
@@ -273,14 +273,14 @@ function TracePane({ channel, x, laps, reference, corners, showXAxis, height, ho
     const refVal = reference && hoverIdx != null ? valueAt(reference, channel, hoverIdx, meta.scale) : null;
 
     return (
-        <div className={cn("bg-zinc-950", !last && "border-b border-zinc-800/70")}>
+        <div className={cn("bg-card", !last && "border-b border-border/70")}>
             {/* Fixed header: never shares pixels with the canvas, so nothing can overlap the axis or data. */}
-            <div className="flex h-6 items-center gap-3 border-b border-zinc-900 px-2 font-mono text-[10px]">
+            <div className="flex h-6 items-center gap-3 border-b border-border/60 px-2 font-mono text-[10px]">
                 <span className="flex items-baseline gap-1.5">
                     <span className="uppercase tracking-[0.2em]" style={{ color: meta.color }}>
                         {meta.label}
                     </span>
-                    {meta.unit ? <span className="text-zinc-600">{meta.unit}</span> : null}
+                    {meta.unit ? <span className="text-muted-foreground/70">{meta.unit}</span> : null}
                 </span>
                 <span className="ml-auto flex items-center gap-3 tabular-nums">
                     {hoverIdx != null
@@ -291,7 +291,7 @@ function TracePane({ channel, x, laps, reference, corners, showXAxis, height, ho
                                   <span key={l.id} className="inline-flex items-baseline gap-1">
                                       <span style={{ color: l.color }}>{v == null ? "—" : fmt(v)}</span>
                                       {showDelta ? (
-                                          <span className={cn("text-[9px]", v - refVal > 0 ? "text-zinc-400" : "text-zinc-500")}>
+                                          <span className={cn("text-[9px]", v - refVal > 0 ? "text-muted-foreground" : "text-muted-foreground")}>
                                               {v - refVal >= 0 ? "+" : ""}
                                               {fmt(v - refVal)}
                                           </span>
@@ -303,14 +303,14 @@ function TracePane({ channel, x, laps, reference, corners, showXAxis, height, ho
                               const e = extents[i];
                               if (!e) return null;
                               return (
-                                  <span key={l.id} className="text-zinc-500">
+                                  <span key={l.id} className="text-muted-foreground">
                                       <span style={{ color: l.color }}>{fmt(e[0])}</span>
-                                      <span className="text-zinc-700"> – </span>
+                                      <span className="text-muted-foreground/50"> – </span>
                                       <span style={{ color: l.color }}>{fmt(e[1])}</span>
                                   </span>
                               );
                           })}
-                    {hoverX != null ? <span className="text-zinc-600">@ {formatDistance(hoverX)}</span> : null}
+                    {hoverX != null ? <span className="text-muted-foreground/70">@ {formatDistance(hoverX)}</span> : null}
                 </span>
             </div>
             <div ref={containerRef} className="w-full" style={{ height }} />

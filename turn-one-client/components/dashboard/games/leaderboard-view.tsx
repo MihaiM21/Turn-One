@@ -23,9 +23,9 @@ function rankAccent(rank: number) {
 
 function RankIcon({ rank }: { rank: number }) {
   if (rank === 1) return <Trophy className="h-4 w-4 text-yellow-400" />;
-  if (rank === 2) return <Medal className="h-4 w-4 text-zinc-300" />;
+  if (rank === 2) return <Medal className="h-4 w-4 text-foreground/85" />;
   if (rank === 3) return <Medal className="h-4 w-4 text-amber-600" />;
-  return <span className="font-mono text-xs tabular-nums text-zinc-500">#{rank}</span>;
+  return <span className="font-mono text-xs tabular-nums text-muted-foreground">#{rank}</span>;
 }
 
 function LeaderboardTable({
@@ -38,10 +38,10 @@ function LeaderboardTable({
   valueFormatter?: (value: number) => string;
 }) {
   if (entries.length === 0) {
-    return <p className="px-5 py-10 text-center text-sm text-zinc-500">No data available yet.</p>;
+    return <p className="px-5 py-10 text-center text-sm text-muted-foreground">No data available yet.</p>;
   }
   return (
-    <ul className="divide-y divide-zinc-800/60">
+    <ul className="divide-y divide-border/60">
       {entries.map((entry) => (
         <li
           key={entry.userId}
@@ -50,15 +50,15 @@ function LeaderboardTable({
           <div className="flex w-8 shrink-0 items-center justify-center">
             <RankIcon rank={entry.rank} />
           </div>
-          <Avatar className="h-8 w-8 shrink-0 border border-zinc-800">
+          <Avatar className="h-8 w-8 shrink-0 border border-border">
             <AvatarImage src={entry.avatarUrl} alt={entry.username} />
-            <AvatarFallback className="bg-zinc-900 text-[11px] font-semibold text-zinc-300">
+            <AvatarFallback className="bg-secondary text-[11px] font-semibold text-foreground/85">
               {entry.username.substring(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{entry.username}</p>
-            <p className="text-[11px] uppercase tracking-wider text-zinc-500">
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
               Lv <span className="font-mono tabular-nums">{entry.level}</span>
             </p>
           </div>
@@ -66,7 +66,7 @@ function LeaderboardTable({
             <p className="font-mono text-sm font-bold tabular-nums">
               {valueFormatter ? valueFormatter(entry.value) : entry.value.toLocaleString()}
             </p>
-            <p className="text-[10px] uppercase tracking-wider text-zinc-500">{valueLabel}</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{valueLabel}</p>
           </div>
         </li>
       ))}
@@ -109,21 +109,21 @@ export function LeaderboardView() {
   ];
 
   return (
-    <section className="border border-zinc-800 bg-zinc-950">
-      <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-3">
+    <section className="border border-border bg-card">
+      <div className="flex items-center justify-between border-b border-border px-5 py-3">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Leaderboards</p>
+          <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Leaderboards</p>
           <p className="mt-0.5 font-bold text-sm">Top performers</p>
         </div>
       </div>
 
       <Tabs defaultValue="predictions">
-        <TabsList className="grid h-auto w-full grid-cols-3 rounded-none border-b border-zinc-800 bg-transparent p-0">
+        <TabsList className="grid h-auto w-full grid-cols-3 rounded-none border-b border-border bg-transparent p-0">
           {tabs.map(({ value, label, icon: Icon }) => (
             <TabsTrigger
               key={value}
               value={value}
-              className="gap-2 rounded-none border-b-2 border-transparent bg-transparent px-3 py-2.5 text-[11px] uppercase tracking-wider text-zinc-400 transition-colors hover:text-zinc-200 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
+              className="gap-2 rounded-none border-b-2 border-transparent bg-transparent px-3 py-2.5 text-[11px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground/95 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
             >
               <Icon className="h-3.5 w-3.5" />
               {label}
@@ -134,7 +134,7 @@ export function LeaderboardView() {
         {loading ? (
           <div className="space-y-2 px-5 py-4">
             {[0, 1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-10 bg-zinc-800/60" />
+              <Skeleton key={i} className="h-10 bg-border/60" />
             ))}
           </div>
         ) : (

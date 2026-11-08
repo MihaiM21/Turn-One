@@ -101,9 +101,9 @@ export default function SimracingLiveDashboard() {
                         : "Waiting for Turn One Link…"
                 }
                 actions={
-                    <div className="flex items-center gap-2 border border-zinc-800 bg-zinc-950 px-3 py-1.5">
+                    <div className="flex items-center gap-2 border border-border bg-card px-3 py-1.5">
                         <span className={`h-2 w-2 rounded-full ${statusLabel.color}`} />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
                             {statusLabel.label}
                         </span>
                     </div>

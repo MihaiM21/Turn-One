@@ -1,4 +1,7 @@
+"use client"
+
 import * as React from "react"
+import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { type LucideIcon } from "lucide-react"
 
@@ -9,51 +12,30 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { pathMatches } from "@/lib/navigation/dashboard-nav"
 
 export function NavSecondary({
   items,
   ...props
 }: {
-  items: {
-    title: string
-    url: string
-    icon: LucideIcon
-  }[]
+  items: { title: string; url: string; icon: LucideIcon }[]
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
-  // App Router client navigations do not emit `popstate`; usePathname is the
-  // supported way to observe the current route.
-  const currentPath = usePathname() ?? "";
-
-  // Check if an item is active based on the current path
-  const isItemActive = (itemUrl: string): boolean => {
-    // Exact match for home or dashboard
-    if (itemUrl === '/' && currentPath === '/') return true;
-    
-    // For other pages, check if current path starts with the item URL
-    // This ensures that sub-routes also highlight the parent menu item
-    if (itemUrl !== '/' && currentPath.startsWith(itemUrl)) return true;
-    
-    return false;
-  };
+  const path = usePathname() ?? ""
 
   return (
     <SidebarGroup {...props}>
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map((item) => {
-            const active = isItemActive(item.url);
-            
-            return (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild size="sm" isActive={active}>
-                  <a href={item.url}>
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
+          {items.map((item) => (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton asChild size="sm" tooltip={item.title} isActive={pathMatches(path, item.url)}>
+                <Link href={item.url}>
+                  <item.icon />
+                  <span>{item.title}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

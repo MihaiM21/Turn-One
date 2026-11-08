@@ -50,7 +50,6 @@ import { useRouter } from 'next/navigation';
 import * as adminService from '@/lib/adminService';
 import * as userService from '@/lib/userService';
 import { OnlineUsersWidget } from '@/components/dashboard/online-users-widget';
-import { DashboardHeader } from '@/components/dashboard/live dashboard/dashboard-header';
 import { PageHeader } from '@/components/dashboard/page-header';
 import type { PageStatusData } from '@/lib/adminService';
 
@@ -486,10 +485,9 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black">
-        <DashboardHeader />
+      <div>
         <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
-          <div className="flex items-center justify-center border border-zinc-800 bg-zinc-950 px-5 py-12 text-sm text-zinc-500">
+          <div className="flex items-center justify-center border border-border bg-card px-5 py-12 text-sm text-muted-foreground">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Loading admin dashboard...
           </div>
@@ -619,11 +617,12 @@ export default function AdminDashboard() {
     { href: '/admin/notifications', label: 'Notifications', icon: Bell, iconColor: 'text-orange-400' },
     { href: '/admin/export-graphs', label: 'Export Graphs', icon: Download, iconColor: 'text-pink-400' },
     { href: '/admin/usage', label: 'Token Usage', icon: Zap, iconColor: 'text-yellow-400' },
+    { href: '/admin/beta', label: 'Beta Applications', icon: Users, iconColor: 'text-primary' },
+    { href: '/admin/catalog', label: 'Catalog Review', icon: Wrench, iconColor: 'text-primary' },
   ];
 
   return (
-    <div className="min-h-screen bg-black">
-      <DashboardHeader />
+    <div>
       <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6 space-y-4">
         <PageHeader
           label="Admin"
@@ -638,7 +637,7 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-3">
               <OnlineUsersWidget />
               {currentUser && (
-                <div className="flex items-center gap-2 border border-zinc-800 bg-zinc-950 px-2.5 py-1.5">
+                <div className="flex items-center gap-2 border border-border bg-card px-2.5 py-1.5">
                   <div className="flex h-6 w-6 items-center justify-center bg-primary/10 text-[11px] font-bold text-primary">
                     {currentUser.username.charAt(0).toUpperCase()}
                   </div>
@@ -654,42 +653,42 @@ export default function AdminDashboard() {
           {primaryStats.map((stat) => {
             const StatIcon = stat.icon;
             return (
-              <div key={stat.label} className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+              <div key={stat.label} className="border border-border bg-card px-4 py-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{stat.label}</p>
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{stat.label}</p>
                     <p className={`mt-1 font-mono text-2xl font-black tabular-nums leading-none ${stat.valueColor ?? ''}`}>
                       {stat.value}
                     </p>
                   </div>
                   <StatIcon className={`h-4 w-4 shrink-0 ${stat.iconColor}`} />
                 </div>
-                <p className="mt-2 truncate text-[11px] text-zinc-500">{stat.helper}</p>
+                <p className="mt-2 truncate text-[11px] text-muted-foreground">{stat.helper}</p>
               </div>
             );
           })}
         </div>
 
         {/* Quick actions */}
-        <section className="border border-zinc-800 bg-zinc-950">
-          <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-3">
+        <section className="border border-border bg-card">
+          <div className="flex items-center gap-2 border-b border-border px-5 py-3">
             <Zap className="h-3.5 w-3.5 text-primary" />
-            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Quick actions</p>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Quick actions</p>
           </div>
-          <div className="grid grid-cols-2 divide-zinc-800 md:grid-cols-4">
+          <div className="grid grid-cols-2 divide-border md:grid-cols-4">
             {quickActionItems.map((action, idx) => {
               const ActionIcon = action.icon;
               return (
                 <Link
                   key={action.href}
                   href={action.href}
-                  className={`group flex items-center gap-3 px-5 py-3 transition-colors hover:bg-zinc-900/60 ${
-                    idx > 0 ? 'border-zinc-800 md:border-l' : ''
+                  className={`group flex items-center gap-3 px-5 py-3 transition-colors hover:bg-secondary/60 ${
+                    idx > 0 ? 'border-border md:border-l' : ''
                   } ${idx >= 2 ? 'border-t md:border-t-0' : ''}`}
                 >
                   <ActionIcon className={`h-4 w-4 shrink-0 ${action.iconColor}`} />
                   <span className="flex-1 truncate text-sm font-medium">{action.label}</span>
-                  <ArrowRight className="h-3.5 w-3.5 text-zinc-600 transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
+                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/70 transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
                 </Link>
               );
             })}
@@ -697,20 +696,20 @@ export default function AdminDashboard() {
         </section>
 
         {/* Page Controls */}
-        <section className="border border-zinc-800 bg-zinc-950">
-          <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-3">
+        <section className="border border-border bg-card">
+          <div className="flex items-center gap-2 border-b border-border px-5 py-3">
             <Wrench className="h-3.5 w-3.5 text-red-400" />
-            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Page controls</p>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Page controls</p>
           </div>
-          <div className="divide-y divide-zinc-800/60">
+          <div className="divide-y divide-border/60">
             {pageStatusesLoading ? (
-              <div className="flex items-center justify-center gap-2 px-5 py-6 text-xs text-zinc-500">
+              <div className="flex items-center justify-center gap-2 px-5 py-6 text-xs text-muted-foreground">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 Loading page statuses...
               </div>
             ) : pageStatuses.length === 0 ? (
               <div className="flex flex-col items-center gap-2 px-5 py-6">
-                <p className="text-xs text-zinc-500">Could not load page statuses.</p>
+                <p className="text-xs text-muted-foreground">Could not load page statuses.</p>
                 <button onClick={loadPageStatuses} className="text-xs uppercase tracking-wider text-primary hover:underline">Retry</button>
               </div>
             ) : null}
@@ -737,7 +736,7 @@ export default function AdminDashboard() {
                   placeholder="Maintenance message (optional)..."
                   value={pageMessages[ps.pageSlug] ?? ''}
                   onChange={(e) => setPageMessages((prev) => ({ ...prev, [ps.pageSlug]: e.target.value }))}
-                  className="h-8 flex-1 rounded-sm border-zinc-800 bg-zinc-900/60 text-xs"
+                  className="h-8 flex-1 rounded-sm border-border bg-secondary/60 text-xs"
                 />
 
                 <Button
@@ -773,10 +772,10 @@ export default function AdminDashboard() {
           ].map((s) => {
             const SIcon = s.icon;
             return (
-              <div key={s.label} className="border border-zinc-800 bg-zinc-950 px-3 py-2.5">
+              <div key={s.label} className="border border-border bg-card px-3 py-2.5">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{s.label}</p>
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{s.label}</p>
                     <p className={`mt-0.5 font-mono text-base font-black tabular-nums leading-none ${s.color}`}>{s.value}</p>
                   </div>
                   <SIcon className={`h-3.5 w-3.5 shrink-0 ${s.color}`} />
@@ -787,10 +786,10 @@ export default function AdminDashboard() {
         </div>
 
         {/* Search and Filters */}
-        <section className="border border-zinc-800 bg-zinc-950">
-          <div className="flex flex-col gap-3 border-b border-zinc-800 px-5 py-3 md:flex-row md:items-center md:justify-between">
+        <section className="border border-border bg-card">
+          <div className="flex flex-col gap-3 border-b border-border px-5 py-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Users</p>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Users</p>
               <p className="mt-0.5 font-bold text-sm">Manage accounts</p>
             </div>
             <div className="flex gap-2">
@@ -798,7 +797,7 @@ export default function AdminDashboard() {
                 variant="outline"
                 size="sm"
                 onClick={() => fetchUsers()}
-                className="h-8 rounded-sm border-zinc-800 bg-zinc-900/60 text-[11px] uppercase tracking-wider text-zinc-300 hover:border-primary/40 hover:text-primary"
+                className="h-8 rounded-sm border-border bg-secondary/60 text-[11px] uppercase tracking-wider text-foreground/85 hover:border-primary/40 hover:text-primary"
               >
                 <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
                 Refresh
@@ -807,7 +806,7 @@ export default function AdminDashboard() {
                 variant="outline"
                 size="sm"
                 onClick={exportUsers}
-                className="h-8 rounded-sm border-zinc-800 bg-zinc-900/60 text-[11px] uppercase tracking-wider text-zinc-300 hover:border-primary/40 hover:text-primary"
+                className="h-8 rounded-sm border-border bg-secondary/60 text-[11px] uppercase tracking-wider text-foreground/85 hover:border-primary/40 hover:text-primary"
               >
                 <Download className="mr-1.5 h-3.5 w-3.5" />
                 Export CSV
@@ -916,7 +915,7 @@ export default function AdminDashboard() {
                     variant="outline"
                     size="sm"
                     onClick={() => setSelectedUsers(new Set())}
-                    className="h-8 rounded-sm border-zinc-800 bg-zinc-900/60 text-[11px] uppercase tracking-wider text-zinc-300"
+                    className="h-8 rounded-sm border-border bg-secondary/60 text-[11px] uppercase tracking-wider text-foreground/85"
                   >
                     Clear
                   </Button>
@@ -927,7 +926,7 @@ export default function AdminDashboard() {
                         Delete
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent className="rounded-xl border-zinc-800 bg-zinc-950">
+                    <AlertDialogContent className="rounded-xl border-border bg-card">
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete multiple users?</AlertDialogTitle>
                         <AlertDialogDescription>
@@ -952,11 +951,11 @@ export default function AdminDashboard() {
         </section>
 
         {/* User Management */}
-        <section className="border border-zinc-800 bg-zinc-950">
-          <div className="border-b border-zinc-800 px-5 py-3">
-            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Directory</p>
+        <section className="border border-border bg-card">
+          <div className="border-b border-border px-5 py-3">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Directory</p>
             <p className="mt-0.5 font-bold text-sm">
-              All users <span className="ml-1.5 font-mono text-[11px] font-normal tabular-nums text-zinc-500">
+              All users <span className="ml-1.5 font-mono text-[11px] font-normal tabular-nums text-muted-foreground">
                 · page {currentPage}/{totalPages} · {sortedUsers.length} found
               </span>
             </p>
@@ -1001,8 +1000,8 @@ export default function AdminDashboard() {
               )}
 
               {paginatedUsers.map((user) => (
-                <div key={user.id} className={`border bg-zinc-950 p-4 transition-colors ${
-                  selectedUsers.has(user.id) ? 'border-primary/50 bg-primary/5' : 'border-zinc-800 hover:border-zinc-700'
+                <div key={user.id} className={`border bg-card p-4 transition-colors ${
+                  selectedUsers.has(user.id) ? 'border-primary/50 bg-primary/5' : 'border-border hover:border-muted-foreground/30'
                 }`}>
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                     <div className="flex-1">

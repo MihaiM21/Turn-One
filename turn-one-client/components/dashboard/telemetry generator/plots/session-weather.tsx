@@ -125,7 +125,7 @@ export function SessionWeatherGraph({ data, advancedSettings }: SessionWeatherGr
         </ResponsiveContainer>
       </div>
       {activeStatuses.length > 0 && (
-        <div className="flex flex-wrap gap-4 text-xs text-zinc-400">
+        <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
           {activeStatuses.map((status) => (
             <span key={status} className="flex items-center gap-1.5">
               <span
@@ -138,11 +138,11 @@ export function SessionWeatherGraph({ data, advancedSettings }: SessionWeatherGr
         </div>
       )}
       {messages.length > 0 && (
-        <div className="max-h-48 overflow-y-auto border border-zinc-800 divide-y divide-zinc-800">
+        <div className="max-h-48 overflow-y-auto border border-border divide-y divide-border">
           {messages.map((m, i) => (
             <div key={i} className="flex items-start gap-3 px-4 py-2 text-sm">
-              <span className="font-mono text-xs text-zinc-500 mt-0.5 shrink-0">Lap {m.lap}</span>
-              <span className="text-zinc-300">{m.message}</span>
+              <span className="font-mono text-xs text-muted-foreground mt-0.5 shrink-0">Lap {m.lap}</span>
+              <span className="text-foreground/85">{m.message}</span>
             </div>
           ))}
         </div>

@@ -67,7 +67,7 @@ export function NextRaceHero() {
 
   if (!race) {
     return (
-      <section className="border border-zinc-800 bg-zinc-950 px-6 py-8 text-center text-sm text-zinc-500">
+      <section className="border border-border bg-card px-6 py-8 text-center text-sm text-muted-foreground">
         No upcoming races scheduled.
       </section>
     );
@@ -82,7 +82,7 @@ export function NextRaceHero() {
 
   return (
     <section
-      className={`relative overflow-hidden border border-zinc-800 bg-zinc-950 animate-in fade-in slide-in-from-bottom-2 duration-500 ${
+      className={`relative overflow-hidden border border-border bg-card animate-in fade-in slide-in-from-bottom-2 duration-500 ${
         isLive ? 'border-l-4 border-l-red-500' : 'border-l-4 border-l-primary'
       }`}
     >
@@ -94,7 +94,7 @@ export function NextRaceHero() {
             {isLive ? (
               <span className="text-red-400 font-medium">● Live now</span>
             ) : (
-              <span className="text-zinc-500">Next on the calendar</span>
+              <span className="text-muted-foreground">Next on the calendar</span>
             )}
           </div>
 
@@ -102,10 +102,10 @@ export function NextRaceHero() {
             {race.grandPrix}
           </h2>
 
-          <div className="flex items-center gap-2 text-sm text-zinc-400">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <MapPin className="h-3.5 w-3.5 text-primary/60 shrink-0" />
             <span>{race.circuit}</span>
-            <span className="text-zinc-700">·</span>
+            <span className="text-muted-foreground/50">·</span>
             <span>{race.country}</span>
           </div>
 
@@ -122,10 +122,10 @@ export function NextRaceHero() {
                   key={s.name}
                   className={`border px-2 py-0.5 text-[10px] uppercase tracking-wider transition ${
                     st === 'passed'
-                      ? 'border-zinc-800 text-zinc-700 line-through'
+                      ? 'border-border text-muted-foreground/50 line-through'
                       : highlight
                         ? 'border-primary text-primary'
-                        : 'border-zinc-700 text-zinc-400'
+                        : 'border-muted-foreground/30 text-muted-foreground'
                   }`}
                 >
                   {s.name}
@@ -137,8 +137,8 @@ export function NextRaceHero() {
 
         {/* Countdown */}
         {session && (
-          <div className="border-t border-zinc-800 px-6 py-5 lg:border-l lg:border-t-0 lg:min-w-[320px]">
-            <p className="mb-4 text-[10px] uppercase tracking-[0.3em] text-zinc-500">{targetLabel}</p>
+          <div className="border-t border-border px-6 py-5 lg:border-l lg:border-t-0 lg:min-w-[320px]">
+            <p className="mb-4 text-[10px] uppercase tracking-[0.3em] text-muted-foreground">{targetLabel}</p>
             <div className="flex items-end gap-4">
               {[
                 { v: c.days, l: 'Days' },
@@ -150,14 +150,14 @@ export function NextRaceHero() {
                   <div className="font-mono text-5xl font-black tabular-nums leading-none text-foreground sm:text-6xl">
                     {typeof u.v === 'number' ? String(u.v).padStart(2, '0') : u.v}
                   </div>
-                  <div className="mt-1.5 text-[9px] uppercase tracking-[0.3em] text-zinc-600">{u.l}</div>
+                  <div className="mt-1.5 text-[9px] uppercase tracking-[0.3em] text-muted-foreground/70">{u.l}</div>
                 </div>
               ))}
             </div>
-            <div className="mt-4 flex items-center gap-1.5 text-[11px] text-zinc-500">
+            <div className="mt-4 flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <Calendar className="h-3 w-3 shrink-0" />
               <span>{sessionDate}</span>
-              <span className="text-zinc-700">·</span>
+              <span className="text-muted-foreground/50">·</span>
               <span className="font-mono">UTC {sessionUtc}</span>
             </div>
           </div>

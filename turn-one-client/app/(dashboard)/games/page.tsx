@@ -12,7 +12,6 @@ import {
   Star,
   Activity,
 } from 'lucide-react';
-import { DashboardHeader } from '@/components/dashboard/live dashboard/dashboard-header';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { ExploreMoreLinks } from '@/components/dashboard/explore-more-links';
 import {
@@ -59,8 +58,7 @@ export default function GameHubPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
-      <DashboardHeader />
+    <div>
 
       <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6 space-y-4">
         <PageHeader
@@ -75,12 +73,12 @@ export default function GameHubPage() {
         />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid h-auto w-full grid-cols-5 rounded-none border border-zinc-800 bg-zinc-950 p-0 lg:inline-grid lg:w-auto">
+          <TabsList className="grid h-auto w-full grid-cols-5 rounded-none border border-border bg-card p-0 lg:inline-grid lg:w-auto">
             {tabs.map(({ value, label, longLabel, icon: Icon }) => (
               <TabsTrigger
                 key={value}
                 value={value}
-                className="gap-2 rounded-none border-b-2 border-transparent bg-transparent px-3 py-2.5 text-[11px] uppercase tracking-wider text-zinc-400 transition-colors hover:text-zinc-200 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
+                className="gap-2 rounded-none border-b-2 border-transparent bg-transparent px-3 py-2.5 text-[11px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground/95 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
               >
                 <Icon className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{longLabel}</span>

@@ -37,7 +37,7 @@ export const SETUP_STEPS: SetupStep[] = [
 export const REQUIREMENTS = [
     { label: "Operating system", value: "Windows 10 (build 19041) or Windows 11" },
     { label: "Runtime", value: ".NET 9 Desktop Runtime (bundled with the installer)" },
-    { label: "Game", value: "ACC, Assetto Corsa, iRacing, or EA SPORTS F1 25/26 (UDP telemetry on, port 20777, format 2025/2026)" },
+    { label: "Game", value: "ACC, iRacing, or EA SPORTS F1 25/26 (UDP telemetry on, port 20777, format 2025/2026); Assetto Corsa is experimental" },
     { label: "Connection", value: "Broadband — Link streams roughly 40 KB/s while you're on track" },
     { label: "Account", value: "A free Turn One account" },
 ];

@@ -17,7 +17,6 @@ import {
     TrendingDown,
 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links";
 import { SectionCard } from "@/components/dashboard/simracing/section-card";
 import { TimeLossList } from "@/components/dashboard/simracing/charts/time-loss-list";
 import { useCoaching, type CoachingSeverity } from "@/hooks/use-coaching";
@@ -141,7 +140,7 @@ export default function AiCoachPage() {
                 actions={
                     <Link
                         href="/simracing"
-                        className="inline-flex items-center gap-1 text-xs text-zinc-400 transition-colors hover:text-primary"
+                        className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-primary"
                     >
                         Back to cockpit <ArrowRight className="h-3 w-3" />
                     </Link>
@@ -157,7 +156,7 @@ export default function AiCoachPage() {
                         <div className="space-y-4">
                             <div>
                                 <p className="text-sm font-bold text-white">No sessions yet</p>
-                                <p className="mt-1 text-xs text-zinc-500">
+                                <p className="mt-1 text-xs text-muted-foreground">
                                     The coach reads your session telemetry. Install Turn One Link, drive a few laps,
                                     then come back.
                                 </p>
@@ -180,7 +179,7 @@ export default function AiCoachPage() {
                                 <div>
                                     <label
                                         htmlFor="coach-session"
-                                        className="mb-1.5 block text-[10px] uppercase tracking-wider text-zinc-500"
+                                        className="mb-1.5 block text-[10px] uppercase tracking-wider text-muted-foreground"
                                     >
                                         Session
                                     </label>
@@ -188,7 +187,7 @@ export default function AiCoachPage() {
                                         id="coach-session"
                                         value={sessionId}
                                         onChange={e => setSessionId(e.target.value)}
-                                        className="h-9 w-full border border-zinc-800 bg-zinc-900 px-3 text-sm text-white outline-none transition-colors focus:border-primary/40"
+                                        className="h-9 w-full border border-border bg-secondary px-3 text-sm text-white outline-none transition-colors focus:border-primary/40"
                                     >
                                         {sessions.map(s => (
                                             <option key={s.id} value={s.id}>
@@ -202,7 +201,7 @@ export default function AiCoachPage() {
                                     <div>
                                         <label
                                             htmlFor="coach-lap"
-                                            className="mb-1.5 block text-[10px] uppercase tracking-wider text-zinc-500"
+                                            className="mb-1.5 block text-[10px] uppercase tracking-wider text-muted-foreground"
                                         >
                                             Lap (optional)
                                         </label>
@@ -212,7 +211,7 @@ export default function AiCoachPage() {
                                             onChange={e =>
                                                 setLapNumber(e.target.value === "" ? null : Number(e.target.value))
                                             }
-                                            className="h-9 w-full border border-zinc-800 bg-zinc-900 px-3 text-sm text-white outline-none transition-colors focus:border-primary/40"
+                                            className="h-9 w-full border border-border bg-secondary px-3 text-sm text-white outline-none transition-colors focus:border-primary/40"
                                         >
                                             <option value="">Whole session</option>
                                             {laps.map(l => (
@@ -229,7 +228,7 @@ export default function AiCoachPage() {
                                 {selectedSession ? (
                                     <Link
                                         href={`/simracing/sessions/${selectedSession.id}`}
-                                        className="inline-flex items-center gap-1 text-xs text-zinc-400 transition-colors hover:text-primary"
+                                        className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-primary"
                                     >
                                         Open full session <ArrowRight className="h-3 w-3" />
                                     </Link>
@@ -254,7 +253,7 @@ export default function AiCoachPage() {
 
                         <SectionCard label="Auto tips" title="Coach analysis" icon={Lightbulb} iconClassName="text-yellow-400">
                             {tipsStatus === "loading" ? (
-                                <p className="animate-pulse font-mono text-sm text-zinc-500">Analysing…</p>
+                                <p className="animate-pulse font-mono text-sm text-muted-foreground">Analysing…</p>
                             ) : tipsStatus === "locked" ? (
                                 <LockedRow
                                     message="AI tips require a PRO or ELITE plan."
@@ -263,9 +262,9 @@ export default function AiCoachPage() {
                             ) : tipsStatus === "error" ? (
                                 <p className="font-mono text-sm text-red-400">Couldn&apos;t load tips.</p>
                             ) : tips.length === 0 ? (
-                                <p className="font-mono text-sm text-zinc-500">No tips for this context.</p>
+                                <p className="font-mono text-sm text-muted-foreground">No tips for this context.</p>
                             ) : (
-                                <div className="-mx-5 divide-y divide-zinc-800/60">
+                                <div className="-mx-5 divide-y divide-border/60">
                                     {tips.map(tip => {
                                         const meta = SEVERITY_META[tip.severity];
                                         const Icon = meta.icon;
@@ -274,10 +273,10 @@ export default function AiCoachPage() {
                                                 <Icon className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${meta.color}`} />
                                                 <div className="min-w-0">
                                                     <p className="text-sm font-medium text-white">{tip.title}</p>
-                                                    <p className="mt-1 text-xs leading-relaxed text-zinc-500">
+                                                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                                                         {tip.detail}
                                                     </p>
-                                                    <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-zinc-600">
+                                                    <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground/70">
                                                         {tip.lapNumber != null ? `Lap ${tip.lapNumber} · ` : ""}
                                                         {tip.category}
                                                     </p>
@@ -301,7 +300,7 @@ export default function AiCoachPage() {
                             localHistory.length > 0 ? (
                                 <button
                                     onClick={() => setLocalHistory([])}
-                                    className="inline-flex items-center gap-1 text-xs text-zinc-500 transition-colors hover:text-primary"
+                                    className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-primary"
                                 >
                                     <Trash2 className="h-3 w-3" />
                                     Clear
@@ -321,7 +320,7 @@ export default function AiCoachPage() {
                                 <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
                                     {localHistory.length === 0 ? (
                                         <div className="space-y-3">
-                                            <p className="font-mono text-sm text-zinc-500">
+                                            <p className="font-mono text-sm text-muted-foreground">
                                                 Start a conversation — or try a quick prompt:
                                             </p>
                                             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -329,7 +328,7 @@ export default function AiCoachPage() {
                                                     <button
                                                         key={p}
                                                         onClick={() => sendMessage(p)}
-                                                        className="border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-left text-sm text-zinc-200 transition-colors hover:border-primary/40 hover:text-primary"
+                                                        className="border border-border bg-secondary/60 px-3 py-2 text-left text-sm text-foreground/95 transition-colors hover:border-primary/40 hover:text-primary"
                                                     >
                                                         {p}
                                                     </button>
@@ -343,7 +342,7 @@ export default function AiCoachPage() {
                                                 className={`whitespace-pre-wrap border px-3 py-2 text-sm leading-relaxed ${
                                                     m.role === "user"
                                                         ? "border-primary/30 bg-primary/5 text-white"
-                                                        : "border-zinc-800 bg-zinc-900/40 text-zinc-200"
+                                                        : "border-border bg-secondary/40 text-foreground/95"
                                                 }`}
                                             >
                                                 {m.content}
@@ -351,14 +350,14 @@ export default function AiCoachPage() {
                                         ))
                                     )}
                                     {chatStatus === "sending" ? (
-                                        <p className="animate-pulse font-mono text-xs text-zinc-500">Thinking…</p>
+                                        <p className="animate-pulse font-mono text-xs text-muted-foreground">Thinking…</p>
                                     ) : null}
                                     {chatStatus === "error" ? (
                                         <p className="font-mono text-xs text-red-400">Request failed. Try again.</p>
                                     ) : null}
                                 </div>
 
-                                <div className="border-t border-zinc-800 px-5 py-3">
+                                <div className="border-t border-border px-5 py-3">
                                     <div className="flex gap-2">
                                         <input
                                             type="text"
@@ -371,7 +370,7 @@ export default function AiCoachPage() {
                                                 }
                                             }}
                                             placeholder="Ask the coach…"
-                                            className="h-9 flex-1 border border-zinc-800 bg-zinc-900 px-3 text-sm text-white outline-none transition-colors focus:border-primary/40"
+                                            className="h-9 flex-1 border border-border bg-secondary px-3 text-sm text-white outline-none transition-colors focus:border-primary/40"
                                         />
                                         <button
                                             onClick={handleSend}
@@ -389,7 +388,6 @@ export default function AiCoachPage() {
                 </div>
             )}
 
-            <ExploreMoreLinks currentPage="/simracing/coach" />
         </main>
     );
 }
@@ -400,7 +398,7 @@ function LockedRow({ message, hint }: { message: string; hint: string }) {
             <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <div>
                 <p className="text-sm font-bold text-white">{message}</p>
-                <p className="mt-0.5 text-xs text-zinc-500">{hint}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
                 <Link
                     href="/pricing"
                     className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"

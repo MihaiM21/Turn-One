@@ -51,7 +51,7 @@ export function LapEvolutionChart({ laps, height = 280, selectedLap = null, onSe
 
     if (data.length < 2) {
         return (
-            <div className="flex h-40 items-center justify-center font-mono text-sm text-zinc-600">
+            <div className="flex h-40 items-center justify-center font-mono text-sm text-muted-foreground/70">
                 Complete at least two timed laps to see the trend
             </div>
         );
@@ -61,17 +61,17 @@ export function LapEvolutionChart({ laps, height = 280, selectedLap = null, onSe
         <div className="space-y-3">
             <div className="flex flex-wrap gap-6">
                 <div>
-                    <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Best</p>
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Best</p>
                     <p className="font-mono text-lg font-black tabular-nums text-primary">{formatLapTime(best)}</p>
                 </div>
                 <div>
-                    <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Consistency</p>
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Consistency</p>
                     <p className="font-mono text-lg font-black tabular-nums text-white">
                         {stats.stdDevMs != null ? `±${(stats.stdDevMs / 1000).toFixed(3)}s` : "—"}
                     </p>
                 </div>
                 <div>
-                    <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Valid laps</p>
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Valid laps</p>
                     <p className="font-mono text-lg font-black tabular-nums text-white">
                         {data.filter(d => d.isValid).length}/{data.length}
                     </p>
@@ -156,7 +156,7 @@ export function LapEvolutionChart({ laps, height = 280, selectedLap = null, onSe
                 </ResponsiveContainer>
             </div>
 
-            <div className="flex flex-wrap gap-4 text-[11px] text-zinc-500">
+            <div className="flex flex-wrap gap-4 text-[11px] text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full" style={{ background: CHART.primary }} />
                     Best lap

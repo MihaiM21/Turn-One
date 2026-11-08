@@ -75,7 +75,7 @@ public class SimLeaderboardService
     }
 
     private Task<CatalogService.Resolved> ResolveAsync(TelemetrySession s) =>
-        _catalog.ResolveAsync(s.Source, s.TrackId, s.Track, s.TrackLengthM, s.CarId ?? s.CarModel, s.CarModel);
+        _catalog.ResolveAsync(s.Source, s.TrackId, s.Track, s.TrackLengthM, s.CarId ?? s.CarModel, s.CarModel, s.CarClass);
 
     public async Task<bool> ExcludeAsync(Guid lapId)
     {
@@ -95,6 +95,16 @@ public class SimLeaderboardService
             .Select(l => l.Id).Take(max).ToListAsync();
         foreach (var id in ids) await OnLapProcessedAsync(id);
         return ids.Count;
+    }
+
+    /// <summary>
+    /// Re-runs validation for laps already on a board, e.g. after an admin merged their provisional track
+    /// or car into a curated one (the canonical track length can change the distance checks).
+    /// </summary>
+    public async Task<int> RevalidateAsync(IReadOnlyCollection<Guid> lapIds)
+    {
+        foreach (var id in lapIds) await OnLapProcessedAsync(id);
+        return lapIds.Count;
     }
 
     public async Task SetVisibilityAsync(Guid userId, LeaderboardVisibility visibility)

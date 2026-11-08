@@ -47,7 +47,7 @@ function DriverBadge({
     <div className="flex flex-col items-center gap-1">
       <div className="relative">
         <div
-          className="h-12 w-12 overflow-hidden rounded-full shadow-lg ring-2 ring-zinc-700"
+          className="h-12 w-12 overflow-hidden rounded-full shadow-lg ring-2 ring-border"
           style={{ backgroundColor: color }}
         >
           {showImage ? (
@@ -98,14 +98,14 @@ function H2HBar({
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">{label}</p>
-        <p className="font-mono text-xs text-zinc-400">
-          <span className={aWins >= bWins ? 'font-bold text-zinc-100' : ''}>{aWins}</span>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+        <p className="font-mono text-xs text-muted-foreground">
+          <span className={aWins >= bWins ? 'font-bold text-foreground' : ''}>{aWins}</span>
           {' – '}
-          <span className={bWins >= aWins ? 'font-bold text-zinc-100' : ''}>{bWins}</span>
+          <span className={bWins >= aWins ? 'font-bold text-foreground' : ''}>{bWins}</span>
         </p>
       </div>
-      <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-zinc-800">
+      <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-border">
         <div
           className="h-full rounded-l-full transition-all"
           style={{ width: `${aPct}%`, backgroundColor: color, opacity: 0.95 }}
@@ -115,7 +115,7 @@ function H2HBar({
           style={{ width: `${100 - aPct}%`, backgroundColor: color, opacity: 0.4 }}
         />
       </div>
-      <div className="flex justify-between text-[10px] font-mono text-zinc-500">
+      <div className="flex justify-between text-[10px] font-mono text-muted-foreground">
         <span>{aCode}</span>
         <span>{bCode}</span>
       </div>
@@ -135,27 +135,27 @@ function TeamCard({ team: t, headshots }: { team: TeammateBattleTeam; headshots:
 
   return (
     <div
-      className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950/40"
+      className="overflow-hidden rounded-lg border border-border bg-card/40"
       style={{ borderTopColor: t.color || '#3f3f46', borderTopWidth: 3 }}
     >
       <div className="flex items-center justify-between px-4 pt-3">
         <div className="flex items-center gap-2">
           <div
-            className="flex h-6 w-6 items-center justify-center rounded text-[9px] font-bold ring-1 ring-zinc-700"
+            className="flex h-6 w-6 items-center justify-center rounded text-[9px] font-bold ring-1 ring-border"
             style={{ backgroundColor: t.color, color: contrastText(t.color) }}
           >
             {teamInitials}
           </div>
-          <p className="text-sm font-semibold text-zinc-100">{t.team}</p>
+          <p className="text-sm font-semibold text-foreground">{t.team}</p>
         </div>
-        <span className="rounded-full bg-zinc-900 px-2 py-0.5 text-[10px] text-zinc-500">
+        <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] text-muted-foreground">
           {t.rounds_counted} rounds counted
         </span>
       </div>
 
       <div className="flex items-center justify-center gap-4 px-4 py-3">
         <DriverBadge code={t.driver_a} color={t.color} won={raceWinsA > raceWinsB} headshotUrl={headshots.get(t.driver_a)} />
-        <span className="text-xs font-semibold text-zinc-600">VS</span>
+        <span className="text-xs font-semibold text-muted-foreground/70">VS</span>
         <DriverBadge code={t.driver_b} color={t.color} won={raceWinsB > raceWinsA} headshotUrl={headshots.get(t.driver_b)} />
       </div>
 
@@ -178,9 +178,9 @@ function TeamCard({ team: t, headshots }: { team: TeammateBattleTeam; headshots:
         />
       </div>
 
-      <div className="border-t border-zinc-800/80 px-4 py-2 text-xs text-zinc-500">
+      <div className="border-t border-border/80 px-4 py-2 text-xs text-muted-foreground">
         Avg quali gap ({t.driver_b} − {t.driver_a}):{' '}
-        <span className="font-mono text-zinc-300">
+        <span className="font-mono text-foreground/85">
           {t.avg_quali_gap_s > 0 ? '+' : ''}
           {t.avg_quali_gap_s.toFixed(3)}s
         </span>

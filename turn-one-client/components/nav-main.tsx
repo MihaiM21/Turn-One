@@ -3,143 +3,102 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ChevronRight, type LucideIcon } from "lucide-react"
+import { ChevronRight } from "lucide-react"
 
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {
   SidebarGroup,
+  SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuAction,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
+import { isNavItemActive, type NavGroup, type NavItem } from "@/lib/navigation/dashboard-nav"
 
-export function NavMain({
-  items,
-}: {
-  items: {
-    title: string
-    url: string
-    icon: LucideIcon
-    isActive?: boolean
-    items?: {
-      title: string
-      url: string
-    }[]
-  }[]
-}) {
-  // App Router client navigations do not emit `popstate`, and the 'routeChange'
-  // event this used to listen for is never dispatched anywhere in the app.
-  // usePathname is the supported way to observe the current route.
-  const currentPath = usePathname() ?? "";
-  const [openItems, setOpenItems] = React.useState<Record<string, boolean>>({});
+function NavItemRow({ item, active }: { item: NavItem; active: boolean }) {
+  const { isMobile, setOpenMobile } = useSidebar()
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild tooltip={item.title} isActive={active}>
+        <Link
+          href={item.url}
+          aria-current={active ? "page" : undefined}
+          // The mobile sheet stays open after a client navigation unless we close it.
+          onClick={() => isMobile && setOpenMobile(false)}
+        >
+          <item.icon />
+          <span>{item.title}</span>
+        </Link>
+      </SidebarMenuButton>
+      {item.plan ? (
+        <SidebarMenuBadge className="font-display text-[10px] tracking-wider text-muted-foreground">
+          {item.plan}
+        </SidebarMenuBadge>
+      ) : null}
+    </SidebarMenuItem>
+  )
+}
 
-  // Check if an item is active based on the current path. Requires an exact
-  // match or a `/`-bounded prefix so a route like `/live2` doesn't also
-  // highlight a sibling nav item at `/live`.
-  const isItemActive = (itemUrl: string): boolean => {
-    if (itemUrl === '/') return currentPath === '/';
-    return currentPath === itemUrl || currentPath.startsWith(itemUrl + '/');
-  };
+function GroupItems({ group, path }: { group: NavGroup; path: string }) {
+  return (
+    <SidebarMenu>
+      {group.items.map((item) => (
+        <NavItemRow key={item.url} item={item} active={isNavItemActive(item, path)} />
+      ))}
+    </SidebarMenu>
+  )
+}
 
-  // Auto-expand sections when navigating to their sub-items. Uses a single
-  // functional update so it reads the live `openItems` rather than a value
-  // captured from the render that scheduled the effect.
+function CollapsibleGroup({ group, path }: { group: NavGroup; path: string }) {
+  const hasActive = group.items.some((item) => isNavItemActive(item, path))
+  // Opens itself when you navigate into it; otherwise the user's toggle wins.
+  const [open, setOpen] = React.useState(hasActive)
   React.useEffect(() => {
-    setOpenItems((prev) => {
-      let changed = false;
-      const next = { ...prev };
-
-      for (const item of items) {
-        if (next[item.title] !== undefined) continue;
-
-        const active = isItemActive(item.url);
-        const hasActiveSubItem = item.items?.some((subItem) => isItemActive(subItem.url)) ?? false;
-        if (item.isActive || active || hasActiveSubItem) {
-          next[item.title] = true;
-          changed = true;
-        }
-      }
-
-      return changed ? next : prev;
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- isItemActive is derived from currentPath
-  }, [currentPath, items]);
+    if (hasActive) setOpen(true)
+  }, [hasActive])
 
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
-      <SidebarMenu>
-        {items.map((item) => {
-          const active = isItemActive(item.url);
-          // Check if any subitem is active to keep the section expanded
-          const hasActiveSubItem = item.items?.some(subItem => isItemActive(subItem.url)) || false;
-          const shouldBeOpen = item.isActive || active || hasActiveSubItem;
-          
-          // Determine if this item should be open
-          const isOpen = openItems[item.title] !== undefined 
-            ? openItems[item.title] 
-            : shouldBeOpen;
-          
-          return (
-            <Collapsible 
-              key={item.title} 
-              asChild 
-              open={isOpen}
-              onOpenChange={(open) => {
-                setOpenItems(prev => ({
-                  ...prev,
-                  [item.title]: open
-                }));
-              }}
-            >
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip={item.title} isActive={active} size="sm">
-                  <Link href={item.url}>
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-                {item.items?.length ? (
-                  <>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuAction className="data-[state=open]:rotate-90">
-                        <ChevronRight />
-                        <span className="sr-only">Toggle</span>
-                      </SidebarMenuAction>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {item.items?.map((subItem) => {
-                          const subItemActive = isItemActive(subItem.url);
-                          
-                          return (
-                            <SidebarMenuSubItem key={subItem.title}>
-                              <SidebarMenuSubButton asChild isActive={subItemActive}>
-                                <Link href={subItem.url}>
-                                  <span>{subItem.title}</span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          );
-                        })}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  </>
-                ) : null}
-              </SidebarMenuItem>
-            </Collapsible>
-          );
-        })}
-      </SidebarMenu>
-    </SidebarGroup>
+    <Collapsible open={open} onOpenChange={setOpen} className="group/collapsible">
+      <SidebarGroup>
+        <SidebarGroupLabel asChild className="eyebrow text-[11px] hover:text-sidebar-foreground">
+          <CollapsibleTrigger>
+            {group.label}
+            <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+          </CollapsibleTrigger>
+        </SidebarGroupLabel>
+        <CollapsibleContent>
+          <SidebarGroupContent>
+            <GroupItems group={group} path={path} />
+          </SidebarGroupContent>
+        </CollapsibleContent>
+      </SidebarGroup>
+    </Collapsible>
+  )
+}
+
+export function NavMain({ groups }: { groups: NavGroup[] }) {
+  // App Router client navigations don't emit `popstate`; usePathname is the supported way to watch the route.
+  const path = usePathname() ?? ""
+
+  return (
+    <>
+      {groups.map((group) =>
+        group.collapsible ? (
+          <CollapsibleGroup key={group.id} group={group} path={path} />
+        ) : (
+          <SidebarGroup key={group.id} className={group.label ? undefined : "pb-0"}>
+            {group.label ? (
+              <SidebarGroupLabel className="eyebrow text-[11px]">{group.label}</SidebarGroupLabel>
+            ) : null}
+            <SidebarGroupContent>
+              <GroupItems group={group} path={path} />
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ),
+      )}
+    </>
   )
 }

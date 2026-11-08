@@ -3,49 +3,55 @@ import { generateSEO, SITE_CONFIG } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { MainNav } from "@/components/navigation/main-nav";
 import { WindTunnelHero } from "@/components/landing/hero";
-import { ProductBezel, Sectors } from "@/components/landing/product-sections";
-import { LatestSessions, Regs2026, seasonStats } from "@/components/landing/season-sections";
-import { loadSeasonsOrNull } from "@/lib/f1/pages";
-import { Eyebrow, Faq, FinalCta, ProofBand, container, faqJsonLd, softwareJsonLd } from "@/components/landing/sections";
+import { LapBezel } from "@/components/landing/lap-bezel";
+import { Broadcast, ChannelSection, HowItWorks, LeaderboardTeaser, SupportedSims } from "@/components/landing/sim-sections";
+import { Eyebrow, Faq, FinalCta, container, faqJsonLd, softwareJsonLd } from "@/components/landing/sections";
+import { channelUrl, getLatestChannelVideos } from "@/lib/server/youtube-feed";
 
-// "Latest from 2026" and the rounds-run stat come from the calendar; refresh hourly.
-export const revalidate = 3600;
+// Leaderboard and channel sections are fetched server-side; refresh every 5 minutes.
+export const revalidate = 300;
 
 export const metadata: Metadata = generateSEO({
-  title: "F1 Live Timing, Telemetry & Race Predictions",
+  title: "Sim Racing Telemetry for ACC, F1 25 and iRacing",
   description:
-    "See the race the way the pit wall does. Free F1 live timing, telemetry that explains itself, and race predictions for the 2026 season — in the browser, on any screen.",
+    "Find the tenth in every corner. Turn One Link records every lap in ACC, EA SPORTS F1 25/26 and iRacing; the web shows where you lose time, corner by corner, against your best and verified leaderboards.",
   url: "/",
   image: "/og-images/turn-one-landing.jpg",
-  keywords: ["F1 2026 regulations", "F1 active aero", "F1 overtake mode", "F1 telemetry explained"],
+  keywords: [
+    "sim racing telemetry",
+    "ACC telemetry",
+    "F1 25 telemetry",
+    "iRacing telemetry",
+    "lap analysis",
+    "sim racing leaderboards",
+  ],
 });
 
 export default async function RootPage() {
-  const now = new Date();
-  // Published sessions from the F1 API; null (section hidden) if it can't be reached.
-  const seasons = await loadSeasonsOrNull();
+  const videos = await getLatestChannelVideos(3);
   return (
-    <div className="min-h-screen bg-[#020202] text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <JsonLd data={[softwareJsonLd(SITE_CONFIG.url), faqJsonLd()]} />
       <MainNav />
       <main>
         <WindTunnelHero />
+        <HowItWorks />
 
-        {/* The product itself, straight after the car — the thing the wind tunnel is selling */}
-        <section aria-labelledby="inside-title" className={`${container} pt-16 md:pt-24`}>
+        {/* The product, from a real lap — the thing the hero is selling */}
+        <section id="lap" aria-labelledby="lap-title" className={`${container} scroll-mt-20 pb-16 md:pb-24`}>
           <div className="mx-auto max-w-3xl text-center">
-            <Eyebrow>What you get inside</Eyebrow>
-            <h2 id="inside-title" className="mt-3 text-balance text-3xl font-black tracking-tight text-white sm:text-4xl">
-              A live race control room, in the browser.
+            <Eyebrow>Inside Turn One</Eyebrow>
+            <h2 id="lap-title" className="font-display mt-3 text-balance text-4xl leading-[0.95] sm:text-5xl">
+              See exactly where the time went.
             </h2>
           </div>
-          <ProductBezel className="mt-10" />
+          <LapBezel className="mt-10" />
         </section>
 
-        <Sectors />
-        <Regs2026 />
-        <LatestSessions seasons={seasons} />
-        <ProofBand stats={seasonStats(now, seasons)} />
+        <SupportedSims />
+        <LeaderboardTeaser />
+        <Broadcast />
+        <ChannelSection videos={videos} channelUrl={channelUrl()} />
         <Faq />
         <FinalCta />
       </main>

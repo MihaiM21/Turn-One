@@ -22,7 +22,6 @@ import {
     Route,
 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links";
 import { SectionCard, StatStrip, Stat } from "@/components/dashboard/simracing/section-card";
 import { SETUP_STEPS } from "@/components/turn-one-link/setup-content";
 import {
@@ -37,13 +36,17 @@ import {
     type SimLeaderboardRow,
 } from "@/lib/simracing/api";
 import { SIM_SOURCE_LABEL, type MyTrackDto } from "@/lib/simracing/protocol";
+import { useSimFilter } from "@/lib/simracing/sim-filter";
+import { matchesSimFilter } from "@/lib/simracing/sims";
 
 export default function SimracingDashboard() {
     const [stats, setStats] = useState<SimStats | null>(null);
     const [sessions, setSessions] = useState<SimSession[]>([]);
     const [leaderboard, setLeaderboard] = useState<SimLeaderboardRow[]>([]);
-    const [tracks, setTracks] = useState<MyTrackDto[]>([]);
+    const [allTracks, setTracks] = useState<MyTrackDto[]>([]);
     const [loading, setLoading] = useState(true);
+    const { filter } = useSimFilter();
+    const tracks = allTracks.filter(t => matchesSimFilter(t.profile.source, filter));
 
     useEffect(() => {
         Promise.allSettled([getMyStats(), getMySessions(), getLeaderboards(), getMyTracks()])
@@ -56,8 +59,9 @@ export default function SimracingDashboard() {
             .finally(() => setLoading(false));
     }, []);
 
-    const latest = sessions.length
-        ? [...sessions].sort((a, b) => +new Date(b.startedAt) - +new Date(a.startedAt))[0]
+    const filteredSessions = sessions.filter(s => matchesSimFilter(s.source, filter));
+    const latest = filteredSessions.length
+        ? [...filteredSessions].sort((a, b) => +new Date(b.startedAt) - +new Date(a.startedAt))[0]
         : null;
     const isLive = sessions.some(s => s.isActive);
     const hasEverConnected = sessions.length > 0;
@@ -91,7 +95,7 @@ export default function SimracingDashboard() {
                         isLive
                             ? "border-green-500/30 bg-green-950/20"
                             : hasEverConnected
-                              ? "border-zinc-800 bg-zinc-950"
+                              ? "border-border bg-card"
                               : "border-yellow-500/30 bg-yellow-950/10"
                     }`}
                 >
@@ -99,7 +103,7 @@ export default function SimracingDashboard() {
                         {isLive ? (
                             <Wifi className="h-4 w-4 shrink-0 text-green-500" />
                         ) : (
-                            <WifiOff className="h-4 w-4 shrink-0 text-zinc-500" />
+                            <WifiOff className="h-4 w-4 shrink-0 text-muted-foreground" />
                         )}
                         <div>
                             <p className="text-sm font-bold text-white">
@@ -109,7 +113,7 @@ export default function SimracingDashboard() {
                                       ? "Turn One Link is offline"
                                       : "Turn One Link not connected yet"}
                             </p>
-                            <p className="mt-0.5 text-xs text-zinc-500">
+                            <p className="mt-0.5 text-xs text-muted-foreground">
                                 {isLive
                                     ? "Your live cockpit is receiving telemetry."
                                     : latest
@@ -125,7 +129,7 @@ export default function SimracingDashboard() {
                         href={isLive ? "/simracing/live" : "/simracing/download"}
                         className={`inline-flex h-8 items-center gap-1.5 px-4 text-xs font-bold uppercase tracking-wide transition-colors ${
                             hasEverConnected
-                                ? "border border-zinc-800 bg-zinc-900/60 text-zinc-300 hover:border-primary/40 hover:text-primary"
+                                ? "border border-border bg-secondary/60 text-foreground/85 hover:border-primary/40 hover:text-primary"
                                 : "bg-primary text-primary-foreground hover:bg-primary/90"
                         }`}
                     >
@@ -147,7 +151,7 @@ export default function SimracingDashboard() {
             {/* First run: show the setup path instead of a wall of zeroes. */}
             {!loading && !hasEverConnected ? (
                 <SectionCard label="Get started" title="Four steps to your first lap" icon={Download}>
-                    <ol className="divide-y divide-zinc-800">
+                    <ol className="divide-y divide-border">
                         {SETUP_STEPS.map((step, i) => {
                             const StepIcon = step.icon;
                             return (
@@ -162,7 +166,7 @@ export default function SimracingDashboard() {
                                                 {step.title}
                                             </p>
                                         </div>
-                                        <p className="text-xs text-zinc-500">{step.description}</p>
+                                        <p className="text-xs text-muted-foreground">{step.description}</p>
                                     </div>
                                 </li>
                             );
@@ -205,7 +209,7 @@ export default function SimracingDashboard() {
                     actions={
                         <Link
                             href={`/simracing/sessions/${stats.bestLap.sessionId}`}
-                            className="inline-flex items-center gap-1 text-xs text-zinc-400 transition-colors hover:text-primary"
+                            className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-primary"
                         >
                             Analyse <ArrowRight className="h-3 w-3" />
                         </Link>
@@ -214,13 +218,13 @@ export default function SimracingDashboard() {
                     <p className="font-mono text-4xl font-black tabular-nums text-primary">
                         {formatLapTime(stats.bestLap.lapTimeMs)}
                     </p>
-                    <p className="mt-1 text-xs text-zinc-500">Lap {stats.bestLap.lapNumber}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Lap {stats.bestLap.lapNumber}</p>
                 </SectionCard>
             ) : null}
 
             {tracks.length > 0 ? (
                 <SectionCard label="By track" title="Best laps by track" icon={Route} flush>
-                    <div className="grid grid-cols-1 divide-y divide-zinc-800/60 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
+                    <div className="grid grid-cols-1 divide-y divide-border/60 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
                         {tracks.map(t => (
                             <TrackTile key={t.profile.id} track={t} />
                         ))}
@@ -243,22 +247,22 @@ export default function SimracingDashboard() {
                     actions={
                         <Link
                             href="/simracing/sessions"
-                            className="inline-flex items-center gap-1 text-xs text-zinc-400 transition-colors hover:text-primary"
+                            className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-primary"
                         >
                             View all <ArrowRight className="h-3 w-3" />
                         </Link>
                     }
                     flush
                 >
-                    <div className="divide-y divide-zinc-800/60">
+                    <div className="divide-y divide-border/60">
                         {sessions.slice(0, 5).map(s => (
                             <Link
                                 key={s.id}
                                 href={`/simracing/sessions/${s.id}`}
-                                className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-zinc-900/60"
+                                className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-secondary/60"
                             >
-                                <Activity className="h-4 w-4 shrink-0 text-zinc-600" />
-                                <span className="w-32 shrink-0 truncate text-[11px] uppercase tracking-wider text-zinc-500">
+                                <Activity className="h-4 w-4 shrink-0 text-muted-foreground/70" />
+                                <span className="w-32 shrink-0 truncate text-[11px] uppercase tracking-wider text-muted-foreground">
                                     {format(new Date(s.startedAt), "MMM d, HH:mm")}
                                 </span>
                                 <span className="truncate text-sm font-medium text-white">{s.track}</span>
@@ -286,17 +290,17 @@ export default function SimracingDashboard() {
                     actions={
                         <Link
                             href="/simracing/leaderboards"
-                            className="inline-flex items-center gap-1 text-xs text-zinc-400 transition-colors hover:text-primary"
+                            className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-primary"
                         >
                             Full board <ArrowRight className="h-3 w-3" />
                         </Link>
                     }
                     flush
                 >
-                    <div className="divide-y divide-zinc-800/60">
+                    <div className="divide-y divide-border/60">
                         {leaderboard.map((r, i) => (
                             <div key={r.userId} className="flex items-center gap-3 px-5 py-3">
-                                <span className="w-5 shrink-0 text-right font-mono text-xs tabular-nums text-zinc-500">
+                                <span className="w-5 shrink-0 text-right font-mono text-xs tabular-nums text-muted-foreground">
                                     {i + 1}
                                 </span>
                                 <span className="truncate text-sm text-white">{r.username}</span>
@@ -309,7 +313,7 @@ export default function SimracingDashboard() {
                 </SectionCard>
             </div>
 
-            <section className="grid grid-cols-1 gap-px overflow-hidden border border-zinc-800 bg-zinc-800 sm:grid-cols-2 lg:grid-cols-4">
+            <section className="grid grid-cols-1 gap-px overflow-hidden border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
                 <ActionTile
                     href="/simracing/coach"
                     icon={Sparkles}
@@ -326,7 +330,6 @@ export default function SimracingDashboard() {
                 <ActionTile href="/simracing/spectate" icon={Eye} title="Watch live" detail="Public sessions on track now" />
             </section>
 
-            <ExploreMoreLinks currentPage="/simracing" />
         </main>
     );
 }
@@ -336,15 +339,15 @@ function TrackTile({ track }: { track: MyTrackDto }) {
         ? `/simracing/analysis?track=${track.profile.id}&ref=${track.bestLapId}`
         : `/simracing/analysis?track=${track.profile.id}`;
     return (
-        <Link href={href} className="block bg-zinc-950 px-5 py-4 transition-colors hover:bg-zinc-900/60">
+        <Link href={href} className="block bg-card px-5 py-4 transition-colors hover:bg-secondary/60">
             <div className="flex items-center justify-between gap-2">
                 <p className="truncate text-sm font-bold text-white">{track.profile.displayName}</p>
-                <span className="shrink-0 border border-zinc-800 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-zinc-500">
+                <span className="shrink-0 border border-border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
                     {SIM_SOURCE_LABEL[track.profile.source as keyof typeof SIM_SOURCE_LABEL] ?? track.profile.source}
                 </span>
             </div>
             <p className="mt-1.5 font-mono text-xl font-bold tabular-nums text-primary">{formatLapTime(track.bestLapMs)}</p>
-            <p className="mt-0.5 text-[11px] text-zinc-500">
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
                 {track.lapCount} lap{track.lapCount === 1 ? "" : "s"}
                 {track.lastDrivenAt ? ` · ${formatDistanceToNow(new Date(track.lastDrivenAt))} ago` : ""}
             </p>
@@ -364,7 +367,7 @@ function QuickLink({
     return (
         <Link
             href={href}
-            className="inline-flex h-8 items-center gap-1.5 border border-zinc-800 bg-zinc-900/60 px-3 text-xs text-zinc-300 transition-colors hover:border-primary/40 hover:text-primary"
+            className="inline-flex h-8 items-center gap-1.5 border border-border bg-secondary/60 px-3 text-xs text-foreground/85 transition-colors hover:border-primary/40 hover:text-primary"
         >
             <Icon className="h-3.5 w-3.5" />
             {label}
@@ -384,12 +387,12 @@ function ActionTile({
     detail: string;
 }) {
     return (
-        <Link href={href} className="group bg-zinc-950 px-5 py-4 transition-colors hover:bg-zinc-900/60">
+        <Link href={href} className="group bg-card px-5 py-4 transition-colors hover:bg-secondary/60">
             <div className="flex items-center gap-2 text-primary">
                 <Icon className="h-4 w-4" />
                 <p className="text-sm font-bold text-white transition-colors group-hover:text-primary">{title}</p>
             </div>
-            <p className="mt-1.5 text-xs text-zinc-500">{detail}</p>
+            <p className="mt-1.5 text-xs text-muted-foreground">{detail}</p>
         </Link>
     );
 }

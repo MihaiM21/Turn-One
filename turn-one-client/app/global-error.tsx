@@ -22,7 +22,7 @@ export default function GlobalError({
   return (
     <html lang="en" className="dark" style={{ colorScheme: "dark" }}>
       <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
-        <div className="min-h-screen bg-gradient-to-br from-black via-red-950 to-black flex flex-col items-center justify-center p-6 text-white">
+        <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-white">
           <div className="max-w-md text-center space-y-6">
             <div className="space-y-2">
               <h1 className="text-6xl font-bold text-red-500">500</h1>

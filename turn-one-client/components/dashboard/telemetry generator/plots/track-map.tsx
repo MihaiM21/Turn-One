@@ -186,14 +186,14 @@ export function TrackMapGraph({ data, height = 700, width = 700, advancedSetting
         <div className="flex flex-col items-center gap-2 mt-4">
           {data.color_by === 'speed' ? (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-zinc-400">{minSpeed.toFixed(0)} km/h</span>
+              <span className="text-xs text-muted-foreground">{minSpeed.toFixed(0)} km/h</span>
               <div className="h-3 w-40 rounded" style={{ background: 'linear-gradient(to right, rgb(59,130,246), rgb(234,179,8), rgb(239,68,68))' }} />
-              <span className="text-xs text-zinc-400">{maxSpeed.toFixed(0)} km/h</span>
+              <span className="text-xs text-muted-foreground">{maxSpeed.toFixed(0)} km/h</span>
             </div>
           ) : (
             <div className="flex items-center gap-3 flex-wrap justify-center">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((gear) => (
-                <span key={gear} className="flex items-center gap-1 text-xs text-zinc-400">
+                <span key={gear} className="flex items-center gap-1 text-xs text-muted-foreground">
                   <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: gearToColor(gear) }} />
                   {gear}
                 </span>

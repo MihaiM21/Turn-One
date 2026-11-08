@@ -13,13 +13,15 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { useAuth } from "@/components/auth/auth-provider"
-import { safeNextPath } from "@/lib/auth-utils"
+import { currentAuthIntent, intentQuery, postAuthPath } from "@/lib/auth-utils"
+import { useAuthIntent } from "@/hooks/use-auth-intent"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const intent = useAuthIntent()
   const router = useRouter()
   const { login } = useAuth()
 
@@ -35,7 +37,8 @@ export default function LoginPage() {
       const response = await login(email, password)
 
       if (response.success) {
-        router.push(safeNextPath(new URLSearchParams(window.location.search).get("next")))
+        const params = new URLSearchParams(window.location.search)
+        router.push(postAuthPath(params.get("next"), currentAuthIntent(params)))
       } else {
         throw new Error(response.message || "Login failed")
       }
@@ -123,7 +126,7 @@ export default function LoginPage() {
 
         <p className="text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
-          <Link href="/auth/signup" className="font-semibold text-primary hover:underline">
+          <Link href={`/auth/signup${intentQuery(intent)}`} className="font-semibold text-primary hover:underline">
             Create one free
           </Link>
         </p>

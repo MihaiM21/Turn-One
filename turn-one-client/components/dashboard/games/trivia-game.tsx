@@ -21,7 +21,7 @@ function difficultyClasses(difficulty: string) {
     case 'hard':
       return 'border-red-500/40 text-red-400';
     default:
-      return 'border-zinc-700 text-zinc-400';
+      return 'border-muted-foreground/30 text-muted-foreground';
   }
 }
 
@@ -81,19 +81,19 @@ export function TriviaGame({ onTriviaCompleted }: TriviaGameProps) {
 
   const getOptionClasses = (letter: string) => {
     const base =
-      'flex items-center gap-3 border bg-zinc-950 px-4 py-3 text-left transition-colors';
+      'flex items-center gap-3 border bg-card px-4 py-3 text-left transition-colors';
     if (result) {
       if (letter === result.correctAnswer) return `${base} border-green-500/50 bg-green-500/5`;
       if (letter === selectedAnswer && !result.isCorrect) return `${base} border-red-500/50 bg-red-500/5`;
-      return `${base} border-zinc-800 opacity-50`;
+      return `${base} border-border opacity-50`;
     }
     if (selectedAnswer === letter) return `${base} border-primary/50 bg-primary/5`;
-    return `${base} border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/60`;
+    return `${base} border-border hover:border-muted-foreground/30 hover:bg-secondary/60`;
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center border border-zinc-800 bg-zinc-950 px-5 py-20 text-sm text-zinc-500">
+      <div className="flex items-center justify-center border border-border bg-card px-5 py-20 text-sm text-muted-foreground">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         Loading question...
       </div>
@@ -102,20 +102,20 @@ export function TriviaGame({ onTriviaCompleted }: TriviaGameProps) {
 
   if (!trivia) {
     return (
-      <div className="flex flex-col items-center gap-3 border border-zinc-800 bg-zinc-950 px-5 py-16 text-center">
-        <Brain className="h-8 w-8 text-zinc-700" />
+      <div className="flex flex-col items-center gap-3 border border-border bg-card px-5 py-16 text-center">
+        <Brain className="h-8 w-8 text-muted-foreground/50" />
         <p className="font-bold">No questions available</p>
-        <p className="text-xs text-zinc-500">Come back tomorrow for new challenges.</p>
+        <p className="text-xs text-muted-foreground">Come back tomorrow for new challenges.</p>
       </div>
     );
   }
 
   return (
     <div className="grid grid-cols-1 gap-3 lg:grid-cols-[2fr_1fr]">
-      <section className="border border-zinc-800 bg-zinc-950">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 px-5 py-3">
+      <section className="border border-border bg-card">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-5 py-3">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Trivia</p>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Trivia</p>
             <p className="mt-0.5 font-bold text-sm">{trivia.category}</p>
           </div>
           <div className="flex items-center gap-1.5">
@@ -132,7 +132,7 @@ export function TriviaGame({ onTriviaCompleted }: TriviaGameProps) {
         </div>
 
         <div className="space-y-4 px-5 py-5">
-          <p className="text-base leading-relaxed text-zinc-100">{trivia.question}</p>
+          <p className="text-base leading-relaxed text-foreground">{trivia.question}</p>
 
           <div className="space-y-2">
             {['A', 'B', 'C', 'D'].map((letter) => {
@@ -146,7 +146,7 @@ export function TriviaGame({ onTriviaCompleted }: TriviaGameProps) {
                   disabled={!!result || submitting}
                   className={getOptionClasses(letter)}
                 >
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center border border-zinc-800 bg-zinc-900 font-mono text-xs font-bold tabular-nums text-zinc-300">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center border border-border bg-secondary font-mono text-xs font-bold tabular-nums text-foreground/85">
                     {letter}
                   </span>
                   <span className="flex-1 text-sm">{optionText}</span>
@@ -163,11 +163,11 @@ export function TriviaGame({ onTriviaCompleted }: TriviaGameProps) {
 
           {result && (
             <div
-              className={`border-l-4 border border-zinc-800 bg-zinc-950 px-4 py-3 ${
+              className={`border-l-4 border border-border bg-card px-4 py-3 ${
                 result.isCorrect ? 'border-l-green-500' : 'border-l-red-500'
               }`}
             >
-              <p className="text-sm font-medium text-zinc-200">{result.message}</p>
+              <p className="text-sm font-medium text-foreground/95">{result.message}</p>
               <div className="mt-2 flex items-center gap-4 text-[11px]">
                 <span className="flex items-center gap-1 text-yellow-400">
                   <Coins className="h-3 w-3" />
@@ -193,7 +193,7 @@ export function TriviaGame({ onTriviaCompleted }: TriviaGameProps) {
             <Button
               onClick={loadTrivia}
               variant="outline"
-              className="w-full rounded-sm border-zinc-800 bg-zinc-900/60 text-xs font-semibold uppercase tracking-wider text-zinc-300 hover:border-primary/40 hover:text-primary"
+              className="w-full rounded-sm border-border bg-secondary/60 text-xs font-semibold uppercase tracking-wider text-foreground/85 hover:border-primary/40 hover:text-primary"
             >
               <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
               Next question
@@ -203,36 +203,36 @@ export function TriviaGame({ onTriviaCompleted }: TriviaGameProps) {
       </section>
 
       <aside className="space-y-3">
-        <section className="border border-zinc-800 bg-zinc-950">
-          <div className="border-b border-zinc-800 px-5 py-3">
-            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Rewards</p>
+        <section className="border border-border bg-card">
+          <div className="border-b border-border px-5 py-3">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Rewards</p>
             <p className="mt-0.5 font-bold text-sm">This question</p>
           </div>
-          <ul className="divide-y divide-zinc-800/60">
+          <ul className="divide-y divide-border/60">
             <li className="flex items-center justify-between px-5 py-3">
-              <span className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-zinc-500">
+              <span className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
                 <Coins className="h-3.5 w-3.5 text-yellow-400" /> Coins
               </span>
               <span className="font-mono text-sm font-bold tabular-nums text-yellow-400">{trivia.coinsReward}</span>
             </li>
             <li className="flex items-center justify-between px-5 py-3">
-              <span className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-zinc-500">
+              <span className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
                 <Zap className="h-3.5 w-3.5 text-blue-400" /> XP
               </span>
               <span className="font-mono text-sm font-bold tabular-nums text-blue-400">{trivia.experienceReward}</span>
             </li>
           </ul>
-          <p className="border-t border-zinc-800/60 px-5 py-2.5 text-[11px] text-zinc-500">
+          <p className="border-t border-border/60 px-5 py-2.5 text-[11px] text-muted-foreground">
             25% XP awarded even for wrong answers.
           </p>
         </section>
 
-        <section className="border border-zinc-800 bg-zinc-950">
-          <div className="border-b border-zinc-800 px-5 py-3">
-            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Difficulty</p>
+        <section className="border border-border bg-card">
+          <div className="border-b border-border px-5 py-3">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Difficulty</p>
             <p className="mt-0.5 font-bold text-sm">Reward range</p>
           </div>
-          <ul className="divide-y divide-zinc-800/60 text-[11px]">
+          <ul className="divide-y divide-border/60 text-[11px]">
             {[
               ['Easy', '50–100', 'text-green-400'],
               ['Medium', '100–200', 'text-yellow-400'],
@@ -240,7 +240,7 @@ export function TriviaGame({ onTriviaCompleted }: TriviaGameProps) {
             ].map(([label, range, color]) => (
               <li key={label} className="flex items-center justify-between px-5 py-2.5">
                 <span className={`uppercase tracking-wider ${color}`}>{label}</span>
-                <span className="font-mono tabular-nums text-zinc-400">{range} coins</span>
+                <span className="font-mono tabular-nums text-muted-foreground">{range} coins</span>
               </li>
             ))}
           </ul>

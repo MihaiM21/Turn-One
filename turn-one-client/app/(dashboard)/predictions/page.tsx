@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
-import { DashboardHeader } from "@/components/dashboard/live dashboard/dashboard-header";
 import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links";
 import { Trophy, ArrowRight } from 'lucide-react';
 import { usePageMaintenance } from '@/hooks/usePageMaintenance';
@@ -26,8 +25,7 @@ export default function PredictionsPage() {
   if (isDisabled) return <MaintenanceScreen slug="predictions" message={message} />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background/95 via-background to-background/98">
-      <DashboardHeader />
+    <div>
       <div className="container mx-auto px-4 py-6 lg:px-8 lg:py-10">
         <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-background/50 backdrop-blur-md max-w-2xl mx-auto">
           <CardContent className="flex flex-col items-center justify-center py-20">

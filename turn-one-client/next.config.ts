@@ -98,6 +98,24 @@ const nextConfig: NextConfig = {
         destination: '/',
         permanent: true,
       },
+      // Retired after F1 put its timing archive behind F1 TV (2026-10): the public
+      // API wishlist and the live-timing desktop app both depended on that feed.
+      {
+        source: '/api-launch',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/live-desktop-app',
+        destination: '/live',
+        permanent: true,
+      },
+      // The second live-timing prototype; same dead feed as /live.
+      {
+        source: '/live2',
+        destination: '/live',
+        permanent: true,
+      },
       // The landing page once linked here; the route never existed. The
       // predictions UI is the first tab of the game hub.
       {

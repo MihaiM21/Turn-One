@@ -54,7 +54,7 @@ export function BrakingPointsPlot({ ctx }: { ctx: SimPlotContext }) {
 
     if (!corners || !rows.length) {
         return (
-            <div className="flex h-32 items-center justify-center font-mono text-sm text-zinc-600">
+            <div className="flex h-32 items-center justify-center font-mono text-sm text-muted-foreground/70">
                 No matched corners for these laps
             </div>
         );
@@ -63,7 +63,7 @@ export function BrakingPointsPlot({ ctx }: { ctx: SimPlotContext }) {
     return (
         <div className="space-y-3">
             {rows.map(row => (
-                <div key={row.label} className="border border-zinc-800 bg-zinc-950 px-3 py-2">
+                <div key={row.label} className="border border-border bg-card px-3 py-2">
                     <p className="mb-2 font-mono text-xs font-bold text-white">{row.label}</p>
 
                     <AxisRow title="Braking (m before apex)" points={row.braking} max={row.maxBraking} colors={colors} labels={labels} />
@@ -71,7 +71,7 @@ export function BrakingPointsPlot({ ctx }: { ctx: SimPlotContext }) {
                 </div>
             ))}
 
-            <p className="text-[11px] text-zinc-600">
+            <p className="text-[11px] text-muted-foreground/70">
                 Filled dots are compared laps; the reference lap&apos;s dot is hollow. Further left in the braking row is earlier braking.
             </p>
         </div>
@@ -94,13 +94,13 @@ function AxisRow({
     className?: string;
 }) {
     if (!points.length) {
-        return <p className={cn("text-[10px] text-zinc-600", className)}>{title}: no data</p>;
+        return <p className={cn("text-[10px] text-muted-foreground/70", className)}>{title}: no data</p>;
     }
 
     return (
         <div className={className}>
-            <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-zinc-500">{title}</p>
-            <div className="relative h-6 border-b border-zinc-800">
+            <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{title}</p>
+            <div className="relative h-6 border-b border-border">
                 {points.map(p => {
                     const pct = Math.min(100, Math.max(0, (p.deltaM / max) * 100));
                     return (

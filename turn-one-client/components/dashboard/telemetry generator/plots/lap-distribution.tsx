@@ -104,8 +104,8 @@ export function LapDistributionGraph({ data, advancedSettings }: LapDistribution
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null
     return (
-      <div className="border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs">
-        <p className="mb-1 font-mono text-zinc-400">Lap {label}</p>
+      <div className="border border-border bg-card px-3 py-2 text-xs">
+        <p className="mb-1 font-mono text-muted-foreground">Lap {label}</p>
         {payload.map((entry: any) => (
           <p key={entry.dataKey} style={{ color: entry.color }} className="font-mono">
             {entry.dataKey}: {formatLapTime(entry.value)}

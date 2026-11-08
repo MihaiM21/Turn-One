@@ -51,7 +51,7 @@ export function PitStrategyGraph({ data, advancedSettings }: PitStrategyGraphPro
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs uppercase tracking-wider text-zinc-500 mb-2">Pit stop durations</p>
+        <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Pit stop durations</p>
         <div style={{ height: `${Math.round(settings.chartHeight * 0.45)}px` }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={stopsChartData} margin={{ top: 10 }}>
@@ -77,7 +77,7 @@ export function PitStrategyGraph({ data, advancedSettings }: PitStrategyGraphPro
 
       {teamAvgData.length > 0 && (
         <div>
-          <p className="text-xs uppercase tracking-wider text-zinc-500 mb-2">Team average pit lane time</p>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Team average pit lane time</p>
           <div style={{ height: `${Math.round(settings.chartHeight * 0.3)}px` }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={teamAvgData} layout="vertical" margin={{ right: 30 }}>
@@ -100,10 +100,10 @@ export function PitStrategyGraph({ data, advancedSettings }: PitStrategyGraphPro
 
       {undercuts.length > 0 && (
         <div>
-          <p className="text-xs uppercase tracking-wider text-zinc-500 mb-2">Undercuts</p>
-          <div className="border border-zinc-800 overflow-x-auto">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Undercuts</p>
+          <div className="border border-border overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-zinc-900/60 text-xs uppercase text-zinc-500">
+              <thead className="bg-secondary/60 text-xs uppercase text-muted-foreground">
                 <tr>
                   <th className="px-3 py-2 text-left">Attacker</th>
                   <th className="px-3 py-2 text-left">Attacked</th>
@@ -111,7 +111,7 @@ export function PitStrategyGraph({ data, advancedSettings }: PitStrategyGraphPro
                   <th className="px-3 py-2 text-right">Worked</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800">
+              <tbody className="divide-y divide-border">
                 {undercuts.map((u, i) => (
                   <tr key={i}>
                     <td className="px-3 py-2">{u.attacker ?? '-'}</td>
@@ -134,12 +134,12 @@ export function PitStrategyGraph({ data, advancedSettings }: PitStrategyGraphPro
 
       {freeChanges.length > 0 && (
         <div>
-          <p className="text-xs uppercase tracking-wider text-zinc-500 mb-2">Free tyre changes</p>
-          <div className="border border-zinc-800 divide-y divide-zinc-800">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Free tyre changes</p>
+          <div className="border border-border divide-y divide-border">
             {freeChanges.map((f, i) => (
               <div key={i} className="flex items-center justify-between px-4 py-2 text-sm">
                 <span>{f.driver} — lap {f.lap}</span>
-                <span className="font-mono text-xs text-zinc-400">{f.compound_in} → {f.compound_out}</span>
+                <span className="font-mono text-xs text-muted-foreground">{f.compound_in} → {f.compound_out}</span>
               </div>
             ))}
           </div>

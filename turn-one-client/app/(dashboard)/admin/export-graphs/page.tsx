@@ -23,7 +23,6 @@ import { useToast } from "@/hooks/use-toast"
 import * as adminService from "@/lib/adminService"
 import { drivers_2025, drivers_2026 } from "@/lib/constants/drivers"
 import { SITE_CONFIG } from "@/lib/seo"
-import { DashboardHeader } from "@/components/dashboard/live dashboard/dashboard-header"
 import {
   EXPORTABLE_PLOTS,
   PLOT_BY_KEY,
@@ -496,7 +495,7 @@ export default function ExportGraphsPage() {
 
   if (!accessChecked) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="flex min-h-[60vh] items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     )
@@ -508,32 +507,31 @@ export default function ExportGraphsPage() {
 
   return (
     <TooltipProvider delayDuration={150}>
-      <div className="min-h-screen bg-black">
-        <DashboardHeader />
+      <div>
         <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
-          <div className="border border-zinc-800 bg-zinc-950 animate-in fade-in duration-500">
+          <div className="border border-border bg-card animate-in fade-in duration-500">
             {/* Header */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/70 px-5 py-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 px-5 py-4">
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-500">Admin · Export</p>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Admin · Export</p>
                 <h2 className="mt-0.5 text-2xl font-bold tracking-tight">
                   {focusedChart.title}
                 </h2>
-                <p className="mt-1 text-sm text-zinc-400">{focusedChart.description}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{focusedChart.description}</p>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant="outline" className="border-primary/50 text-primary bg-primary/10">
                   <Shield className="h-3 w-3 mr-1" />
                   Admin
                 </Badge>
-                <Badge variant="outline" className="border-zinc-700 text-zinc-400 text-[10px] uppercase tracking-wider">
+                <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground text-[10px] uppercase tracking-wider">
                   v2 API
                 </Badge>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setPresetDialogOpen(true)}
-                  className="border-zinc-800 bg-transparent"
+                  className="border-border bg-transparent"
                 >
                   <Settings className="h-4 w-4 mr-2" />
                   Presets
@@ -577,12 +575,12 @@ export default function ExportGraphsPage() {
 
               {/* Plot options card */}
               {showPlotOptions && (
-                <div className="border border-zinc-800">
-                  <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-3">
+                <div className="border border-border">
+                  <div className="flex items-center gap-2 border-b border-border px-5 py-3">
                     <Users className="h-4 w-4 text-primary" />
                     <div>
                       <p className="text-sm font-medium leading-none">Plot options</p>
-                      <p className="mt-0.5 text-xs text-zinc-500">Configure inputs for this plot.</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">Configure inputs for this plot.</p>
                     </div>
                   </div>
                   <div className="space-y-4 px-5 py-4">
@@ -632,7 +630,7 @@ export default function ExportGraphsPage() {
                 <Button
                   onClick={() => toggleQueued(focusedChartKey)}
                   variant={isQueued(focusedChartKey) ? "default" : "outline"}
-                  className={isQueued(focusedChartKey) ? "" : "border-zinc-800 bg-transparent"}
+                  className={isQueued(focusedChartKey) ? "" : "border-border bg-transparent"}
                 >
                   {isQueued(focusedChartKey) ? (
                     <><Check className="h-4 w-4 mr-2" />In export queue</>
@@ -642,7 +640,7 @@ export default function ExportGraphsPage() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="border-zinc-800 bg-transparent"
+                  className="border-border bg-transparent"
                   disabled={exporting || !selectedSizes.length}
                   onClick={() => handleExport([focusedChartKey])}
                 >
@@ -657,26 +655,26 @@ export default function ExportGraphsPage() {
               {/* Preview area */}
               <div className="space-y-2 pt-2">
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-500">Preview</p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Preview</p>
+                  <p className="text-xs text-muted-foreground">
                     {core.selectedEventName || "—"} · {core.selectedSession}
                   </p>
                 </div>
-                <div className="border border-zinc-800 p-4 min-h-[700px] bg-black/40">
+                <div className="border border-border p-4 min-h-[700px] bg-black/40">
                   {previewLoading ? (
                     <div className="flex h-[700px] flex-col items-center justify-center gap-3">
                       <Loader2 className="h-7 w-7 animate-spin text-primary" />
-                      <span className="text-sm text-zinc-400">Fetching data…</span>
+                      <span className="text-sm text-muted-foreground">Fetching data…</span>
                     </div>
                   ) : !previewFetched ? (
-                    <div className="flex h-[700px] flex-col items-center justify-center gap-3 text-zinc-500">
+                    <div className="flex h-[700px] flex-col items-center justify-center gap-3 text-muted-foreground">
                       <Eye className="h-8 w-8 opacity-30" />
-                      <span className="text-sm">Click <strong className="text-zinc-300">Preview</strong> to load this chart</span>
+                      <span className="text-sm">Click <strong className="text-foreground/85">Preview</strong> to load this chart</span>
                     </div>
                   ) : previewError ? (
                     <div className="flex h-[700px] flex-col items-center justify-center gap-2">
                       <span className="text-amber-400 font-medium">No data available</span>
-                      <span className="text-xs text-zinc-500">
+                      <span className="text-xs text-muted-foreground">
                         {/404/.test(previewError) ? "Session not recorded yet" : previewError}
                       </span>
                     </div>
@@ -693,12 +691,12 @@ export default function ExportGraphsPage() {
               </div>
 
               {/* Output sizes */}
-              <div className="border border-zinc-800">
-                <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-3">
+              <div className="border border-border">
+                <div className="flex items-center gap-2 border-b border-border px-5 py-3">
                   <ImageIcon className="h-4 w-4 text-primary" />
                   <div>
                     <p className="text-sm font-medium leading-none">Output sizes</p>
-                    <p className="mt-0.5 text-xs text-zinc-500">Pick one or more formats. Each produces its own PNG.</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">Pick one or more formats. Each produces its own PNG.</p>
                   </div>
                 </div>
                 <div className="px-5 py-4">
@@ -707,13 +705,13 @@ export default function ExportGraphsPage() {
               </div>
 
               {/* Export queue */}
-              <div className="border border-zinc-800">
-                <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-3">
+              <div className="border border-border">
+                <div className="flex items-center justify-between border-b border-border px-5 py-3">
                   <div className="flex items-center gap-2">
                     <Download className="h-4 w-4 text-primary" />
                     <div>
                       <p className="text-sm font-medium leading-none">Export queue</p>
-                      <p className="mt-0.5 text-xs text-zinc-500">
+                      <p className="mt-0.5 text-xs text-muted-foreground">
                         Charts added here will all be exported together.
                       </p>
                     </div>
@@ -723,7 +721,7 @@ export default function ExportGraphsPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setQueuedChartKeys([])}
-                      className="text-xs text-zinc-500 hover:text-foreground"
+                      className="text-xs text-muted-foreground hover:text-foreground"
                     >
                       Clear
                     </Button>
@@ -731,7 +729,7 @@ export default function ExportGraphsPage() {
                 </div>
                 <div className="px-5 py-4 space-y-4">
                   {queuedChartKeys.length === 0 ? (
-                    <p className="text-sm text-zinc-500 text-center py-4">
+                    <p className="text-sm text-muted-foreground text-center py-4">
                       Queue is empty. Use &quot;Add to export queue&quot; on a plot to add it here.
                     </p>
                   ) : (
@@ -756,7 +754,7 @@ export default function ExportGraphsPage() {
                     </div>
                   )}
 
-                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-zinc-800">
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-border">
                     <div className="text-sm">
                       <span className="font-semibold">{queuedChartKeys.length}</span> chart
                       {queuedChartKeys.length === 1 ? "" : "s"} ×{" "}
@@ -798,22 +796,22 @@ export default function ExportGraphsPage() {
 
         {/* Export progress overlay */}
         {exportProgress && (
-          <div className="fixed bottom-6 right-6 z-50 w-80 border border-zinc-700 bg-zinc-900 shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-200">
-            <div className="flex items-center gap-3 border-b border-zinc-800 px-4 py-3">
+          <div className="fixed bottom-6 right-6 z-50 w-80 border border-muted-foreground/30 bg-secondary shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-200">
+            <div className="flex items-center gap-3 border-b border-border px-4 py-3">
               <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                   {exportProgress.phase === "fetching" ? "Fetching data" : "Rendering"}
                 </p>
-                <p className="truncate text-sm font-medium text-zinc-100">{exportProgress.label}</p>
+                <p className="truncate text-sm font-medium text-foreground">{exportProgress.label}</p>
               </div>
             </div>
             <div className="px-4 py-3 space-y-2">
-              <div className="flex items-center justify-between text-xs text-zinc-500">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{exportProgress.current} of {exportProgress.total}</span>
                 <span>{Math.round((exportProgress.current / exportProgress.total) * 100)}%</span>
               </div>
-              <div className="h-1 w-full bg-zinc-800 overflow-hidden">
+              <div className="h-1 w-full bg-border overflow-hidden">
                 <div
                   className="h-full bg-primary transition-all duration-300"
                   style={{ width: `${(exportProgress.current / exportProgress.total) * 100}%` }}

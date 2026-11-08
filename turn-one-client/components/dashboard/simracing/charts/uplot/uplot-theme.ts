@@ -52,7 +52,7 @@ export const PANE_META: Record<string, PaneMeta> = {
 /** Default pane order for the analysis workspace; the first three are on by default. */
 export const DEFAULT_PANES = ["speed", "throttle", "brake", "steer", "gear", "rpm", "gLat"] as const;
 
-export const UPLOT_FONT = "11px ui-monospace, SFMono-Regular, Menlo, monospace";
+export const UPLOT_FONT = "11px 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace";
 
 /** Shared geometry so the ribbon, every pane and the delta chart line up pixel for pixel. */
 export const PANE_LAYOUT = {
@@ -109,7 +109,7 @@ export const CURSOR_BASE: uPlot.Cursor = {
     x: true,
     y: false,
     lock: false,
-    points: { size: 6, width: 1.5, fill: "#0a0a0a" },
+    points: { size: 6, width: 1.5, fill: "#020202" },
     drag: { x: true, y: false, setScale: true, uni: 24 },
     sync: { key: SYNC_KEY, setSeries: false },
 };
@@ -118,9 +118,9 @@ export const CURSOR_BASE: uPlot.Cursor = {
 export const CORNER_BAND = {
     right: "rgba(59,130,246,0.10)",
     left: "rgba(236,72,153,0.10)",
-    label: "#a1a1aa",
-    sector: "rgba(161,161,170,0.45)",
-    sectorLabel: "#71717a",
+    label: "#868686",
+    sector: "rgba(134,134,134,0.45)",
+    sectorLabel: "#868686",
     brakingMarker: "#f97316",
     throttleMarker: "#22c55e",
 } as const;

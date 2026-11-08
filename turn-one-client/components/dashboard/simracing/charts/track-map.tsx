@@ -90,7 +90,7 @@ export function TrackMap({
 
     if (!samples.length) {
         return (
-            <div className="flex h-48 items-center justify-center font-mono text-sm text-zinc-600">
+            <div className="flex h-48 items-center justify-center font-mono text-sm text-muted-foreground/70">
                 No position data for this lap
             </div>
         );
@@ -108,7 +108,7 @@ export function TrackMap({
                             className={`h-7 border px-2.5 text-[11px] font-bold transition-colors ${
                                 mode === m.key
                                     ? "border-primary/50 bg-primary/10 text-primary"
-                                    : "border-zinc-800 text-zinc-500 hover:text-zinc-300"
+                                    : "border-border text-muted-foreground hover:text-foreground/85"
                             }`}
                         >
                             {m.label}
@@ -117,7 +117,7 @@ export function TrackMap({
                 </div>
 
                 {hoveredSample ? (
-                    <div className="flex gap-3 font-mono text-[11px] tabular-nums text-zinc-400">
+                    <div className="flex gap-3 font-mono text-[11px] tabular-nums text-muted-foreground">
                         <span>{formatDistance(hoveredSample.distance)}</span>
                         <span className="text-white">{Math.round(hoveredSample.speedKmh)} km/h</span>
                         <span>G{hoveredSample.gear}</span>
@@ -180,7 +180,7 @@ export function TrackMap({
             </div>
 
             {!path.ok ? (
-                <p className="text-[11px] text-zinc-600">
+                <p className="text-[11px] text-muted-foreground/70">
                     Track shape unavailable for this session — showing the lap as a distance ribbon instead.
                 </p>
             ) : null}

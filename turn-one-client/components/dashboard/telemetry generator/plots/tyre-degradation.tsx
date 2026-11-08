@@ -136,7 +136,7 @@ export function TyreDegradationGraph({ data, advancedSettings }: TyreDegradation
           </ComposedChart>
         </ResponsiveContainer>
       </div>
-      <div className="flex flex-wrap gap-4 text-xs text-zinc-400">
+      <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
         {data.map((c) => (
           <span key={c.compound} className="flex items-center gap-1.5">
             <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: c.color }} />

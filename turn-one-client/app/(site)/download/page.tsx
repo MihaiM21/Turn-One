@@ -27,7 +27,7 @@ const CAPABILITIES = [
         icon: Activity,
         title: "Live cockpit",
         description:
-            "Speed, gear, RPM, pedals, tyre and brake temperatures streaming to your browser at 100 Hz — on a second monitor, phone or tablet.",
+            "Speed, gear, RPM, pedals, tyre and brake temperatures updating 20 times a second in your browser — on a second monitor, phone or tablet.",
     },
     {
         icon: History,
@@ -49,9 +49,9 @@ const CAPABILITIES = [
     },
     {
         icon: Bot,
-        title: "AI coaching",
+        title: "Coaching tips",
         description:
-            "Plain-language feedback on braking, throttle application and consistency — and a chat you can ask about any lap.",
+            "Plain-language notes on braking, throttle application and consistency for each lap, from the corners where you lose the most.",
     },
     {
         icon: Radio,
@@ -160,7 +160,7 @@ export default function DownloadPage() {
                     <SectionHeader
                         eyebrow="Privacy"
                         title="Exactly what it reads."
-                        subtitle="Link reads one block of memory that ACC already publishes, and sends nothing else. Here's the full list."
+                        subtitle="Link reads only the telemetry each sim publishes for dashboards (ACC shared memory, the iRacing SDK, F1 UDP) and sends nothing else. Here's the full list."
                     />
 
                     <div className="grid gap-4 lg:grid-cols-2">

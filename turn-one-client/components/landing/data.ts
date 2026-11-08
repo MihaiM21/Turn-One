@@ -1,13 +1,18 @@
 /**
- * Copy + content for the root landing page (`/`). One place to edit wording;
- * the hero, hotspots, sector rows, FAQ and JSON-LD all read from here.
+ * Copy + content for the root landing page (`/`), sim-first since 2026-11-08
+ * (grill G7/G9). One place to edit wording; the hero, hotspots, sections, FAQ
+ * and JSON-LD all read from here.
+ *
+ * Honesty rules (docs/LANDING_PAGE_REDESIGN_RESEARCH.md): no invented numbers or
+ * testimonials, and nothing that says Link can be downloaded today — it is in
+ * closed beta.
  */
 
-export type PillarId = "live" | "telemetry" | "play" | "hub";
+export type PillarId = "link" | "analysis" | "compete" | "broadcast";
 
 export type Pillar = {
   id: PillarId;
-  /** Hotspot anchor on the 2026 model, metres, +Z = nose, Y up */
+  /** Hotspot anchor on the car model, metres, +Z = nose, Y up */
   anchor: [number, number, number];
   eyebrow: string;
   title: string;
@@ -16,109 +21,102 @@ export type Pillar = {
   cta: string;
 };
 
+export const BETA_SIGNUP_HREF = "/auth/signup?intent=beta";
+
 export const HERO = {
-  eyebrow: "Turn One · Formula One intelligence",
-  h1: "See the race the way the pit wall does.",
-  sub: "Live timing, telemetry that explains itself, and race predictions — in one place, on any screen.",
-  primary: { label: "Watch live — free", href: "/live" },
-  secondary: { label: "Create account", href: "/auth/signup" },
+  eyebrow: "Turn One · Sim racing telemetry",
+  h1: "Find the tenth in every corner.",
+  sub: "Turn One Link records every lap you drive in ACC, EA SPORTS F1 25 and F1 26, and iRacing. The web shows where you lose time, corner by corner, against your best and the leaderboard.",
+  primary: { label: "Join the beta", href: BETA_SIGNUP_HREF },
+  secondary: { label: "How Link works", href: "#how" },
   tertiary: { label: "See every feature", href: "/features" },
 };
 
 export const PILLARS: Pillar[] = [
   {
-    id: "live",
-    anchor: [0, 0.95, -2.3],
-    eyebrow: "Rear wing · Active aero",
-    title: "F1 Live",
-    body: "Timing tower, gaps, tyre age and sector times — streamed the moment it happens. No spoilers, no thumbnails, no delay.",
-    href: "/live",
-    cta: "Open live timing",
-  },
-  {
-    id: "telemetry",
-    anchor: [1.08, 0.22, 0.3],
-    eyebrow: "Floor · Engine cover",
-    title: "Telemetry, explained",
-    body: "Throttle, brake and speed traces for every lap since 2020 — with the why written next to the chart, not left to you.",
-    href: "/f1",
-    cta: "Browse session telemetry",
-  },
-  {
-    id: "play",
+    id: "link",
     anchor: [0, 0.98, 0.5],
-    eyebrow: "Cockpit · Your inputs",
-    title: "Predict & play",
-    body: "Call the podium, beat the trivia clock, climb the leaderboard. Coins, tokens and daily gifts keep the weekend alive.",
-    href: "/games",
-    cta: "Make a prediction",
+    eyebrow: "Cockpit · Turn One Link",
+    title: "Every lap, recorded",
+    body: "A small Windows app reads the telemetry your sim already publishes, keeps every session on your PC and uploads finished laps. No in-game overlay, nothing injected into the game.",
+    href: "#how",
+    cta: "How Link works",
   },
   {
-    id: "hub",
+    id: "analysis",
+    anchor: [1.08, 0.22, 0.3],
+    eyebrow: "Floor · Where the time goes",
+    title: "Corner by corner",
+    body: "Overlay any two laps on distance: speed, throttle, brake, gear and the running delta. The gaps that matter are found for you, so you know which corner to work on next.",
+    href: "#lap",
+    cta: "See a real lap",
+  },
+  {
+    id: "compete",
+    anchor: [0, 0.95, -2.3],
+    eyebrow: "Rear wing · Leaderboards",
+    title: "Verified leaderboards",
+    body: "Best valid laps per sim, track and car, checked on the server: sector sum, track length and plausible speed. Drivers can stay anonymous or hide.",
+    href: "#leaderboard",
+    cta: "See the leaderboards",
+  },
+  {
+    id: "broadcast",
     anchor: [0, 0.78, 2.45],
-    eyebrow: "Nose · Front wing",
-    title: "One dashboard",
-    body: "Next session countdown, latest results, your streak and your rewards — one screen that refreshes every lap.",
-    href: "/dashboard",
-    cta: "Open the dashboard",
+    eyebrow: "Nose · On stream",
+    title: "Overlays for streamers",
+    body: "Browser-source overlays for OBS — cockpit, lap timer and leaderboard — fed live from your Link session.",
+    href: "#broadcast",
+    cta: "Overlays for OBS",
   },
 ];
 
-/**
- * The 2026 technical rules, stated plainly, and what each one looks like in the
- * data. Figures are from the FIA 2026 technical regulations.
- */
-export const REGS_2026 = [
+export const HOW_IT_WORKS = [
   {
-    k: "Active aero",
-    v: "Corner / Straight",
-    body: "Front and rear wings flatten on designated straights and close again for the corners. DRS is gone.",
-    where: "Top speed jumps on the straights where Straight Mode is allowed.",
+    step: "01",
+    title: "Install Turn One Link",
+    body: "Windows 10 or 11. Pair it with your account once by approving a code on the website.",
   },
   {
-    k: "Overtake Mode",
-    v: "< 1.0 s",
-    body: "Within a second of the car ahead, a driver gets extra electrical deployment to attack — the new push-to-pass.",
-    where: "Gaps under 1.0 s on the timing tower are where attacks start.",
+    step: "02",
+    title: "Drive",
+    body: "Open your sim and drive. Link records every lap on your PC and uploads finished laps, retrying if your connection drops.",
   },
   {
-    k: "Electric power",
-    v: "350 kW",
-    body: "The MGU-K nearly triples, from 120 kW, and the MGU-H is gone. Energy management now decides races.",
-    where: "Speed tapering before a braking point is a car running out of deployment.",
-  },
-  {
-    k: "Smaller car",
-    v: "768 kg · 3.4 m",
-    body: "Lighter, 200 mm shorter in wheelbase and 100 mm narrower than the 2022–25 cars.",
-    where: "Put the same circuit side by side in the 2025 and 2026 session archive.",
+    step: "03",
+    title: "Analyse on the web",
+    body: "Your sessions, laps and personal bests appear in your dashboard, ready to compare against your best and the leaderboard.",
   },
 ];
 
 export const FAQ = [
   {
-    q: "Is Turn One free?",
-    a: "Yes. Live timing, current-season analysis, predictions and trivia are free on the Enthusiast plan. Professional adds the 2020–2025 archive, exports and deeper AI insights.",
+    q: "Which sims work?",
+    a: "Assetto Corsa Competizione, EA SPORTS F1 25 and F1 26 (PC, and PS5 or Xbox over your network), and iRacing. Original Assetto Corsa is experimental: laps are recorded but don't rank yet.",
   },
   {
-    q: "Does it work during a live session?",
-    a: "That's the point. Timing, gaps, tyre stints and sector times update in real time over a WebSocket connection while the session runs.",
+    q: "What does Turn One Link read from my PC?",
+    a: "Only the telemetry each sim publishes for dashboards: ACC's shared memory, the iRacing SDK feed, or the UDP feed you switch on in F1. It doesn't read game files, inject into the game or see anything else on your PC.",
   },
   {
-    q: "Is Turn One updated for the 2026 regulations?",
-    a: "Yes. The 2026 calendar, sessions and results are covered, and the guide on this page explains what the new rules — active aero, Overtake Mode instead of DRS, and 350 kW of electric power — change in the data.",
+    q: "Does it touch the game?",
+    a: "No. Link only reads the telemetry interfaces dashboards and wheel apps already use, and never writes to the game or its memory.",
   },
   {
-    q: "Where does the data come from?",
-    a: "Official live timing feeds during sessions, and the FastF1/OpenF1 archives for every session from 2020 onwards. Turn One is not affiliated with Formula 1.",
+    q: "Can I use it on PlayStation or Xbox?",
+    a: "Yes, for F1 25 and F1 26: the console sends its UDP telemetry to Link running on a PC on the same network. ACC on console doesn't publish telemetry, and iRacing is PC only.",
   },
   {
-    q: "Do I need to install anything?",
-    a: "No. It runs in the browser on desktop, tablet and phone. A desktop overlay app is available separately for stream setups.",
+    q: "Who can see my laps?",
+    a: "Your sessions are private until you share them. Best valid laps appear on leaderboards under your name, anonymously, or not at all — your choice.",
   },
   {
-    q: "What makes it different from other F1 dashboards?",
-    a: "Charts are everywhere. Turn One explains them — every trace comes with the reasoning next to it — and wraps the weekend in predictions and rewards.",
+    q: "What does it cost?",
+    a: "Recording, your own lap analysis and the leaderboards are free. Paid plans add comparing against other drivers' laps, the corner coach, spectating and overlays. Paid plans aren't on sale yet.",
+  },
+  {
+    q: "When can I download Turn One Link?",
+    a: "It's in closed beta for 20–50 drivers from January 2027. Join the beta with your sims and setup; the decision shows up in your dashboard.",
   },
 ];
 
@@ -129,7 +127,7 @@ export const PLANS = [
   { name: "Elite", price: "19.99" },
 ];
 
-/** The 2026 Turn One car. Model optimised from public/turn-one-car/2026-turn-one-car/2026_TurnOneCar.glb
+/** The Turn One car. Model optimised from public/turn-one-car/2026-turn-one-car/2026_TurnOneCar.glb
  *  (25 MB → 1.4 MB: draco, 40% simplify, 1K WebP textures).
  *  Posters are rendered from the live scene at its start camera (Corner mode, no view offset):
  *  landscape 1920×1080 at 32° FOV, portrait 1080×1920 at 50°. Re-render them if the camera,

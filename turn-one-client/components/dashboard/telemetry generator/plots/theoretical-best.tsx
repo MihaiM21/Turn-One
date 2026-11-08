@@ -43,7 +43,7 @@ export function TheoreticalBestGraph({ data, advancedSettings }: TheoreticalBest
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-4 text-xs text-zinc-400">
+      <div className="flex items-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 rounded-full bg-white" />
           Actual best lap

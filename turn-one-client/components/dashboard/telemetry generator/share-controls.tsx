@@ -87,7 +87,7 @@ export function ShareControls({ def, ctx, settings, captureAt, data }: ShareCont
     <div className="flex flex-wrap items-center gap-2">
       {isCreator && (
         <Select value={presetKey} onValueChange={(v) => setPresetKey(v as OutputSizeKey)}>
-          <SelectTrigger className="min-h-11 w-[190px] border-zinc-800 bg-transparent">
+          <SelectTrigger className="min-h-11 w-[190px] border-border bg-transparent">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -103,7 +103,7 @@ export function ShareControls({ def, ctx, settings, captureAt, data }: ShareCont
       <Button
         variant="outline"
         size="sm"
-        className="min-h-11 border-zinc-800 bg-transparent hover:bg-zinc-900"
+        className="min-h-11 border-border bg-transparent hover:bg-secondary"
         disabled={exporting}
         onClick={handleExportPng}
       >
@@ -114,7 +114,7 @@ export function ShareControls({ def, ctx, settings, captureAt, data }: ShareCont
       <Button
         variant="outline"
         size="sm"
-        className="min-h-11 border-zinc-800 bg-transparent hover:bg-zinc-900"
+        className="min-h-11 border-border bg-transparent hover:bg-secondary"
         onClick={handleShareToX}
       >
         <XIcon className="h-4 w-4 mr-2" />

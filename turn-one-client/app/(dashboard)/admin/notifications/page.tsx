@@ -30,7 +30,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { getAuthToken } from '@/lib/auth-utils';
-import { DashboardHeader } from '@/components/dashboard/live dashboard/dashboard-header';
 import { PageHeader } from '@/components/dashboard/page-header';
 
 interface Notification {
@@ -272,10 +271,9 @@ export default function AdminNotificationsPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-black">
-        <DashboardHeader />
+      <div>
         <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
-          <div className="flex items-center justify-center border border-zinc-800 bg-zinc-950 px-5 py-12 text-sm text-zinc-500">
+          <div className="flex items-center justify-center border border-border bg-card px-5 py-12 text-sm text-muted-foreground">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Loading notifications...
           </div>
@@ -285,12 +283,11 @@ export default function AdminNotificationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <DashboardHeader />
+    <div>
       <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6 space-y-4">
         <Link
           href="/admin"
-          className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-zinc-500 transition-colors hover:text-primary"
+          className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-primary"
         >
           <ArrowLeft className="h-3 w-3" />
           Back to admin
@@ -314,55 +311,55 @@ export default function AdminNotificationsPage() {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+          <div className="border border-border bg-card px-4 py-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Total sent</p>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Total sent</p>
                 <p className="mt-1 font-mono text-2xl font-black tabular-nums leading-none text-orange-400">
                   {notifications.length}
                 </p>
               </div>
               <Bell className="h-4 w-4 shrink-0 text-orange-400" />
             </div>
-            <p className="mt-2 text-[11px] text-zinc-500">
+            <p className="mt-2 text-[11px] text-muted-foreground">
               <span className="font-mono tabular-nums">{stats.allUsers}</span> broadcast ·{' '}
               <span className="font-mono tabular-nums">{stats.targeted}</span> targeted
             </p>
           </div>
 
-          <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+          <div className="border border-border bg-card px-4 py-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Info</p>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Info</p>
                 <p className="mt-1 font-mono text-2xl font-black tabular-nums leading-none text-blue-400">{stats.info}</p>
               </div>
               <Info className="h-4 w-4 shrink-0 text-blue-400" />
             </div>
-            <p className="mt-2 text-[11px] text-zinc-500">informational</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">informational</p>
           </div>
 
-          <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+          <div className="border border-border bg-card px-4 py-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Success</p>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Success</p>
                 <p className="mt-1 font-mono text-2xl font-black tabular-nums leading-none text-green-400">{stats.success}</p>
               </div>
               <CheckCircle2 className="h-4 w-4 shrink-0 text-green-400" />
             </div>
-            <p className="mt-2 text-[11px] text-zinc-500">positive updates</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">positive updates</p>
           </div>
 
-          <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+          <div className="border border-border bg-card px-4 py-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Warnings & errors</p>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Warnings & errors</p>
                 <p className="mt-1 font-mono text-2xl font-black tabular-nums leading-none text-yellow-400">
                   {stats.warning + stats.error}
                 </p>
               </div>
               <AlertTriangle className="h-4 w-4 shrink-0 text-yellow-400" />
             </div>
-            <p className="mt-2 text-[11px] text-zinc-500">
+            <p className="mt-2 text-[11px] text-muted-foreground">
               <span className="font-mono tabular-nums">{stats.warning}</span> warn ·{' '}
               <span className="font-mono tabular-nums">{stats.error}</span> error
             </p>
@@ -370,20 +367,20 @@ export default function AdminNotificationsPage() {
         </div>
 
         {/* Filters & Search */}
-        <section className="border border-zinc-800 bg-zinc-950">
+        <section className="border border-border bg-card">
           <div className="px-5 py-4 space-y-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search notifications by title or message..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="rounded-sm border-zinc-800 bg-zinc-900/60 pl-10"
+                className="rounded-sm border-border bg-secondary/60 pl-10"
               />
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid h-auto w-full grid-cols-5 rounded-none border border-zinc-800 bg-zinc-950 p-0">
+              <TabsList className="grid h-auto w-full grid-cols-5 rounded-none border border-border bg-card p-0">
                 {[
                   { value: 'all', label: 'All', icon: Bell, count: notifications.length },
                   { value: 'info', label: 'Info', icon: Info, count: stats.info },
@@ -394,21 +391,21 @@ export default function AdminNotificationsPage() {
                   <TabsTrigger
                     key={value}
                     value={value}
-                    className="gap-1.5 rounded-none border-b-2 border-transparent bg-transparent px-3 py-2.5 text-[11px] uppercase tracking-wider text-zinc-400 transition-colors hover:text-zinc-200 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
+                    className="gap-1.5 rounded-none border-b-2 border-transparent bg-transparent px-3 py-2.5 text-[11px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground/95 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
                   >
                     <TIcon className="h-3.5 w-3.5" />
-                    {label} <span className="font-mono tabular-nums text-zinc-500">{count}</span>
+                    {label} <span className="font-mono tabular-nums text-muted-foreground">{count}</span>
                   </TabsTrigger>
                 ))}
               </TabsList>
             </Tabs>
 
             {searchTerm && (
-              <div className="flex items-center gap-2 text-[11px] text-zinc-500">
+              <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                 <Filter className="h-3 w-3" />
-                Showing <span className="font-mono tabular-nums text-zinc-300">{filteredNotifications.length}</span> of{' '}
-                <span className="font-mono tabular-nums text-zinc-300">{notifications.length}</span>
-                <span className="border border-zinc-700 px-1.5 py-0.5 uppercase tracking-wider">Search: {searchTerm}</span>
+                Showing <span className="font-mono tabular-nums text-foreground/85">{filteredNotifications.length}</span> of{' '}
+                <span className="font-mono tabular-nums text-foreground/85">{notifications.length}</span>
+                <span className="border border-muted-foreground/30 px-1.5 py-0.5 uppercase tracking-wider">Search: {searchTerm}</span>
               </div>
             )}
           </div>
@@ -417,11 +414,11 @@ export default function AdminNotificationsPage() {
         {/* Notifications List */}
         <div className="space-y-3">
           {filteredNotifications.length === 0 ? (
-            <section className="flex flex-col items-center gap-3 border border-zinc-800 bg-zinc-950 px-5 py-16 text-center">
-              <Bell className="h-8 w-8 text-zinc-700" />
+            <section className="flex flex-col items-center gap-3 border border-border bg-card px-5 py-16 text-center">
+              <Bell className="h-8 w-8 text-muted-foreground/50" />
               <div>
                 <p className="font-bold">No notifications found</p>
-                <p className="mt-0.5 max-w-sm text-xs text-zinc-500">
+                <p className="mt-0.5 max-w-sm text-xs text-muted-foreground">
                   {searchTerm ? 'Try adjusting your search terms.' : 'Send your first notification to get started.'}
                 </p>
               </div>
@@ -442,7 +439,7 @@ export default function AdminNotificationsPage() {
               const TypeIcon = getTypeIcon(notification.type);
 
               return (
-                <Card key={notification.id} className={`group rounded-none border-zinc-800 bg-zinc-950 transition-colors hover:border-zinc-700 ${colors.border}`}>
+                <Card key={notification.id} className={`group rounded-none border-border bg-card transition-colors hover:border-muted-foreground/30 ${colors.border}`}>
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 space-y-3">

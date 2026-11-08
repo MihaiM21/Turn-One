@@ -78,10 +78,10 @@ export function TrackEvolutionGraph({ data, advancedSettings }: TrackEvolutionGr
 
   return (
     <div className="space-y-2">
-      <p className="text-xs text-zinc-500">
-        Each line is a driver&apos;s <span className="text-zinc-300">personal-best lap time so far</span> in the
+      <p className="text-xs text-muted-foreground">
+        Each line is a driver&apos;s <span className="text-foreground/85">personal-best lap time so far</span> in the
         session — it steps down every time they set a new best and holds flat otherwise. The white{' '}
-        <span className="text-zinc-300">Overall best</span> line is the fastest lap set by anyone up to that point.
+        <span className="text-foreground/85">Overall best</span> line is the fastest lap set by anyone up to that point.
         Track temperature (dashed, right axis) shows the grip conditions driving that improvement.
       </p>
       <div style={{ height: `${settings.chartHeight}px` }}>
