@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+    ADMIN_NAV_GROUP,
     DASHBOARD_NAV,
     findActiveNav,
     isNavItemActive,
@@ -39,6 +40,15 @@ describe("isNavItemActive", () => {
             .filter(i => i.title === "My driver page");
         expect(resolved.url).toBe("/simracing/drivers/mihai");
         expect(isNavItemActive(resolved, "/simracing/drivers/someone-else")).toBe(true);
+    });
+});
+
+describe("admin group", () => {
+    it("lights only the specific admin page, not the panel too", () => {
+        const [panel, beta] = ADMIN_NAV_GROUP.items;
+        expect(isNavItemActive(beta, "/admin/beta")).toBe(true);
+        expect(isNavItemActive(panel, "/admin/beta")).toBe(false);
+        expect(isNavItemActive(panel, "/admin/trivia")).toBe(true);
     });
 });
 

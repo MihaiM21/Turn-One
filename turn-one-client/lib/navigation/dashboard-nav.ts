@@ -2,6 +2,7 @@ import {
   Activity,
   BookOpen,
   ChartNoAxesCombined,
+  ClipboardList,
   Download,
   Eye,
   Flag,
@@ -13,6 +14,8 @@ import {
   MonitorPlay,
   ListOrdered,
   Laptop,
+  Library,
+  Rocket,
   Shield,
   Sparkles,
   Store,
@@ -105,6 +108,7 @@ export const DASHBOARD_NAV: NavGroup[] = [
     items: [
       { title: "Download and setup", url: "/simracing/download", icon: Download },
       { title: "Devices", url: "/link", icon: Laptop },
+      { title: "Closed beta", url: "/simracing/beta", icon: Rocket },
     ],
   },
   {
@@ -131,7 +135,17 @@ export const DASHBOARD_NAV: NavGroup[] = [
 export const ADMIN_NAV_GROUP: NavGroup = {
   id: "admin",
   label: "Admin",
-  items: [{ title: "Admin panel", url: "/admin", icon: Shield }],
+  items: [
+    {
+      title: "Admin panel",
+      url: "/admin",
+      icon: Shield,
+      // The two pages below have their own items.
+      exclude: ["/admin/beta", "/admin/catalog"],
+    },
+    { title: "Beta applications", url: "/admin/beta", icon: ClipboardList },
+    { title: "Catalog review", url: "/admin/catalog", icon: Library },
+  ],
 }
 
 /** Fills `{username}`; items that need a username are dropped when there is none. */
