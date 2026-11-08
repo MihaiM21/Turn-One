@@ -39,7 +39,7 @@ export function ShiftHistogram({ samples, maxRpm = null, height = 260 }: ShiftHi
 
     if (!data.length) {
         return (
-            <div className="flex h-40 items-center justify-center font-mono text-sm text-zinc-600">
+            <div className="flex h-40 items-center justify-center font-mono text-sm text-muted-foreground/70">
                 No upshifts detected in this lap
             </div>
         );
@@ -82,7 +82,7 @@ export function ShiftHistogram({ samples, maxRpm = null, height = 260 }: ShiftHi
                 </ResponsiveContainer>
             </div>
 
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] text-zinc-500 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] text-muted-foreground sm:grid-cols-4">
                 {data.map(d => (
                     <span key={d.gear} className="font-mono tabular-nums">
                         {d.gear}: {d.count}×
@@ -91,7 +91,7 @@ export function ShiftHistogram({ samples, maxRpm = null, height = 260 }: ShiftHi
             </div>
 
             {maxRpm && maxRpm > 0 ? (
-                <p className="text-[11px] text-zinc-600">
+                <p className="text-[11px] text-muted-foreground/70">
                     Bars well below the rev limit mean you&apos;re short-shifting and leaving power unused.
                 </p>
             ) : null}

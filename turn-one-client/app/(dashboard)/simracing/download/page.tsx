@@ -14,7 +14,6 @@ import {
     HelpCircle,
 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links";
 import { SectionCard } from "@/components/dashboard/simracing/section-card";
 import { LinkDownloadButton } from "@/components/turn-one-link/download-button";
 import { SETUP_STEPS, REQUIREMENTS, TROUBLESHOOTING, PRIVACY_POINTS } from "@/components/turn-one-link/setup-content";
@@ -64,7 +63,7 @@ export default function SimracingDownloadPage() {
                 actions={
                     <Link
                         href="/download"
-                        className="inline-flex h-8 items-center gap-1.5 border border-zinc-800 bg-zinc-900/60 px-3 text-xs text-zinc-300 transition-colors hover:border-primary/40 hover:text-primary"
+                        className="inline-flex h-8 items-center gap-1.5 border border-border bg-secondary/60 px-3 text-xs text-foreground/85 transition-colors hover:border-primary/40 hover:text-primary"
                     >
                         Full guide
                         <ExternalLink className="h-3 w-3" />
@@ -77,11 +76,11 @@ export default function SimracingDownloadPage() {
                 label="Status"
                 title="Your connection"
                 icon={isLive ? Wifi : WifiOff}
-                iconClassName={isLive ? "text-green-500" : hasConnected ? "text-zinc-500" : "text-yellow-500"}
+                iconClassName={isLive ? "text-green-500" : hasConnected ? "text-muted-foreground" : "text-yellow-500"}
             >
                 <div className="grid gap-4 sm:grid-cols-3">
                     <div>
-                        <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">State</p>
+                        <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">State</p>
                         <p className="mt-1 text-sm font-bold text-white">
                             {isLive ? (
                                 <span className="text-green-500">Streaming now</span>
@@ -92,16 +91,16 @@ export default function SimracingDownloadPage() {
                             )}
                         </p>
                         {latestSession ? (
-                            <p className="mt-0.5 text-[11px] text-zinc-500">
+                            <p className="mt-0.5 text-[11px] text-muted-foreground">
                                 Last session {formatDistanceToNow(new Date(latestSession.startedAt))} ago
                             </p>
                         ) : (
-                            <p className="mt-0.5 text-[11px] text-zinc-500">Install Link to record your first lap.</p>
+                            <p className="mt-0.5 text-[11px] text-muted-foreground">Install Link to record your first lap.</p>
                         )}
                     </div>
 
                     <div>
-                        <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Your version</p>
+                        <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Your version</p>
                         <p className="mt-1 font-mono text-sm font-bold tabular-nums text-white">
                             {installedVersion ? `v${installedVersion.replace(/^v/, "")}` : "—"}
                         </p>
@@ -119,7 +118,7 @@ export default function SimracingDownloadPage() {
                     </div>
 
                     <div>
-                        <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Latest release</p>
+                        <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Latest release</p>
                         <p className="mt-1 font-mono text-sm font-bold tabular-nums text-white">
                             {release?.version ? `v${release.version}` : release ? "Unreleased" : "—"}
                         </p>
@@ -131,7 +130,7 @@ export default function SimracingDownloadPage() {
                 <SectionCard label="Install" title="Get Turn One Link" icon={Download}>
                     <LinkDownloadButton size="sm" />
 
-                    <ol className="mt-6 divide-y divide-zinc-800 border-t border-zinc-800">
+                    <ol className="mt-6 divide-y divide-border border-t border-border">
                         {SETUP_STEPS.map((step, i) => {
                             const StepIcon = step.icon;
                             return (
@@ -146,7 +145,7 @@ export default function SimracingDownloadPage() {
                                                 {step.title}
                                             </p>
                                         </div>
-                                        <p className="text-xs text-zinc-500">{step.description}</p>
+                                        <p className="text-xs text-muted-foreground">{step.description}</p>
                                     </div>
                                 </li>
                             );
@@ -156,11 +155,11 @@ export default function SimracingDownloadPage() {
 
                 <div className="space-y-4">
                     <SectionCard label="Requirements" title="Before you start">
-                        <dl className="divide-y divide-zinc-800">
+                        <dl className="divide-y divide-border">
                             {REQUIREMENTS.map(req => (
                                 <div key={req.label} className="flex flex-col gap-0.5 py-2.5 first:pt-0 last:pb-0">
-                                    <dt className="text-[10px] uppercase tracking-wider text-zinc-500">{req.label}</dt>
-                                    <dd className="text-xs text-zinc-300">{req.value}</dd>
+                                    <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{req.label}</dt>
+                                    <dd className="text-xs text-foreground/85">{req.value}</dd>
                                 </div>
                             ))}
                         </dl>
@@ -169,7 +168,7 @@ export default function SimracingDownloadPage() {
                     <SectionCard label="Privacy" title="What it never does" icon={ShieldCheck} iconClassName="text-green-500">
                         <ul className="space-y-2">
                             {PRIVACY_POINTS.doesNot.map(point => (
-                                <li key={point} className="flex gap-2 text-xs text-zinc-400">
+                                <li key={point} className="flex gap-2 text-xs text-muted-foreground">
                                     <span className="mt-1.5 h-1 w-1 shrink-0 bg-zinc-700" aria-hidden />
                                     {point}
                                 </li>
@@ -182,11 +181,11 @@ export default function SimracingDownloadPage() {
             <SectionCard label="Help" title="Troubleshooting" icon={HelpCircle}>
                 <Accordion type="single" collapsible className="w-full">
                     {TROUBLESHOOTING.map((item, i) => (
-                        <AccordionItem key={item.question} value={`item-${i}`} className="border-zinc-800">
+                        <AccordionItem key={item.question} value={`item-${i}`} className="border-border">
                             <AccordionTrigger className="text-left text-sm font-bold hover:text-primary hover:no-underline">
                                 {item.question}
                             </AccordionTrigger>
-                            <AccordionContent className="text-xs leading-relaxed text-zinc-400">
+                            <AccordionContent className="text-xs leading-relaxed text-muted-foreground">
                                 {item.answer}
                             </AccordionContent>
                         </AccordionItem>
@@ -194,7 +193,6 @@ export default function SimracingDownloadPage() {
                 </Accordion>
             </SectionCard>
 
-            <ExploreMoreLinks currentPage="/simracing/download" />
         </main>
     );
 }

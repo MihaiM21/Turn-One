@@ -37,7 +37,7 @@ export function FrictionCircleChart({ samples, height = 340 }: FrictionCirclePro
 
     if (!points.length) {
         return (
-            <div className="flex h-48 items-center justify-center font-mono text-sm text-zinc-600">
+            <div className="flex h-48 items-center justify-center font-mono text-sm text-muted-foreground/70">
                 No G-force data for this lap
             </div>
         );
@@ -47,11 +47,11 @@ export function FrictionCircleChart({ samples, height = 340 }: FrictionCirclePro
         <div className="space-y-3">
             <div className="flex flex-wrap gap-6">
                 <div>
-                    <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Peak lateral</p>
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Peak lateral</p>
                     <p className="font-mono text-lg font-black tabular-nums text-white">{peakLateral.toFixed(2)} g</p>
                 </div>
                 <div>
-                    <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Peak combined</p>
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Peak combined</p>
                     <p className="font-mono text-lg font-black tabular-nums text-primary">{peakCombined.toFixed(2)} g</p>
                 </div>
             </div>
@@ -118,7 +118,7 @@ export function FrictionCircleChart({ samples, height = 340 }: FrictionCirclePro
                 </ResponsiveContainer>
             </div>
 
-            <p className="text-[11px] leading-relaxed text-zinc-600">
+            <p className="text-[11px] leading-relaxed text-muted-foreground/70">
                 Points are coloured by speed. A filled circle means you&apos;re combining braking and cornering;
                 empty diagonals mean you brake in a straight line before turning in.
             </p>

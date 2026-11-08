@@ -35,15 +35,15 @@ export function TelemetryOverview() {
       : null;
 
   return (
-    <div className="border border-zinc-800 bg-zinc-950 animate-in fade-in duration-500">
-      <div className="grid grid-cols-2 divide-x divide-y divide-zinc-800 lg:grid-cols-4 lg:divide-y-0">
+    <div className="border border-border bg-card animate-in fade-in duration-500">
+      <div className="grid grid-cols-2 divide-x divide-y divide-border lg:grid-cols-4 lg:divide-y-0">
 
         <div className="flex items-center gap-4 px-5 py-4">
           <Database className="h-4 w-4 shrink-0 text-primary" />
           <div>
-            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Total Sessions</p>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Total Sessions</p>
             {loading ? (
-              <Skeleton className="mt-0.5 h-7 w-16 bg-zinc-800" />
+              <Skeleton className="mt-0.5 h-7 w-16 bg-border" />
             ) : (
               <p className="font-mono text-2xl font-black tabular-nums">{totalStats?.total_sessions ?? '—'}</p>
             )}
@@ -53,9 +53,9 @@ export function TelemetryOverview() {
         <div className="flex items-center gap-4 px-5 py-4">
           <CalendarDays className="h-4 w-4 shrink-0 text-primary" />
           <div>
-            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Sessions Today</p>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Sessions Today</p>
             {loading ? (
-              <Skeleton className="mt-0.5 h-7 w-10 bg-zinc-800" />
+              <Skeleton className="mt-0.5 h-7 w-10 bg-border" />
             ) : (
               <p className="font-mono text-2xl font-black tabular-nums">{dailyStats?.total_sessions ?? '—'}</p>
             )}
@@ -65,9 +65,9 @@ export function TelemetryOverview() {
         <div className="flex items-center gap-4 px-5 py-4">
           <TrendingUp className="h-4 w-4 shrink-0 text-primary" />
           <div>
-            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Today's Share</p>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Today's Share</p>
             {loading ? (
-              <Skeleton className="mt-0.5 h-7 w-14 bg-zinc-800" />
+              <Skeleton className="mt-0.5 h-7 w-14 bg-border" />
             ) : (
               <p className="font-mono text-2xl font-black tabular-nums">
                 {todayShare !== null ? `${todayShare}%` : '—'}
@@ -77,11 +77,11 @@ export function TelemetryOverview() {
         </div>
 
         <div className="flex items-center gap-4 px-5 py-4">
-          <Activity className={`h-4 w-4 shrink-0 ${!loading && online ? 'text-green-500' : !loading ? 'text-red-500' : 'text-zinc-600'}`} />
+          <Activity className={`h-4 w-4 shrink-0 ${!loading && online ? 'text-green-500' : !loading ? 'text-red-500' : 'text-muted-foreground/70'}`} />
           <div>
-            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">API Status</p>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">API Status</p>
             {loading ? (
-              <Skeleton className="mt-0.5 h-7 w-16 bg-zinc-800" />
+              <Skeleton className="mt-0.5 h-7 w-16 bg-border" />
             ) : (
               <p className={`font-mono text-2xl font-black ${online ? 'text-green-400' : 'text-red-400'}`}>
                 {online ? 'Online' : 'Offline'}

@@ -125,7 +125,7 @@ export default function LinkDevicePage() {
                         <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" />
                         <div>
                             <p className="font-semibold text-white">{step.deviceName} is connected.</p>
-                            <p className="mt-1 text-sm text-zinc-400">
+                            <p className="mt-1 text-sm text-muted-foreground">
                                 You can close this tab — Turn One Link finishes signing in by itself.
                             </p>
                         </div>
@@ -138,7 +138,7 @@ export default function LinkDevicePage() {
                                 <p className="font-semibold text-white">
                                     Sign in Turn One Link on <span className="text-primary">{step.pairing.deviceName}</span>?
                                 </p>
-                                <p className="mt-1 text-sm text-zinc-400">
+                                <p className="mt-1 text-sm text-muted-foreground">
                                     Code <span className="font-mono text-white">{step.pairing.userCode}</span>
                                     {step.pairing.appVersion ? ` · Link ${step.pairing.appVersion}` : ""} · requested{" "}
                                     {formatDistanceToNow(new Date(step.pairing.createdAt), { addSuffix: true })}
@@ -179,7 +179,7 @@ export default function LinkDevicePage() {
                             {step.kind === "error" ? (
                                 <p className="mt-2 text-sm text-red-400">{step.message}</p>
                             ) : (
-                                <p className="mt-2 text-xs text-zinc-500">
+                                <p className="mt-2 text-xs text-muted-foreground">
                                     In Turn One Link, click &quot;Sign in&quot; — the code appears there.
                                 </p>
                             )}
@@ -197,12 +197,12 @@ export default function LinkDevicePage() {
                 empty={devices?.length === 0 ? "No devices yet." : undefined}
                 flush
             >
-                <ul className="divide-y divide-zinc-800">
+                <ul className="divide-y divide-border">
                     {devices?.map(d => (
                         <li key={d.id} className="flex items-center justify-between gap-3 px-5 py-3">
                             <div className="min-w-0">
                                 <p className="truncate text-sm font-semibold text-white">{d.name}</p>
-                                <p className="text-xs text-zinc-500">
+                                <p className="text-xs text-muted-foreground">
                                     {d.appVersion ? `Link ${d.appVersion} · ` : ""}
                                     {d.lastSeenAt
                                         ? `active ${formatDistanceToNow(new Date(d.lastSeenAt), { addSuffix: true })}`
@@ -227,9 +227,9 @@ export default function LinkDevicePage() {
                             checked={consent.granted}
                             onChange={e => toggleConsent(e.target.checked)}
                         />
-                        <span className="text-sm text-zinc-300">
+                        <span className="text-sm text-foreground/85">
                             Use my laps and my 👍/👎 on coaching tips to train Turn One&apos;s own coaching model.
-                            <span className="mt-1 block text-xs text-zinc-500">
+                            <span className="mt-1 block text-xs text-muted-foreground">
                                 Optional and off unless you turn it on. Exports are pseudonymised; turning it off removes your
                                 data from future training sets. Your laps are stored and analysed either way.
                             </span>

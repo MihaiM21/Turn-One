@@ -20,8 +20,8 @@ interface PredictionGameProps {
 
 function SectionHeader({ label, title }: { label: string; title: string }) {
   return (
-    <div className="border-b border-zinc-800 px-5 py-3">
-      <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{label}</p>
+    <div className="border-b border-border px-5 py-3">
+      <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{label}</p>
       <p className="mt-0.5 font-bold text-sm">{title}</p>
     </div>
   );
@@ -30,7 +30,7 @@ function SectionHeader({ label, title }: { label: string; title: string }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{label}</p>
+      <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{label}</p>
       {children}
     </div>
   );
@@ -176,14 +176,14 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
     <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 lg:grid-cols-[2fr_1fr]">
       <div className="space-y-3">
         {/* Race selection */}
-        <section className="border border-zinc-800 bg-zinc-950">
+        <section className="border border-border bg-card">
           <SectionHeader label="Step 1" title="Select Grand Prix" />
           <div className="space-y-3 px-5 py-4">
             <Select
               value={selectedRaceIndex >= 0 ? selectedRaceIndex.toString() : ''}
               onValueChange={handleRaceSelect}
             >
-              <SelectTrigger className="rounded-sm border-zinc-800 bg-zinc-900/60">
+              <SelectTrigger className="rounded-sm border-border bg-secondary/60">
                 <SelectValue placeholder="Choose upcoming race..." />
               </SelectTrigger>
               <SelectContent>
@@ -206,17 +206,17 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
             </Select>
             {selectedRace && selectedRaceSession && (
               <div className="grid grid-cols-1 gap-y-1 text-[11px] sm:grid-cols-3">
-                <span className="text-zinc-500">
+                <span className="text-muted-foreground">
                   <span className="uppercase tracking-wider">Circuit</span>
-                  <span className="ml-2 text-zinc-300">{selectedRace.circuit}</span>
+                  <span className="ml-2 text-foreground/85">{selectedRace.circuit}</span>
                 </span>
-                <span className="text-zinc-500">
+                <span className="text-muted-foreground">
                   <span className="uppercase tracking-wider">Country</span>
-                  <span className="ml-2 text-zinc-300">{selectedRace.country}</span>
+                  <span className="ml-2 text-foreground/85">{selectedRace.country}</span>
                 </span>
-                <span className="text-zinc-500">
+                <span className="text-muted-foreground">
                   <span className="uppercase tracking-wider">Race</span>
-                  <span className="ml-2 font-mono tabular-nums text-zinc-300">
+                  <span className="ml-2 font-mono tabular-nums text-foreground/85">
                     {new Date(selectedRaceSession.startTime).toLocaleString('en-GB', {
                       day: '2-digit',
                       month: 'short',
@@ -231,7 +231,7 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
         </section>
 
         {/* Podium */}
-        <section className="border border-zinc-800 bg-zinc-950">
+        <section className="border border-border bg-card">
           <SectionHeader label="100 pts each" title="Podium predictions" />
           <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-3">
             <Field label="1st place">
@@ -239,7 +239,7 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
                 value={prediction.podiumP1}
                 onValueChange={(value) => setPrediction({ ...prediction, podiumP1: value })}
               >
-                <SelectTrigger className="rounded-sm border-zinc-800 bg-zinc-900/60">
+                <SelectTrigger className="rounded-sm border-border bg-secondary/60">
                   <SelectValue placeholder="Driver" />
                 </SelectTrigger>
                 <SelectContent>
@@ -256,7 +256,7 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
                 value={prediction.podiumP2}
                 onValueChange={(value) => setPrediction({ ...prediction, podiumP2: value })}
               >
-                <SelectTrigger className="rounded-sm border-zinc-800 bg-zinc-900/60">
+                <SelectTrigger className="rounded-sm border-border bg-secondary/60">
                   <SelectValue placeholder="Driver" />
                 </SelectTrigger>
                 <SelectContent>
@@ -273,7 +273,7 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
                 value={prediction.podiumP3}
                 onValueChange={(value) => setPrediction({ ...prediction, podiumP3: value })}
               >
-                <SelectTrigger className="rounded-sm border-zinc-800 bg-zinc-900/60">
+                <SelectTrigger className="rounded-sm border-border bg-secondary/60">
                   <SelectValue placeholder="Driver" />
                 </SelectTrigger>
                 <SelectContent>
@@ -289,7 +289,7 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
         </section>
 
         {/* Optional */}
-        <section className="border border-zinc-800 bg-zinc-950">
+        <section className="border border-border bg-card">
           <SectionHeader label="Optional" title="Additional predictions" />
           <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-2">
             <Field label="Fastest lap">
@@ -297,7 +297,7 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
                 value={prediction.fastestLapDriver}
                 onValueChange={(value) => setPrediction({ ...prediction, fastestLapDriver: value })}
               >
-                <SelectTrigger className="rounded-sm border-zinc-800 bg-zinc-900/60">
+                <SelectTrigger className="rounded-sm border-border bg-secondary/60">
                   <SelectValue placeholder="Driver" />
                 </SelectTrigger>
                 <SelectContent>
@@ -314,7 +314,7 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
                 value={prediction.polePositionDriver}
                 onValueChange={(value) => setPrediction({ ...prediction, polePositionDriver: value })}
               >
-                <SelectTrigger className="rounded-sm border-zinc-800 bg-zinc-900/60">
+                <SelectTrigger className="rounded-sm border-border bg-secondary/60">
                   <SelectValue placeholder="Driver" />
                 </SelectTrigger>
                 <SelectContent>
@@ -336,7 +336,7 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
                 onChange={(e) =>
                   setPrediction({ ...prediction, firstRetirementLap: parseInt(e.target.value) || undefined })
                 }
-                className="rounded-sm border-zinc-800 bg-zinc-900/60 font-mono tabular-nums"
+                className="rounded-sm border-border bg-secondary/60 font-mono tabular-nums"
               />
             </Field>
             <Field label="Number of DNFs">
@@ -349,11 +349,11 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
                 onChange={(e) =>
                   setPrediction({ ...prediction, numberOfDnfs: parseInt(e.target.value) || undefined })
                 }
-                className="rounded-sm border-zinc-800 bg-zinc-900/60 font-mono tabular-nums"
+                className="rounded-sm border-border bg-secondary/60 font-mono tabular-nums"
               />
             </Field>
-            <div className="flex items-center justify-between border border-zinc-800 bg-zinc-900/40 px-3 py-2.5 md:col-span-2">
-              <span className="text-sm text-zinc-300">Will there be a safety car?</span>
+            <div className="flex items-center justify-between border border-border bg-secondary/40 px-3 py-2.5 md:col-span-2">
+              <span className="text-sm text-foreground/85">Will there be a safety car?</span>
               <Switch
                 checked={prediction.willThereBeASafetyCar || false}
                 onCheckedChange={(checked) => setPrediction({ ...prediction, willThereBeASafetyCar: checked })}
@@ -365,11 +365,11 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
 
       {/* Sidebar */}
       <div className="space-y-3">
-        <section className="border border-zinc-800 border-l-4 border-l-primary bg-zinc-950">
+        <section className="border border-border border-l-4 border-l-primary bg-card">
           <SectionHeader label="Step 2" title="Set wager" />
           <div className="space-y-4 px-5 py-4">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] uppercase tracking-wider text-zinc-500">Wager</span>
+              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Wager</span>
               <span className="flex items-center gap-1.5 font-mono text-lg font-black tabular-nums">
                 <Coins className="h-4 w-4 text-yellow-400" />
                 {coinsWagered}
@@ -382,8 +382,8 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
               max={1000}
               step={50}
             />
-            <div className="flex items-center justify-between border-t border-zinc-800/60 pt-3">
-              <span className="text-[11px] uppercase tracking-wider text-zinc-500">Potential payout</span>
+            <div className="flex items-center justify-between border-t border-border/60 pt-3">
+              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Potential payout</span>
               <span className="font-mono text-sm font-bold tabular-nums text-green-400">
                 +{calculatePotentialPayout()}
               </span>
@@ -398,9 +398,9 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
           </div>
         </section>
 
-        <section className="border border-zinc-800 bg-zinc-950">
+        <section className="border border-border bg-card">
           <SectionHeader label="How it works" title="Scoring & payout" />
-          <ul className="divide-y divide-zinc-800/60 text-[11px]">
+          <ul className="divide-y divide-border/60 text-[11px]">
             {[
               ['1st place', '100 pts'],
               ['2nd place', '75 pts'],
@@ -410,12 +410,12 @@ export function PredictionGame({ onPredictionCreated }: PredictionGameProps) {
               ['Safety car', '50 pts'],
             ].map(([label, value]) => (
               <li key={label} className="flex items-center justify-between px-5 py-2">
-                <span className="text-zinc-400">{label}</span>
-                <span className="font-mono tabular-nums text-zinc-300">{value}</span>
+                <span className="text-muted-foreground">{label}</span>
+                <span className="font-mono tabular-nums text-foreground/85">{value}</span>
               </li>
             ))}
-            <li className="px-5 py-2.5 text-[11px] text-zinc-500">
-              Each extra pick raises payout by <span className="font-mono tabular-nums text-zinc-300">30%</span>.
+            <li className="px-5 py-2.5 text-[11px] text-muted-foreground">
+              Each extra pick raises payout by <span className="font-mono tabular-nums text-foreground/85">30%</span>.
             </li>
           </ul>
         </section>

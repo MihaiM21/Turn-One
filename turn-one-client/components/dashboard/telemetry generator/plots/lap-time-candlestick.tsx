@@ -159,13 +159,13 @@ export function LapTimeCandlestickGraph({ data, advancedSettings }: LapTimeCandl
     const d: BoxEntry = payload[0]?.payload
     if (!d) return null
     return (
-      <div className="border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs font-mono space-y-0.5">
+      <div className="border border-border bg-card px-3 py-2 text-xs font-mono space-y-0.5">
         <p className="font-bold mb-1" style={{ color: d.color }}>{d.driver}</p>
-        <p className="text-zinc-400">Max:    {formatLapTime(d.maxVal)}</p>
-        <p className="text-zinc-400">Q3:     {formatLapTime(d.q3Val)}</p>
-        <p className="text-zinc-300">Median: {formatLapTime(d.medianVal)}</p>
-        <p className="text-zinc-400">Q1:     {formatLapTime(d.q1Val)}</p>
-        <p className="text-zinc-400">Min:    {formatLapTime(d.minVal)}</p>
+        <p className="text-muted-foreground">Max:    {formatLapTime(d.maxVal)}</p>
+        <p className="text-muted-foreground">Q3:     {formatLapTime(d.q3Val)}</p>
+        <p className="text-foreground/85">Median: {formatLapTime(d.medianVal)}</p>
+        <p className="text-muted-foreground">Q1:     {formatLapTime(d.q1Val)}</p>
+        <p className="text-muted-foreground">Min:    {formatLapTime(d.minVal)}</p>
       </div>
     )
   }

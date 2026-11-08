@@ -58,11 +58,11 @@ export function CornerDuelGraph({ data, advancedSettings }: CornerDuelGraphProps
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-2 border border-zinc-800 px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 border border-border px-4 py-3">
         <p className="text-sm font-semibold">
           <span style={{ color: d1Color }}>{data.driver1}</span> vs <span style={{ color: d2Color }}>{data.driver2}</span>
         </p>
-        <p className="text-xs text-zinc-400">
+        <p className="text-xs text-muted-foreground">
           {data.session_info?.event_name} — {data.session_info?.session_name}
           {data.same_team && <span className="ml-2 text-yellow-400">(teammates)</span>}
         </p>
@@ -70,8 +70,8 @@ export function CornerDuelGraph({ data, advancedSettings }: CornerDuelGraphProps
 
       {deltaSeries.length > 0 && (
         <div>
-          <p className="text-xs uppercase tracking-wider text-zinc-500 mb-1">Running time delta over lap distance</p>
-          <p className="text-[11px] text-zinc-500 mb-2">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Running time delta over lap distance</p>
+          <p className="text-[11px] text-muted-foreground mb-2">
             Cumulative time gap as the lap unfolds. Above zero = <span style={{ color: d2Color }}>{data.driver2}</span> is
             ahead so far; below zero = <span style={{ color: d1Color }}>{data.driver1}</span> is ahead.
           </p>
@@ -115,8 +115,8 @@ export function CornerDuelGraph({ data, advancedSettings }: CornerDuelGraphProps
       )}
 
       <div>
-        <p className="text-xs uppercase tracking-wider text-zinc-500 mb-1">Apex speed delta per corner</p>
-        <p className="text-[11px] text-zinc-500 mb-2">
+        <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Apex speed delta per corner</p>
+        <p className="text-[11px] text-muted-foreground mb-2">
           How much faster each driver was through the corner's slowest point. Bars above zero (
           <span style={{ color: d1Color }}>{data.driver1}</span>) or below zero (
           <span style={{ color: d2Color }}>{data.driver2}</span>) show who carried more min-corner speed.
@@ -167,8 +167,8 @@ export function CornerDuelGraph({ data, advancedSettings }: CornerDuelGraphProps
       </div>
 
       <div>
-        <p className="text-xs uppercase tracking-wider text-zinc-500 mb-1">Time gained/lost per corner</p>
-        <p className="text-[11px] text-zinc-500 mb-2">
+        <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Time gained/lost per corner</p>
+        <p className="text-[11px] text-muted-foreground mb-2">
           Time each driver gained or lost relative to their rival through that corner (colored by who benefited).
         </p>
         <div style={{ height: `${Math.round(settings.chartHeight * 0.3)}px` }}>

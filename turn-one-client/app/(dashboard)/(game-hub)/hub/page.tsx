@@ -14,7 +14,6 @@ import {
   ShoppingBag,
   type LucideIcon,
 } from 'lucide-react';
-import { DashboardHeader } from '@/components/dashboard/live dashboard/dashboard-header';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { NextRaceHero } from '@/components/dashboard/live dashboard/next-race-hero';
 import { ExploreMoreLinks } from '@/components/dashboard/explore-more-links';
@@ -64,17 +63,17 @@ function QuickActionCard({ action }: { action: QuickAction }) {
   const Icon = action.icon;
   return (
     <Link href={action.href} className="group block">
-      <div className="relative h-full overflow-hidden border border-zinc-800 border-l-4 border-l-primary bg-zinc-950 transition-colors hover:border-zinc-700 hover:bg-zinc-900/60">
+      <div className="relative h-full overflow-hidden border border-border border-l-4 border-l-primary bg-card transition-colors hover:border-muted-foreground/30 hover:bg-secondary/60">
         <div className="flex items-center gap-4 px-5 py-4">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-primary/30 bg-primary/10">
             <Icon className="h-5 w-5 text-primary" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{action.label}</p>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{action.label}</p>
             <h3 className="mt-0.5 truncate text-base font-bold tracking-tight">{action.title}</h3>
-            <p className="mt-0.5 truncate text-xs text-zinc-400">{action.description}</p>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">{action.description}</p>
           </div>
-          <ArrowRight className="h-4 w-4 shrink-0 text-zinc-600 transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
+          <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground/70 transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
         </div>
       </div>
     </Link>
@@ -90,7 +89,7 @@ function statusBadgeClasses(status: PredictionStatus) {
     case PredictionStatus.PARTIAL:
       return 'border-yellow-500/40 text-yellow-400';
     case PredictionStatus.CANCELLED:
-      return 'border-zinc-700 text-zinc-500';
+      return 'border-muted-foreground/30 text-muted-foreground';
     case PredictionStatus.PENDING:
     default:
       return 'border-blue-500/40 text-blue-400';
@@ -122,8 +121,7 @@ export default function GameHubPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
-      <DashboardHeader />
+    <div>
 
       <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6 space-y-4">
         <PageHeader
@@ -140,28 +138,28 @@ export default function GameHubPage() {
 
         <NextRaceHero />
 
-        <section className="border border-zinc-800 bg-zinc-950 animate-in fade-in duration-500">
-          <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
+        <section className="border border-border bg-card animate-in fade-in duration-500">
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Recent activity</p>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Recent activity</p>
               <p className="mt-0.5 font-bold">Your predictions</p>
             </div>
             <Link
               href="/games?tab=my-predictions"
-              className="flex h-7 items-center rounded-sm px-2 text-xs text-zinc-400 transition-colors hover:text-primary"
+              className="flex h-7 items-center rounded-sm px-2 text-xs text-muted-foreground transition-colors hover:text-primary"
             >
               View all <ArrowRight className="ml-1 h-3.5 w-3.5" />
             </Link>
           </div>
 
           {recentPredictions.length > 0 ? (
-            <div className="divide-y divide-zinc-800/60">
+            <div className="divide-y divide-border/60">
               {recentPredictions.map((p) => (
                 <div key={p.id} className="flex items-center gap-3 px-5 py-3">
-                  <Target className="h-4 w-4 shrink-0 text-zinc-600" />
+                  <Target className="h-4 w-4 shrink-0 text-muted-foreground/70" />
                   <span className="min-w-0 flex-1 truncate text-sm font-medium">{p.raceName}</span>
-                  <span className="hidden text-[11px] text-zinc-500 sm:inline">
-                    Wager <span className="font-mono tabular-nums text-zinc-400">{p.coinsWagered}</span>
+                  <span className="hidden text-[11px] text-muted-foreground sm:inline">
+                    Wager <span className="font-mono tabular-nums text-muted-foreground">{p.coinsWagered}</span>
                   </span>
                   {p.status === PredictionStatus.WON && (
                     <span className="hidden font-mono text-xs tabular-nums text-green-400 sm:inline">
@@ -178,11 +176,11 @@ export default function GameHubPage() {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3 px-5 py-10 text-center">
-              <Target className="h-8 w-8 text-zinc-700" />
-              <p className="text-sm text-zinc-400">No predictions yet</p>
+              <Target className="h-8 w-8 text-muted-foreground/50" />
+              <p className="text-sm text-muted-foreground">No predictions yet</p>
               <Link
                 href="/games?tab=predictions"
-                className="rounded-sm border border-zinc-800 bg-zinc-900/60 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:border-primary/40 hover:text-primary"
+                className="rounded-sm border border-border bg-secondary/60 px-3 py-1.5 text-xs text-foreground/85 transition-colors hover:border-primary/40 hover:text-primary"
               >
                 Make your first prediction
               </Link>

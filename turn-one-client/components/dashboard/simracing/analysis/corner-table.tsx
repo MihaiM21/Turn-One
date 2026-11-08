@@ -55,7 +55,7 @@ export function CornerTable({ data, laps }: CornerTableProps) {
     }, [data.rows, deltaRows, sortKey]);
 
     if (!data.rows.length) {
-        return <p className="px-5 py-8 text-center text-sm text-zinc-500">No matched corners for these laps.</p>;
+        return <p className="px-5 py-8 text-center text-sm text-muted-foreground">No matched corners for these laps.</p>;
     }
 
     return (
@@ -71,7 +71,7 @@ export function CornerTable({ data, laps }: CornerTableProps) {
                             "border px-2 py-1 text-[11px] font-bold transition-colors",
                             sortKey === s.key
                                 ? "border-primary/50 bg-primary/15 text-primary"
-                                : "border-zinc-800 text-zinc-500 hover:text-zinc-300"
+                                : "border-border text-muted-foreground hover:text-foreground/85"
                         )}
                     >
                         {s.label}
@@ -82,7 +82,7 @@ export function CornerTable({ data, laps }: CornerTableProps) {
             <div className="overflow-x-auto">
                 <table className="w-full min-w-[720px] border-collapse text-xs">
                     <thead>
-                        <tr className="border-b border-zinc-800 text-left text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                        <tr className="border-b border-border text-left text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                             <th className="px-5 py-2 font-normal">Corner</th>
                             {laps.map(l => (
                                 <th key={l.id} className="px-3 py-2 font-normal" style={{ color: l.color }}>
@@ -103,7 +103,7 @@ export function CornerTable({ data, laps }: CornerTableProps) {
                                         if (ref) setZoom([ref.entryM - 80, ref.exitM + 80]);
                                     }}
                                     className={cn(
-                                        "cursor-pointer border-b border-zinc-900 transition-colors hover:bg-zinc-900/60",
+                                        "cursor-pointer border-b border-border/60 transition-colors hover:bg-secondary/60",
                                         active && "bg-primary/10"
                                     )}
                                 >
@@ -114,7 +114,7 @@ export function CornerTable({ data, laps }: CornerTableProps) {
                                         const c = row.perLap[i];
                                         if (!c) {
                                             return (
-                                                <td key={l.id} className="px-3 py-2 align-top text-zinc-600">
+                                                <td key={l.id} className="px-3 py-2 align-top text-muted-foreground/70">
                                                     —
                                                 </td>
                                             );
@@ -162,11 +162,11 @@ function CellMetrics({
 
     return (
         <div className="flex flex-col gap-0.5">
-            <span className={isRef ? "text-zinc-300" : color(minSpeedDelta, "higherIsBetter")}>
+            <span className={isRef ? "text-foreground/85" : color(minSpeedDelta, "higherIsBetter")}>
                 {Math.round(corner.minSpeedKmh)} km/h
                 {!isRef && minSpeedDelta != null ? <Delta value={minSpeedDelta} digits={1} suffix="" /> : null}
             </span>
-            <span className="text-[10px] text-zinc-500">
+            <span className="text-[10px] text-muted-foreground">
                 brk {brakingBeforeApex != null ? brakingBeforeApex.toFixed(0) : "—"}m before apex
                 {!isRef && brakingDelta != null ? (
                     <span className={cn("ml-1", color(brakingDelta, "higherIsBetter"))}>
@@ -174,7 +174,7 @@ function CellMetrics({
                     </span>
                 ) : null}
             </span>
-            <span className="text-[10px] text-zinc-500">
+            <span className="text-[10px] text-muted-foreground">
                 thr {throttleAfterApex != null ? throttleAfterApex.toFixed(0) : "—"}m after apex
                 {!isRef && throttleDelta != null ? (
                     <span className={cn("ml-1", color(throttleDelta, "lowerIsBetter"))}>
@@ -182,7 +182,7 @@ function CellMetrics({
                     </span>
                 ) : null}
             </span>
-            <span className={isRef ? "text-zinc-400" : color(timeDelta, "lowerIsBetter")}>
+            <span className={isRef ? "text-muted-foreground" : color(timeDelta, "lowerIsBetter")}>
                 {(corner.timeInCornerMs / 1000).toFixed(3)}s
                 {!isRef && timeDelta != null ? <Delta value={timeDelta / 1000} digits={3} suffix="s" /> : null}
             </span>
@@ -202,7 +202,7 @@ function Delta({ value, digits, suffix }: { value: number; digits: number; suffi
 
 /** Green when the delta favours this lap, red when it costs it. Both polarities show up in the table. */
 function color(value: number | null, polarity: "higherIsBetter" | "lowerIsBetter") {
-    if (value == null || Math.abs(value) < 1e-6) return "text-zinc-400";
+    if (value == null || Math.abs(value) < 1e-6) return "text-muted-foreground";
     const better = polarity === "higherIsBetter" ? value > 0 : value < 0;
     return better ? "text-green-500" : "text-red-500";
 }

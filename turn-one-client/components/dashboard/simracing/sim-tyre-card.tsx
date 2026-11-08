@@ -26,7 +26,7 @@ export function SimTyreCard({ physics }: SimTyreCardProps) {
 
 function TyreWidget({ temp, pressure, label }: { temp: number; pressure: number; label: string }) {
     const getColorClass = (t: number) => {
-        if (t === 0) return "bg-black text-zinc-600 border-zinc-800";
+        if (t === 0) return "bg-black text-muted-foreground/70 border-border";
         if (t < 50) return "bg-blue-950/40 text-blue-400 border-blue-900/50";
         if (t < 70) return "bg-teal-950/40 text-teal-400 border-teal-900/50";
         if (t <= 95) return "bg-green-950/40 text-green-400 border-green-800/50";

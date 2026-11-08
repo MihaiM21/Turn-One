@@ -6,7 +6,6 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { ArrowLeft, Copy, Plus, Radio, Trash2, ExternalLink, Eye, EyeOff } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links";
 import { SectionCard } from "@/components/dashboard/simracing/section-card";
 import { PlanGate } from "@/components/dashboard/simracing/plan-gate";
 import { request, SimApiError } from "@/lib/simracing/api";
@@ -90,7 +89,7 @@ export default function StreamerPage() {
         <main className="w-full space-y-4 px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
             <Link
                 href="/simracing"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 transition-colors hover:text-primary"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-primary"
             >
                 <ArrowLeft className="h-3.5 w-3.5" />
                 Back to cockpit
@@ -114,7 +113,7 @@ export default function StreamerPage() {
                             <div className="flex-1">
                                 <label
                                     htmlFor="token-label"
-                                    className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500"
+                                    className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground"
                                 >
                                     Label
                                 </label>
@@ -124,7 +123,7 @@ export default function StreamerPage() {
                                     value={label}
                                     onChange={e => setLabel(e.target.value)}
                                     placeholder="e.g. Friday stream"
-                                    className="h-9 w-full border border-zinc-800 bg-zinc-950 px-3 text-sm text-white placeholder:text-zinc-600 focus:border-primary/40 focus:outline-none"
+                                    className="h-9 w-full border border-border bg-card px-3 text-sm text-white placeholder:text-muted-foreground/70 focus:border-primary/40 focus:outline-none"
                                 />
                             </div>
                             <button
@@ -157,7 +156,6 @@ export default function StreamerPage() {
                 </div>
             </PlanGate>
 
-            <ExploreMoreLinks currentPage="/simracing/streamer" />
         </main>
     );
 }
@@ -186,7 +184,7 @@ function TokenCard({ token, onRevoke }: { token: TokenDto; onRevoke: () => void 
                 </button>
             }
         >
-            <p className="font-mono text-[11px] text-zinc-500">
+            <p className="font-mono text-[11px] text-muted-foreground">
                 Created {format(new Date(token.createdAt), "MMM d, HH:mm")}
                 {token.expiresAt
                     ? ` · Expires ${format(new Date(token.expiresAt), "MMM d, HH:mm")}`
@@ -198,20 +196,20 @@ function TokenCard({ token, onRevoke }: { token: TokenDto; onRevoke: () => void 
                     const url = `${origin}/overlay/${token.token}/${kind.key}`;
                     const isPreviewing = previewing === kind.key;
                     return (
-                        <div key={kind.key} className="border border-zinc-800 bg-black">
-                            <div className="flex items-center justify-between border-b border-zinc-800 px-3 py-2">
+                        <div key={kind.key} className="border border-border bg-black">
+                            <div className="flex items-center justify-between border-b border-border px-3 py-2">
                                 <div className="min-w-0">
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                         {kind.label}
                                     </p>
-                                    <p className="mt-0.5 truncate text-[10px] text-zinc-600">{kind.detail}</p>
+                                    <p className="mt-0.5 truncate text-[10px] text-muted-foreground/70">{kind.detail}</p>
                                 </div>
                                 <div className="flex shrink-0 items-center gap-1">
                                     <button
                                         onClick={() => setPreviewing(isPreviewing ? null : kind.key)}
                                         aria-label={isPreviewing ? "Hide preview" : "Show preview"}
                                         className={`p-1 transition-colors ${
-                                            isPreviewing ? "text-primary" : "text-zinc-600 hover:text-white"
+                                            isPreviewing ? "text-primary" : "text-muted-foreground/70 hover:text-white"
                                         }`}
                                     >
                                         <Eye className="h-3.5 w-3.5" />
@@ -221,7 +219,7 @@ function TokenCard({ token, onRevoke }: { token: TokenDto; onRevoke: () => void 
                                         target="_blank"
                                         rel="noreferrer"
                                         aria-label="Open in a new tab"
-                                        className="p-1 text-zinc-600 transition-colors hover:text-white"
+                                        className="p-1 text-muted-foreground/70 transition-colors hover:text-white"
                                     >
                                         <ExternalLink className="h-3.5 w-3.5" />
                                     </a>
@@ -231,7 +229,7 @@ function TokenCard({ token, onRevoke }: { token: TokenDto; onRevoke: () => void 
                             {/* Live preview so you can see what you're pasting into OBS. */}
                             {isPreviewing ? (
                                 <div
-                                    className="border-b border-zinc-800"
+                                    className="border-b border-border"
                                     // Checkerboard, so the transparent overlay background is visible.
                                     style={{
                                         backgroundImage:
@@ -250,15 +248,15 @@ function TokenCard({ token, onRevoke }: { token: TokenDto; onRevoke: () => void 
                             ) : null}
 
                             <div className="flex items-center gap-2 px-3 py-2">
-                                <code className="min-w-0 flex-1 truncate font-mono text-[10px] text-zinc-400">
+                                <code className="min-w-0 flex-1 truncate font-mono text-[10px] text-muted-foreground">
                                     {url}
                                 </code>
                                 <button
                                     onClick={() => copy(url, kind.label)}
                                     aria-label={`Copy ${kind.label} overlay URL`}
-                                    className="shrink-0 border border-zinc-800 p-1.5 transition-colors hover:border-primary/40 hover:text-primary"
+                                    className="shrink-0 border border-border p-1.5 transition-colors hover:border-primary/40 hover:text-primary"
                                 >
-                                    <Copy className="h-3.5 w-3.5 text-zinc-500" />
+                                    <Copy className="h-3.5 w-3.5 text-muted-foreground" />
                                 </button>
                             </div>
                         </div>

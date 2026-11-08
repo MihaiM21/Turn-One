@@ -77,20 +77,6 @@ export const dashboardPagesMetadata: Record<string, DashboardPageConfig> = {
     url: '/live',
     noIndex: true,
   },
-  live2: {
-    title: 'F1 Live Timing Screen - Advanced Race Tracking',
-    description: 'Advanced Formula 1 live timing screen with comprehensive race data, gap analysis, pit stop information, and detailed driver positions. Professional F1 timing for serious racing fans.',
-    keywords: [
-      'F1 live timing screen',
-      'Formula 1 timing tower',
-      'F1 gap analysis',
-      'live pit stops',
-      'F1 timing data',
-      'professional F1 timing',
-    ],
-    url: '/live2',
-    noIndex: true,
-  },
   rewards: {
     title: 'F1 Rewards & Leveling - Earn Turn One Coins',
     description: 'Earn rewards, level up your profile, and collect Turn One Coins. Complete daily challenges, participate in F1 games, and unlock exclusive features. Track your progress and achievements.',

@@ -22,7 +22,7 @@ export function SimSessionStatusCard({ graphics }: SimSessionStatusCardProps) {
                     <StatusItem label="Status" value={graphics?.status?.replace("AC_", "") || "-"} />
                 </div>
 
-                <div className="mt-3 flex justify-between gap-2 border-t border-zinc-800 pt-3">
+                <div className="mt-3 flex justify-between gap-2 border-t border-border pt-3">
                     <MapSetting label="TC" val={graphics?.tc} />
                     <MapSetting label="ABS" val={graphics?.abs} />
                     <MapSetting label="MAP" val={graphics?.engineMap} />
@@ -44,8 +44,8 @@ function StatusItem({
     valueClass?: string;
 }) {
     return (
-        <div className="flex flex-col gap-0.5 border border-zinc-800 bg-black p-2.5">
-            <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+        <div className="flex flex-col gap-0.5 border border-border bg-black p-2.5">
+            <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {icon}
                 {label}
             </span>
@@ -56,8 +56,8 @@ function StatusItem({
 
 function MapSetting({ label, val }: { label: string; val?: number }) {
     return (
-        <div className="flex flex-1 flex-col items-center border border-zinc-800 bg-black px-2 py-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">{label}</span>
+        <div className="flex flex-1 flex-col items-center border border-border bg-black px-2 py-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
             <span className="font-mono text-sm font-black text-white">{val ?? "-"}</span>
         </div>
     );

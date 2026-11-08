@@ -45,7 +45,7 @@ export function FrictionOverlayPlot({ ctx }: { ctx: SimPlotContext }) {
 
     if (!hasAny) {
         return (
-            <div className="flex h-32 items-center justify-center font-mono text-sm text-zinc-600">
+            <div className="flex h-32 items-center justify-center font-mono text-sm text-muted-foreground/70">
                 No G-force data for these laps
             </div>
         );
@@ -97,7 +97,7 @@ export function FrictionOverlayPlot({ ctx }: { ctx: SimPlotContext }) {
                 </ResponsiveContainer>
             </div>
 
-            <p className="text-[11px] leading-relaxed text-zinc-600">
+            <p className="text-[11px] leading-relaxed text-muted-foreground/70">
                 Each colour is one lap. A fuller, rounder cloud means the lap combines braking and cornering; a
                 cross-shaped hole in the diagonals means braking happens before turning in.
             </p>

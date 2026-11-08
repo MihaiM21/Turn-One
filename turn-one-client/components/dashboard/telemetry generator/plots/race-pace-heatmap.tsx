@@ -38,14 +38,14 @@ export function RacePaceHeatmapGraph({ data, advancedSettings }: RacePaceHeatmap
   return (
     <div className="space-y-3">
       <div
-        className="overflow-auto border border-zinc-800"
+        className="overflow-auto border border-border"
         style={{ maxHeight: `${settings.chartHeight}px` }}
       >
         <table className="border-collapse" style={{ fontSize: `${cellFont}px` }}>
           <thead>
             <tr>
               <th
-                className="sticky left-0 top-0 z-20 bg-zinc-950 border-b border-r border-zinc-800 px-2 py-1 text-left text-zinc-400"
+                className="sticky left-0 top-0 z-20 bg-card border-b border-r border-border px-2 py-1 text-left text-muted-foreground"
                 style={{ minWidth: cellSize * 2 }}
               >
                 Driver
@@ -53,7 +53,7 @@ export function RacePaceHeatmapGraph({ data, advancedSettings }: RacePaceHeatmap
               {data.laps.map((lap) => (
                 <th
                   key={lap}
-                  className="sticky top-0 z-10 bg-zinc-950 border-b border-zinc-800 text-zinc-500 font-normal"
+                  className="sticky top-0 z-10 bg-card border-b border-border text-muted-foreground font-normal"
                   style={{ width: cellSize, minWidth: cellSize }}
                 >
                   {lap % 5 === 0 || lap === data.laps[0] ? lap : ''}
@@ -67,7 +67,7 @@ export function RacePaceHeatmapGraph({ data, advancedSettings }: RacePaceHeatmap
               const pitLapsForDriver = new Set(data.pit_laps?.[driver] ?? [])
               return (
                 <tr key={driver}>
-                  <td className="sticky left-0 z-10 bg-zinc-950 border-r border-zinc-800 px-2 py-0.5 font-mono font-semibold text-zinc-200">
+                  <td className="sticky left-0 z-10 bg-card border-r border-border px-2 py-0.5 font-mono font-semibold text-foreground/95">
                     {driver}
                   </td>
                   {data.laps.map((lap, i) => {
@@ -88,7 +88,7 @@ export function RacePaceHeatmapGraph({ data, advancedSettings }: RacePaceHeatmap
                         key={lap}
                         title={`${driver} — Lap ${lap}: ${value !== null ? `${value > 0 ? '+' : ''}${value.toFixed(3)}s` : '-'} (${status})`}
                         style={{ backgroundColor: bg, width: cellSize, height: cellSize }}
-                        className="text-center border border-zinc-900/50"
+                        className="text-center border border-border/60"
                       />
                     )
                   })}
@@ -98,7 +98,7 @@ export function RacePaceHeatmapGraph({ data, advancedSettings }: RacePaceHeatmap
           </tbody>
         </table>
       </div>
-      <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-400">
+      <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: deltaToColor(-maxAbs, maxAbs) }} /> Faster than median</span>
         <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-zinc-500" /> On median</span>
         <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: deltaToColor(maxAbs, maxAbs) }} /> Slower than median</span>

@@ -71,7 +71,7 @@ export default function SpectateSessionDashboard() {
 
             <Link
                 href="/simracing/spectate"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 transition-colors hover:text-primary"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-primary"
             >
                 <ArrowLeft className="h-3.5 w-3.5" />
                 All live streams

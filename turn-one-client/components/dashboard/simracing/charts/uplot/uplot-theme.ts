@@ -52,7 +52,7 @@ export const PANE_META: Record<string, PaneMeta> = {
 /** Default pane order for the analysis workspace; the first three are on by default. */
 export const DEFAULT_PANES = ["speed", "throttle", "brake", "steer", "gear", "rpm", "gLat"] as const;
 
-export const UPLOT_FONT = "11px ui-monospace, SFMono-Regular, Menlo, monospace";
+export const UPLOT_FONT = "11px 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace";
 
 /** Shared geometry so the ribbon, every pane and the delta chart line up pixel for pixel. */
 export const PANE_LAYOUT = {

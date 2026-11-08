@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Coins, Star, TrendingUp, Gift, Clock3, Loader2 } from 'lucide-react';
-import { DashboardHeader } from '@/components/dashboard/live dashboard/dashboard-header';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { DailyGiftWidget } from '@/components/dashboard/daily-gift-widget';
 import { ExploreMoreLinks } from '@/components/dashboard/explore-more-links';
@@ -22,8 +21,8 @@ interface RewardsProfile {
 
 function SectionHeader({ label, title }: { label: string; title: string }) {
   return (
-    <div className="border-b border-zinc-800 px-5 py-3">
-      <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{label}</p>
+    <div className="border-b border-border px-5 py-3">
+      <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{label}</p>
       <p className="mt-0.5 font-bold text-sm">{title}</p>
     </div>
   );
@@ -106,28 +105,28 @@ export default function RewardsPage() {
       />
 
       {!authToken ? (
-        <section className="flex flex-col items-center gap-3 border border-zinc-800 bg-zinc-950 px-5 py-12 text-center">
-          <Gift className="h-8 w-8 text-zinc-700" />
+        <section className="flex flex-col items-center gap-3 border border-border bg-card px-5 py-12 text-center">
+          <Gift className="h-8 w-8 text-muted-foreground/50" />
           <div>
             <p className="font-bold">Please log in</p>
-            <p className="mt-0.5 text-xs text-zinc-500">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               Log in to view your rewards and level progress.
             </p>
           </div>
         </section>
       ) : isLoadingSummary && !profile ? (
-        <div className="flex items-center justify-center border border-zinc-800 bg-zinc-950 px-5 py-12 text-sm text-zinc-500">
+        <div className="flex items-center justify-center border border-border bg-card px-5 py-12 text-sm text-muted-foreground">
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Loading rewards data...
         </div>
       ) : summaryError || !profile || !levelProgress ? (
-        <section className="border border-zinc-800 bg-zinc-950">
+        <section className="border border-border bg-card">
           <SectionHeader label="Error" title="Could not load rewards" />
           <div className="px-5 py-5">
             <button
               type="button"
               onClick={refresh}
-              className="rounded-sm border border-zinc-800 bg-zinc-900/60 px-3 py-1.5 text-xs uppercase tracking-wider text-zinc-300 transition-colors hover:border-primary/40 hover:text-primary"
+              className="rounded-sm border border-border bg-secondary/60 px-3 py-1.5 text-xs uppercase tracking-wider text-foreground/85 transition-colors hover:border-primary/40 hover:text-primary"
             >
               Retry
             </button>
@@ -137,32 +136,32 @@ export default function RewardsPage() {
         <>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-[3fr_2fr]">
             {/* Level progress panel */}
-            <section className="border border-zinc-800 border-l-4 border-l-primary bg-zinc-950">
+            <section className="border border-border border-l-4 border-l-primary bg-card">
               <SectionHeader label="Progression" title={`Level ${levelProgress.currentLevel}`} />
               <div className="space-y-4 px-5 py-5">
                 <div className="flex items-baseline justify-between">
-                  <span className="text-[11px] uppercase tracking-wider text-zinc-500">XP this level</span>
+                  <span className="text-[11px] uppercase tracking-wider text-muted-foreground">XP this level</span>
                   <span className="font-mono text-sm font-bold tabular-nums">
                     {levelProgress.currentExperience}
-                    <span className="text-zinc-600"> / </span>
+                    <span className="text-muted-foreground/70"> / </span>
                     {levelProgress.experienceRequired}
                   </span>
                 </div>
-                <div className="relative h-1 w-full bg-zinc-800">
+                <div className="relative h-1 w-full bg-border">
                   <div
                     style={{ width: `${xpProgressPct}%` }}
                     className="absolute inset-y-0 left-0 bg-primary transition-all duration-700"
                   />
                 </div>
-                <div className="flex items-center justify-between border-t border-zinc-800/60 pt-3 text-[11px]">
-                  <span className="uppercase tracking-wider text-zinc-500">XP to next level</span>
-                  <span className="font-mono tabular-nums text-zinc-300">{xpRemaining}</span>
+                <div className="flex items-center justify-between border-t border-border/60 pt-3 text-[11px]">
+                  <span className="uppercase tracking-wider text-muted-foreground">XP to next level</span>
+                  <span className="font-mono tabular-nums text-foreground/85">{xpRemaining}</span>
                 </div>
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="uppercase tracking-wider text-zinc-500">Formula</span>
-                  <span className="font-mono tabular-nums text-zinc-400">
+                  <span className="uppercase tracking-wider text-muted-foreground">Formula</span>
+                  <span className="font-mono tabular-nums text-muted-foreground">
                     100 × level + 100 ={' '}
-                    <span className="text-zinc-300">{100 * profile.level + 100}</span>
+                    <span className="text-foreground/85">{100 * profile.level + 100}</span>
                   </span>
                 </div>
               </div>
@@ -173,33 +172,33 @@ export default function RewardsPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <section className="border border-zinc-800 bg-zinc-950">
+            <section className="border border-border bg-card">
               <SectionHeader label="Rules" title="How rewards work" />
-              <ul className="divide-y divide-zinc-800/60 text-sm">
+              <ul className="divide-y divide-border/60 text-sm">
                 <li className="flex items-start gap-3 px-5 py-3">
                   <Gift className="mt-0.5 h-4 w-4 shrink-0 text-yellow-400" />
                   <div>
-                    <p className="text-zinc-200">Daily gift</p>
-                    <p className="mt-0.5 text-[11px] text-zinc-500">
-                      +<span className="font-mono tabular-nums text-zinc-300">50</span> coins and{' '}
-                      +<span className="font-mono tabular-nums text-zinc-300">25</span> XP, once per UTC day.
+                    <p className="text-foreground/95">Daily gift</p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      +<span className="font-mono tabular-nums text-foreground/85">50</span> coins and{' '}
+                      +<span className="font-mono tabular-nums text-foreground/85">25</span> XP, once per UTC day.
                     </p>
                   </div>
                 </li>
                 <li className="flex items-start gap-3 px-5 py-3">
                   <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                   <div>
-                    <p className="text-zinc-200">Level XP</p>
-                    <p className="mt-0.5 text-[11px] text-zinc-500">
-                      Required XP scales as <span className="font-mono tabular-nums text-zinc-300">100 × level + 100</span>.
+                    <p className="text-foreground/95">Level XP</p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      Required XP scales as <span className="font-mono tabular-nums text-foreground/85">100 × level + 100</span>.
                     </p>
                   </div>
                 </li>
                 <li className="flex items-start gap-3 px-5 py-3">
-                  <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-zinc-500" />
+                  <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                   <div>
-                    <p className="text-zinc-200">Last claim</p>
-                    <p className="mt-0.5 font-mono text-[11px] tabular-nums text-zinc-400">
+                    <p className="text-foreground/95">Last claim</p>
+                    <p className="mt-0.5 font-mono text-[11px] tabular-nums text-muted-foreground">
                       {formatLastClaim(profile.lastDailyGiftDate)}
                     </p>
                   </div>
@@ -207,30 +206,30 @@ export default function RewardsPage() {
               </ul>
             </section>
 
-            <section className="border border-zinc-800 bg-zinc-950">
+            <section className="border border-border bg-card">
               <SectionHeader label="Status" title="Daily gift" />
-              <ul className="divide-y divide-zinc-800/60">
+              <ul className="divide-y divide-border/60">
                 <li className="flex items-center justify-between px-5 py-3">
-                  <span className="text-[11px] uppercase tracking-wider text-zinc-500">Availability</span>
+                  <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Availability</span>
                   <span
                     className={`border px-2 py-0.5 text-[10px] uppercase tracking-wider ${
                       profile.canClaimDailyGift
                         ? 'border-yellow-500/40 text-yellow-400'
-                        : 'border-zinc-700 text-zinc-500'
+                        : 'border-muted-foreground/30 text-muted-foreground'
                     }`}
                   >
                     {profile.canClaimDailyGift ? 'Available now' : 'Claimed today'}
                   </span>
                 </li>
                 <li className="flex items-center justify-between px-5 py-3">
-                  <span className="text-[11px] uppercase tracking-wider text-zinc-500">Coins balance</span>
+                  <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Coins balance</span>
                   <span className="font-mono text-sm font-bold tabular-nums text-yellow-400">
                     {profile.coins.toLocaleString()}
                   </span>
                 </li>
                 <li className="flex items-center justify-between px-5 py-3">
-                  <span className="text-[11px] uppercase tracking-wider text-zinc-500">Current XP</span>
-                  <span className="font-mono text-sm font-bold tabular-nums text-zinc-200">
+                  <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Current XP</span>
+                  <span className="font-mono text-sm font-bold tabular-nums text-foreground/95">
                     {profile.experience.toLocaleString()}
                   </span>
                 </li>

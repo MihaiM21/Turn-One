@@ -49,14 +49,14 @@ export function SectionCard({
     const hasHeader = label || title || actions || Icon;
 
     return (
-        <section className={cn("border border-zinc-800 bg-zinc-950", className)}>
+        <section className={cn("border border-border bg-card", className)}>
             {hasHeader ? (
-                <div className="flex items-center justify-between gap-3 border-b border-zinc-800 px-5 py-3">
+                <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
                     <div className="flex min-w-0 items-center gap-2">
                         {Icon ? <Icon className={cn("h-4 w-4 shrink-0 text-primary", iconClassName)} /> : null}
                         <div className="min-w-0">
                             {label ? (
-                                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{label}</p>
+                                <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{label}</p>
                             ) : null}
                             {title ? <p className="mt-0.5 truncate text-sm font-bold text-white">{title}</p> : null}
                         </div>
@@ -71,8 +71,8 @@ export function SectionCard({
                 </div>
             ) : empty ? (
                 <div className="flex flex-col items-center justify-center gap-3 px-5 py-12 text-center">
-                    {EmptyIcon ? <EmptyIcon className="h-8 w-8 text-zinc-700" /> : null}
-                    <div className="text-sm text-zinc-500">{empty}</div>
+                    {EmptyIcon ? <EmptyIcon className="h-8 w-8 text-muted-foreground/50" /> : null}
+                    <div className="text-sm text-muted-foreground">{empty}</div>
                 </div>
             ) : (
                 <div className={cn(!flush && "px-5 py-4", bodyClassName)}>{children}</div>
@@ -86,7 +86,7 @@ export function StatStrip({ children, className }: { children: ReactNode; classN
     return (
         <div
             className={cn(
-                "grid grid-cols-2 gap-px overflow-hidden border border-zinc-800 bg-zinc-800 lg:grid-cols-4",
+                "grid grid-cols-2 gap-px overflow-hidden border border-border bg-border lg:grid-cols-4",
                 className
             )}
         >
@@ -109,13 +109,13 @@ export function Stat({
     valueClassName?: string;
 }) {
     return (
-        <div className="bg-zinc-950 px-5 py-4">
-            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.25em] text-zinc-500">
+        <div className="bg-card px-5 py-4">
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
                 {Icon ? <Icon className="h-3 w-3" /> : null}
                 {label}
             </div>
             <p className={cn("mt-2 font-mono text-2xl font-bold tabular-nums text-white", valueClassName)}>{value}</p>
-            {sub ? <p className="mt-0.5 text-[10px] text-zinc-500">{sub}</p> : null}
+            {sub ? <p className="mt-0.5 text-[10px] text-muted-foreground">{sub}</p> : null}
         </div>
     );
 }

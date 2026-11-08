@@ -37,7 +37,7 @@ export function CoachingPanel({ sessionId, lapNumber, onJumpTo }: CoachingPanelP
             title={lapNumber != null ? `AI Coach · lap ${lapNumber}` : "AI Coach"}
             icon={Sparkles}
             actions={
-                <div className="flex border border-zinc-800">
+                <div className="flex border border-border">
                     <TabButton
                         active={tab === "tips"}
                         onClick={() => setTab("tips")}
@@ -74,7 +74,7 @@ function TipsView({
     onJumpTo?: (distanceM: number) => void;
 }) {
     if (status === "loading") {
-        return <p className="animate-pulse font-mono text-sm text-zinc-500">Analysing your laps…</p>;
+        return <p className="animate-pulse font-mono text-sm text-muted-foreground">Analysing your laps…</p>;
     }
     if (status === "locked") {
         return <LockedNotice message="AI tips are available on PRO and ELITE plans." />;
@@ -83,7 +83,7 @@ function TipsView({
         return <p className="font-mono text-sm text-red-400">Couldn&apos;t load tips. Try again later.</p>;
     }
     if (!tips.length) {
-        return <p className="font-mono text-sm text-zinc-500">No tips for this lap yet.</p>;
+        return <p className="font-mono text-sm text-muted-foreground">No tips for this lap yet.</p>;
     }
 
     return (
@@ -112,7 +112,7 @@ function TipsView({
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                                     <h3 className="text-sm font-bold text-white">{tip.title}</h3>
-                                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                         {tip.category}
                                     </span>
                                     {tip.cornerName ? (
@@ -121,10 +121,10 @@ function TipsView({
                                         </span>
                                     ) : null}
                                     {tip.lapNumber != null ? (
-                                        <span className="font-mono text-[10px] text-zinc-500">L{tip.lapNumber}</span>
+                                        <span className="font-mono text-[10px] text-muted-foreground">L{tip.lapNumber}</span>
                                     ) : null}
                                 </div>
-                                <p className="text-sm leading-relaxed text-zinc-400">{tip.detail}</p>
+                                <p className="text-sm leading-relaxed text-muted-foreground">{tip.detail}</p>
                             </div>
                         </div>
                     </div>
@@ -155,7 +155,7 @@ function ChatView({
         <div className="space-y-3">
             <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
                 {history.length === 0 ? (
-                    <p className="font-mono text-sm text-zinc-500">
+                    <p className="font-mono text-sm text-muted-foreground">
                         Ask the coach about a corner, a sector, or a setup change.
                     </p>
                 ) : (
@@ -165,7 +165,7 @@ function ChatView({
                             className={`whitespace-pre-wrap border p-3 text-sm leading-relaxed ${
                                 m.role === "user"
                                     ? "border-primary/30 bg-primary/5 text-white"
-                                    : "border-zinc-800 bg-zinc-900/40 text-zinc-200"
+                                    : "border-border bg-secondary/40 text-foreground/95"
                             }`}
                         >
                             {m.content}
@@ -173,7 +173,7 @@ function ChatView({
                     ))
                 )}
                 {status === "sending" ? (
-                    <p className="animate-pulse font-mono text-xs text-zinc-500">Thinking…</p>
+                    <p className="animate-pulse font-mono text-xs text-muted-foreground">Thinking…</p>
                 ) : null}
                 {status === "error" ? (
                     <p className="font-mono text-xs text-red-400">Request failed. Try again.</p>
@@ -192,7 +192,7 @@ function ChatView({
                         }
                     }}
                     placeholder="Ask about a lap, sector, or setup…"
-                    className="h-9 flex-1 border border-zinc-800 bg-zinc-900 px-3 text-sm text-white outline-none transition-colors focus:border-primary/40"
+                    className="h-9 flex-1 border border-border bg-secondary px-3 text-sm text-white outline-none transition-colors focus:border-primary/40"
                 />
                 <button
                     onClick={onSend}
@@ -213,7 +213,7 @@ function LockedNotice({ message }: { message: string }) {
             <Lock className="h-4 w-4 shrink-0 text-primary" />
             <div className="flex-1">
                 <p className="text-sm font-bold text-white">{message}</p>
-                <p className="mt-0.5 text-xs text-zinc-500">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                     Upgrade your plan to unlock this feature.
                 </p>
             </div>
@@ -236,7 +236,7 @@ function TabButton({
         <button
             onClick={onClick}
             className={`inline-flex h-7 items-center gap-1.5 px-3 text-[11px] font-bold transition-colors ${
-                active ? "bg-primary/15 text-primary" : "text-zinc-500 hover:text-zinc-300"
+                active ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground/85"
             }`}
         >
             {icon}

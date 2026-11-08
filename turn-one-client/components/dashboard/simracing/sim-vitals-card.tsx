@@ -39,7 +39,7 @@ export function SimVitalsCard({ physics, maxRpm }: SimVitalsCardProps) {
                         <div
                             key={i}
                             className={`h-2 flex-1 transition-all duration-75 ${
-                                i < activeLeds ? getLedColor(i) : "bg-zinc-800"
+                                i < activeLeds ? getLedColor(i) : "bg-border"
                             }`}
                         />
                     ))}
@@ -47,23 +47,23 @@ export function SimVitalsCard({ physics, maxRpm }: SimVitalsCardProps) {
 
                 <div className="flex justify-between items-center mb-5">
                     <div className="flex flex-col">
-                        <span className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-500">Speed</span>
+                        <span className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Speed</span>
                         <div className="flex items-baseline gap-2">
                             <span className="font-mono text-6xl font-black leading-none tracking-tighter tabular-nums text-white">
                                 {speed}
                             </span>
-                            <span className="text-lg font-bold text-zinc-500">km/h</span>
+                            <span className="text-lg font-bold text-muted-foreground">km/h</span>
                         </div>
                     </div>
                     <div className="flex flex-col items-end">
-                        <span className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-500">Gear</span>
+                        <span className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Gear</span>
                         <div
                             className={`flex h-24 w-20 items-center justify-center border-2 bg-black transition-colors duration-100 ${
                                 isShiftLight
                                     ? "border-primary"
                                     : isNearShift
                                       ? "border-orange-500/50"
-                                      : "border-zinc-800"
+                                      : "border-border"
                             }`}
                         >
                             <span
@@ -78,13 +78,13 @@ export function SimVitalsCard({ physics, maxRpm }: SimVitalsCardProps) {
                 </div>
 
                 <div className="space-y-2">
-                    <div className="flex justify-between text-[11px] font-semibold text-zinc-500">
+                    <div className="flex justify-between text-[11px] font-semibold text-muted-foreground">
                         <span className="uppercase tracking-wider">RPM</span>
                         <span className="font-mono tabular-nums">
                             {rpm.toLocaleString()} / {maxRpm ? maxRpm.toLocaleString() : "---"}
                         </span>
                     </div>
-                    <div className="h-3 w-full overflow-hidden border border-zinc-800 bg-black">
+                    <div className="h-3 w-full overflow-hidden border border-border bg-black">
                         <div
                             className={`h-full transition-all duration-75 ${
                                 isShiftLight ? "bg-primary" : isNearShift ? "bg-orange-500" : "bg-primary/60"

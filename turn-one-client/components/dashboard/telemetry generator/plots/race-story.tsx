@@ -140,11 +140,11 @@ export function RaceStoryGraph({ data, advancedSettings }: RaceStoryGraphProps) 
         </ResponsiveContainer>
       </div>
       {moments.length > 0 && (
-        <div className="max-h-48 overflow-y-auto border border-zinc-800 divide-y divide-zinc-800">
+        <div className="max-h-48 overflow-y-auto border border-border divide-y divide-border">
           {moments.map((m, i) => (
             <div key={i} className="flex items-start gap-3 px-4 py-2 text-sm">
-              <span className="font-mono text-xs text-zinc-500 mt-0.5 shrink-0">Lap {m.lap}</span>
-              <span className={MAJOR_KINDS.has(m.kind) ? 'font-semibold text-red-400' : 'text-zinc-300'}>{m.caption}</span>
+              <span className="font-mono text-xs text-muted-foreground mt-0.5 shrink-0">Lap {m.lap}</span>
+              <span className={MAJOR_KINDS.has(m.kind) ? 'font-semibold text-red-400' : 'text-foreground/85'}>{m.caption}</span>
             </div>
           ))}
         </div>

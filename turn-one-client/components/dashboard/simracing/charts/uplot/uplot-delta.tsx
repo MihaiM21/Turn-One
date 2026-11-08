@@ -105,16 +105,16 @@ export function UPlotDelta({ x, laps, referenceLabel, corners = [], height = 200
                                 {fmtDelta(finalDelta)}
                             </p>
                             {at != null && !Number.isNaN(at) ? (
-                                <p className="font-mono text-xs text-zinc-400">
+                                <p className="font-mono text-xs text-muted-foreground">
                                     {fmtDelta(at)} @ {formatDistance(hover ?? 0)}
                                 </p>
                             ) : null}
                         </div>
                     );
                 })}
-                <p className="ml-auto self-end text-xs text-zinc-500">vs {referenceLabel}</p>
+                <p className="ml-auto self-end text-xs text-muted-foreground">vs {referenceLabel}</p>
             </div>
-            <div className="border border-zinc-800 bg-zinc-950">
+            <div className="border border-border bg-card">
                 <div ref={containerRef} className="w-full" style={{ height }} />
             </div>
         </div>

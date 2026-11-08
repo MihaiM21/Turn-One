@@ -58,7 +58,7 @@ export function FormGuideGraph({ data, advancedSettings }: FormGuideGraphProps) 
 
   return (
     <div className="space-y-2">
-      <p className="text-xs text-zinc-500">
+      <p className="text-xs text-muted-foreground">
         Each line is a driver&apos;s {data.window}-round rolling average finishing position — lower is better.
         Hover a driver below to isolate their line.
       </p>
@@ -71,14 +71,14 @@ export function FormGuideGraph({ data, advancedSettings }: FormGuideGraphProps) 
             className={`rounded border px-2 py-1 text-xs transition-colors ${
               seriesMode === mode
                 ? 'border-blue-500 bg-blue-500/10 text-blue-400'
-                : 'border-zinc-700 text-zinc-400 hover:border-zinc-500'
+                : 'border-muted-foreground/30 text-muted-foreground hover:border-muted-foreground/50'
             }`}
           >
             {mode === 'race' ? 'Race' : mode === 'quali' ? 'Qualifying' : 'Both'}
           </button>
         ))}
         {seriesMode === 'both' && (
-          <span className="ml-2 text-[10px] text-zinc-500">Solid = Race · Dashed = Qualifying</span>
+          <span className="ml-2 text-[10px] text-muted-foreground">Solid = Race · Dashed = Qualifying</span>
         )}
       </div>
 
@@ -155,11 +155,11 @@ export function FormGuideGraph({ data, advancedSettings }: FormGuideGraphProps) 
               key={driver.tla}
               onMouseEnter={() => setHoveredDriver(driver.tla)}
               onMouseLeave={() => setHoveredDriver(null)}
-              className="flex items-center gap-1.5 rounded px-1.5 py-0.5 text-xs transition-opacity hover:bg-zinc-800/60"
+              className="flex items-center gap-1.5 rounded px-1.5 py-0.5 text-xs transition-opacity hover:bg-border/60"
               style={{ opacity: hoveredDriver && hoveredDriver !== driver.tla ? 0.4 : 1 }}
             >
               <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: driver.color }} />
-              <span className="font-mono text-zinc-300">{driver.tla}</span>
+              <span className="font-mono text-foreground/85">{driver.tla}</span>
             </button>
           ))}
         </div>

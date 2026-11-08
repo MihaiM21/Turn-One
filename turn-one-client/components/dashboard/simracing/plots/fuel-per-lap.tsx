@@ -45,7 +45,7 @@ export function FuelPerLapPlot({ ctx }: { ctx: SimPlotContext }) {
 
     if (!hasFuel) {
         return (
-            <div className="flex h-32 items-center justify-center font-mono text-sm text-zinc-600">
+            <div className="flex h-32 items-center justify-center font-mono text-sm text-muted-foreground/70">
                 No fuel data for these laps
             </div>
         );

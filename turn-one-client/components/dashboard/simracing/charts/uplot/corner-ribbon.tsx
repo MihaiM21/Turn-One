@@ -49,7 +49,7 @@ export function CornerRibbon({ x, corners, sectorBoundariesM = [], height = PANE
     const { containerRef } = useUPlot({ buildOptions, data, height, deps: [] });
 
     return (
-        <div className="border-b border-zinc-800 bg-zinc-950/80">
+        <div className="border-b border-border bg-card/80">
             <div ref={containerRef} className="w-full" style={{ height }} />
         </div>
     );

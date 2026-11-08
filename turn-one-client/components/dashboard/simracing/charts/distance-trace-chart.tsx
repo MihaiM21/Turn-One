@@ -83,7 +83,7 @@ export function DistanceTraceChart({
 
     if (!samples.length) {
         return (
-            <div className="flex h-48 items-center justify-center font-mono text-sm text-zinc-600">
+            <div className="flex h-48 items-center justify-center font-mono text-sm text-muted-foreground/70">
                 No telemetry for this lap
             </div>
         );
@@ -102,8 +102,8 @@ export function DistanceTraceChart({
                             aria-pressed={on}
                             className={`inline-flex h-7 items-center gap-1.5 border px-2.5 text-[11px] font-bold transition-colors ${
                                 on
-                                    ? "border-zinc-700 bg-zinc-900 text-white"
-                                    : "border-zinc-800 bg-transparent text-zinc-600 hover:text-zinc-400"
+                                    ? "border-muted-foreground/30 bg-secondary text-white"
+                                    : "border-border bg-transparent text-muted-foreground/70 hover:text-muted-foreground"
                             }`}
                         >
                             <span
@@ -207,7 +207,7 @@ export function DistanceTraceChart({
             </div>
 
             {!visible.length ? (
-                <p className="py-8 text-center font-mono text-sm text-zinc-600">Select a channel above</p>
+                <p className="py-8 text-center font-mono text-sm text-muted-foreground/70">Select a channel above</p>
             ) : null}
         </div>
     );

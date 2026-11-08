@@ -150,8 +150,8 @@ export function LapPicker({ trackId, refLapId, lapIds, onChange }: LapPickerProp
 
     if (!tracksLoading && tracks?.length === 0) {
         return (
-            <div className="space-y-3 border border-zinc-800 bg-zinc-950 p-5 text-center">
-                <p className="text-sm text-zinc-400">No tracks recorded yet.</p>
+            <div className="space-y-3 border border-border bg-card p-5 text-center">
+                <p className="text-sm text-muted-foreground">No tracks recorded yet.</p>
                 <Link href="/simracing/download" className="inline-block text-xs font-bold text-primary hover:underline">
                     Get the Turn One link app
                 </Link>
@@ -160,13 +160,13 @@ export function LapPicker({ trackId, refLapId, lapIds, onChange }: LapPickerProp
     }
 
     return (
-        <div className="flex flex-col border border-zinc-800 bg-zinc-950">
-            <div className="border-b border-zinc-800 p-3">
-                <label className="mb-1.5 block text-[10px] uppercase tracking-[0.25em] text-zinc-500">Track</label>
+        <div className="flex flex-col border border-border bg-card">
+            <div className="border-b border-border p-3">
+                <label className="mb-1.5 block text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Track</label>
                 <select
                     value={trackId ?? ""}
                     onChange={e => selectTrack(e.target.value)}
-                    className="h-9 w-full border border-zinc-800 bg-zinc-900 px-2 text-sm text-white focus:border-primary/40 focus:outline-none"
+                    className="h-9 w-full border border-border bg-secondary px-2 text-sm text-white focus:border-primary/40 focus:outline-none"
                 >
                     <option value="">{tracksLoading ? "Loading…" : "Select a track…"}</option>
                     {tracks?.map(t => (
@@ -179,15 +179,15 @@ export function LapPicker({ trackId, refLapId, lapIds, onChange }: LapPickerProp
             </div>
 
             {!trackId ? (
-                <div className="p-5 text-center text-xs text-zinc-500">Pick a track to see its laps.</div>
+                <div className="p-5 text-center text-xs text-muted-foreground">Pick a track to see its laps.</div>
             ) : (
                 <>
-                    <div className="flex flex-wrap items-center gap-1.5 border-b border-zinc-800 p-3">
+                    <div className="flex flex-wrap items-center gap-1.5 border-b border-border p-3">
                         {activeTrack?.cars.length ? (
                             <select
                                 value={car}
                                 onChange={e => setCar(e.target.value)}
-                                className="h-7 border border-zinc-800 bg-zinc-900 px-1.5 text-[11px] text-white focus:border-primary/40 focus:outline-none"
+                                className="h-7 border border-border bg-secondary px-1.5 text-[11px] text-white focus:border-primary/40 focus:outline-none"
                             >
                                 <option value="">All cars</option>
                                 {activeTrack.cars.map(c => (
@@ -206,7 +206,7 @@ export function LapPicker({ trackId, refLapId, lapIds, onChange }: LapPickerProp
                                 "h-7 border px-2 text-[11px] font-bold transition-colors",
                                 validOnly
                                     ? "border-primary/50 bg-primary/15 text-primary"
-                                    : "border-zinc-800 text-zinc-500 hover:text-zinc-300"
+                                    : "border-border text-muted-foreground hover:text-foreground/85"
                             )}
                         >
                             Valid only
@@ -221,20 +221,20 @@ export function LapPicker({ trackId, refLapId, lapIds, onChange }: LapPickerProp
                                     "h-7 border px-2 text-[11px] font-bold transition-colors",
                                     includePublic
                                         ? "border-primary/50 bg-primary/15 text-primary"
-                                        : "border-zinc-800 text-zinc-500 hover:text-zinc-300"
+                                        : "border-border text-muted-foreground hover:text-foreground/85"
                                 )}
                             >
                                 Public laps
                             </button>
                         ) : (
-                            <span className="inline-flex items-center gap-1 text-[11px] text-zinc-600">
+                            <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/70">
                                 Public laps <PlanBadge plan="PRO" />
                             </span>
                         )}
                     </div>
 
                     {!isPro ? (
-                        <p className="border-b border-zinc-800 bg-primary/5 px-3 py-2 text-[11px] text-zinc-400">
+                        <p className="border-b border-border bg-primary/5 px-3 py-2 text-[11px] text-muted-foreground">
                             BASIC plan: overlay up to {MAX_LAPS_BASIC} laps.{" "}
                             <Link href="/pricing" className="font-bold text-primary hover:underline">
                                 Upgrade
@@ -245,13 +245,13 @@ export function LapPicker({ trackId, refLapId, lapIds, onChange }: LapPickerProp
 
                     <div className="max-h-[70vh] overflow-y-auto">
                         {lapsLoading ? (
-                            <div className="p-5 text-center text-xs text-zinc-500">Loading laps…</div>
+                            <div className="p-5 text-center text-xs text-muted-foreground">Loading laps…</div>
                         ) : groups.length === 0 ? (
-                            <div className="p-5 text-center text-xs text-zinc-500">No laps match these filters.</div>
+                            <div className="p-5 text-center text-xs text-muted-foreground">No laps match these filters.</div>
                         ) : (
                             groups.map(group => (
                                 <div key={group.sessionId}>
-                                    <div className="sticky top-0 border-b border-zinc-900 bg-zinc-950/95 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-zinc-600">
+                                    <div className="sticky top-0 border-b border-border/60 bg-card/95 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
                                         {format(new Date(group.startedAt), "MMM d, yyyy")} · {group.car} · {group.kind}
                                     </div>
                                     {group.laps.map(item => {
@@ -275,11 +275,11 @@ export function LapPicker({ trackId, refLapId, lapIds, onChange }: LapPickerProp
                                                     }
                                                 }}
                                                 className={cn(
-                                                    "flex items-center gap-2 border-b border-zinc-900 px-3 py-2 text-xs transition-colors",
+                                                    "flex items-center gap-2 border-b border-border/60 px-3 py-2 text-xs transition-colors",
                                                     disabled
                                                         ? "cursor-not-allowed opacity-50"
-                                                        : "cursor-pointer hover:bg-zinc-900/60",
-                                                    selected && "bg-zinc-900"
+                                                        : "cursor-pointer hover:bg-secondary/60",
+                                                    selected && "bg-secondary"
                                                 )}
                                             >
                                                 <button
@@ -296,7 +296,7 @@ export function LapPicker({ trackId, refLapId, lapIds, onChange }: LapPickerProp
                                                     <Star
                                                         className={cn(
                                                             "h-3.5 w-3.5",
-                                                            isRef ? "fill-primary text-primary" : "text-zinc-700"
+                                                            isRef ? "fill-primary text-primary" : "text-muted-foreground/50"
                                                         )}
                                                     />
                                                 </button>
@@ -306,14 +306,14 @@ export function LapPicker({ trackId, refLapId, lapIds, onChange }: LapPickerProp
                                                     style={selected ? { background: lapColor(selectedIndex) } : undefined}
                                                 />
 
-                                                <span className="w-9 shrink-0 font-mono text-zinc-400">L{item.lapNumber}</span>
+                                                <span className="w-9 shrink-0 font-mono text-muted-foreground">L{item.lapNumber}</span>
                                                 <span className="w-16 shrink-0 font-mono font-bold tabular-nums text-white">
                                                     {formatLapTime(item.lapTimeMs)}
                                                 </span>
 
                                                 <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
                                                     {item.sectorsMs.some(s => s != null) ? (
-                                                        <span className="hidden gap-1 font-mono text-[10px] text-zinc-500 sm:flex">
+                                                        <span className="hidden gap-1 font-mono text-[10px] text-muted-foreground sm:flex">
                                                             {item.sectorsMs.map((s, i) => (
                                                                 <span key={i}>{s != null ? (s / 1000).toFixed(3) : "—"}</span>
                                                             ))}
@@ -337,7 +337,7 @@ export function LapPicker({ trackId, refLapId, lapIds, onChange }: LapPickerProp
                                                                     handleReprocess(item);
                                                                 }}
                                                                 disabled={isReprocessing}
-                                                                className="border border-zinc-700 px-1.5 py-0.5 text-[10px] font-bold text-zinc-300 hover:border-primary/40 hover:text-primary disabled:opacity-50"
+                                                                className="border border-muted-foreground/30 px-1.5 py-0.5 text-[10px] font-bold text-foreground/85 hover:border-primary/40 hover:text-primary disabled:opacity-50"
                                                             >
                                                                 {isReprocessing ? (
                                                                     <Loader2 className="h-2.5 w-2.5 animate-spin" />
@@ -363,7 +363,7 @@ export function LapPicker({ trackId, refLapId, lapIds, onChange }: LapPickerProp
 
 function Badge({ children }: { children: ReactNode }) {
     return (
-        <span className="inline-flex items-center border border-zinc-700 px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide text-zinc-400">
+        <span className="inline-flex items-center border border-muted-foreground/30 px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
             {children}
         </span>
     );

@@ -46,7 +46,8 @@ export default function RootLayout({ children, }: {
     const websiteSchema = generateWebsiteSchema();
 
     return (
-        <html lang="en" className="dark" style={{ colorScheme: "dark" }}>
+        // Font variables sit on <html>: Tailwind resolves --font-sans there, so on <body> they were never seen.
+        <html lang="en" className={`dark ${barlow.variable} ${barlowCondensed.variable} ${jetbrainsMono.variable}`} style={{ colorScheme: "dark" }} suppressHydrationWarning>
             <head>
                 {/* Structured Data for SEO */}
                 <JsonLd data={[organizationSchema, websiteSchema]} />
@@ -75,7 +76,7 @@ export default function RootLayout({ children, }: {
                     gtag('config', 'G-KY3D64KP8W');
                 `}
             </Script>
-            <body className={`${barlow.variable} ${barlowCondensed.variable} ${jetbrainsMono.variable} antialiased`}>
+            <body className="font-sans antialiased">
                 <ThemeProvider attribute="data-theme" themes={["t1"]} defaultTheme="t1" enableSystem={false} disableTransitionOnChange>
                     <AuthProvider>
                         <VersionProvider>

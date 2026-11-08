@@ -322,7 +322,7 @@ function AnalysisWorkspace() {
                             </SectionCard>
 
                             {isPlanGated ? (
-                                <p className="border border-primary/30 bg-primary/5 px-4 py-3 text-xs text-zinc-400">
+                                <p className="border border-primary/30 bg-primary/5 px-4 py-3 text-xs text-muted-foreground">
                                     Some of this overlay needs a higher plan — upgrade to see every selected lap.
                                 </p>
                             ) : null}
@@ -330,7 +330,7 @@ function AnalysisWorkspace() {
                             {plotCtx ? (
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-2">
-                                        <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">More plots</p>
+                                        <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">More plots</p>
                                         <div className="flex flex-wrap gap-1">
                                             {SIM_PLOT_CATEGORIES.map(cat => (
                                                 <button
@@ -342,7 +342,7 @@ function AnalysisWorkspace() {
                                                         "border px-2.5 py-1 text-[11px] font-bold transition-colors",
                                                         plotCategory === cat.key
                                                             ? "border-primary/50 bg-primary/15 text-primary"
-                                                            : "border-zinc-800 text-zinc-500 hover:text-zinc-300"
+                                                            : "border-border text-muted-foreground hover:text-foreground/85"
                                                     )}
                                                 >
                                                     {cat.label}

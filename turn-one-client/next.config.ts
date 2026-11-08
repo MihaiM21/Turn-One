@@ -110,6 +110,12 @@ const nextConfig: NextConfig = {
         destination: '/live',
         permanent: true,
       },
+      // The second live-timing prototype; same dead feed as /live.
+      {
+        source: '/live2',
+        destination: '/live',
+        permanent: true,
+      },
       // The landing page once linked here; the route never existed. The
       // predictions UI is the first tab of the game hub.
       {

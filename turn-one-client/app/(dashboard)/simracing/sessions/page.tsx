@@ -19,7 +19,6 @@ import {
     Square,
 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links";
 import { SectionCard } from "@/components/dashboard/simracing/section-card";
 import {
     getMySessions,
@@ -28,18 +27,10 @@ import {
     type SimSession,
 } from "@/lib/simracing/api";
 import { SIM_SOURCE_LABEL, type SimSource } from "@/lib/simracing/protocol";
+import { useSimFilter } from "@/lib/simracing/sim-filter";
+import { SIM_FILTERS, matchesSimFilter } from "@/lib/simracing/sims";
 
 type SortKey = "newest" | "bestLap";
-type SourceFilter = "all" | SimSource;
-
-const SOURCE_FILTERS: { key: SourceFilter; label: string }[] = [
-    { key: "all", label: "All" },
-    { key: "Acc", label: "ACC" },
-    { key: "Ac", label: "AC" },
-    { key: "IRacing", label: "iRacing" },
-    { key: "F1_25", label: "F1 25" },
-    { key: "F1_26", label: "F1 26" },
-];
 
 const SESSION_TYPE_COLORS: Record<string, string> = {
     RACE: "border-primary/30 bg-primary/10 text-primary",
@@ -86,7 +77,8 @@ export default function MySessionsPage() {
     const [loading, setLoading] = useState(true);
     const [query, setQuery] = useState("");
     const [sort, setSort] = useState<SortKey>("newest");
-    const [source, setSource] = useState<SourceFilter>("all");
+    // The dashboard-wide sim filter (also in the top bar), not a page-local one.
+    const { filter: source, setFilter: setSource } = useSimFilter();
     const [deleting, setDeleting] = useState<string | null>(null);
     const [selected, setSelected] = useState<Set<string>>(new Set());
     const [bulkDeleting, setBulkDeleting] = useState(false);
@@ -104,7 +96,7 @@ export default function MySessionsPage() {
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
         return sessions.filter(s => {
-            if (source !== "all" && s.source !== source) return false;
+            if (!matchesSimFilter(s.source, source)) return false;
             if (!q) return true;
             return s.track?.toLowerCase().includes(q) || s.carModel?.toLowerCase().includes(q);
         });
@@ -197,21 +189,21 @@ export default function MySessionsPage() {
                 <div className="space-y-2">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <div className="relative flex-1">
-                            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-600" />
+                            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/70" />
                             <input
                                 value={query}
                                 onChange={e => setQuery(e.target.value)}
                                 placeholder="Filter by track or car"
-                                className="h-9 w-full border border-zinc-800 bg-zinc-950 pl-9 pr-3 text-sm text-white placeholder:text-zinc-600 focus:border-primary/40 focus:outline-none"
+                                className="h-9 w-full border border-border bg-card pl-9 pr-3 text-sm text-white placeholder:text-muted-foreground/70 focus:border-primary/40 focus:outline-none"
                             />
                         </div>
 
                         <div className="relative">
-                            <ArrowUpDown className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-600" />
+                            <ArrowUpDown className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/70" />
                             <select
                                 value={sort}
                                 onChange={e => setSort(e.target.value as SortKey)}
-                                className="h-9 w-full appearance-none border border-zinc-800 bg-zinc-950 pl-9 pr-8 text-sm text-white focus:border-primary/40 focus:outline-none sm:w-52"
+                                className="h-9 w-full appearance-none border border-border bg-card pl-9 pr-8 text-sm text-white focus:border-primary/40 focus:outline-none sm:w-52"
                             >
                                 <option value="newest">Newest track activity</option>
                                 <option value="bestLap">Fastest lap</option>
@@ -232,16 +224,16 @@ export default function MySessionsPage() {
                     </div>
 
                     <div className="flex flex-wrap gap-1.5">
-                        {SOURCE_FILTERS.map(f => (
+                        {SIM_FILTERS.map(f => (
                             <button
-                                key={f.key}
+                                key={f.value}
                                 type="button"
-                                onClick={() => setSource(f.key)}
-                                aria-pressed={source === f.key}
+                                onClick={() => setSource(f.value)}
+                                aria-pressed={source === f.value}
                                 className={`h-7 border px-2.5 text-[11px] font-bold transition-colors ${
-                                    source === f.key
+                                    source === f.value
                                         ? "border-primary/50 bg-primary/10 text-primary"
-                                        : "border-zinc-800 text-zinc-500 hover:text-zinc-300"
+                                        : "border-border text-muted-foreground hover:text-foreground/85"
                                 }`}
                             >
                                 {f.label}
@@ -260,7 +252,7 @@ export default function MySessionsPage() {
                         <div className="space-y-4">
                             <div>
                                 <p className="text-sm font-bold text-white">No sessions recorded yet</p>
-                                <p className="mt-1 text-xs text-zinc-500">
+                                <p className="mt-1 text-xs text-muted-foreground">
                                     Install Turn One Link, launch ACC and complete a lap — your session shows up here
                                     automatically.
                                 </p>
@@ -286,14 +278,14 @@ export default function MySessionsPage() {
                             title={group.trackName || "Unknown track"}
                             actions={
                                 <div className="flex items-center gap-3">
-                                    <span className="font-mono text-[11px] tabular-nums text-zinc-500">
+                                    <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
                                         {group.sessions.length} session{group.sessions.length === 1 ? "" : "s"} · best{" "}
                                         <span className="text-primary">{formatLapTime(group.bestLapMs)}</span>
                                     </span>
                                     {group.trackProfileId ? (
                                         <Link
                                             href={`/simracing/analysis?track=${group.trackProfileId}`}
-                                            className="inline-flex items-center gap-1 text-xs font-bold text-zinc-400 transition-colors hover:text-primary"
+                                            className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground transition-colors hover:text-primary"
                                         >
                                             Analyse this track
                                             <ArrowRight className="h-3 w-3" />
@@ -303,22 +295,22 @@ export default function MySessionsPage() {
                             }
                             flush
                         >
-                            <div className="divide-y divide-zinc-800/60">
+                            <div className="divide-y divide-border/60">
                                 {group.sessions.map(s => {
                                     const typeKey = s.sessionKind ?? shortType(s.sessionType);
                                     const typeColor =
-                                        SESSION_TYPE_COLORS[typeKey.toUpperCase()] ?? "border-zinc-700 bg-zinc-900 text-zinc-400";
+                                        SESSION_TYPE_COLORS[typeKey.toUpperCase()] ?? "border-muted-foreground/30 bg-secondary text-muted-foreground";
                                     const isSelected = selected.has(s.id);
                                     return (
                                         <div
                                             key={s.id}
-                                            className="flex flex-wrap items-center gap-3 px-5 py-3 transition-colors hover:bg-zinc-900/40"
+                                            className="flex flex-wrap items-center gap-3 px-5 py-3 transition-colors hover:bg-secondary/40"
                                         >
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSelected(s.id)}
                                                 aria-label={isSelected ? "Deselect session" : "Select session"}
-                                                className="shrink-0 text-zinc-600 transition-colors hover:text-zinc-300"
+                                                className="shrink-0 text-muted-foreground/70 transition-colors hover:text-foreground/85"
                                             >
                                                 {isSelected ? (
                                                     <CheckSquare className="h-4 w-4 text-primary" />
@@ -327,7 +319,7 @@ export default function MySessionsPage() {
                                                 )}
                                             </button>
 
-                                            <span className="flex w-36 shrink-0 items-center gap-1.5 text-[11px] text-zinc-500">
+                                            <span className="flex w-36 shrink-0 items-center gap-1.5 text-[11px] text-muted-foreground">
                                                 <Clock className="h-3 w-3" />
                                                 {format(new Date(s.startedAt), "MMM d, yyyy · HH:mm")}
                                             </span>
@@ -347,12 +339,12 @@ export default function MySessionsPage() {
                                             ) : null}
 
                                             {group.source ? (
-                                                <span className="shrink-0 border border-zinc-800 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-zinc-500">
+                                                <span className="shrink-0 border border-border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
                                                     {SIM_SOURCE_LABEL[group.source]}
                                                 </span>
                                             ) : null}
 
-                                            <span className="shrink-0 font-mono text-xs tabular-nums text-zinc-400">
+                                            <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
                                                 {s.lapCount} laps
                                             </span>
 
@@ -364,14 +356,14 @@ export default function MySessionsPage() {
                                                 {s.trackProfileId ? (
                                                     <Link
                                                         href={`/simracing/analysis?track=${s.trackProfileId}`}
-                                                        className="inline-flex h-7 items-center gap-1 px-2 text-[11px] font-bold text-zinc-400 transition-colors hover:text-primary"
+                                                        className="inline-flex h-7 items-center gap-1 px-2 text-[11px] font-bold text-muted-foreground transition-colors hover:text-primary"
                                                     >
                                                         Analyse
                                                     </Link>
                                                 ) : null}
                                                 <Link
                                                     href={`/simracing/sessions/${s.id}`}
-                                                    className="inline-flex h-7 items-center gap-1 px-2 text-[11px] font-bold text-zinc-400 transition-colors hover:text-primary"
+                                                    className="inline-flex h-7 items-center gap-1 px-2 text-[11px] font-bold text-muted-foreground transition-colors hover:text-primary"
                                                 >
                                                     Open
                                                     <ChevronRight className="h-3.5 w-3.5" />
@@ -380,7 +372,7 @@ export default function MySessionsPage() {
                                                     onClick={() => handleDelete(s)}
                                                     disabled={deleting === s.id}
                                                     aria-label={`Delete ${s.track} session`}
-                                                    className="inline-flex h-7 w-7 items-center justify-center text-zinc-600 transition-colors hover:text-red-500 disabled:opacity-40"
+                                                    className="inline-flex h-7 w-7 items-center justify-center text-muted-foreground/70 transition-colors hover:text-red-500 disabled:opacity-40"
                                                 >
                                                     <Trash2 className="h-3.5 w-3.5" />
                                                 </button>
@@ -394,7 +386,6 @@ export default function MySessionsPage() {
                 </div>
             )}
 
-            <ExploreMoreLinks currentPage="/simracing/sessions" />
         </main>
     );
 }

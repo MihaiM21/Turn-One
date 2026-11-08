@@ -1,6 +1,5 @@
 'use client';
 
-import { DashboardHeader } from "@/components/dashboard/live dashboard/dashboard-header"
 import { TelemetryOverview } from "@/components/dashboard/live dashboard/telemetry-overview"
 import { DailyGiftWidget } from "@/components/dashboard/daily-gift-widget"
 import { LatestSessionWidget } from "@/components/dashboard/latest-session-widget"
@@ -28,8 +27,7 @@ export default function DashboardPage() {
       isReady={isReady}
       loadingMessage={hasToken === false ? "Authentication required..." : "Loading dashboard..."}
     >
-      <div className="min-h-screen bg-black">
-        <DashboardHeader />
+      <div>
 
         <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6 space-y-4">
           <WelcomeBanner />

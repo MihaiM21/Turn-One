@@ -18,14 +18,13 @@ import {
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { DashboardHeader } from '@/components/dashboard/live dashboard/dashboard-header';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { ExploreMoreLinks } from '@/components/dashboard/explore-more-links';
 
 function SectionHeader({ label, title }: { label: string; title: string }) {
   return (
-    <div className="border-b border-zinc-800 px-5 py-3">
-      <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{label}</p>
+    <div className="border-b border-border px-5 py-3">
+      <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{label}</p>
       <p className="mt-0.5 font-bold text-sm">{title}</p>
     </div>
   );
@@ -44,11 +43,11 @@ function ActionButton({
     <Button
       variant="outline"
       onClick={onClick}
-      className="h-auto justify-start gap-3 rounded-none border-zinc-800 bg-zinc-950 px-5 py-4 text-left text-sm text-zinc-300 transition-colors hover:border-zinc-700 hover:bg-zinc-900/60 hover:text-primary"
+      className="h-auto justify-start gap-3 rounded-none border-border bg-card px-5 py-4 text-left text-sm text-foreground/85 transition-colors hover:border-muted-foreground/30 hover:bg-secondary/60 hover:text-primary"
     >
       <Icon className="h-4 w-4 shrink-0 text-primary" />
       <span className="flex-1 font-medium">{label}</span>
-      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
+      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
     </Button>
   );
 }
@@ -66,8 +65,8 @@ function Feature({
     <li className="flex items-start gap-3 px-5 py-3">
       <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
       <div className="min-w-0">
-        <p className="text-sm font-medium text-zinc-200">{title}</p>
-        <p className="mt-0.5 text-[11px] text-zinc-500">{description}</p>
+        <p className="text-sm font-medium text-foreground/95">{title}</p>
+        <p className="mt-0.5 text-[11px] text-muted-foreground">{description}</p>
       </div>
     </li>
   );
@@ -85,15 +84,15 @@ function AnalysisBlock({
   features: string[];
 }) {
   return (
-    <section className="border border-zinc-800 bg-zinc-950">
+    <section className="border border-border bg-card">
       <SectionHeader label={label} title={title} />
-      <div className="flex items-center gap-2 border-b border-zinc-800/60 px-5 py-2.5">
+      <div className="flex items-center gap-2 border-b border-border/60 px-5 py-2.5">
         <Icon className="h-3.5 w-3.5 text-primary" />
-        <span className="text-[11px] uppercase tracking-wider text-zinc-400">Includes</span>
+        <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Includes</span>
       </div>
-      <ul className="divide-y divide-zinc-800/60">
+      <ul className="divide-y divide-border/60">
         {features.map((feature) => (
-          <li key={feature} className="flex items-center gap-2 px-5 py-2 text-[12px] text-zinc-400">
+          <li key={feature} className="flex items-center gap-2 px-5 py-2 text-[12px] text-muted-foreground">
             <span className="h-1 w-1 shrink-0 bg-zinc-700" />
             <span>{feature}</span>
           </li>
@@ -120,8 +119,7 @@ export default function DocumentationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
-      <DashboardHeader />
+    <div>
 
       <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6 space-y-4">
         <PageHeader
@@ -138,14 +136,14 @@ export default function DocumentationPage() {
         </div>
 
         {/* Getting started */}
-        <section className="border border-zinc-800 border-l-4 border-l-primary bg-zinc-950">
+        <section className="border border-border border-l-4 border-l-primary bg-card">
           <SectionHeader label="Getting started" title="Platform overview" />
-          <div className="grid grid-cols-1 md:grid-cols-2 md:divide-x md:divide-zinc-800/60">
+          <div className="grid grid-cols-1 md:grid-cols-2 md:divide-x md:divide-border/60">
             <div>
-              <div className="border-b border-zinc-800/60 px-5 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Key features</p>
+              <div className="border-b border-border/60 px-5 py-2.5">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Key features</p>
               </div>
-              <ul className="divide-y divide-zinc-800/60">
+              <ul className="divide-y divide-border/60">
                 <Feature
                   icon={Signal}
                   title="Real-time telemetry"
@@ -164,10 +162,10 @@ export default function DocumentationPage() {
               </ul>
             </div>
             <div className="flex flex-col">
-              <div className="border-b border-zinc-800/60 px-5 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Quick setup</p>
+              <div className="border-b border-border/60 px-5 py-2.5">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Quick setup</p>
               </div>
-              <ol className="divide-y divide-zinc-800/60">
+              <ol className="divide-y divide-border/60">
                 {[
                   'Access the live dashboard',
                   'Connect to active F1 sessions',
@@ -178,11 +176,11 @@ export default function DocumentationPage() {
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center border border-primary/30 bg-primary/10 font-mono text-[11px] tabular-nums text-primary">
                       {i + 1}
                     </span>
-                    <span className="text-zinc-300">{step}</span>
+                    <span className="text-foreground/85">{step}</span>
                   </li>
                 ))}
               </ol>
-              <div className="mt-auto border-t border-zinc-800/60 px-5 py-3">
+              <div className="mt-auto border-t border-border/60 px-5 py-3">
                 <Button
                   onClick={() => router.push('/live')}
                   size="sm"
@@ -197,9 +195,9 @@ export default function DocumentationPage() {
         </section>
 
         {/* Live dashboard */}
-        <section className="border border-zinc-800 bg-zinc-950">
+        <section className="border border-border bg-card">
           <SectionHeader label="Live dashboard" title="Real-time monitoring" />
-          <div className="grid grid-cols-1 md:grid-cols-3 md:divide-x md:divide-zinc-800/60">
+          <div className="grid grid-cols-1 md:grid-cols-3 md:divide-x md:divide-border/60">
             {[
               {
                 icon: Timer,
@@ -218,13 +216,13 @@ export default function DocumentationPage() {
               },
             ].map(({ icon: Icon, title, items }) => (
               <div key={title}>
-                <div className="flex items-center gap-2 border-b border-zinc-800/60 px-5 py-2.5">
+                <div className="flex items-center gap-2 border-b border-border/60 px-5 py-2.5">
                   <Icon className="h-3.5 w-3.5 text-primary" />
-                  <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{title}</p>
+                  <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{title}</p>
                 </div>
-                <ul className="divide-y divide-zinc-800/60">
+                <ul className="divide-y divide-border/60">
                   {items.map((item) => (
-                    <li key={item} className="flex items-center gap-2 px-5 py-2 text-[12px] text-zinc-400">
+                    <li key={item} className="flex items-center gap-2 px-5 py-2 text-[12px] text-muted-foreground">
                       <span className="h-1 w-1 shrink-0 bg-zinc-700" />
                       <span>{item}</span>
                     </li>
@@ -252,10 +250,10 @@ export default function DocumentationPage() {
         </div>
 
         {/* Support */}
-        <section className="border border-zinc-800 bg-zinc-950">
+        <section className="border border-border bg-card">
           <SectionHeader label="Support" title="Need help?" />
           <div className="px-5 py-5">
-            <p className="mb-4 text-xs text-zinc-500">
+            <p className="mb-4 text-xs text-muted-foreground">
               Get support from our team of F1 data experts.
             </p>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">

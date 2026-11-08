@@ -52,7 +52,7 @@ export function TyrePerLapPlot({ ctx }: { ctx: SimPlotContext }) {
 
     if (!availablePanes.length) {
         return (
-            <div className="flex h-32 items-center justify-center font-mono text-sm text-zinc-600">
+            <div className="flex h-32 items-center justify-center font-mono text-sm text-muted-foreground/70">
                 No tyre {metric} data for these laps
             </div>
         );
@@ -70,8 +70,8 @@ export function TyrePerLapPlot({ ctx }: { ctx: SimPlotContext }) {
                         className={cn(
                             "border px-2 py-0.5 text-[11px] font-medium capitalize transition-colors",
                             metric === m
-                                ? "border-zinc-700 bg-zinc-800 text-white"
-                                : "border-zinc-800 bg-zinc-950 text-zinc-500 hover:text-zinc-300"
+                                ? "border-muted-foreground/30 bg-border text-white"
+                                : "border-border bg-card text-muted-foreground hover:text-foreground/85"
                         )}
                     >
                         {m}

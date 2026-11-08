@@ -20,13 +20,13 @@ interface PageHeaderProps {
 
 export function PageHeader({ label, title, description, stats, actions }: PageHeaderProps) {
   return (
-    <section className="border-b border-zinc-800/70 pb-5 animate-in fade-in duration-500">
+    <section className="border-b border-border/70 pb-5 animate-in fade-in duration-500">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-500">{label}</p>
+          <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">{label}</p>
           <h1 className="mt-0.5 text-2xl font-bold tracking-tight sm:text-3xl">{title}</h1>
           {description && (
-            <p className="mt-1.5 text-sm text-zinc-400">{description}</p>
+            <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>
           )}
         </div>
 
@@ -35,7 +35,7 @@ export function PageHeader({ label, title, description, stats, actions }: PageHe
             <div key={statLabel} className="flex items-center gap-2.5">
               <Icon className={`h-4 w-4 ${iconClassName ?? 'text-primary'}`} />
               <div className="leading-tight">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">{statLabel}</p>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{statLabel}</p>
                 <p className="font-mono text-lg font-black tabular-nums leading-none mt-0.5">{value}</p>
               </div>
             </div>

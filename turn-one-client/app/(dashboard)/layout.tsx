@@ -5,14 +5,14 @@ import { Metadata } from 'next';
 
 // Default metadata for dashboard - can be overridden by page-specific layouts
 export const metadata: Metadata = generateSEO({
-  title: 'Dashboard - Formula 1 Live Timing Platform',
-  description: 'Access your Formula 1 dashboard with live race timing, telemetry analysis, predictions, and comprehensive F1 data. Your central hub for all things Formula 1.',
+  title: 'Dashboard - Sim Racing Telemetry',
+  description: 'Your Turn One dashboard: laps recorded by Turn One Link in ACC, EA SPORTS F1 25/26 and iRacing, corner-by-corner analysis, leaderboards and overlays.',
   url: '/dashboard',
   keywords: [
-    'F1 dashboard',
-    'Formula 1 user dashboard',
-    'F1 live data',
-    'personal F1 hub',
+    'sim racing dashboard',
+    'sim racing telemetry',
+    'lap analysis',
+    'sim racing leaderboards',
   ],
 });
 

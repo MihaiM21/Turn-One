@@ -26,7 +26,7 @@ export function MaintenanceScreen({ slug, message }: MaintenanceScreenProps) {
     'This page is temporarily unavailable while we perform maintenance. Please check back soon.';
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-black via-red-950/20 to-black px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       {/* Decorative top stripe */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-700 via-red-500 to-red-700" />
 

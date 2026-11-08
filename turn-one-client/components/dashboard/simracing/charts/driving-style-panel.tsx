@@ -97,7 +97,7 @@ export function DrivingStylePanel({
 
     if (!rows) {
         return (
-            <div className="flex h-32 items-center justify-center font-mono text-sm text-zinc-600">
+            <div className="flex h-32 items-center justify-center font-mono text-sm text-muted-foreground/70">
                 Not enough data to profile this lap
             </div>
         );
@@ -115,7 +115,7 @@ export function DrivingStylePanel({
                 return (
                     <div key={row.label}>
                         <div className="flex items-baseline justify-between gap-3">
-                            <p className="text-[11px] uppercase tracking-wider text-zinc-400">{row.label}</p>
+                            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{row.label}</p>
                             <div className="flex items-baseline gap-2">
                                 <span className="font-mono text-sm font-bold tabular-nums text-white">{row.display}</span>
                                 {diff != null && Math.abs(diff) >= 0.1 ? (
@@ -133,7 +133,7 @@ export function DrivingStylePanel({
                         </div>
 
                         {isPercent(row) ? (
-                            <div className="relative mt-1.5 h-1.5 w-full bg-zinc-900">
+                            <div className="relative mt-1.5 h-1.5 w-full bg-secondary">
                                 <div
                                     className="absolute inset-y-0 left-0"
                                     style={{ width: `${Math.min(100, row.value)}%`, backgroundColor: row.color }}
@@ -148,13 +148,13 @@ export function DrivingStylePanel({
                             </div>
                         ) : null}
 
-                        <p className="mt-1 text-[11px] text-zinc-600">{row.hint}</p>
+                        <p className="mt-1 text-[11px] text-muted-foreground/70">{row.hint}</p>
                     </div>
                 );
             })}
 
             {referenceSamples ? (
-                <p className="border-t border-zinc-800 pt-3 text-[11px] text-zinc-600">
+                <p className="border-t border-border pt-3 text-[11px] text-muted-foreground/70">
                     The white tick on each bar is your {referenceLabel}.
                 </p>
             ) : null}

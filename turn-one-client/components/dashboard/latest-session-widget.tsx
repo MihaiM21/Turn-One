@@ -58,19 +58,19 @@ export function LatestSessionWidget({ previewData }: LatestSessionWidgetProps = 
 
   if (loading) {
     return (
-      <div className="border border-zinc-800 bg-zinc-950">
-        <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
+      <div className="border border-border bg-card">
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <div className="space-y-1.5">
-            <Skeleton className="h-2.5 w-24 bg-zinc-800" />
-            <Skeleton className="h-4 w-40 bg-zinc-800" />
+            <Skeleton className="h-2.5 w-24 bg-border" />
+            <Skeleton className="h-4 w-40 bg-border" />
           </div>
         </div>
-        <div className="divide-y divide-zinc-800/60">
+        <div className="divide-y divide-border/60">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex items-center gap-3 px-5 py-3">
-              <Skeleton className="h-4 w-4 bg-zinc-800" />
-              <Skeleton className="h-3 w-20 bg-zinc-800" />
-              <Skeleton className="ml-auto h-3 w-24 bg-zinc-800" />
+              <Skeleton className="h-4 w-4 bg-border" />
+              <Skeleton className="h-3 w-20 bg-border" />
+              <Skeleton className="ml-auto h-3 w-24 bg-border" />
             </div>
           ))}
         </div>
@@ -81,15 +81,15 @@ export function LatestSessionWidget({ previewData }: LatestSessionWidgetProps = 
   if (!sessionData) {
     const isNotReady = status?.kind === "not_ready";
     return (
-      <div className="h-full border border-zinc-800 bg-zinc-950">
-        <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
+      <div className="h-full border border-border bg-card">
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Latest session</p>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Latest session</p>
             <p className="mt-0.5 font-bold">Performance Highlights</p>
           </div>
         </div>
         <div className="flex flex-col items-start gap-3 px-5 py-4">
-          <div className="flex items-center gap-2 text-xs text-zinc-400">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {isNotReady ? (
               <Clock className="h-3.5 w-3.5 shrink-0 text-primary" />
             ) : (
@@ -104,7 +104,7 @@ export function LatestSessionWidget({ previewData }: LatestSessionWidgetProps = 
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 rounded-sm px-2 text-xs text-zinc-400 hover:text-primary"
+            className="h-7 rounded-sm px-2 text-xs text-muted-foreground hover:text-primary"
             onClick={handleRefresh}
             disabled={refreshing}
           >
@@ -117,10 +117,10 @@ export function LatestSessionWidget({ previewData }: LatestSessionWidgetProps = 
   }
 
   return (
-    <div className="h-full border border-zinc-800 bg-zinc-950 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
+    <div className="h-full border border-border bg-card animate-in fade-in duration-500">
+      <div className="flex items-center justify-between border-b border-border px-5 py-4">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Latest session</p>
+          <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Latest session</p>
           <p className="mt-0.5 font-bold">Performance Highlights</p>
         </div>
         <div className="flex items-center gap-2">
@@ -130,13 +130,13 @@ export function LatestSessionWidget({ previewData }: LatestSessionWidgetProps = 
           >
             {sessionData.session_name}
           </Badge>
-          <div className="flex items-center gap-1.5 text-[11px] text-zinc-500">
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <Calendar className="h-3 w-3" />
             <span className="font-mono">{sessionData.year}</span>
-            <span className="text-zinc-700">·</span>
+            <span className="text-muted-foreground/50">·</span>
             <span>R{sessionData.round}</span>
           </div>
-          <Button asChild variant="ghost" size="sm" className="h-7 rounded-sm px-2 text-xs text-zinc-400 hover:text-primary">
+          <Button asChild variant="ghost" size="sm" className="h-7 rounded-sm px-2 text-xs text-muted-foreground hover:text-primary">
             <Link href="/news">
               View <ArrowRight className="ml-1 h-3.5 w-3.5" />
             </Link>
@@ -144,11 +144,11 @@ export function LatestSessionWidget({ previewData }: LatestSessionWidgetProps = 
         </div>
       </div>
 
-      <div className="divide-y divide-zinc-800/60">
+      <div className="divide-y divide-border/60">
         {sessionData.qualifying_results && sessionData.qualifying_results.length > 0 && (
           <div className="flex items-center gap-3 px-5 py-3">
             <Trophy className="h-4 w-4 shrink-0 text-yellow-500/70" />
-            <span className="w-24 shrink-0 text-[11px] uppercase tracking-wider text-zinc-500">Top qualifier</span>
+            <span className="w-24 shrink-0 text-[11px] uppercase tracking-wider text-muted-foreground">Top qualifier</span>
             <span className="truncate text-sm font-medium" style={{ color: sessionData.qualifying_results[0].Color }}>
               {sessionData.qualifying_results[0].Driver}
             </span>
@@ -161,7 +161,7 @@ export function LatestSessionWidget({ previewData }: LatestSessionWidgetProps = 
         {sessionData.top_speed && sessionData.top_speed.length > 0 && (
           <div className="flex items-center gap-3 px-5 py-3">
             <Gauge className="h-4 w-4 shrink-0 text-blue-500/70" />
-            <span className="w-24 shrink-0 text-[11px] uppercase tracking-wider text-zinc-500">Top speed</span>
+            <span className="w-24 shrink-0 text-[11px] uppercase tracking-wider text-muted-foreground">Top speed</span>
             <span className="truncate text-sm font-medium" style={{ color: sessionData.top_speed[0].Color }}>
               {sessionData.top_speed[0].Team}
             </span>
@@ -174,7 +174,7 @@ export function LatestSessionWidget({ previewData }: LatestSessionWidgetProps = 
         {sessionData.throttle_comparison && sessionData.throttle_comparison.length > 0 && (
           <div className="flex items-center gap-3 px-5 py-3">
             <Zap className="h-4 w-4 shrink-0 text-green-500/70" />
-            <span className="w-24 shrink-0 text-[11px] uppercase tracking-wider text-zinc-500">Avg throttle</span>
+            <span className="w-24 shrink-0 text-[11px] uppercase tracking-wider text-muted-foreground">Avg throttle</span>
             <span className="truncate text-sm font-medium" style={{ color: sessionData.throttle_comparison[0].Color }}>
               {sessionData.throttle_comparison[0].Driver}
             </span>

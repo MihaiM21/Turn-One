@@ -28,7 +28,7 @@ export function SectorMatrixTable({ laps, selectedLap = null, onSelectLap }: Sec
 
     if (!matrix.laps.length) {
         return (
-            <div className="flex h-32 items-center justify-center font-mono text-sm text-zinc-600">
+            <div className="flex h-32 items-center justify-center font-mono text-sm text-muted-foreground/70">
                 No laps recorded yet
             </div>
         );
@@ -37,15 +37,15 @@ export function SectorMatrixTable({ laps, selectedLap = null, onSelectLap }: Sec
     return (
         <div className="space-y-4">
             {hasSectors ? (
-                <div className="grid grid-cols-2 gap-px overflow-hidden border border-zinc-800 bg-zinc-800 sm:grid-cols-3">
-                    <div className="bg-zinc-950 px-4 py-3">
-                        <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Best lap</p>
+                <div className="grid grid-cols-2 gap-px overflow-hidden border border-border bg-border sm:grid-cols-3">
+                    <div className="bg-card px-4 py-3">
+                        <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Best lap</p>
                         <p className="mt-1 font-mono text-lg font-black tabular-nums text-white">
                             {formatLapTime(matrix.bestLapMs)}
                         </p>
                     </div>
-                    <div className="bg-zinc-950 px-4 py-3">
-                        <p className="flex items-center gap-1 text-[10px] uppercase tracking-[0.25em] text-zinc-500">
+                    <div className="bg-card px-4 py-3">
+                        <p className="flex items-center gap-1 text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
                             <Sparkles className="h-3 w-3 text-primary" />
                             Theoretical best
                         </p>
@@ -53,8 +53,8 @@ export function SectorMatrixTable({ laps, selectedLap = null, onSelectLap }: Sec
                             {formatLapTime(matrix.theoreticalBestMs)}
                         </p>
                     </div>
-                    <div className="bg-zinc-950 px-4 py-3">
-                        <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Left on the table</p>
+                    <div className="bg-card px-4 py-3">
+                        <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Left on the table</p>
                         <p className="mt-1 font-mono text-lg font-black tabular-nums text-yellow-400">
                             {matrix.timeLeftOnTableMs != null
                                 ? `${(matrix.timeLeftOnTableMs / 1000).toFixed(3)}s`
@@ -72,20 +72,20 @@ export function SectorMatrixTable({ laps, selectedLap = null, onSelectLap }: Sec
             <div className="overflow-x-auto">
                 <table className="w-full min-w-[420px] border-collapse text-sm">
                     <thead>
-                        <tr className="border-b border-zinc-800 text-left">
-                            <th className="px-3 py-2 text-[10px] uppercase tracking-[0.2em] font-normal text-zinc-500">
+                        <tr className="border-b border-border text-left">
+                            <th className="px-3 py-2 text-[10px] uppercase tracking-[0.2em] font-normal text-muted-foreground">
                                 Lap
                             </th>
-                            <th className="px-3 py-2 text-right text-[10px] uppercase tracking-[0.2em] font-normal text-zinc-500">
+                            <th className="px-3 py-2 text-right text-[10px] uppercase tracking-[0.2em] font-normal text-muted-foreground">
                                 S1
                             </th>
-                            <th className="px-3 py-2 text-right text-[10px] uppercase tracking-[0.2em] font-normal text-zinc-500">
+                            <th className="px-3 py-2 text-right text-[10px] uppercase tracking-[0.2em] font-normal text-muted-foreground">
                                 S2
                             </th>
-                            <th className="px-3 py-2 text-right text-[10px] uppercase tracking-[0.2em] font-normal text-zinc-500">
+                            <th className="px-3 py-2 text-right text-[10px] uppercase tracking-[0.2em] font-normal text-muted-foreground">
                                 S3
                             </th>
-                            <th className="px-3 py-2 text-right text-[10px] uppercase tracking-[0.2em] font-normal text-zinc-500">
+                            <th className="px-3 py-2 text-right text-[10px] uppercase tracking-[0.2em] font-normal text-muted-foreground">
                                 Lap time
                             </th>
                         </tr>
@@ -95,12 +95,12 @@ export function SectorMatrixTable({ laps, selectedLap = null, onSelectLap }: Sec
                             <tr
                                 key={lap.lapNumber}
                                 onClick={() => onSelectLap?.(lap.lapNumber)}
-                                className={`border-b border-zinc-800/60 transition-colors ${
-                                    onSelectLap ? "cursor-pointer hover:bg-zinc-900/60" : ""
-                                } ${selectedLap === lap.lapNumber ? "bg-zinc-900" : ""}`}
+                                className={`border-b border-border/60 transition-colors ${
+                                    onSelectLap ? "cursor-pointer hover:bg-secondary/60" : ""
+                                } ${selectedLap === lap.lapNumber ? "bg-secondary" : ""}`}
                             >
                                 <td className="px-3 py-2">
-                                    <span className="font-mono tabular-nums text-zinc-300">{lap.lapNumber}</span>
+                                    <span className="font-mono tabular-nums text-foreground/85">{lap.lapNumber}</span>
                                     {!lap.isValid ? (
                                         <span className="ml-2 border border-red-500/30 px-1 py-0.5 text-[9px] font-bold uppercase tracking-wider text-red-400">
                                             Invalid
@@ -112,7 +112,7 @@ export function SectorMatrixTable({ laps, selectedLap = null, onSelectLap }: Sec
                                     <td
                                         key={i}
                                         className={`px-3 py-2 text-right font-mono tabular-nums ${
-                                            lap.sectorIsBest[i] ? "font-bold text-purple-400" : "text-zinc-400"
+                                            lap.sectorIsBest[i] ? "font-bold text-purple-400" : "text-muted-foreground"
                                         }`}
                                     >
                                         {formatSector(sector)}
@@ -121,7 +121,7 @@ export function SectorMatrixTable({ laps, selectedLap = null, onSelectLap }: Sec
 
                                 <td
                                     className={`px-3 py-2 text-right font-mono tabular-nums font-bold ${
-                                        lap.isBestLap ? "text-primary" : lap.isValid ? "text-white" : "text-zinc-600"
+                                        lap.isBestLap ? "text-primary" : lap.isValid ? "text-white" : "text-muted-foreground/70"
                                     }`}
                                 >
                                     {formatLapTime(lap.lapTimeMs)}
@@ -133,7 +133,7 @@ export function SectorMatrixTable({ laps, selectedLap = null, onSelectLap }: Sec
             </div>
 
             {hasSectors ? (
-                <p className="text-[11px] text-zinc-600">
+                <p className="text-[11px] text-muted-foreground/70">
                     <span className="text-purple-400">Purple</span> marks your best time in that sector.
                 </p>
             ) : null}

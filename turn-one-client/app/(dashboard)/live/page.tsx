@@ -20,7 +20,6 @@ import {
   StopCircle,
   AlertCircle
 } from 'lucide-react';
-import { DashboardHeader } from "@/components/dashboard/live dashboard/dashboard-header"
 import { ExploreMoreLinks } from "@/components/dashboard/explore-more-links"
 import { TrackMap } from '@/components/dashboard/track-map';
 import { SessionTimer } from '@/components/dashboard/session-timer';
@@ -287,7 +286,6 @@ export default function LiveDashboard() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <DashboardHeader />
       <div className="container mx-auto px-4 py-8 lg:px-8 space-y-6">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -378,13 +376,6 @@ export default function LiveDashboard() {
                 Updated {lastUpdate.toLocaleTimeString()}
               </div>
             )}
-            <Link
-              href="/live2"
-              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/15 text-primary transition-colors"
-              title="Try our experimental live dashboard with enhanced features"
-            >
-              <span>Try Experimental</span>
-            </Link>
           </div>
         </div>
 

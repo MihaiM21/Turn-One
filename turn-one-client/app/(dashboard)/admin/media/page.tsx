@@ -24,7 +24,6 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
-import { DashboardHeader } from '@/components/dashboard/live dashboard/dashboard-header';
 import { PageHeader } from '@/components/dashboard/page-header';
 
 interface MediaItem {
@@ -245,10 +244,9 @@ export default function MediaManagementPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-black">
-        <DashboardHeader />
+      <div>
         <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
-          <div className="flex items-center justify-center border border-zinc-800 bg-zinc-950 px-5 py-12 text-sm text-zinc-500">
+          <div className="flex items-center justify-center border border-border bg-card px-5 py-12 text-sm text-muted-foreground">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Loading media library...
           </div>
@@ -258,12 +256,11 @@ export default function MediaManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <DashboardHeader />
+    <div>
       <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6 space-y-4">
         <Link
           href="/admin"
-          className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-zinc-500 transition-colors hover:text-primary"
+          className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-primary"
         >
           <ArrowLeft className="h-3 w-3" />
           Back to admin
@@ -306,56 +303,56 @@ export default function MediaManagementPage() {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+          <div className="border border-border bg-card px-4 py-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Total images</p>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Total images</p>
                 <p className="mt-1 font-mono text-2xl font-black tabular-nums leading-none text-cyan-400">
                   {media.length}
                 </p>
               </div>
               <FileImage className="h-4 w-4 shrink-0 text-cyan-400" />
             </div>
-            <p className="mt-2 text-[11px] text-zinc-500">in library</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">in library</p>
           </div>
 
-          <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+          <div className="border border-border bg-card px-4 py-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Total size</p>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Total size</p>
                 <p className="mt-1 font-mono text-2xl font-black tabular-nums leading-none text-blue-400">
                   {formatFileSize(stats.totalSize)}
                 </p>
               </div>
               <HardDrive className="h-4 w-4 shrink-0 text-blue-400" />
             </div>
-            <p className="mt-2 text-[11px] text-zinc-500">avg {formatFileSize(stats.avgSize)}/image</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">avg {formatFileSize(stats.avgSize)}/image</p>
           </div>
 
-          <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+          <div className="border border-border bg-card px-4 py-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Uploaded 7d</p>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Uploaded 7d</p>
                 <p className="mt-1 font-mono text-2xl font-black tabular-nums leading-none text-green-400">
                   {stats.recentCount}
                 </p>
               </div>
               <Calendar className="h-4 w-4 shrink-0 text-green-400" />
             </div>
-            <p className="mt-2 text-[11px] text-zinc-500">recent additions</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">recent additions</p>
           </div>
 
-          <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+          <div className="border border-border bg-card px-4 py-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">With alt text</p>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">With alt text</p>
                 <p className="mt-1 font-mono text-2xl font-black tabular-nums leading-none text-purple-400">
                   {media.filter((m) => m.altText?.trim()).length}
                 </p>
               </div>
               <CheckCircle2 className="h-4 w-4 shrink-0 text-purple-400" />
             </div>
-            <p className="mt-2 text-[11px] text-zinc-500">
+            <p className="mt-2 text-[11px] text-muted-foreground">
               {media.length > 0
                 ? Math.round((media.filter((m) => m.altText?.trim()).length / media.length) * 100)
                 : 0}
@@ -365,21 +362,21 @@ export default function MediaManagementPage() {
         </div>
 
         {/* Search */}
-        <section className="border border-zinc-800 bg-zinc-950">
+        <section className="border border-border bg-card">
           <div className="px-5 py-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search by filename or alt text..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="rounded-sm border-zinc-800 bg-zinc-900/60 pl-10"
+                className="rounded-sm border-border bg-secondary/60 pl-10"
               />
             </div>
             {searchTerm && (
-              <p className="mt-2 text-[11px] text-zinc-500">
-                Showing <span className="font-mono tabular-nums text-zinc-300">{filteredMedia.length}</span> of{' '}
-                <span className="font-mono tabular-nums text-zinc-300">{media.length}</span> images
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Showing <span className="font-mono tabular-nums text-foreground/85">{filteredMedia.length}</span> of{' '}
+                <span className="font-mono tabular-nums text-foreground/85">{media.length}</span> images
               </p>
             )}
           </div>
@@ -387,11 +384,11 @@ export default function MediaManagementPage() {
 
         {/* Media Grid */}
         {filteredMedia.length === 0 ? (
-          <section className="flex flex-col items-center gap-3 border border-zinc-800 bg-zinc-950 px-5 py-16 text-center">
-            <ImageIcon className="h-8 w-8 text-zinc-700" />
+          <section className="flex flex-col items-center gap-3 border border-border bg-card px-5 py-16 text-center">
+            <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
             <div>
               <p className="font-bold">No images found</p>
-              <p className="mt-0.5 max-w-sm text-xs text-zinc-500">
+              <p className="mt-0.5 max-w-sm text-xs text-muted-foreground">
                 {searchTerm ? 'No images match your search.' : 'Upload your first image to get started.'}
               </p>
             </div>
@@ -399,8 +396,8 @@ export default function MediaManagementPage() {
         ) : (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredMedia.map((item) => (
-              <Card key={item.id} className="group overflow-hidden rounded-none border-zinc-800 bg-zinc-950 transition-colors hover:border-zinc-700">
-                <div className="relative aspect-square overflow-hidden bg-zinc-900">
+              <Card key={item.id} className="group overflow-hidden rounded-none border-border bg-card transition-colors hover:border-muted-foreground/30">
+                <div className="relative aspect-square overflow-hidden bg-secondary">
                   <img
                     src={getImageUrl(item)}
                     alt={item.altText || item.originalFileName}

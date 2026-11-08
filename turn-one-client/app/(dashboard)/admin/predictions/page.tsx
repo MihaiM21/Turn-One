@@ -38,7 +38,6 @@ import Link from 'next/link';
 import { getAuthToken } from '@/lib/auth-utils';
 import { f1_2026_drivers } from '@/lib/constants/f1_2026_drivers_full';
 import { f1_2026_races } from '@/lib/constants/f1_races';
-import { DashboardHeader } from '@/components/dashboard/live dashboard/dashboard-header';
 import { PageHeader } from '@/components/dashboard/page-header';
 
 // --- Types ---
@@ -302,12 +301,11 @@ export default function AdminPredictionsPage() {
     (results.numberOfDnfs !== undefined ? 1 : 0);
 
   return (
-    <div className="min-h-screen bg-black">
-      <DashboardHeader />
+    <div>
       <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6 space-y-4">
         <Link
           href="/admin"
-          className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-zinc-500 transition-colors hover:text-primary"
+          className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-primary"
         >
           <ArrowLeft className="h-3 w-3" />
           Back to admin
@@ -318,7 +316,7 @@ export default function AdminPredictionsPage() {
           title="Prediction validation"
           description="Review pending predictions, enter race results and settle outcomes."
           actions={
-            <span className="border border-zinc-700 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-zinc-400 tabular-nums">
+            <span className="border border-muted-foreground/30 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground tabular-nums">
               2026 Season
             </span>
           }
@@ -326,54 +324,54 @@ export default function AdminPredictionsPage() {
 
         {/* Overview Stats */}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+          <div className="border border-border bg-card px-4 py-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Pending</p>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Pending</p>
                 <p className="mt-1 font-mono text-2xl font-black tabular-nums leading-none text-primary">
                   {totalPendingPredictions}
                 </p>
               </div>
               <Clock className="h-4 w-4 shrink-0 text-primary" />
             </div>
-            <p className="mt-2 text-[11px] text-zinc-500">predictions</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">predictions</p>
           </div>
 
-          <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+          <div className="border border-border bg-card px-4 py-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">At stake</p>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">At stake</p>
                 <p className="mt-1 font-mono text-2xl font-black tabular-nums leading-none text-yellow-400">
                   {totalCoinsAtStake.toLocaleString()}
                 </p>
               </div>
               <Coins className="h-4 w-4 shrink-0 text-yellow-400" />
             </div>
-            <p className="mt-2 text-[11px] text-zinc-500">coins wagered</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">coins wagered</p>
           </div>
 
-          <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+          <div className="border border-border bg-card px-4 py-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Players</p>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Players</p>
                 <p className="mt-1 font-mono text-2xl font-black tabular-nums leading-none text-blue-400">{uniqueUsers}</p>
               </div>
               <Users className="h-4 w-4 shrink-0 text-blue-400" />
             </div>
-            <p className="mt-2 text-[11px] text-zinc-500">active predictors</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">active predictors</p>
           </div>
 
-          <div className="border border-zinc-800 bg-zinc-950 px-4 py-3">
+          <div className="border border-border bg-card px-4 py-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Races</p>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Races</p>
                 <p className="mt-1 font-mono text-2xl font-black tabular-nums leading-none text-green-400">
                   {racesWithPending.length}
                 </p>
               </div>
               <Flag className="h-4 w-4 shrink-0 text-green-400" />
             </div>
-            <p className="mt-2 text-[11px] text-zinc-500">need validation</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">need validation</p>
           </div>
         </div>
 
@@ -382,25 +380,25 @@ export default function AdminPredictionsPage() {
 
           {/* Left: Race List (2 cols) */}
           <div className="lg:col-span-2 space-y-4">
-            <Card className="rounded-none border-zinc-800 bg-zinc-950">
-              <div className="flex items-center justify-between gap-3 border-b border-zinc-800 px-5 py-3">
+            <Card className="rounded-none border-border bg-card">
+              <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Calendar</p>
+                  <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Calendar</p>
                   <p className="mt-0.5 font-bold text-sm">Race calendar</p>
                 </div>
                 <Tabs value={raceTab} onValueChange={(v) => setRaceTab(v as 'pending' | 'all')}>
-                  <TabsList className="h-auto rounded-none border border-zinc-800 bg-zinc-950 p-0">
+                  <TabsList className="h-auto rounded-none border border-border bg-card p-0">
                     <TabsTrigger
                       value="pending"
-                      className="rounded-none border-b-2 border-transparent bg-transparent px-3 py-1.5 text-[11px] uppercase tracking-wider text-zinc-400 transition-colors data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
+                      className="rounded-none border-b-2 border-transparent bg-transparent px-3 py-1.5 text-[11px] uppercase tracking-wider text-muted-foreground transition-colors data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
                     >
-                      Pending <span className="ml-1 font-mono tabular-nums text-zinc-500">{racesWithPending.length}</span>
+                      Pending <span className="ml-1 font-mono tabular-nums text-muted-foreground">{racesWithPending.length}</span>
                     </TabsTrigger>
                     <TabsTrigger
                       value="all"
-                      className="rounded-none border-b-2 border-transparent bg-transparent px-3 py-1.5 text-[11px] uppercase tracking-wider text-zinc-400 transition-colors data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
+                      className="rounded-none border-b-2 border-transparent bg-transparent px-3 py-1.5 text-[11px] uppercase tracking-wider text-muted-foreground transition-colors data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
                     >
-                      All <span className="ml-1 font-mono tabular-nums text-zinc-500">24</span>
+                      All <span className="ml-1 font-mono tabular-nums text-muted-foreground">24</span>
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
@@ -460,25 +458,25 @@ export default function AdminPredictionsPage() {
           {/* Right: Details + Form (3 cols) */}
           <div className="lg:col-span-3 space-y-4">
             {!selectedRace ? (
-              <Card className="rounded-none border-2 border-dashed border-zinc-800 bg-zinc-950/50">
+              <Card className="rounded-none border-2 border-dashed border-border bg-card/50">
                 <CardContent className="flex flex-col items-center justify-center gap-3 py-20 text-center">
-                  <Target className="h-10 w-10 text-zinc-700" />
+                  <Target className="h-10 w-10 text-muted-foreground/50" />
                   <div>
                     <p className="font-bold">Select a race</p>
-                    <p className="mt-0.5 text-xs text-zinc-500">Choose a race from the calendar to enter results.</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">Choose a race from the calendar to enter results.</p>
                   </div>
                 </CardContent>
               </Card>
             ) : (
               <>
                 {/* Race Info Banner */}
-                <Card className="overflow-hidden rounded-none border-zinc-800 border-l-4 border-l-primary bg-zinc-950">
+                <Card className="overflow-hidden rounded-none border-border border-l-4 border-l-primary bg-card">
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between">
                       <div>
                         <div className="mb-1 flex items-center gap-2">
                           <Flag className="h-3.5 w-3.5 text-primary" />
-                          <span className="font-mono text-[11px] uppercase tracking-wider text-zinc-500">{selectedRace.raceId}</span>
+                          <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">{selectedRace.raceId}</span>
                           {selectedRace.isPast && (
                             <span className="border border-green-500/40 px-2 py-0.5 text-[10px] uppercase tracking-wider text-green-400">
                               <CheckCircle2 className="mr-1 inline h-3 w-3" /> Completed
@@ -486,8 +484,8 @@ export default function AdminPredictionsPage() {
                           )}
                         </div>
                         <h2 className="text-xl font-bold tracking-tight">{selectedRace.raceName}</h2>
-                        <p className="text-sm text-zinc-400">{selectedRace.circuit}, {selectedRace.country}</p>
-                        <p className="mt-1 font-mono text-[11px] tabular-nums text-zinc-500">
+                        <p className="text-sm text-muted-foreground">{selectedRace.circuit}, {selectedRace.country}</p>
+                        <p className="mt-1 font-mono text-[11px] tabular-nums text-muted-foreground">
                           {new Date(selectedRace.raceDateTime).toLocaleDateString('en-GB', {
                             weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
                           })}
@@ -497,7 +495,7 @@ export default function AdminPredictionsPage() {
                         <p className="font-mono text-3xl font-black tabular-nums leading-none text-primary">
                           {selectedRacePredictions.length}
                         </p>
-                        <p className="mt-1 text-[10px] uppercase tracking-[0.25em] text-zinc-500">predictions</p>
+                        <p className="mt-1 text-[10px] uppercase tracking-[0.25em] text-muted-foreground">predictions</p>
                       </div>
                     </div>
                   </CardContent>
@@ -505,7 +503,7 @@ export default function AdminPredictionsPage() {
 
                 {/* Pending Predictions for this race */}
                 {selectedRacePredictions.length > 0 && (
-                  <Card className="rounded-none border-zinc-800 bg-zinc-950">
+                  <Card className="rounded-none border-border bg-card">
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-base flex items-center gap-2">
@@ -732,9 +730,9 @@ export default function AdminPredictionsPage() {
 
                 {/* Validation Results */}
                 {validationResult && (
-                  <Card className="rounded-none border-zinc-800 border-l-4 border-l-green-500 bg-zinc-950">
-                    <div className="border-b border-zinc-800 px-5 py-3">
-                      <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">Validation</p>
+                  <Card className="rounded-none border-border border-l-4 border-l-green-500 bg-card">
+                    <div className="border-b border-border px-5 py-3">
+                      <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Validation</p>
                       <p className="mt-0.5 flex items-center gap-2 font-bold text-sm">
                         <CheckCircle2 className="h-4 w-4 text-green-400" />
                         Validation complete

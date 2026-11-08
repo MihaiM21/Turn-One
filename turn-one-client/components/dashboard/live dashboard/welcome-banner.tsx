@@ -60,12 +60,12 @@ export function WelcomeBanner() {
     : 0;
 
   return (
-    <section className="border-b border-zinc-800/70 pb-5 animate-in fade-in duration-500">
+    <section className="border-b border-border/70 pb-5 animate-in fade-in duration-500">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-500">Welcome back</p>
+          <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Welcome back</p>
           {loading ? (
-            <Skeleton className="mt-1 h-8 w-56 bg-zinc-800/60" />
+            <Skeleton className="mt-1 h-8 w-56 bg-border/60" />
           ) : (
             <h1 className="mt-0.5 text-2xl font-bold tracking-tight sm:text-3xl">
               {getGreeting()},{' '}
@@ -76,22 +76,22 @@ export function WelcomeBanner() {
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5">
             {loading ? (
               <>
-                <Skeleton className="h-3 w-10 bg-zinc-800/60" />
-                <Skeleton className="h-1 w-32 bg-zinc-800/60" />
-                <Skeleton className="h-3 w-24 bg-zinc-800/60" />
+                <Skeleton className="h-3 w-10 bg-border/60" />
+                <Skeleton className="h-1 w-32 bg-border/60" />
+                <Skeleton className="h-3 w-24 bg-border/60" />
               </>
             ) : profile ? (
               <>
-                <span className="text-[11px] uppercase tracking-wider text-zinc-500">
+                <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
                   Lv {profile.level ?? 1}
                 </span>
-                <div className="relative h-1 w-32 bg-zinc-800 sm:w-44">
+                <div className="relative h-1 w-32 bg-border sm:w-44">
                   <div
                     style={{ width: `${xpProgress}%` }}
                     className="absolute inset-y-0 left-0 bg-primary transition-all duration-700"
                   />
                 </div>
-                <span className="font-mono text-[11px] tabular-nums text-zinc-400">
+                <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
                   {profile.experience ?? 0} / {xpToNextLevel} XP
                 </span>
                 {typeof profile.coins === 'number' && (
@@ -109,7 +109,7 @@ export function WelcomeBanner() {
               key={href}
               variant="outline"
               size="sm"
-              className="h-8 gap-1.5 rounded-sm border-zinc-800 bg-zinc-900/60 px-3 text-xs text-zinc-300 transition-colors hover:border-primary/40 hover:bg-zinc-900 hover:text-primary"
+              className="h-8 gap-1.5 rounded-sm border-border bg-secondary/60 px-3 text-xs text-foreground/85 transition-colors hover:border-primary/40 hover:bg-secondary hover:text-primary"
             >
               <Link href={href}>
                 <Icon className="h-3.5 w-3.5" />
