@@ -276,11 +276,12 @@ public class TelemetryIngestionService
                 .Select(e => e.GetSingle())
                 .ToArray();
 
-        string? carId = null, carName = null;
+        string? carId = null, carName = null, carClass = null;
         if (payload.TryGetProperty("car", out var carProp) && carProp.ValueKind == JsonValueKind.Object)
         {
             carId = carProp.TryGetProperty("id", out var cIdP) ? cIdP.GetString() : null;
             carName = carProp.TryGetProperty("name", out var cNameP) ? cNameP.GetString() : null;
+            carClass = carProp.TryGetProperty("class", out var cClassP) && cClassP.ValueKind == JsonValueKind.String ? cClassP.GetString() : null;
         }
 
         string sessionType = payload.TryGetProperty("sessionType", out var stProp) ? (stProp.GetString() ?? "other") : "other";
@@ -312,6 +313,7 @@ public class TelemetryIngestionService
             SectorBoundariesM = sectorBoundariesM,
             CarId = carId,
             CarName = carName,
+            CarClass = string.IsNullOrWhiteSpace(carClass) ? null : carClass.Trim(),
             SessionKind = normalizedType,
             SessionTypeRaw = sessionTypeRaw ?? sessionType,
             Driver = driver,

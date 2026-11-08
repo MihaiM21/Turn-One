@@ -71,6 +71,10 @@ public class TelemetrySession
     [MaxLength(64)]
     public string? CarId { get; set; }
 
+    /// <summary>Car class as the sim names it (v2 <c>session_start.car.class</c>, e.g. iRacing <c>CarClassShortName</c> "GT3 Class"). Feeds <c>CatalogService.InferClass</c>.</summary>
+    [MaxLength(64)]
+    public string? CarClass { get; set; }
+
     public DateTime StartedAt { get; set; } = DateTime.UtcNow;
     public DateTime? EndedAt { get; set; }
     public DateTime? LastSeenAt { get; set; }
