@@ -50,6 +50,9 @@ public class TurnOneDbContext : DbContext
     // AI dataset consent (HCR-015)
     public DbSet<AiConsent> AiConsents { get; set; } = null!;
 
+    // Sim-racing closed beta applications
+    public DbSet<BetaApplication> BetaApplications { get; set; } = null!;
+
     // Telemetry token-usage / request log
     public DbSet<TelemetryGenerationRequest> TelemetryGenerationRequests { get; set; } = null!;
     public DbSet<TelemetryLogSettings> TelemetryLogSettings { get; set; } = null!;
@@ -281,6 +284,15 @@ public class TurnOneDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.UserId).IsUnique();
+        });
+        modelBuilder.Entity<BetaApplication>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.User).WithOne().HasForeignKey<BetaApplication>(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => e.UserId).IsUnique();
+            entity.Property(e => e.Sims).IsRequired();
+            entity.Property(e => e.Note).HasMaxLength(BetaApplication.NoteMaxLength).IsRequired(false);
+            entity.HasIndex(e => new { e.Status, e.CreatedAt });
         });
         modelBuilder.Entity<LapValidation>(entity =>
         {

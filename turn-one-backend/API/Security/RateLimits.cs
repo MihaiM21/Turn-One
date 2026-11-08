@@ -17,6 +17,7 @@ public static class RateLimits
     public const string PairingStart = "pairing-start";
     public const string DeviceTokens = "device-tokens";
     public const string Uploads = "uploads";
+    public const string Beta = "beta";
 
     private const string TelemetrySocketPath = "/api/ws/telemetry";
 
@@ -57,6 +58,10 @@ public static class RateLimits
             options.AddPolicy(Uploads, ctx => Window(
                 "upload:" + (ctx.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? ClientIp(ctx)),
                 permits: 240, TimeSpan.FromHours(1)));
+            // Closed-beta application edits: per account, a handful of saves is plenty.
+            options.AddPolicy(Beta, ctx => Window(
+                "beta:" + (ctx.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? ClientIp(ctx)),
+                permits: 10, TimeSpan.FromHours(1)));
 
             // The telemetry socket is plain middleware (no endpoint), so it is limited globally by path.
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
