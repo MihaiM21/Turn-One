@@ -1,4 +1,5 @@
 using Domain.Entities;
+using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services;
@@ -32,9 +33,12 @@ public class CatalogAdminService
 
     public sealed record MergeResult(Outcome Outcome, int AliasesMoved = 0, int LapsMoved = 0);
 
-    public async Task<Review> GetProvisionalAsync()
+    /// <param name="source">Only entries with an alias from this sim (ACC cars, for instance, are never seeded and stay provisional).</param>
+    public async Task<Review> GetProvisionalAsync(SimSource? source = null)
     {
-        var layouts = await _db.TrackLayouts.AsNoTracking().Where(t => t.Status == CatalogStatus.Provisional).OrderBy(t => t.Name).ToListAsync();
+        var layoutQuery = _db.TrackLayouts.AsNoTracking().Where(t => t.Status == CatalogStatus.Provisional);
+        if (source != null) layoutQuery = layoutQuery.Where(t => _db.TrackAliases.Any(a => a.TrackLayoutId == t.Id && a.Source == source));
+        var layouts = await layoutQuery.OrderBy(t => t.Name).ToListAsync();
         var layoutIds = layouts.Select(l => l.Id).ToList();
         var trackAliases = await _db.TrackAliases.AsNoTracking().Where(a => layoutIds.Contains(a.TrackLayoutId)).ToListAsync();
         var trackLaps = await _db.LapValidations.AsNoTracking()
@@ -42,7 +46,9 @@ public class CatalogAdminService
             .GroupBy(v => v.TrackLayoutId!.Value).Select(g => new { Id = g.Key, Count = g.Count() })
             .ToDictionaryAsync(g => g.Id, g => g.Count);
 
-        var cars = await _db.Cars.AsNoTracking().Include(c => c.CarClass).Where(c => c.Status == CatalogStatus.Provisional).OrderBy(c => c.Name).ToListAsync();
+        var carQuery = _db.Cars.AsNoTracking().Include(c => c.CarClass).Where(c => c.Status == CatalogStatus.Provisional);
+        if (source != null) carQuery = carQuery.Where(c => _db.CarAliases.Any(a => a.CarId == c.Id && a.Source == source));
+        var cars = await carQuery.OrderBy(c => c.Name).ToListAsync();
         var carIds = cars.Select(c => c.Id).ToList();
         var carAliases = await _db.CarAliases.AsNoTracking().Where(a => carIds.Contains(a.CarId)).ToListAsync();
         var carLaps = await _db.LapValidations.AsNoTracking()

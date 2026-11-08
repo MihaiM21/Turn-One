@@ -27,6 +27,7 @@ export interface CatalogCar {
     slug: string;
     name: string;
     class: string | null;
+    curated?: boolean;
 }
 
 export interface BoardEntry {
@@ -144,3 +145,76 @@ export const setAiConsent = (granted: boolean, version: string) =>
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ granted, version }),
     });
+
+// ---------------------------------------------------------------------------
+// Admin catalog review (HCR-008/009): approve provisional entries or merge them into curated ones
+// ---------------------------------------------------------------------------
+
+export interface CatalogAliasRef {
+    source: BoardSim;
+    simId: string;
+}
+
+export interface ProvisionalTrack {
+    id: string;
+    slug: string;
+    name: string;
+    country: string | null;
+    lengthM: number | null;
+    aliases: CatalogAliasRef[];
+    lapCount: number;
+}
+
+export interface ProvisionalCar {
+    id: string;
+    slug: string;
+    name: string;
+    classSlug: string | null;
+    aliases: CatalogAliasRef[];
+    lapCount: number;
+}
+
+export interface CatalogReview {
+    tracks: ProvisionalTrack[];
+    cars: ProvisionalCar[];
+}
+
+export interface CarClassOption {
+    slug: string;
+    name: string;
+}
+
+export interface MergeResult {
+    aliasesMoved: number;
+    lapsMoved: number;
+}
+
+const ADMIN_CATALOG = "/api/simracing/admin/catalog";
+
+const postJson = <T>(path: string, body: unknown) =>
+    request<T>(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    });
+
+export const getCatalogReview = (sim?: BoardSim) =>
+    request<CatalogReview>(`${ADMIN_CATALOG}/provisional${sim ? `?source=${sim}` : ""}`, { cache: "no-store" });
+
+export const getCarClasses = () => request<CarClassOption[]>(`${ADMIN_CATALOG}/classes`, { cache: "no-store" });
+
+/** Every catalog layout / car across sims (merge targets). `no-store` skips the public 5-minute cache. */
+export const getAllTracks = () => request<CatalogTrack[]>("/api/simracing/catalog/tracks", { cache: "no-store" });
+export const getAllCars = () => request<CatalogCar[]>("/api/simracing/catalog/cars", { cache: "no-store" });
+
+export const approveTrack = (id: string, body: { slug?: string; name?: string; country?: string; lengthM?: number }) =>
+    postJson<void>(`${ADMIN_CATALOG}/tracks/${encodeURIComponent(id)}/approve`, body);
+
+export const approveCar = (id: string, body: { slug?: string; name?: string; class?: string }) =>
+    postJson<void>(`${ADMIN_CATALOG}/cars/${encodeURIComponent(id)}/approve`, body);
+
+export const mergeTrack = (id: string, into: string) =>
+    postJson<MergeResult>(`${ADMIN_CATALOG}/tracks/${encodeURIComponent(id)}/merge`, { into });
+
+export const mergeCar = (id: string, into: string) =>
+    postJson<MergeResult>(`${ADMIN_CATALOG}/cars/${encodeURIComponent(id)}/merge`, { into });

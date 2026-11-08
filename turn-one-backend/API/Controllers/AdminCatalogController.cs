@@ -1,4 +1,6 @@
+using Infrastructure;
 using Infrastructure.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using static Infrastructure.Services.CatalogAdminService;
@@ -15,10 +17,12 @@ namespace API.Controllers;
 public class AdminCatalogController : ControllerBase
 {
     private readonly CatalogAdminService _admin;
+    private readonly TurnOneDbContext _db;
 
-    public AdminCatalogController(CatalogAdminService admin)
+    public AdminCatalogController(CatalogAdminService admin, TurnOneDbContext db)
     {
         _admin = admin;
+        _db = db;
     }
 
     public sealed class ApproveTrackRequest
@@ -43,9 +47,19 @@ public class AdminCatalogController : ControllerBase
         public string Into { get; set; } = "";
     }
 
-    /// <summary>Provisional layouts and cars with their sim aliases and how many laps they hold.</summary>
+    /// <summary>Provisional layouts and cars with their sim aliases and how many laps they hold. ?source=iracing narrows to one sim.</summary>
     [HttpGet("provisional")]
-    public async Task<IActionResult> Provisional() => Ok(await _admin.GetProvisionalAsync());
+    public async Task<IActionResult> Provisional([FromQuery] string? source)
+    {
+        var sim = CatalogService.ParseSource(source);
+        if (!string.IsNullOrWhiteSpace(source) && sim == null) return BadRequest(new { message = "Unknown source." });
+        return Ok(await _admin.GetProvisionalAsync(sim));
+    }
+
+    /// <summary>Every car class, for the approve form's class picker.</summary>
+    [HttpGet("classes")]
+    public async Task<IActionResult> Classes() =>
+        Ok(await _db.CarClasses.AsNoTracking().OrderBy(c => c.Name).Select(c => new { c.Slug, c.Name }).ToListAsync());
 
     [HttpPost("tracks/{id:guid}/approve")]
     public async Task<IActionResult> ApproveTrack(Guid id, [FromBody] ApproveTrackRequest? body)

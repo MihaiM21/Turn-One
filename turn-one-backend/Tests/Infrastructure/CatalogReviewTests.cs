@@ -139,6 +139,10 @@ public class CatalogReviewTests
 
         var review = await w.Admin.GetProvisionalAsync();
 
+        await w.LapAsync(a, 139_000, SimSource.Acc, "spa", "ferrari_296_gt3");   // ACC cars are never seeded: provisional too
+        (await w.Admin.GetProvisionalAsync()).Cars.Should().HaveCount(2);
+        review = await w.Admin.GetProvisionalAsync(SimSource.IRacing);
+
         var track = review.Tracks.Should().ContainSingle().Subject;
         track.Slug.Should().Be("iracing:163:grand prix pits");
         track.Aliases.Should().Equal(new CatalogAdminService.AliasRef("iracing", "163:grand prix pits"));
