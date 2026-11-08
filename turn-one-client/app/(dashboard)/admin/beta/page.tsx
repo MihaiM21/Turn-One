@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle2, Clock, Loader2, RotateCcw, Users, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { DashboardHeader } from '@/components/dashboard/live dashboard/dashboard-header';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -89,8 +88,7 @@ export default function AdminBetaPage() {
   const total = data ? data.pending + data.accepted + data.declined : 0;
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader />
+    <div>
       <main className="w-full space-y-4 px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
         <Link
           href="/admin"
