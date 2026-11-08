@@ -619,6 +619,7 @@ export default function AdminDashboard() {
     { href: '/admin/notifications', label: 'Notifications', icon: Bell, iconColor: 'text-orange-400' },
     { href: '/admin/export-graphs', label: 'Export Graphs', icon: Download, iconColor: 'text-pink-400' },
     { href: '/admin/usage', label: 'Token Usage', icon: Zap, iconColor: 'text-yellow-400' },
+    { href: '/admin/beta', label: 'Beta Applications', icon: Users, iconColor: 'text-primary' },
   ];
 
   return (

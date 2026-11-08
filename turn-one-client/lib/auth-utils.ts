@@ -30,6 +30,65 @@ export const safeNextPath = (next: string | null | undefined, fallback = '/dashb
 };
 
 /**
+ * Sign-up intents: `?intent=beta` from the sim landing's "Join the beta" CTA. The intent rides
+ * along signup ⇄ login links and is also remembered in localStorage, because a sign-up that needs
+ * email confirmation comes back through /auth/confirm-email → /auth/login without the query.
+ */
+export const AUTH_INTENT_PATHS = {
+  beta: '/simracing/beta',
+} as const;
+
+export type AuthIntent = keyof typeof AUTH_INTENT_PATHS;
+
+const INTENT_STORAGE_KEY = 'turnone.authIntent';
+
+export const parseAuthIntent = (raw: string | null | undefined): AuthIntent | null =>
+  raw && Object.prototype.hasOwnProperty.call(AUTH_INTENT_PATHS, raw) ? (raw as AuthIntent) : null;
+
+/** `?intent=beta` for links between auth pages, or "" when there is no intent. */
+export const intentQuery = (intent: AuthIntent | null) => (intent ? `?intent=${intent}` : '');
+
+export const rememberAuthIntent = (intent: AuthIntent | null) => {
+  if (typeof window === 'undefined' || !intent) return;
+  try {
+    localStorage.setItem(INTENT_STORAGE_KEY, intent);
+  } catch {
+    /* storage blocked — the query string still carries it */
+  }
+};
+
+/** The intent in the URL, else one remembered from an earlier sign-up step. */
+export const currentAuthIntent = (search: string | URLSearchParams): AuthIntent | null => {
+  const params = typeof search === 'string' ? new URLSearchParams(search) : search;
+  const fromUrl = parseAuthIntent(params.get('intent'));
+  if (fromUrl) return fromUrl;
+  if (typeof window === 'undefined') return null;
+  try {
+    return parseAuthIntent(localStorage.getItem(INTENT_STORAGE_KEY));
+  } catch {
+    return null;
+  }
+};
+
+export const clearAuthIntent = () => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(INTENT_STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
+};
+
+/**
+ * Where to send a user who just signed in or up: an explicit same-site `next` wins (a protected
+ * page sent them here), then the intent's page, then the dashboard.
+ */
+export const postAuthPath = (next: string | null | undefined, intent: AuthIntent | null) => {
+  const fallback = intent ? AUTH_INTENT_PATHS[intent] : '/dashboard';
+  return safeNextPath(next, fallback);
+};
+
+/**
  * Session-expiry plumbing.
  *
  * There is no token refresh: once the JWT expires every authenticated request
