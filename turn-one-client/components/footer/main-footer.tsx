@@ -25,12 +25,12 @@ export function MainFooter() {
               </div>
               <div className="flex flex-col">
                 <span className="text-foreground font-bold text-xl text-primary">Turn One</span>
-                <span className="text-xs text-muted-foreground font-medium tracking-wider">F1 TELEMETRY</span>
+                <span className="text-xs text-muted-foreground font-medium tracking-wider">SIM RACING TELEMETRY</span>
               </div>
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              Professional Formula One telemetry analysis and real-time insights for motorsport enthusiasts and
-              professionals.
+              Telemetry and lap analysis for ACC, EA SPORTS F1 25/26 and iRacing, recorded by Turn One Link.
+              Independent; not affiliated with Formula 1, EA, Kunos or iRacing.
             </p>
             <div className="flex space-x-3">
               <Button name="twitter" variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors duration-200">
@@ -80,14 +80,14 @@ export function MainFooter() {
 
           {/* Gaming & Features */}
           <div className="space-y-4">
-            <h3 className="text-foreground font-semibold text-lg">Gaming</h3>
+            <h3 className="text-foreground font-semibold text-lg">Sim racing</h3>
             <div className="space-y-2">
               {[
-                { href: "/games", label: "Game Hub" },
-                { href: "/predictions", label: "Predictions" },
-                { href: "/rewards", label: "Rewards & Leveling" },
-                { href: "/live", label: "Live Timing" },
                 { href: "/download", label: "Turn One Link" },
+                { href: "/#how", label: "How it works" },
+                { href: "/simracing/leaderboards", label: "Leaderboards" },
+                { href: "/rewards", label: "Rewards & Leveling" },
+                { href: "/f1", label: "F1 Archive" },
               ].map((link) => (
                 <Link
                   key={link.href}

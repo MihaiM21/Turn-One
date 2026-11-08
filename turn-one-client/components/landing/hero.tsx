@@ -6,7 +6,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CarSceneLazy, useCanRender3D } from "./car-scene-lazy";
 import type { AeroMode } from "./car-scene";
 import { Poster } from "./poster";
-import { LiveStrip } from "./live-strip";
+import { SimStrip } from "./sim-strip";
+import { useAuth } from "@/components/auth/auth-provider";
 import { Fragment } from "./ui-fragments";
 import { Btn, Eyebrow, Plate } from "./sections";
 import { HERO, PILLARS, type Pillar } from "./data";
@@ -27,7 +28,7 @@ function Readout({ mode }: { mode: AeroMode }) {
     return () => clearInterval(id);
   }, []);
   return (
-    <dl className="grid w-56 grid-cols-[auto_1fr] items-center gap-x-4 gap-y-1 border border-zinc-800 bg-black/70 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500 backdrop-blur-sm">
+    <dl className="grid w-56 grid-cols-[auto_1fr] items-center gap-x-4 gap-y-1 border border-border bg-black/70 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground backdrop-blur-sm">
       <dt>Wind</dt>
       <dd className="text-right tabular-nums text-white">{m.wind + jitter} km/h</dd>
       <dt>Rear wing</dt>
@@ -42,7 +43,7 @@ function Readout({ mode }: { mode: AeroMode }) {
 
 function Bar({ v }: { v: number }) {
   return (
-    <span className="block h-1 w-full bg-zinc-800">
+    <span className="block h-1 w-full bg-border">
       <span className="block h-full bg-zinc-200 transition-[width] duration-500 ease-out" style={{ width: `${v * 100}%` }} />
     </span>
   );
@@ -51,7 +52,7 @@ function Bar({ v }: { v: number }) {
 /** The 2026 active-aero switch. Auto-alternates to show itself off until someone uses it. */
 function AeroSwitch({ mode, onChange }: { mode: AeroMode; onChange: (m: AeroMode) => void }) {
   return (
-    <div role="group" aria-label="Active aero mode" className="flex border border-zinc-800 bg-black/70 p-0.5 backdrop-blur-sm">
+    <div role="group" aria-label="Active aero mode" className="flex border border-border bg-black/70 p-0.5 backdrop-blur-sm">
       {(["corner", "straight"] as const).map((m) => (
         <button
           key={m}
@@ -60,7 +61,7 @@ function AeroSwitch({ mode, onChange }: { mode: AeroMode; onChange: (m: AeroMode
           onClick={() => onChange(m)}
           className={cn(
             "min-h-9 flex-1 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] transition-colors",
-            mode === m ? "bg-zinc-100 text-black" : "text-zinc-400 hover:text-white",
+            mode === m ? "bg-zinc-100 text-black" : "text-muted-foreground hover:text-white",
           )}
         >
           {m} mode
@@ -78,6 +79,9 @@ function AeroSwitch({ mode, onChange }: { mode: AeroMode; onChange: (m: AeroMode
  */
 export function WindTunnelHero() {
   const can3D = useCanRender3D();
+  const { isAuthenticated } = useAuth();
+  // Signed-in visitors skip the sign-up step and go straight to the beta form.
+  const primaryHref = isAuthenticated ? "/simracing/beta" : HERO.primary.href;
   const [open, setOpen] = useState<Pillar | null>(null);
   const [touched, setTouched] = useState(false);
   const [wide, setWide] = useState(false);
@@ -114,7 +118,7 @@ export function WindTunnelHero() {
   }));
 
   return (
-    <section aria-labelledby="hero-title" className="relative border-b border-zinc-800 bg-[#020202]">
+    <section aria-labelledby="hero-title" className="relative border-b border-border bg-[#020202]">
       <div className="relative h-[100svh] min-h-[600px] w-full overflow-hidden">
         <Poster />
         {can3D && (
@@ -133,17 +137,17 @@ export function WindTunnelHero() {
         <div className="pointer-events-none absolute inset-0 mx-auto flex w-full max-w-6xl flex-col justify-end px-4 pb-10 sm:px-6 sm:pb-16 lg:justify-center lg:px-8 lg:pb-0">
           <div className="pointer-events-auto max-w-lg">
             <Eyebrow>{HERO.eyebrow}</Eyebrow>
-            <h1 id="hero-title" className="mt-4 text-balance font-black leading-[0.95] tracking-tight text-white [font-size:clamp(2.1rem,1rem+4vw,4.5rem)]">
+            <h1 id="hero-title" className="font-display mt-4 text-balance leading-[0.9] text-foreground [font-size:clamp(2.6rem,1.2rem+5vw,5.5rem)]">
               {HERO.h1}
             </h1>
-            <p className="mt-4 max-w-md text-pretty text-sm text-zinc-300 sm:text-lg">{HERO.sub}</p>
+            <p className="mt-4 max-w-md text-pretty text-sm text-foreground/85 sm:text-lg">{HERO.sub}</p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              <Btn href={HERO.primary.href}>{HERO.primary.label}</Btn>
+              <Btn href={primaryHref}>{HERO.primary.label}</Btn>
               <Btn href={HERO.secondary.href} variant="ghost">{HERO.secondary.label}</Btn>
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-4">
-              <LiveStrip />
-              <Link href={HERO.tertiary.href} className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 hover:text-white">
+              <SimStrip />
+              <Link href={HERO.tertiary.href} className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground hover:text-white">
                 {HERO.tertiary.label} →
               </Link>
             </div>
@@ -161,7 +165,7 @@ export function WindTunnelHero() {
               }}
             />
             <div className="hidden sm:block"><Readout mode={mode} /></div>
-            <p className="hidden text-right text-[10px] uppercase tracking-[0.35em] text-zinc-500 sm:block">
+            <p className="hidden text-right text-[10px] uppercase tracking-[0.35em] text-muted-foreground sm:block">
               {touched ? "Tap a number" : "Drag to turn the car"}
             </p>
           </div>
@@ -185,15 +189,15 @@ export function WindTunnelHero() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <Eyebrow>{open.eyebrow}</Eyebrow>
-                    <h2 id={`plate-${open.id}`} className="mt-2 text-2xl font-black tracking-tight text-white">{open.title}</h2>
+                    <h2 id={`plate-${open.id}`} className="font-display mt-2 text-3xl leading-none text-foreground">{open.title}</h2>
                   </div>
-                  <button type="button" onClick={() => setOpen(null)} aria-label="Close" className="-m-2 p-2 text-zinc-500 hover:text-white">
+                  <button type="button" onClick={() => setOpen(null)} aria-label="Close" className="-m-2 p-2 text-muted-foreground hover:text-white">
                     ✕
                   </button>
                 </div>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-300">{open.body}</p>
-                <div className="mt-4 border-t border-zinc-800 pt-4"><Fragment id={open.id} /></div>
-                <Link href={open.href} className="mt-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-red-400 hover:text-red-300">
+                <p className="mt-2 text-sm leading-relaxed text-foreground/85">{open.body}</p>
+                <div className="mt-4 border-t border-border pt-4"><Fragment id={open.id} /></div>
+                <Link href={open.href} className="mt-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-primary hover:text-primary/80">
                   {open.cta} →
                 </Link>
               </Plate>

@@ -45,6 +45,11 @@ export function parseChannelFeed(xml: string, limit: number): ChannelVideo[] {
   return videos
 }
 
+export function channelUrl(): string | null {
+  const id = process.env.YOUTUBE_CHANNEL_ID
+  return id ? `https://www.youtube.com/channel/${encodeURIComponent(id)}` : null
+}
+
 export async function getLatestChannelVideos(limit = 3): Promise<ChannelVideo[]> {
   const channelId = process.env.YOUTUBE_CHANNEL_ID
   if (!channelId) return []

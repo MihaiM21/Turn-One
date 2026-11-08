@@ -8,9 +8,9 @@ import { SOCIAL_LINKS } from '@/lib/social-links'
 
 // Base domain configuration
 export const SITE_CONFIG = {
-  name: 'Turn One - Formula 1 Live Timing & Telemetry Platform',
-  shortName: 'Turn One F1',
-  description: 'Turn One: Your ultimate Formula 1 destination for live timing, telemetry analysis, and real-time F1 race data. Follow F1 races live with professional-grade timing screens, comprehensive race statistics, and advanced telemetry insights. The premier F1 platform for racing fans and data enthusiasts.',
+  name: 'Turn One - Sim Racing Telemetry for ACC, F1 25 and iRacing',
+  shortName: 'Turn One',
+  description: 'Turn One is sim racing telemetry for Assetto Corsa Competizione, EA SPORTS F1 25/26 and iRacing. Turn One Link records every lap; the web shows where you lose time, corner by corner, against your best and verified leaderboards. Plus an archive of past F1 sessions.',
   url: process.env.NEXT_PUBLIC_SITE_URL || 'https://turnonehub.com',
   domain: 'turnonehub.com',
   author: 'Turn One',

@@ -89,7 +89,7 @@ export function CarScene({ hotspots, aero = "corner", onInteract, className = ""
                 <span className="relative flex h-8 w-8 items-center justify-center rounded-full border border-red-400 bg-black/70 font-mono text-[11px] font-bold text-red-400 backdrop-blur-sm transition-colors group-hover:bg-red-600 group-hover:text-white">
                   {String(h.index + 1).padStart(2, "0")}
                 </span>
-                <span className="pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap border border-zinc-800 bg-black/80 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-zinc-200 opacity-0 transition-opacity group-hover:opacity-100">
+                <span className="pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap border border-border bg-black/80 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-foreground/95 opacity-0 transition-opacity group-hover:opacity-100">
                   {h.label}
                 </span>
               </button>

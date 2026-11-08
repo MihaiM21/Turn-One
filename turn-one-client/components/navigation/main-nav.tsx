@@ -8,7 +8,7 @@ import { ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { SOCIAL_LINKS } from "@/lib/social-links"
 import { useAuth } from "@/components/auth/auth-provider"
-import { useSessionClock } from "@/hooks/use-session-clock"
+import { BETA_SIGNUP_HREF } from "@/components/landing/data"
 
 /**
  * The public site header, in the landing page's language: near-black, square
@@ -24,29 +24,18 @@ import { useSessionClock } from "@/hooks/use-session-clock"
 
 type Item = { href: string; label: string; secondary?: boolean }
 
+// Sim-first since 2026-11-08 (grill G1): the F1 archive is secondary, live F1 timing is paused.
 const ITEMS: Item[] = [
-  { href: "/live", label: "Live" },
+  { href: "/#how", label: "Sim racing" },
+  { href: "/download", label: "Turn One Link" },
   { href: "/features", label: "Features" },
-  { href: "/f1", label: "Sessions" },
-  { href: "/news", label: "News" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/examples", label: "Examples", secondary: true },
+  { href: "/news", label: "News" },
+  { href: "/f1", label: "F1 Archive", secondary: true },
   { href: "/how-it-works", label: "How it works", secondary: true },
 ]
 
 const isActive = (pathname: string | null, href: string) => !!pathname && (pathname === href || pathname.startsWith(`${href}/`))
-
-/** Red dot next to "Live" while a session is actually running. Checks once a minute. */
-function LiveDot() {
-  const { pick } = useSessionClock(60_000)
-  if (!pick?.live) return null
-  return (
-    <span className="relative ml-1.5 inline-flex h-1.5 w-1.5" aria-label="Session live now">
-      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75 motion-reduce:hidden" />
-      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-500" />
-    </span>
-  )
-}
 
 export function MainNav() {
   const pathname = usePathname()
@@ -153,11 +142,10 @@ export function MainNav() {
                     aria-current={active ? "page" : undefined}
                     className={cn(
                       "relative inline-flex h-10 items-center px-3 text-[11px] font-medium uppercase tracking-[0.2em] transition-colors",
-                      active ? "text-white" : "text-zinc-400 hover:text-white",
+                      active ? "text-white" : "text-muted-foreground hover:text-white",
                     )}
                   >
                     {item.label}
-                    {item.href === "/live" && <LiveDot />}
                     {/* active marker: a short crimson tick under the label */}
                     <span
                       aria-hidden
@@ -181,12 +169,12 @@ export function MainNav() {
               <>
                 <Link
                   href="/auth/login"
-                  className="hidden h-9 items-center rounded-lg px-3.5 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white sm:inline-flex"
+                  className="hidden h-9 items-center rounded-lg px-3.5 text-sm font-medium text-foreground/85 transition-colors hover:bg-white/5 hover:text-white sm:inline-flex"
                 >
                   Log in
                 </Link>
-                <NavCta href="/auth/signup" onClick={close}>
-                  Start free
+                <NavCta href={BETA_SIGNUP_HREF} onClick={close}>
+                  Join the beta
                 </NavCta>
               </>
             )}
@@ -198,7 +186,7 @@ export function MainNav() {
               aria-controls={menuId}
               aria-label={open ? "Close menu" : "Open menu"}
               onClick={() => setOpen((o) => !o)}
-              className="relative -mr-2 inline-flex h-10 w-10 items-center justify-center text-zinc-300 hover:text-white xl:hidden"
+              className="relative -mr-2 inline-flex h-10 w-10 items-center justify-center text-foreground/85 hover:text-white xl:hidden"
             >
               {/* two bars → X */}
               <span
@@ -222,7 +210,7 @@ export function MainNav() {
         className="fixed inset-x-3 bottom-3 top-[4.75rem] z-50 overflow-y-auto rounded-2xl border border-white/10 bg-[#050505]/95 shadow-[0_18px_50px_-18px_rgba(0,0,0,0.9)] backdrop-blur-xl xl:hidden"
       >
         <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-6 sm:px-6 lg:px-8">
-          <ul className="divide-y divide-zinc-800/80 border-y border-zinc-800/80">
+          <ul className="divide-y divide-border/80 border-y border-border/80">
             {ITEMS.map((item, i) => {
               const active = isActive(pathname, item.href)
               return (
@@ -235,16 +223,15 @@ export function MainNav() {
                     className="group flex items-center justify-between py-4"
                   >
                     <span className="flex items-baseline gap-4">
-                      <span className="font-mono text-[10px] tabular-nums text-zinc-600">{String(i + 1).padStart(2, "0")}</span>
+                      <span className="font-mono text-[10px] tabular-nums text-muted-foreground/70">{String(i + 1).padStart(2, "0")}</span>
                       <span
-                        className={cn("text-2xl font-black tracking-tight", active ? "text-white" : "text-zinc-300 group-hover:text-white")}
+                        className={cn("text-2xl font-black tracking-tight", active ? "text-white" : "text-foreground/85 group-hover:text-white")}
                       >
                         {item.label}
-                        {item.href === "/live" && <LiveDot />}
-                      </span>
+                          </span>
                     </span>
                     <ArrowRight
-                      className={cn("h-4 w-4 transition-transform group-hover:translate-x-1", active ? "text-red-500" : "text-zinc-600")}
+                      className={cn("h-4 w-4 transition-transform group-hover:translate-x-1", active ? "text-red-500" : "text-muted-foreground/70")}
                     />
                   </Link>
                 </li>
@@ -259,13 +246,13 @@ export function MainNav() {
               </NavCta>
             ) : (
               <>
-                <NavCta href="/auth/signup" onClick={close} className="h-11 w-full">
-                  Start free
+                <NavCta href={BETA_SIGNUP_HREF} onClick={close} className="h-11 w-full">
+                  Join the beta
                 </NavCta>
                 <Link
                   href="/auth/login"
                   onClick={close}
-                  className="inline-flex h-11 items-center justify-center rounded-lg border border-white/15 text-sm font-medium text-zinc-200 transition-colors hover:border-white/30 hover:bg-white/5 hover:text-white"
+                  className="inline-flex h-11 items-center justify-center rounded-lg border border-white/15 text-sm font-medium text-foreground/95 transition-colors hover:border-white/30 hover:bg-white/5 hover:text-white"
                 >
                   Log in
                 </Link>
@@ -276,7 +263,7 @@ export function MainNav() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={close}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-lg text-sm font-medium text-zinc-400 transition-colors hover:bg-white/5 hover:text-white sm:col-span-2"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:bg-white/5 hover:text-white sm:col-span-2"
             >
               <Image src="/discord.svg" alt="" width={14} height={14} />
               Join the Discord
