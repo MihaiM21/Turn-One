@@ -116,7 +116,7 @@ export const FAQ = [
   },
   {
     q: "When can I download Turn One Link?",
-    a: "It's in closed beta for 20–50 drivers from January 2027. Join the beta with your sims and setup and we'll email you when your place is confirmed.",
+    a: "It's in closed beta for 20–50 drivers from January 2027. Join the beta with your sims and setup; the decision shows up in your dashboard.",
   },
 ];
 

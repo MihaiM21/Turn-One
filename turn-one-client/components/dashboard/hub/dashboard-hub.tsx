@@ -24,7 +24,7 @@ import type { ChannelVideo } from "@/lib/server/youtube-feed"
 const linkClass =
   "inline-flex items-center gap-1 text-xs font-semibold text-primary underline-offset-4 hover:underline"
 
-type BetaStatus = "none" | "Pending" | "Accepted" | "Declined" | "unknown"
+type BetaStatus = "none" | "pending" | "accepted" | "declined" | "unknown"
 
 /** GET api/simracing/beta/me (closed-beta applications). 404 means "not applied yet". */
 function useBetaStatus(): BetaStatus | null {
@@ -32,8 +32,8 @@ function useBetaStatus(): BetaStatus | null {
   React.useEffect(() => {
     request<{ status?: string } | null>("/api/simracing/beta/me")
       .then((r) => {
-        const s = r?.status
-        setStatus(s === "Pending" || s === "Accepted" || s === "Declined" ? s : r ? "unknown" : "none")
+        const s = r?.status?.toLowerCase()
+        setStatus(s === "pending" || s === "accepted" || s === "declined" ? s : r ? "unknown" : "none")
       })
       .catch((err: { status?: number }) => setStatus(err?.status === 404 ? "none" : "unknown"))
   }, [])
@@ -42,13 +42,13 @@ function useBetaStatus(): BetaStatus | null {
 
 function BetaCard() {
   const status = useBetaStatus()
-  if (status === null || status === "Accepted" || status === "unknown") return null
+  if (status === null || status === "accepted" || status === "unknown") return null
 
   const copy =
     status === "none"
       ? { title: "Join the closed beta", body: "Tell us which sims you drive and on what. We pick 20–50 drivers for January 2027.", cta: "Apply" }
-      : status === "Pending"
-        ? { title: "Beta application received", body: "We'll email you when your place is confirmed. You can still change your answers.", cta: "Edit answers" }
+      : status === "pending"
+        ? { title: "Beta application received", body: "The decision shows up here and on your beta page. You can still change your answers.", cta: "Edit answers" }
         : { title: "Not this round", body: "The first beta round is full. You stay on the list for the next one.", cta: "View application" }
 
   return (

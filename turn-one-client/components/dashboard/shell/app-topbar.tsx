@@ -21,8 +21,9 @@ import { DASHBOARD_NAV, findActiveNav, pathMatches } from "@/lib/navigation/dash
 import { useSimFilter } from "@/lib/simracing/sim-filter"
 import { SIM_FILTERS, type SimFilter } from "@/lib/simracing/sims"
 
-/** Pages where the sim filter changes what you see. */
-const SIM_FILTERED_ROUTES = ["/dashboard", "/simracing"]
+/** Pages where the sim filter changes what you see (exact match, or a prefix for sections). */
+const SIM_FILTERED_EXACT = ["/dashboard", "/simracing"]
+const SIM_FILTERED_PREFIXES = ["/simracing/sessions", "/simracing/leaderboards"]
 
 /** Fallback titles for routes that aren't in the sidebar. */
 const ROUTE_TITLES: [string, string][] = [
@@ -68,7 +69,8 @@ export function AppTopbar() {
   const crumbs = useCrumbs(path)
   const { coins } = useBalance()
   const { stats } = useNotificationStats()
-  const showSimFilter = SIM_FILTERED_ROUTES.some((p) => pathMatches(path, p))
+  const showSimFilter =
+    SIM_FILTERED_EXACT.includes(path) || SIM_FILTERED_PREFIXES.some((p) => pathMatches(path, p))
 
   return (
     <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background/85 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/70 md:px-4">
