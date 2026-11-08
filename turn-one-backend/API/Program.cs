@@ -336,6 +336,7 @@ builder.Services.AddScoped<Microsoft.AspNetCore.Authentication.IClaimsTransforma
 builder.Services.AddScoped<LapUploadService>();
 builder.Services.AddScoped<CatalogService>();
 builder.Services.AddScoped<SimLeaderboardService>();
+builder.Services.AddScoped<CatalogAdminService>();
 builder.Services.AddScoped<HeuristicCoachingService>();
 builder.Services.AddScoped<ICoachingService>(sp =>
 {

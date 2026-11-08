@@ -1180,6 +1180,10 @@ namespace Infrastructure.Migrations
                     b.Property<int>("BestLapMs")
                         .HasColumnType("integer");
 
+                    b.Property<string>("CarClass")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("CarId")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");

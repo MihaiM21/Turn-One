@@ -17,6 +17,8 @@ public sealed class StartSessionV2Request
     public float[]? SectorBoundariesM { get; init; }
     public string? CarId { get; init; }
     public string? CarName { get; init; }
+    /// <summary>Sim-native class name (<c>car.class</c>), e.g. iRacing "GT3 Class". Optional.</summary>
+    public string? CarClass { get; init; }
     public NormalizedSessionType SessionKind { get; init; }
     public string? SessionTypeRaw { get; init; }
     public string Driver { get; init; } = "";

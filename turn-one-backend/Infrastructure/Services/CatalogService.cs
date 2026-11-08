@@ -7,7 +7,9 @@ namespace Infrastructure.Services;
 /// <summary>
 /// HCR-008 — canonical track layouts and cars across sims. <see cref="ResolveAsync"/> maps a session's
 /// sim-native ids to catalog rows, creating provisional ones for ids it has never seen so an upload is
-/// never blocked. <see cref="SeedAsync"/> installs the curated ACC and F1 aliases.
+/// never blocked. <see cref="SeedAsync"/> installs the curated ACC and F1 aliases. iRacing ids are only
+/// known from real sessions, so iRacing entries start provisional and an admin curates or merges them
+/// (<see cref="CatalogAdminService"/>).
 /// </summary>
 public class CatalogService
 {
@@ -20,7 +22,8 @@ public class CatalogService
 
     public sealed record Resolved(Guid? TrackLayoutId, Guid? CarId, Guid? CarClassId);
 
-    public async Task<Resolved> ResolveAsync(SimSource source, string? simTrackId, string? trackName, float? lengthM, string? simCarId, string? carName)
+    /// <param name="simCarClass">The sim's own class name for the car (v2 <c>car.class</c>), when it sends one.</param>
+    public async Task<Resolved> ResolveAsync(SimSource source, string? simTrackId, string? trackName, float? lengthM, string? simCarId, string? carName, string? simCarClass = null)
     {
         Guid? layoutId = null, carId = null, classId = null;
 
@@ -51,8 +54,7 @@ public class CatalogService
             var alias = await _db.CarAliases.Include(a => a.Car).FirstOrDefaultAsync(a => a.Source == source && a.SimCarId == carKey);
             if (alias == null)
             {
-                var classSlug = InferClass(source, carKey);
-                var carClass = classSlug == null ? null : await _db.CarClasses.FirstOrDefaultAsync(c => c.Slug == classSlug);
+                var carClass = await FindClassAsync(InferClass(source, carKey, simCarClass));
                 var car = new Car
                 {
                     Id = Guid.NewGuid(),
@@ -65,6 +67,12 @@ public class CatalogService
                 _db.Cars.Add(car);
                 _db.CarAliases.Add(alias);
             }
+            else if (alias.Car.CarClassId == null && alias.Car.Status == CatalogStatus.Provisional
+                     && await FindClassAsync(InferClass(source, carKey, simCarClass)) is { } lateClass)
+            {
+                // First seen from a Link build that didn't send car.class; fill it in now. Curated cars are left alone.
+                alias.Car.CarClassId = lateClass.Id;
+            }
             carId = alias.CarId;
             classId = alias.Car.CarClassId;
         }
@@ -73,11 +81,17 @@ public class CatalogService
         return new Resolved(layoutId, carId, classId);
     }
 
-    /// <summary>The class a car most likely races in, from its sim id. Null when we can't tell (iRacing ids are numeric).</summary>
-    public static string? InferClass(SimSource source, string simCarId)
+    private async Task<CarClass?> FindClassAsync(string? slug) =>
+        slug == null ? null : await _db.CarClasses.FirstOrDefaultAsync(c => c.Slug == slug);
+
+    /// <summary>
+    /// The class a car most likely races in. F1 and ACC from the sim id; other sims (iRacing ids are
+    /// numeric) from the class name the sim reports (<paramref name="simCarClass"/>). Null when we can't tell.
+    /// </summary>
+    public static string? InferClass(SimSource source, string simCarId, string? simCarClass = null)
     {
         if (source is SimSource.F1_25 or SimSource.F1_26) return "f1";
-        if (source != SimSource.Acc) return null;
+        if (source != SimSource.Acc) return ClassFromName(simCarClass);
 
         var id = simCarId.ToLowerInvariant();
         if (id.Contains("gt4")) return "gt4";
@@ -85,6 +99,30 @@ public class CatalogService
         if (id.Contains("m2_cs")) return "tcx";
         if (id.Contains("cup") || id.Contains("_st_") || id.EndsWith("_st") || id.Contains("challenge") || id.Contains("supertrofeo")) return "gtc";
         return "gt3"; // most of ACC's roster
+    }
+
+    /// <summary>
+    /// Maps a sim's class name to a <see cref="CarClass"/> slug. Written for iRacing's
+    /// <c>CarClassShortName</c> ("GT3 Class", "GTP", "LMP2", "PCup", "MX5 Cup", "SF23", "F4"...), tolerant of
+    /// case, spaces, dashes and a trailing "Class". Unknown names -> null (the admin sets it on approve).
+    /// </summary>
+    public static string? ClassFromName(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return null;
+        var n = new string(name.ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
+        if (n.EndsWith("class") && n.Length > 5) n = n[..^5];
+
+        if (n is "pcup" or "porschecup" || n.Contains("gt3cup") || n.Contains("911cup") || n.Contains("992cup") || n.Contains("supercup")) return "gtc";
+        if (n.Contains("gtp") || n.Contains("hypercar") || n.Contains("lmdh") || n.Contains("lmh")) return "gtp";
+        if (n.Contains("lmp2")) return "lmp2";
+        if (n.Contains("lmp3")) return "lmp3";
+        if (n.Contains("gt3")) return "gt3";
+        if (n.Contains("gt4")) return "gt4";
+        if (n.Contains("tcr")) return "tcr";
+        if (n.Contains("mx5") || n.Contains("miata")) return "mx5";
+        if (n is "sf" or "sf23" or "sf19" || (n.StartsWith("superformula") && !n.Contains("lights"))) return "super_formula";
+        if (n.StartsWith("f4") || n.StartsWith("formula4") || n.StartsWith("fiaf4")) return "f4";
+        return null;
     }
 
     private static string? Normalize(string? id) =>
@@ -115,6 +153,24 @@ public class CatalogService
     private static readonly (string Slug, string Name)[] Classes =
     {
         ("gt3", "GT3"), ("gt4", "GT4"), ("gt2", "GT2"), ("gtc", "GTC / Cup"), ("tcx", "TCX"), ("f1", "Formula 1"),
+        ("gtp", "GTP / Hypercar"), ("lmp2", "LMP2"), ("lmp3", "LMP3"), ("tcr", "TCR"), ("mx5", "MX-5 Cup"),
+        ("super_formula", "Super Formula"), ("f4", "Formula 4"),
+    };
+
+    /// <summary>
+    /// iRacing aliases (sim track id "<c>TrackID:TrackConfigName</c>", lower-case) -> curated layout slug. Left
+    /// empty on purpose: iRacing's official id list needs a member OAuth Data API, so entries are taken from
+    /// real sessions and normally added through the admin Catalog review (merge) instead of here.
+    /// </summary>
+    private static readonly (string SimTrackId, string LayoutSlug)[] IRacingTracks =
+    {
+        // ("163:grand prix pits", "spa"),   // example shape: Spa-Francorchamps GP Pits; verify the id from a real session
+    };
+
+    /// <summary>iRacing CarID -> curated car slug. Empty for the same reason as <see cref="IRacingTracks"/>.</summary>
+    private static readonly (string SimCarId, string CarSlug)[] IRacingCars =
+    {
+        // ("132", "bmw_m4_gt3"),   // example shape: verify the CarID from a real session
     };
 
     /// <summary>(layout slug, name, country, length m, ACC id, F1 id).</summary>
@@ -194,6 +250,20 @@ public class CatalogService
                 if (!await db.TrackAliases.AnyAsync(a => a.Source == source && a.SimTrackId == simId))
                     db.TrackAliases.Add(new TrackAlias { Id = Guid.NewGuid(), Source = source, SimTrackId = simId, TrackLayoutId = layout.Id });
             }
+        }
+        await db.SaveChangesAsync();
+
+        foreach (var (simId, layoutSlug) in IRacingTracks)
+        {
+            var layout = await db.TrackLayouts.FirstOrDefaultAsync(t => t.Slug == layoutSlug);
+            if (layout != null && !await db.TrackAliases.AnyAsync(a => a.Source == SimSource.IRacing && a.SimTrackId == simId))
+                db.TrackAliases.Add(new TrackAlias { Id = Guid.NewGuid(), Source = SimSource.IRacing, SimTrackId = simId, TrackLayoutId = layout.Id });
+        }
+        foreach (var (simId, carSlug) in IRacingCars)
+        {
+            var car = await db.Cars.FirstOrDefaultAsync(c => c.Slug == carSlug);
+            if (car != null && !await db.CarAliases.AnyAsync(a => a.Source == SimSource.IRacing && a.SimCarId == simId))
+                db.CarAliases.Add(new CarAlias { Id = Guid.NewGuid(), Source = SimSource.IRacing, SimCarId = simId, CarId = car.Id });
         }
 
         await db.SaveChangesAsync();

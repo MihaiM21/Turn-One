@@ -148,6 +148,7 @@ public class TelemetrySessionService : ITelemetrySessionService
         session.TickRateHz = request.TickRateHz;
         session.CarId = request.CarId;
         if (!string.IsNullOrEmpty(request.CarName)) session.CarModel = request.CarName;
+        if (!string.IsNullOrEmpty(request.CarClass)) session.CarClass = request.CarClass.Length > 64 ? request.CarClass[..64] : request.CarClass;
         if (!string.IsNullOrEmpty(request.TrackName)) session.Track = request.TrackName;
         session.SessionType = request.SessionTypeRaw ?? WireEnums.SessionTypeName(request.SessionKind);
         if (!string.IsNullOrEmpty(request.Driver)) session.DriverName = request.Driver;
