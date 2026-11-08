@@ -28,9 +28,8 @@ interface SectionCardProps {
 /**
  * The single card primitive for the simracing section.
  *
- * Matches the dashboard idiom used elsewhere in the app (square corners, zinc-800 hairline,
- * zinc-950 surface, wide-tracked uppercase eyebrow) rather than the rounded/blurred shadcn
- * `Card` these pages used to reach for.
+ * t1-style: card surface, hairline border, condensed eyebrow. Prefer it over the
+ * blurred shadcn `Card` these pages used to reach for.
  */
 export function SectionCard({
     label,
@@ -49,16 +48,16 @@ export function SectionCard({
     const hasHeader = label || title || actions || Icon;
 
     return (
-        <section className={cn("border border-border bg-card", className)}>
+        <section className={cn("rounded-lg border border-border bg-card", className)}>
             {hasHeader ? (
                 <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
                     <div className="flex min-w-0 items-center gap-2">
                         {Icon ? <Icon className={cn("h-4 w-4 shrink-0 text-primary", iconClassName)} /> : null}
                         <div className="min-w-0">
                             {label ? (
-                                <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{label}</p>
+                                <p className="eyebrow text-[10px]">{label}</p>
                             ) : null}
-                            {title ? <p className="mt-0.5 truncate text-sm font-bold text-white">{title}</p> : null}
+                            {title ? <p className="mt-0.5 truncate text-sm font-semibold text-foreground">{title}</p> : null}
                         </div>
                     </div>
                     {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}

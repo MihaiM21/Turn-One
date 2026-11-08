@@ -16,6 +16,7 @@ import {
 import { PageHeader } from "@/components/dashboard/page-header";
 import { SectionCard } from "@/components/dashboard/simracing/section-card";
 import { LinkDownloadButton } from "@/components/turn-one-link/download-button";
+import { SimGuides } from "@/components/turn-one-link/sim-guides";
 import { SETUP_STEPS, REQUIREMENTS, TROUBLESHOOTING, PRIVACY_POINTS } from "@/components/turn-one-link/setup-content";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useLinkRelease } from "@/hooks/use-link-release";
@@ -177,6 +178,8 @@ export default function SimracingDownloadPage() {
                     </SectionCard>
                 </div>
             </div>
+
+            <SimGuides sessions={sessions} />
 
             <SectionCard label="Help" title="Troubleshooting" icon={HelpCircle}>
                 <Accordion type="single" collapsible className="w-full">

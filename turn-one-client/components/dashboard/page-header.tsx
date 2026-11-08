@@ -23,8 +23,8 @@ export function PageHeader({ label, title, description, stats, actions }: PageHe
     <section className="border-b border-border/70 pb-5 animate-in fade-in duration-500">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">{label}</p>
-          <h1 className="mt-0.5 text-2xl font-bold tracking-tight sm:text-3xl">{title}</h1>
+          <p className="eyebrow">{label}</p>
+          <h1 className="font-display mt-1 text-3xl leading-none sm:text-4xl">{title}</h1>
           {description && (
             <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>
           )}

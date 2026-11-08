@@ -18,16 +18,14 @@ interface DashboardPageConfig {
 
 export const dashboardPagesMetadata: Record<string, DashboardPageConfig> = {
   dashboard: {
-    title: 'F1 Dashboard - Live Timing & Telemetry',
-    description: 'Your personalized Formula 1 dashboard with live timing, telemetry data, race statistics, and real-time F1 updates. Track your favorite drivers, manage predictions, and access comprehensive F1 analytics.',
+    title: 'Home - Sim Racing Telemetry',
+    description: 'Your Turn One home: your Turn One Link rig, your last session, personal bests and leaderboard ranks across ACC, EA SPORTS F1 25/26 and iRacing.',
     keywords: [
-      'F1 dashboard',
-      'Formula 1 dashboard',
-      'F1 live timing dashboard',
-      'F1 user dashboard',
-      'F1 telemetry dashboard',
-      'personal F1 hub',
-      'F1 race dashboard',
+      'sim racing dashboard',
+      'sim racing telemetry',
+      'ACC telemetry',
+      'F1 25 telemetry',
+      'iRacing telemetry',
     ],
     url: '/dashboard',
     noIndex: true,
