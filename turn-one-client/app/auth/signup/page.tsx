@@ -11,9 +11,10 @@ import { PasswordInput } from "@/components/auth/password-input"
 import { FeatureList } from "@/components/auth/feature-list"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { register } from "@/lib/auth"
-import { setAuthToken } from "@/lib/auth-utils"
+import { setAuthToken, intentQuery, parseAuthIntent, postAuthPath, rememberAuthIntent } from "@/lib/auth-utils"
+import { useAuthIntent } from "@/hooks/use-auth-intent"
 import { useAuth } from "@/components/auth/auth-provider"
 import { RegisterData } from "@/types/auth-types"
 import { Turnstile, turnstileEnabled } from "@/components/auth/turnstile"
@@ -26,8 +27,14 @@ export default function SignUpPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const intent = useAuthIntent()
   const router = useRouter()
   const { refresh } = useAuth()
+
+  // `?intent=beta` from "Join the beta": remember it so it survives the email-confirmation detour.
+  useEffect(() => {
+    rememberAuthIntent(parseAuthIntent(new URLSearchParams(window.location.search).get("intent")))
+  }, [])
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,9 +57,9 @@ export default function SignUpPage() {
           // state so the app is logged in without needing a reload.
           setAuthToken(response.token)
           await refresh()
-          router.push("/dashboard")
+          router.push(postAuthPath(null, intent))
         } else {
-          router.push("/auth/check-email")
+          router.push(`/auth/check-email${intentQuery(intent)}`)
         }
       } else {
         throw new Error(response.message || "Registration failed")
@@ -86,7 +93,11 @@ export default function SignUpPage() {
       <div className="space-y-8">
         <div className="space-y-2">
           <h2 className="text-3xl font-bold tracking-tight">Create account</h2>
-          <p className="text-sm text-muted-foreground">Join Turn One — it&apos;s completely free</p>
+          <p className="text-sm text-muted-foreground">
+            {intent === "beta"
+              ? "Step 1 of 2 — then tell us what you race to apply for the sim beta"
+              : "Join Turn One — it’s completely free"}
+          </p>
         </div>
 
         <OAuthButtons />
@@ -173,7 +184,7 @@ export default function SignUpPage() {
 
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{" "}
-          <Link href="/auth/login" className="font-semibold text-primary hover:underline">
+          <Link href={`/auth/login${intentQuery(intent)}`} className="font-semibold text-primary hover:underline">
             Sign in
           </Link>
         </p>
