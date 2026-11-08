@@ -1,0 +1,39 @@
+/*
+ * Future "HUD" theme (grill 2026-11-08, option C): lime on graphite.
+ * Not imported and not selectable yet. To enable later:
+ *   1. @import this file from app/globals.css,
+ *   2. add "hud" to the ThemeProvider `themes` list in app/layout.tsx,
+ *   3. expose a switcher.
+ * It only redefines the semantic tokens declared in app/globals.css.
+ */
+[data-theme="hud"] {
+  --background: #07090c;
+  --foreground: #e6edf3;
+  --card: #0c1016;
+  --card-foreground: #e6edf3;
+  --popover: #0c1016;
+  --popover-foreground: #e6edf3;
+  --surface: #0f141b;
+  --primary: #c6ff00;
+  --primary-foreground: #0b0f02;
+  --secondary: #131a22;
+  --secondary-foreground: #e6edf3;
+  --muted: #131a22;
+  --muted-foreground: #6b7785;
+  --accent: #141c08;
+  --accent-foreground: #c6ff00;
+  --border: #1c2430;
+  --input: #1c2430;
+  --ring: #c6ff00;
+  --timing-fastest: #c6ff00;
+  --timing-pb: #38bdf8;
+  --timing-slower: #ff5c5c;
+  --sidebar: #0c1016;
+  --sidebar-foreground: #e6edf3;
+  --sidebar-primary: #c6ff00;
+  --sidebar-primary-foreground: #0b0f02;
+  --sidebar-accent: #141c08;
+  --sidebar-accent-foreground: #c6ff00;
+  --sidebar-border: #1c2430;
+  --sidebar-ring: #c6ff00;
+}

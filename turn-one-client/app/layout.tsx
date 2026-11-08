@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { GeistSans } from 'geist/font/sans'
-import { GeistMono } from 'geist/font/mono'
+import { Barlow, Barlow_Condensed, JetBrains_Mono } from "next/font/google"
 import type React from "react"
 import Script from "next/script"
 import { Suspense } from "react"
@@ -15,23 +14,28 @@ import { generateSEO, generateOrganizationSchema, generateWebsiteSchema } from "
 import { JsonLd } from "@/components/seo/json-ld";
 
 
+// House type (t1-style): Barlow for text, Barlow Condensed for display, JetBrains Mono for numbers.
+const barlow = Barlow({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-barlow", display: "swap" })
+const barlowCondensed = Barlow_Condensed({ subsets: ["latin"], weight: ["600", "700"], variable: "--font-barlow-condensed", display: "swap" })
+const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-jetbrains-mono", display: "swap" })
+
 // Enhanced SEO metadata for the entire application
 export const metadata: Metadata = generateSEO({
     title: undefined, // Use default full name from config
-    description: 'Turn One is the ultimate Formula 1 platform for fans and creators, featuring real-time telemetry, live race tracking, F1 statistics, predictions, and interactive tools designed to turn race data into powerful insights.',
+    description: 'Turn One is sim racing telemetry for ACC, EA SPORTS F1 25/26 and iRacing. Turn One Link records every lap; the web shows where you lose time, corner by corner.',
     keywords: [
-        'F1 2026 season',
-        'Formula 1 real-time data',
-        'F1 multiplayer games',
-        'F1 fantasy league',
-        'Formula 1 championship',
+        'sim racing telemetry',
+        'ACC telemetry',
+        'F1 25 telemetry',
+        'iRacing telemetry',
+        'lap analysis',
     ],
 });
 
 export const viewport: Viewport = {
     width: 'device-width',
     initialScale: 1,
-    themeColor: '#e10600',
+    themeColor: '#d40924',
 };
 
 export default function RootLayout({ children, }: {
@@ -71,8 +75,8 @@ export default function RootLayout({ children, }: {
                     gtag('config', 'G-KY3D64KP8W');
                 `}
             </Script>
-            <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
-                <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            <body className={`${barlow.variable} ${barlowCondensed.variable} ${jetbrainsMono.variable} antialiased`}>
+                <ThemeProvider attribute="data-theme" themes={["t1"]} defaultTheme="t1" enableSystem={false} disableTransitionOnChange>
                     <AuthProvider>
                         <VersionProvider>
                             <PageLoadingProvider>
