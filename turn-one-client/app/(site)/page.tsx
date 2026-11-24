@@ -14,7 +14,7 @@ export const revalidate = 300;
 export const metadata: Metadata = generateSEO({
   title: "Sim Racing Telemetry for ACC, F1 25 and iRacing",
   description:
-    "Find the tenth in every corner. Turn One Link records every lap in ACC, EA SPORTS F1 25/26 and iRacing; the web shows where you lose time, corner by corner, against your best and verified leaderboards.",
+    "Find the tenth in every corner. Turn One Link records every lap in ACC, EA SPORTS F1 25 and iRacing; the web shows where you lose time, corner by corner, against your best and verified leaderboards.",
   url: "/",
   image: "/og-images/turn-one-landing.jpg",
   keywords: [

@@ -4,7 +4,7 @@ import { SIMS } from "@/lib/simracing/sims";
 export function SimStrip({ className = "" }: { className?: string }) {
   const games = [
     { key: "acc", label: "ACC" },
-    { key: "f1", label: "F1 25 · F1 26" },
+    { key: "f1", label: "EA F1 25" },
     { key: "iracing", label: "iRacing" },
   ];
   const experimental = SIMS.filter((s) => s.experimental);

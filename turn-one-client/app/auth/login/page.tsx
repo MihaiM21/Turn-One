@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { AuthSplitLayout } from "@/components/auth/auth-split-layout"
 import { OAuthButtons } from "@/components/auth/oauth-buttons"
 import { PasswordInput } from "@/components/auth/password-input"
-import { LiveTimingPreview } from "@/components/auth/live-timing-preview"
+import { LapPreview } from "@/components/auth/lap-preview"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -54,17 +54,17 @@ export default function LoginPage() {
       left={
         <div className="space-y-6">
           <span className="inline-block text-xs font-semibold tracking-[0.2em] text-primary">
-            LIVE RIGHT NOW
+            SIM RACING TELEMETRY
           </span>
           <h1 className="text-4xl xl:text-5xl font-bold leading-[1.1] tracking-tight">
-            The race waits
+            Your laps
             <br />
-            for no one.
+            are waiting.
           </h1>
           <p className="text-sm text-muted-foreground max-w-sm">
-            Sign in and get back to the action — your custom layout, saved preferences, and live data streams are ready.
+            Sign in to see your sessions, your personal bests and where you lose time, corner by corner.
           </p>
-          <LiveTimingPreview />
+          <LapPreview />
         </div>
       }
     >

@@ -42,10 +42,10 @@ export function HowItWorks() {
 
 /* ── Supported sims ──────────────────────────────────────────────────────── */
 
-/** One card per game (F1 25 and F1 26 share one), straight from lib/simracing/sims.ts. */
+/** One card per game (F1 25 and its 2026 Season Pack share one), straight from lib/simracing/sims.ts. */
 const SIM_CARDS = [
   { title: "Assetto Corsa Competizione", sims: SIMS.filter((s) => s.id === "acc") },
-  { title: "EA SPORTS F1 25 · F1 26", sims: SIMS.filter((s) => s.id === "f1_25" || s.id === "f1_26") },
+  { title: "EA SPORTS F1 25 · 2026 Season Pack", sims: SIMS.filter((s) => s.id === "f1_25" || s.id === "f1_26") },
   { title: "iRacing", sims: SIMS.filter((s) => s.id === "iracing") },
   { title: "Assetto Corsa", sims: SIMS.filter((s) => s.id === "ac") },
 ]

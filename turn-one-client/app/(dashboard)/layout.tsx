@@ -6,7 +6,7 @@ import { Metadata } from 'next';
 // Default metadata for dashboard - can be overridden by page-specific layouts
 export const metadata: Metadata = generateSEO({
   title: 'Dashboard - Sim Racing Telemetry',
-  description: 'Your Turn One dashboard: laps recorded by Turn One Link in ACC, EA SPORTS F1 25/26 and iRacing, corner-by-corner analysis, leaderboards and overlays.',
+  description: 'Your Turn One dashboard: laps recorded by Turn One Link in ACC, EA SPORTS F1 25 and iRacing, corner-by-corner analysis, leaderboards and overlays.',
   url: '/dashboard',
   keywords: [
     'sim racing dashboard',

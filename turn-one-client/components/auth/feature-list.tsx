@@ -1,11 +1,12 @@
 import { Check } from "lucide-react"
 
+// Free-plan features only; keep in step with the Enthusiast plan on /pricing.
 const features = [
-  "Save and sync custom multiviewer layouts",
-  "Track your favourite drivers",
-  "Full live timing with deltas",
-  "Access to all free public F1 data",
-  "Link F1 TV Pro for premium streams",
+  "Every lap recorded with Turn One Link",
+  "Sessions, lap and sector times, track maps",
+  "Verified leaderboards and your driver page",
+  "ACC, EA SPORTS F1 25 and iRacing",
+  "No credit card",
 ]
 
 export function FeatureList() {

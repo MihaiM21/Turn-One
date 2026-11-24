@@ -10,7 +10,7 @@ describe("simMeta", () => {
         ["IRacing", "iRacing"],
         ["iracing", "iRacing"],
         ["F1_25", "F1 25"],
-        ["f1_26", "F1 26"],
+        ["f1_26", "F1 25 · 2026"],
     ])("%s → %s", (source, short) => {
         expect(simMeta(source)?.short).toBe(short);
     });
@@ -27,7 +27,7 @@ describe("simMeta", () => {
 });
 
 describe("matchesSimFilter", () => {
-    it("groups F1 25 and F1 26 under f1", () => {
+    it("groups F1 25 and the 2026 Season Pack under f1", () => {
         expect(matchesSimFilter("F1_25", "f1")).toBe(true);
         expect(matchesSimFilter("f1_26", "f1")).toBe(true);
         expect(matchesSimFilter("Acc", "f1")).toBe(false);

@@ -8,7 +8,7 @@
 import type { SimSource } from "@/lib/simracing/protocol"
 import type { BoardSim } from "@/lib/simracing/leaderboards"
 
-/** The global sim filter. EA F1 25 and F1 26 share one bucket; AC only shows under "all". */
+/** The global sim filter. EA F1 25 and its 2026 Season Pack share one bucket; AC only shows under "all". */
 export type SimFilter = "all" | "acc" | "f1" | "iracing"
 
 export type Platform = "PC" | "PS5" | "Xbox"
@@ -54,8 +54,8 @@ export const SIMS: SimMeta[] = [
   {
     source: "F1_26",
     id: "f1_26",
-    label: "EA SPORTS F1 26",
-    short: "F1 26",
+    label: "EA SPORTS F1 25 · 2026 Season Pack",
+    short: "F1 25 · 2026",
     filter: "f1",
     experimental: false,
     platforms: ["PC", "PS5", "Xbox"],
@@ -89,7 +89,7 @@ export const SIMS: SimMeta[] = [
 export const SIM_FILTERS: { value: SimFilter; label: string }[] = [
   { value: "all", label: "All sims" },
   { value: "acc", label: "ACC" },
-  { value: "f1", label: "F1 25 · 26" },
+  { value: "f1", label: "EA F1 25" },
   { value: "iracing", label: "iRacing" },
 ]
 

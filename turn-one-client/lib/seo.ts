@@ -10,7 +10,7 @@ import { SOCIAL_LINKS } from '@/lib/social-links'
 export const SITE_CONFIG = {
   name: 'Turn One - Sim Racing Telemetry for ACC, F1 25 and iRacing',
   shortName: 'Turn One',
-  description: 'Turn One is sim racing telemetry for Assetto Corsa Competizione, EA SPORTS F1 25/26 and iRacing. Turn One Link records every lap; the web shows where you lose time, corner by corner, against your best and verified leaderboards. Plus an archive of past F1 sessions.',
+  description: 'Turn One is sim racing telemetry for Assetto Corsa Competizione, EA SPORTS F1 25 and iRacing. Turn One Link records every lap; the web shows where you lose time, corner by corner, against your best and verified leaderboards. Plus an archive of past F1 sessions.',
   url: process.env.NEXT_PUBLIC_SITE_URL || 'https://turnonehub.com',
   domain: 'turnonehub.com',
   author: 'Turn One',

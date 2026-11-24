@@ -19,7 +19,7 @@ interface DashboardPageConfig {
 export const dashboardPagesMetadata: Record<string, DashboardPageConfig> = {
   dashboard: {
     title: 'Home - Sim Racing Telemetry',
-    description: 'Your Turn One home: your Turn One Link rig, your last session, personal bests and leaderboard ranks across ACC, EA SPORTS F1 25/26 and iRacing.',
+    description: 'Your Turn One home: your Turn One Link rig, your last session, personal bests and leaderboard ranks across ACC, EA SPORTS F1 25 and iRacing.',
     keywords: [
       'sim racing dashboard',
       'sim racing telemetry',

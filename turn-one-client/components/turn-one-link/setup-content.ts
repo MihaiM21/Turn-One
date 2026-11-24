@@ -18,13 +18,13 @@ export const SETUP_STEPS: SetupStep[] = [
         icon: LogIn,
         title: "Sign in",
         description:
-            "Use the same Turn One email and password you use on the site. Link stays signed in between sessions.",
+            "Click Sign in in Link. Your browser opens the Turn One website with a code: approve it there and Link is paired. There is no password in Link, and it stays signed in between sessions.",
     },
     {
         icon: Gauge,
         title: "Launch your sim",
         description:
-            "Link detects ACC, Assetto Corsa, iRacing or F1 25/26 automatically. For F1 UDP mode: enable telemetry, set port 20777, format 2025/2026.",
+            "Link detects ACC, Assetto Corsa, iRacing or EA SPORTS F1 25 automatically. For F1: switch UDP telemetry on, port 20777, format 2025 (or 2026 with the 2026 Season Pack).",
     },
     {
         icon: Flag,
@@ -37,7 +37,7 @@ export const SETUP_STEPS: SetupStep[] = [
 export const REQUIREMENTS = [
     { label: "Operating system", value: "Windows 10 (build 19041) or Windows 11" },
     { label: "Runtime", value: ".NET 9 Desktop Runtime (bundled with the installer)" },
-    { label: "Game", value: "ACC, iRacing, or EA SPORTS F1 25/26 (UDP telemetry on, port 20777, format 2025/2026); Assetto Corsa is experimental" },
+    { label: "Game", value: "ACC, iRacing, or EA SPORTS F1 25, including the 2026 Season Pack (UDP telemetry on, port 20777, format 2025 or 2026); Assetto Corsa is experimental" },
     { label: "Connection", value: "Broadband — Link streams roughly 40 KB/s while you're on track" },
     { label: "Account", value: "A free Turn One account" },
 ];
@@ -61,7 +61,7 @@ export const TROUBLESHOOTING = [
     {
         question: "Link says \"Waiting for data\" but I'm on track",
         answer:
-            "Make sure your sim is running and sending telemetry. For ACC/AC/iRacing, the session must be active (not in menus). For F1 25/26, check that UDP telemetry is enabled in settings. If it still doesn't appear, restart Link.",
+            "Make sure your sim is running and sending telemetry. For ACC/AC/iRacing, the session must be active (not in menus). For F1 25, check that UDP telemetry is enabled in settings. If it still doesn't appear, restart Link.",
     },
     {
         question: "Windows SmartScreen blocked the installer",
@@ -74,9 +74,9 @@ export const TROUBLESHOOTING = [
             "Only completed laps are recorded — the lap you're on mid-session won't appear until you cross the line. Also check that Link still shows Connected; if your network dropped, it reconnects automatically but the in-progress lap may be lost.",
     },
     {
-        question: "Can I use it with iRacing, Assetto Corsa or F1 25/26?",
+        question: "Can I use it with iRacing, Assetto Corsa or F1 25?",
         answer:
-            "Yes. Turn One Link supports ACC, Assetto Corsa, iRacing, and EA SPORTS F1 25/26 over UDP. Le Mans Ultimate and rFactor 2 are not yet supported — tell us if you want them next on Discord.",
+            "Yes. Turn One Link supports ACC, Assetto Corsa, iRacing, and EA SPORTS F1 25 (including the 2026 Season Pack) over UDP. Le Mans Ultimate and rFactor 2 are not yet supported — tell us if you want them next on Discord.",
     },
     {
         question: "Does it affect my frame rate?",

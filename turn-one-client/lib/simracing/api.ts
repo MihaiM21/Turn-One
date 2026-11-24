@@ -345,7 +345,7 @@ export type BetaStatus = "pending" | "accepted" | "declined";
 export const BETA_SIMS: { value: BetaSim; label: string }[] = [
     { value: "acc", label: "ACC" },
     { value: "f1_25", label: "EA F1 25" },
-    { value: "f1_26", label: "EA F1 26" },
+    { value: "f1_26", label: "EA F1 25 · 2026 Season Pack" },
     { value: "iracing", label: "iRacing" },
     { value: "ac", label: "Assetto Corsa" },
 ];

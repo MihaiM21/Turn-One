@@ -26,7 +26,7 @@ export const BETA_SIGNUP_HREF = "/auth/signup?intent=beta";
 export const HERO = {
   eyebrow: "Turn One · Sim racing telemetry",
   h1: "Find the tenth in every corner.",
-  sub: "Turn One Link records every lap you drive in ACC, EA SPORTS F1 25 and F1 26, and iRacing. The web shows where you lose time, corner by corner, against your best and the leaderboard.",
+  sub: "Turn One Link records every lap you drive in ACC, EA SPORTS F1 25 and iRacing. The web shows where you lose time, corner by corner, against your best and the leaderboard.",
   primary: { label: "Join the beta", href: BETA_SIGNUP_HREF },
   secondary: { label: "How Link works", href: "#how" },
   tertiary: { label: "See every feature", href: "/features" },
@@ -92,7 +92,7 @@ export const HOW_IT_WORKS = [
 export const FAQ = [
   {
     q: "Which sims work?",
-    a: "Assetto Corsa Competizione, EA SPORTS F1 25 and F1 26 (PC, and PS5 or Xbox over your network), and iRacing. Original Assetto Corsa is experimental: laps are recorded but don't rank yet.",
+    a: "Assetto Corsa Competizione, EA SPORTS F1 25 including the 2026 Season Pack (PC, and PS5 or Xbox over your network), and iRacing. Original Assetto Corsa is experimental: laps are recorded but don't rank yet.",
   },
   {
     q: "What does Turn One Link read from my PC?",
@@ -104,7 +104,7 @@ export const FAQ = [
   },
   {
     q: "Can I use it on PlayStation or Xbox?",
-    a: "Yes, for F1 25 and F1 26: the console sends its UDP telemetry to Link running on a PC on the same network. ACC on console doesn't publish telemetry, and iRacing is PC only.",
+    a: "Yes, for EA SPORTS F1 25, including the 2026 Season Pack: the console sends its UDP telemetry to Link running on a PC on the same network. ACC on console doesn't publish telemetry, and iRacing is PC only.",
   },
   {
     q: "Who can see my laps?",

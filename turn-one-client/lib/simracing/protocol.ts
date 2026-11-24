@@ -211,7 +211,7 @@ export const SIM_SOURCE_LABEL: Record<SimSource, string> = {
     Ac: "Assetto Corsa (experimental)",
     IRacing: "iRacing",
     F1_25: "F1 25",
-    F1_26: "F1 26",
+    F1_26: "F1 25 · 2026",
     Unknown: "Unknown",
 };
 
