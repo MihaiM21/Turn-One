@@ -29,7 +29,7 @@ export function MainFooter() {
               </div>
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              Telemetry and lap analysis for ACC, EA SPORTS F1 25/26 and iRacing, recorded by Turn One Link.
+              Telemetry and lap analysis for ACC, EA SPORTS F1 25 and iRacing, recorded by Turn One Link.
               Independent; not affiliated with Formula 1, EA, Kunos or iRacing.
             </p>
             <div className="flex space-x-3">

@@ -35,7 +35,7 @@ const selectClass =
 export function LapTimeLeaderboard({ signedIn }: { signedIn: boolean }) {
     const { filter: simFilter } = useSimFilter();
     const [sim, setSim] = useState<BoardSim>("acc");
-    // Follow the dashboard sim filter; the local select still picks between F1 25 and F1 26.
+    // Follow the dashboard sim filter; the local select still picks between the 2025 and 2026 UDP formats.
     useEffect(() => {
         setSim(current => boardSimForFilter(simFilter, current));
     }, [simFilter]);

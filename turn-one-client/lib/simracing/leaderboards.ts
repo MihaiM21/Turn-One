@@ -11,7 +11,7 @@ export type LeaderboardVisibility = "public" | "anonymous" | "hidden";
 export const BOARD_SIMS: { value: BoardSim; label: string }[] = [
     { value: "acc", label: "ACC" },
     { value: "f1_25", label: "F1 25" },
-    { value: "f1_26", label: "F1 26" },
+    { value: "f1_26", label: "F1 25 · 2026 Season Pack" },
     { value: "iracing", label: "iRacing" },
 ];
 

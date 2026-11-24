@@ -77,7 +77,7 @@ function LinkCard() {
     <SectionCard label="Turn One Link" title="Your rig" icon={Laptop} loading={status.kind === "loading"}>
       {status.kind === "none" ? (
         <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">No device paired yet. Link records every lap in ACC, F1 25/26 and iRacing.</p>
+          <p className="text-sm text-muted-foreground">No device paired yet. Link records every lap in ACC, F1 25 and iRacing.</p>
           <Link href="/simracing/download" className={linkClass}>
             Set up Turn One Link <ArrowRight className="size-3" />
           </Link>

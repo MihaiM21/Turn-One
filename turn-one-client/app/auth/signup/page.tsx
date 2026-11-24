@@ -76,15 +76,15 @@ export default function SignUpPage() {
       left={
         <div className="space-y-6">
           <span className="inline-block text-xs font-semibold tracking-[0.2em] text-primary">
-            FREE FOREVER
+            FREE TO RECORD
           </span>
           <h1 className="text-4xl xl:text-5xl font-bold leading-[1.1] tracking-tight">
-            Your free account
+            Find the tenth
             <br />
-            includes everything.
+            in every corner.
           </h1>
           <p className="text-sm text-muted-foreground max-w-sm">
-            No credit card. No trial period. Just sign up and you&apos;re in the race.
+            Turn One Link records every lap you drive. Recording, your own lap analysis and the leaderboards are free.
           </p>
           <FeatureList />
         </div>
@@ -96,7 +96,7 @@ export default function SignUpPage() {
           <p className="text-sm text-muted-foreground">
             {intent === "beta"
               ? "Step 1 of 2 — then tell us what you race to apply for the sim beta"
-              : "Join Turn One — it’s completely free"}
+              : "Join Turn One — recording is free"}
           </p>
         </div>
 

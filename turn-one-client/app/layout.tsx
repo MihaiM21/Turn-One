@@ -22,7 +22,7 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "500"
 // Enhanced SEO metadata for the entire application
 export const metadata: Metadata = generateSEO({
     title: undefined, // Use default full name from config
-    description: 'Turn One is sim racing telemetry for ACC, EA SPORTS F1 25/26 and iRacing. Turn One Link records every lap; the web shows where you lose time, corner by corner.',
+    description: 'Turn One is sim racing telemetry for ACC, EA SPORTS F1 25 and iRacing. Turn One Link records every lap; the web shows where you lose time, corner by corner.',
     keywords: [
         'sim racing telemetry',
         'ACC telemetry',

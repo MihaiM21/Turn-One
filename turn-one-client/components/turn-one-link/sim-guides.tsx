@@ -36,11 +36,11 @@ const GUIDES: Guide[] = [
   },
   {
     anchor: "f1",
-    title: "EA SPORTS F1 25 and F1 26",
+    title: "EA SPORTS F1 25 and the 2026 Season Pack",
     sims: bySims("f1_25", "f1_26"),
     steps: [
       "In the game: Settings → Telemetry Settings → UDP Telemetry: On.",
-      "UDP Format: 2025 for F1 25, 2026 for F1 26. UDP Port: 20777. Send rate: 20 Hz or higher.",
+      "UDP Format: 2025, or 2026 if you own the 2026 Season Pack (the game picks 2026 for new players). UDP Port: 20777. Send rate: 20 Hz or higher.",
       "Same PC: UDP IP Address 127.0.0.1. PS5 or Xbox: enter the IP address of the PC running Link, on the same network.",
       "Start Turn One Link. On console, switch on Settings → Telemetry → \"F1 on PlayStation / Xbox\"; Link's log then shows the IP and port to enter in the game.",
     ],

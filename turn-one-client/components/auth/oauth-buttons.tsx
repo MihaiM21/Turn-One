@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button"
-import { Tv } from "lucide-react"
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -12,28 +11,17 @@ function GoogleIcon({ className }: { className?: string }) {
 export function OAuthButtons() {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          disabled
-          title="Coming soon"
-          className="h-11 cursor-not-allowed"
-        >
-          <GoogleIcon className="size-4" />
-          <span className="font-medium">Google</span>
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          disabled
-          title="Coming soon"
-          className="h-11 cursor-not-allowed"
-        >
-          <Tv className="size-4 text-primary" />
-          <span className="font-medium">F1 TV</span>
-        </Button>
-      </div>
+      <Button
+        type="button"
+        variant="outline"
+        disabled
+        title="Coming soon"
+        className="h-11 w-full cursor-not-allowed"
+      >
+        <GoogleIcon className="size-4" />
+        <span className="font-medium">Continue with Google</span>
+        <span className="text-xs text-muted-foreground">· coming soon</span>
+      </Button>
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
         <div className="h-px flex-1 bg-border" />
         <span className="tracking-widest">OR</span>

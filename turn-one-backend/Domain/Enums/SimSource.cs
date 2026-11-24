@@ -15,7 +15,7 @@ public enum SimSource
     IRacing = 2,
     /// <summary>EA SPORTS F1 25 (UDP, packetFormat 2025).</summary>
     F1_25 = 3,
-    /// <summary>EA SPORTS F1 26 / 2026 Season Pack (UDP, packetFormat 2026).</summary>
+    /// <summary>EA SPORTS F1 25 with the 2026 Season Pack (UDP, packetFormat 2026). There is no separate "F1 26" game.</summary>
     F1_26 = 4,
     Unknown = 99
 }
