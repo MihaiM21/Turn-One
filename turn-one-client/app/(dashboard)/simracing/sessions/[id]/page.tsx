@@ -37,6 +37,7 @@ import {
     InitialFocus,
     LapStrip,
     LapVsPicker,
+    SegmentStepper,
     SyncedLosses,
     type DetailsTab,
     type WorkbenchLap,
@@ -61,6 +62,10 @@ import {
 import { simTelemetryService, type LapProcessedEvent } from "@/lib/simTelemetryService";
 import { toDistanceSeries, resampleByDistance, deltaTrace, biggestLoss } from "@/lib/simracing/analysis";
 import { cn } from "@/lib/utils";
+import { buildSegments, segmentDeltas } from "@/lib/simracing/segments";
+import { buildTimeAxis, cornerOnAxis } from "@/lib/simracing/time-axis";
+import { DISTANCE_AXIS, type AxisMap } from "@/components/dashboard/simracing/charts/uplot/cursor-sync";
+import { usePlan } from "@/hooks/use-plan";
 
 /**
  * /simracing/sessions/[id] — the session workbench (PBI-068, layout A "Split", chosen 2026-11-25).
@@ -84,6 +89,9 @@ async function tryLapRecord(sessionId: string, lap: number): Promise<LapTelemetr
     }
 }
 
+/** Remembers the chart x axis (distance or lap time) per browser. */
+const AXIS_KEY = "t1.workbench.axis";
+
 const numParam = (v: string | null) => (v != null && v !== "" && Number.isFinite(Number(v)) ? Number(v) : null);
 
 export default function SessionWorkbenchPage() {
@@ -102,6 +110,26 @@ export default function SessionWorkbenchPage() {
     const [selectedLap, setSelectedLap] = useState<number | null>(() => numParam(search.get("lap")));
     const [referenceLap, setReferenceLap] = useState<number | null>(() => numParam(search.get("ref")));
     const [focusAt, setFocusAt] = useState<number | null>(() => numParam(search.get("at")));
+    const [axisKind, setAxisKind] = useState<"distance" | "time">(() => (search.get("x") === "time" ? "time" : "distance"));
+    const chooseAxis = (k: "distance" | "time") => {
+        setAxisKind(k);
+        try {
+            localStorage.setItem(AXIS_KEY, k);
+        } catch {
+            // Private mode or blocked storage: the URL still carries the choice.
+        }
+    };
+    // No axis in the URL: fall back to this browser's last choice.
+    useEffect(() => {
+        if (search.get("x")) return;
+        try {
+            if (localStorage.getItem(AXIS_KEY) === "time") setAxisKind("time");
+        } catch {
+            // Storage unavailable: stay on distance.
+        }
+        // Read once on mount; the URL effect below owns later changes.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
     const [detailsOpen, setDetailsOpen] = useState(false);
 
     const [lapChart, setLapChart] = useState<MultiChannelChartData>(EMPTY_CHART);
@@ -177,8 +205,10 @@ export default function SessionWorkbenchPage() {
         sp.set("ref", String(referenceLap));
         if (focusAt != null) sp.set("at", String(Math.round(focusAt)));
         else sp.delete("at");
+        if (axisKind === "time") sp.set("x", "time");
+        else sp.delete("x");
         if (sp.toString() !== search.toString()) router.replace(`${pathname}?${sp.toString()}`, { scroll: false });
-    }, [selectedLap, referenceLap, focusAt, pathname, router, search]);
+    }, [selectedLap, referenceLap, focusAt, axisKind, pathname, router, search]);
 
     // ---- load telemetry --------------------------------------------------
     const loadCharts = useCallback(
@@ -263,6 +293,24 @@ export default function SessionWorkbenchPage() {
         return Float32Array.from({ length: n }, (_, i) => i * step);
     }, [lapParsed, refParsed]);
 
+    // Time axis (PBI-071): same grid, x = the selected lap's elapsed time; map, losses and stepper stay in metres.
+    const timeAxis = useMemo(
+        () =>
+            lapParsed && axisKind === "time"
+                ? buildTimeAxis(lapParsed.series.samples.map(p => p.time), lapParsed.columnar.stepM, traceX.length)
+                : null,
+        [lapParsed, axisKind, traceX]
+    );
+    const axisMap: AxisMap = useMemo(
+        () => (timeAxis ? { kind: "time", toX: timeAxis.toX, fromX: timeAxis.fromX } : DISTANCE_AXIS),
+        [timeAxis]
+    );
+    const chartX = timeAxis?.x ?? traceX;
+    const chartLaps = useMemo(
+        () => (timeAxis ? traceLaps.map(l => ({ ...l, corners: l.corners?.map(c => cornerOnAxis(c, timeAxis.toX)) })) : traceLaps),
+        [traceLaps, timeAxis]
+    );
+
     const delta = useMemo(() => (refSeries.samples.length ? deltaTrace(lapSeries, refSeries, 5) : []), [lapSeries, refSeries]);
     const losses = useMemo(() => (delta.length ? biggestLoss(delta, lapSamples, 5) : []), [delta, lapSamples]);
     const totalDelta = delta.length ? delta[delta.length - 1].delta : null;
@@ -297,6 +345,14 @@ export default function SessionWorkbenchPage() {
             },
         ];
     }, [lapParsed, selectedLap, deltaOnTraceGrid]);
+
+    /** Corners (kinks left out) and the straights between them, with the time won or lost in each. */
+    const segments = useMemo(() => {
+        const corners = (refParsed?.corners ?? lapParsed?.corners ?? []).filter(c => !c.isKink);
+        return buildSegments(corners, delta.length ? delta[delta.length - 1].distance : 0);
+    }, [refParsed, lapParsed, delta]);
+    const segDeltas = useMemo(() => segmentDeltas(segments, delta), [segments, delta]);
+    const { atLeast } = usePlan();
 
     const maxRpm = useMemo(() => {
         const rpms = laps.map(l => l.maxRpm).filter(r => r > 0);
@@ -572,19 +628,49 @@ export default function SessionWorkbenchPage() {
                 </div>
             </div>
 
-            <CursorSyncProvider>
+            <CursorSyncProvider axis={axisMap}>
                 <InitialFocus at={focusAt} ready={!chartLoading && traceLaps.length > 0} />
 
                 {/* Wide: map | charts with losses under the map. Below 1280 px: map, charts, losses. */}
                 <div className="grid gap-3 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] xl:[grid-template-areas:'map_charts'_'losses_charts']">
-                    <section className="min-w-0 rounded-lg border border-border bg-card p-3 xl:[grid-area:map]" aria-label="Track map">
+                    <section className="min-w-0 space-y-3 rounded-lg border border-border bg-card p-3 xl:[grid-area:map]" aria-label="Track map">
                         {map}
+                        {atLeast("PRO") && !isSameLap && segments.length > 1 ? (
+                            <SegmentStepper
+                                key={`${selectedLap}-${referenceLap}`}
+                                segments={segments}
+                                deltas={segDeltas}
+                                onFocus={setFocusAt}
+                            />
+                        ) : null}
                     </section>
 
                     <section
                         className="min-w-0 space-y-3 rounded-lg border border-border bg-card p-3 xl:[grid-area:charts]"
                         aria-label="Delta and traces"
                     >
+                        {traceLaps.length ? (
+                            <div className="flex items-center justify-end gap-2">
+                                <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">X axis</span>
+                                <div role="group" aria-label="Chart x axis" className="flex overflow-hidden rounded-md border border-border">
+                                    {(["distance", "time"] as const).map(k => (
+                                        <button
+                                            key={k}
+                                            type="button"
+                                            aria-pressed={axisKind === k}
+                                            onClick={() => chooseAxis(k)}
+                                            title={k === "time" ? `Elapsed time of lap ${selectedLap}; both laps stay aligned by position` : "Metres from the line"}
+                                            className={cn(
+                                                "h-7 px-2.5 text-[11px] font-semibold transition-colors",
+                                                axisKind === k ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground/85"
+                                            )}
+                                        >
+                                            {k === "distance" ? "Distance" : "Lap time"}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : null}
                         <PlanGate required="PRO" title="Lap delta" description="Time gained and lost against the reference lap, along the lap.">
                             {isSameLap ? (
                                 <p className="px-1 py-6 text-center text-xs text-muted-foreground">
@@ -592,10 +678,10 @@ export default function SessionWorkbenchPage() {
                                 </p>
                             ) : traceLaps.length && deltaOnTraceGrid ? (
                                 <UPlotDelta
-                                    x={traceX}
+                                    x={chartX}
                                     laps={[{ id: "delta", label: `Lap ${selectedLap}`, color: LAP_COLOR, deltaS: deltaOnTraceGrid }]}
                                     referenceLabel={`Lap ${referenceLap}`}
-                                    corners={refParsed?.corners ?? lapParsed?.corners}
+                                    corners={(chartLaps.find(l => l.dashed) ?? chartLaps[0])?.corners}
                                     height={150}
                                 />
                             ) : (
@@ -612,7 +698,7 @@ export default function SessionWorkbenchPage() {
                         {chartLoading && !lapSamples.length ? (
                             <SectionCard loading className="border-0" />
                         ) : traceLaps.length ? (
-                            <UPlotTraces x={traceX} laps={traceLaps} cornerSource={traceLaps.find(l => l.dashed) ?? traceLaps[0]} paneHeight={95} />
+                            <UPlotTraces x={chartX} laps={chartLaps} cornerSource={chartLaps.find(l => l.dashed) ?? chartLaps[0]} paneHeight={95} />
                         ) : (
                             <DistanceTraceChart
                                 samples={lapSamples}

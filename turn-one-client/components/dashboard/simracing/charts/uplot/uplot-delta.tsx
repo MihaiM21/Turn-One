@@ -5,7 +5,8 @@ import type uPlot from "uplot";
 import { cn } from "@/lib/utils";
 import { CHART, formatDistance } from "../chart-theme";
 import { cornerOverlayPlugin, type OverlayCorner } from "./corner-overlay";
-import { CURSOR_BASE, PANE_LAYOUT, distanceAxis, valueAxis } from "./uplot-theme";
+import { CURSOR_BASE, PANE_LAYOUT, valueAxis, xAxis } from "./uplot-theme";
+import { useCursorSync } from "./cursor-sync";
 import { useUPlot } from "./use-uplot";
 import { useLatest } from "./use-latest";
 import { nearestIndex } from "./uplot-traces";
@@ -37,6 +38,7 @@ export interface UPlotDeltaProps {
 export function UPlotDelta({ x, laps, referenceLabel, corners = [], height = 200, className }: UPlotDeltaProps) {
     const lapsRef = useLatest(laps);
     const cornersRef = useLatest(corners);
+    const axisKind = useCursorSync().axis.kind;
 
     const data = useMemo<uPlot.AlignedData>(() => {
         const xs = Array.from(x);
@@ -63,7 +65,7 @@ export function UPlotDelta({ x, laps, referenceLabel, corners = [], height = 200
                     },
                 },
             },
-            axes: [distanceAxis(), valueAxis("s")],
+            axes: [xAxis(axisKind), valueAxis("s")],
             series: [
                 { label: "Distance" },
                 ...lapsRef.current.map((l, i) => ({
@@ -78,10 +80,10 @@ export function UPlotDelta({ x, laps, referenceLabel, corners = [], height = 200
             ],
             plugins: [wheelZoomPlugin(), zeroLinePlugin(), cornerOverlayPlugin(() => ({ corners: cornersRef.current, labels: true }))],
         }),
-        [cornersRef, lapsRef]
+        [cornersRef, lapsRef, axisKind]
     );
 
-    const { containerRef } = useUPlot({ buildOptions, data, height, deps: [laps.length], onCursor: setHover });
+    const { containerRef } = useUPlot({ buildOptions, data, height, deps: [laps.length, axisKind], onCursor: setHover });
 
     const hoverIdx = hover == null ? null : nearestIndex(x, hover);
 

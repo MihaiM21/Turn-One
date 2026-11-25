@@ -7,7 +7,7 @@ import { CHART, formatDistance } from "../chart-theme";
 import { cornerOverlayPlugin, type OverlayCorner } from "./corner-overlay";
 import { CornerRibbon } from "./corner-ribbon";
 import { useCursorSync } from "./cursor-sync";
-import { CURSOR_BASE, DEFAULT_PANES, PANE_LAYOUT, PANE_META, distanceAxis, trimNumber, valueAxis } from "./uplot-theme";
+import { CURSOR_BASE, DEFAULT_PANES, PANE_LAYOUT, PANE_META, trimNumber, valueAxis, xAxis } from "./uplot-theme";
 import { useUPlot } from "./use-uplot";
 import { useLatest } from "./use-latest";
 import { wheelZoomPlugin } from "./wheel-zoom";
@@ -181,6 +181,7 @@ interface TracePaneProps {
 
 function TracePane({ channel, x, laps, reference, corners, showXAxis, height, hoverIdx, hoverX, onHover, last }: TracePaneProps) {
     const meta = PANE_META[channel];
+    const axisKind = useCursorSync().axis.kind;
     const cornersRef = useLatest(corners);
     const lapsRef = useLatest(laps);
 
@@ -231,7 +232,7 @@ function TracePane({ channel, x, laps, reference, corners, showXAxis, height, ho
                     : { range: (_u, min, max) => padRange(min, max, meta) },
             },
             axes: [
-                { ...distanceAxis(), show: showXAxis, size: showXAxis ? PANE_LAYOUT.xAxisHeight : 0 },
+                { ...xAxis(axisKind), show: showXAxis, size: showXAxis ? PANE_LAYOUT.xAxisHeight : 0 },
                 valueAxis(meta.unit, { discrete: meta.discrete }),
             ],
             series: [
@@ -258,14 +259,14 @@ function TracePane({ channel, x, laps, reference, corners, showXAxis, height, ho
                 })),
             ],
         }),
-        [meta, showXAxis, cornersRef, lapsRef]
+        [meta, showXAxis, cornersRef, lapsRef, axisKind]
     );
 
     const { containerRef } = useUPlot({
         buildOptions,
         data,
         height,
-        deps: [laps.length, channel, showXAxis],
+        deps: [laps.length, channel, showXAxis, axisKind],
         onCursor: onHover,
     });
 
@@ -365,10 +366,19 @@ const stepped: uPlot.Series.PathBuilder = (u, seriesIdx, idx0, idx1) => {
     return { stroke, fill: null, clip: null };
 };
 
+/** Index of the x value nearest `value`; x must be increasing but need not be evenly spaced (time axis). */
 export function nearestIndex(x: Float32Array | number[], value: number) {
     if (!x.length) return null;
-    const step = x.length > 1 ? x[1] - x[0] : 1;
-    return Math.max(0, Math.min(x.length - 1, Math.round((value - x[0]) / step)));
+    if (value <= x[0]) return 0;
+    if (value >= x[x.length - 1]) return x.length - 1;
+    let lo = 0;
+    let hi = x.length - 1;
+    while (hi - lo > 1) {
+        const mid = (lo + hi) >> 1;
+        if (x[mid] <= value) lo = mid;
+        else hi = mid;
+    }
+    return value - x[lo] <= x[hi] - value ? lo : hi;
 }
 
 function fmtLapTime(ms: number) {
