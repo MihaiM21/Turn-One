@@ -23,6 +23,13 @@ interface SectionCardProps {
     className?: string;
     bodyClassName?: string;
     children?: ReactNode;
+    /**
+     * `card` (default) is the boxed surface: use it for the one element a page leads with.
+     * `quiet` drops the box, the icon and the header rule and sits under a hairline, so
+     * supporting content stays readable without competing (PBI-072). The eyebrow shows only
+     * when there is no title, since the title already says what the block is.
+     */
+    variant?: "card" | "quiet";
 }
 
 /**
@@ -44,8 +51,31 @@ export function SectionCard({
     className,
     bodyClassName,
     children,
+    variant = "card",
 }: SectionCardProps) {
     const hasHeader = label || title || actions || Icon;
+
+    if (variant === "quiet") {
+        return (
+            <section className={cn("border-t border-border", className)}>
+                {label || title || actions ? (
+                    <div className="flex items-center justify-between gap-3 px-5 pb-1 pt-4">
+                        <div className="min-w-0">
+                            {title ? (
+                                <p className="truncate text-sm font-semibold text-foreground">{title}</p>
+                            ) : label ? (
+                                <p className="eyebrow text-[10px]">{label}</p>
+                            ) : null}
+                        </div>
+                        {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
+                    </div>
+                ) : null}
+                <SectionBody loading={loading} empty={empty} emptyIcon={EmptyIcon} flush={flush} bodyClassName={bodyClassName}>
+                    {children}
+                </SectionBody>
+            </section>
+        );
+    }
 
     return (
         <section className={cn("rounded-lg border border-border bg-card", className)}>
@@ -64,20 +94,37 @@ export function SectionCard({
                 </div>
             ) : null}
 
-            {loading ? (
-                <div className="px-5 py-12">
-                    <DiamondLoader size={40} tone="flat" label="Loading" />
-                </div>
-            ) : empty ? (
-                <div className="flex flex-col items-center justify-center gap-3 px-5 py-12 text-center">
-                    {EmptyIcon ? <EmptyIcon className="h-8 w-8 text-muted-foreground/50" /> : null}
-                    <div className="text-sm text-muted-foreground">{empty}</div>
-                </div>
-            ) : (
-                <div className={cn(!flush && "px-5 py-4", bodyClassName)}>{children}</div>
-            )}
+            <SectionBody loading={loading} empty={empty} emptyIcon={EmptyIcon} flush={flush} bodyClassName={bodyClassName}>
+                {children}
+            </SectionBody>
         </section>
     );
+}
+
+function SectionBody({
+    loading,
+    empty,
+    emptyIcon: EmptyIcon,
+    flush,
+    bodyClassName,
+    children,
+}: Pick<SectionCardProps, "loading" | "empty" | "emptyIcon" | "flush" | "bodyClassName" | "children">) {
+    if (loading) {
+        return (
+            <div className="px-5 py-12">
+                <DiamondLoader size={40} tone="flat" label="Loading" />
+            </div>
+        );
+    }
+    if (empty) {
+        return (
+            <div className="flex flex-col items-center justify-center gap-3 px-5 py-12 text-center">
+                {EmptyIcon ? <EmptyIcon className="h-8 w-8 text-muted-foreground/50" /> : null}
+                <div className="text-sm text-muted-foreground">{empty}</div>
+            </div>
+        );
+    }
+    return <div className={cn(!flush && "px-5 py-4", bodyClassName)}>{children}</div>;
 }
 
 /** Divided stat strip — the mono/tabular metric row used across the dashboard. */

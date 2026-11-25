@@ -3,12 +3,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { SectionCard } from "@/components/dashboard/simracing/section-card";
-import { getSession, getLaps, SimApiError } from "@/lib/simracing/api";
+import { getLaps, SimApiError } from "@/lib/simracing/api";
 
 /**
- * The old session-scoped comparison UI is superseded by the cross-session Analysis workspace.
- * This route now just resolves the session's track + best lap and redirects there, so old links
- * (bookmarks, the session detail page) keep working.
+ * Old comparison links. The session workbench compares any two laps of a session in place
+ * (PBI-068), so this route opens it with the latest valid non-best lap against the best lap.
  */
 export default function CompareSessionRedirect() {
     const params = useParams();
@@ -20,18 +19,18 @@ export default function CompareSessionRedirect() {
         if (!id) return;
         let cancelled = false;
 
-        Promise.all([getSession(id), getLaps(id)])
-            .then(([session, laps]) => {
+        getLaps(id)
+            .then(laps => {
                 if (cancelled) return;
                 const valid = laps.filter(l => l.isValid && l.lapTimeMs && l.lapTimeMs > 0);
-                const best = valid.length
-                    ? valid.reduce((a, b) => (b.lapTimeMs! < a.lapTimeMs! ? b : a))
-                    : (laps[0] ?? null);
+                const best = valid.length ? valid.reduce((a, b) => (b.lapTimeMs! < a.lapTimeMs! ? b : a)) : (laps[0] ?? null);
+                const timed = [...laps].reverse().filter(l => l.lapNumber !== best?.lapNumber && (l.lapTimeMs ?? 0) > 0);
+                const other = timed.find(l => l.isValid) ?? timed[0] ?? best;
 
                 const query = new URLSearchParams();
-                query.set("track", session.trackProfileId ?? "");
-                if (best) query.set("ref", best.id);
-                router.replace(`/simracing/analysis?${query.toString()}`);
+                if (other) query.set("lap", String(other.lapNumber));
+                if (best) query.set("ref", String(best.lapNumber));
+                router.replace(`/simracing/sessions/${id}?${query.toString()}`);
             })
             .catch(err => {
                 if (cancelled) return;
@@ -48,7 +47,7 @@ export default function CompareSessionRedirect() {
         <main className="w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
             <SectionCard
                 loading={!failed}
-                empty={failed ? "Couldn't load this session — try Analysis from the sidebar instead." : undefined}
+                empty={failed ? "Couldn't load this session — open it from My sessions instead." : undefined}
             />
         </main>
     );

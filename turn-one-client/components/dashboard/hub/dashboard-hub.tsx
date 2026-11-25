@@ -110,6 +110,7 @@ function PbsCard({ username }: { username: string | undefined }) {
       label="Compete"
       title="Your PBs and ranks"
       icon={ListOrdered}
+      variant="quiet"
       loading={pbs === null && !!username}
       actions={
         username ? (
@@ -158,6 +159,7 @@ function RecentSessions({ sessions }: { sessions: SimSession[] }) {
       label="Recent"
       title="Earlier sessions"
       icon={History}
+      variant="quiet"
       actions={
         <Link href="/simracing/sessions" className={linkClass}>
           View all
@@ -197,7 +199,7 @@ function LinkLine() {
   if (status.kind === "loading") return null
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-border px-5 py-3 text-sm">
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-border px-5 pt-4 text-sm">
       {status.kind === "none" ? (
         <>
           <span className="text-muted-foreground">Turn One Link · no device paired yet</span>
