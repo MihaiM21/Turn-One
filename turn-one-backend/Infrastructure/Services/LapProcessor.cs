@@ -190,8 +190,7 @@ public class LapProcessor : ILapProcessor
         if (isNewLap) _db.TelemetryLaps.Add(lap);
 
         // Session aggregates from valid laps only.
-        if (lap.IsValid && lap.LapTimeMs is > 0 && (session.BestLapMs <= 0 || lap.LapTimeMs < session.BestLapMs))
-            session.BestLapMs = lap.LapTimeMs.Value;
+        session.BestLapMs = LapPlausibility.NextSessionBest(session.BestLapMs, lap.LapTimeMs, lap.IsValid, session.TrackLengthM);
         if (lap.LapNumber > session.LapCount) session.LapCount = lap.LapNumber;
         if (session.TrackLengthM is null or <= 0 && trackLength is > 0) session.TrackLengthM = trackLength;
         if (session.TrackProfileId == null && profile != null) session.TrackProfileId = profile.Id;
@@ -223,8 +222,8 @@ public class LapProcessor : ILapProcessor
         if (complete.FuelUsedL is > 0) lap.FuelUsed = complete.FuelUsedL.Value;
 
         var session = await _db.TelemetrySessions.FirstOrDefaultAsync(s => s.Id == sessionId, ct);
-        if (session != null && lap.IsValid && lap.LapTimeMs is > 0 && (session.BestLapMs <= 0 || lap.LapTimeMs < session.BestLapMs))
-            session.BestLapMs = lap.LapTimeMs.Value;
+        if (session != null)
+            session.BestLapMs = LapPlausibility.NextSessionBest(session.BestLapMs, lap.LapTimeMs, lap.IsValid, session.TrackLengthM);
 
         await _db.SaveChangesAsync(ct);
     }
