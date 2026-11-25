@@ -6,8 +6,10 @@
  * details sheet that holds everything secondary.
  */
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { LapSegment } from "@/lib/simracing/segments";
 import { formatLapTime } from "@/lib/simracing/api";
 import type { TimeLoss } from "@/lib/simracing/analysis";
 import { TimeLossList } from "@/components/dashboard/simracing/charts/time-loss-list";
@@ -136,6 +138,90 @@ export function SyncedLosses({
                 onFocus(d);
             }}
         />
+    );
+}
+
+/**
+ * Corner-by-corner stepper (PBI-070): one segment at a time with the time gained or lost in it.
+ * The buttons and the ← → keys move the map, the delta and the traces to the segment.
+ */
+export function SegmentStepper({
+    segments,
+    deltas,
+    onFocus,
+}: {
+    segments: LapSegment[];
+    deltas: number[];
+    onFocus: (distanceM: number) => void;
+}) {
+    const sync = useCursorSync();
+    const [index, setIndex] = useState<number | null>(null);
+    const syncRef = useRef(sync);
+    useEffect(() => {
+        syncRef.current = sync;
+    }, [sync]);
+
+    const go = useCallback(
+        (next: number) => {
+            if (!segments.length) return;
+            const k = (next + segments.length) % segments.length;
+            const s = segments[k];
+            const mid = (s.startM + s.endM) / 2;
+            setIndex(k);
+            syncRef.current.setDistance(mid);
+            syncRef.current.setZoom([Math.max(0, s.startM - 20), s.endM + 20]);
+            onFocus(mid);
+        },
+        [segments, onFocus]
+    );
+
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+            const t = e.target as HTMLElement | null;
+            if (t && (t.closest("input, textarea, select, [contenteditable=true]") || t.closest("[role=dialog]"))) return;
+            e.preventDefault();
+            go(index == null ? (e.key === "ArrowRight" ? 0 : segments.length - 1) : index + (e.key === "ArrowRight" ? 1 : -1));
+        };
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, [go, index, segments.length]);
+
+    if (!segments.length) return null;
+    const s = index == null ? null : segments[index];
+    const d = index == null ? null : deltas[index];
+    const btn =
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary";
+
+    return (
+        <div className="flex items-center gap-2 rounded-md border border-border bg-background/60 px-2 py-1.5" role="group" aria-label="Step through the lap">
+            <button type="button" className={btn} onClick={() => go(index == null ? segments.length - 1 : index - 1)} aria-label="Previous segment">
+                <ChevronLeft className="size-4" />
+            </button>
+            <div className="min-w-0 flex-1 text-center" aria-live="polite">
+                {s ? (
+                    <>
+                        <p className="truncate text-sm font-semibold">
+                            {s.label}
+                            <span className="ml-2 text-[10px] font-normal uppercase tracking-wider text-muted-foreground">{s.kind}</span>
+                        </p>
+                        <p className="font-mono text-xs tabular-nums">
+                            <span className={cn(d != null && d > 0.0005 ? "text-red-400" : d != null && d < -0.0005 ? "text-timing-pb" : "text-muted-foreground")}>
+                                {d == null ? "—" : `${d > 0 ? "+" : ""}${d.toFixed(3)} s`}
+                            </span>
+                            <span className="ml-2 text-muted-foreground">
+                                {index! + 1} / {segments.length}
+                            </span>
+                        </p>
+                    </>
+                ) : (
+                    <p className="text-xs text-muted-foreground">Step through the lap corner by corner · ← →</p>
+                )}
+            </div>
+            <button type="button" className={btn} onClick={() => go(index == null ? 0 : index + 1)} aria-label="Next segment">
+                <ChevronRight className="size-4" />
+            </button>
+        </div>
     );
 }
 

@@ -71,6 +71,20 @@ export const PANE_LAYOUT = {
 /** Shared cursor-sync key — every pane and the delta chart join this group. */
 export const SYNC_KEY = "t1-lap-distance";
 
+/** Lap time for the x axis: "1:05.2" over a minute, "42.0 s" under. */
+export function formatAxisTime(seconds: number) {
+    if (!Number.isFinite(seconds)) return "";
+    if (seconds < 60) return `${seconds.toFixed(1)} s`;
+    const m = Math.floor(seconds / 60);
+    return `${m}:${(seconds - m * 60).toFixed(1).padStart(4, "0")}`;
+}
+
+/** The x axis for the shared lap grid, labelled in metres or in lap time. */
+export function xAxis(kind: "distance" | "time" = "distance"): uPlot.Axis {
+    const base = distanceAxis();
+    return kind === "time" ? { ...base, values: (_u, splits) => splits.map(v => formatAxisTime(v)) } : base;
+}
+
 export function distanceAxis(): uPlot.Axis {
     return {
         stroke: CHART.axis,

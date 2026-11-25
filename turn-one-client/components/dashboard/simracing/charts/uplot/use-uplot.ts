@@ -57,7 +57,7 @@ export function useUPlot({ buildOptions, data, height, deps = [], onCursor }: Us
                 const idx = u.cursor.idx;
                 const x = idx == null || idx < 0 ? null : (u.data[0][idx] ?? null);
                 onCursorRef.current?.(x, u);
-                syncRef.current.setDistance(x);
+                syncRef.current.setDistance(x == null ? null : syncRef.current.axis.fromX(x));
             };
             hooks.setCursor = [...(hooks.setCursor ?? []), setCursor];
 
@@ -98,9 +98,9 @@ export function useUPlot({ buildOptions, data, height, deps = [], onCursor }: Us
         const x = data[0];
         if (x.length) {
             const z = sync.zoom;
-            u.setScale("x", z ? { min: z[0], max: z[1] } : { min: x[0], max: x[x.length - 1] });
+            u.setScale("x", z ? { min: sync.axis.toX(z[0]), max: sync.axis.toX(z[1]) } : { min: x[0], max: x[x.length - 1] });
         }
-    }, [data, ready, sync.zoom]);
+    }, [data, ready, sync.zoom, sync.axis]);
 
     // Resize with the container.
     useLayoutEffect(() => {
