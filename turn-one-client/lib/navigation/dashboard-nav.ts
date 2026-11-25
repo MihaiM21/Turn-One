@@ -6,7 +6,6 @@ import {
   Download,
   Eye,
   Flag,
-  Gauge,
   Gift,
   History,
   House,
@@ -41,6 +40,8 @@ export interface NavItem {
   match?: string[]
   /** Prefixes that must NOT mark this item active even though they share its prefix. */
   exclude?: string[]
+  /** Dropped once the driver has been accepted into the closed beta. */
+  hideWhenBetaAccepted?: boolean
 }
 
 export interface NavGroup {
@@ -55,35 +56,24 @@ export interface NavGroup {
 /** `{username}` is replaced with the signed-in user's name. */
 export const DRIVER_PAGE_URL = "/simracing/drivers/{username}"
 
+/**
+ * Four groups for the sim product, then one closed "More" group for the rest
+ * (PBI-066). The old Overview item went away when /simracing merged into Home.
+ */
 export const DASHBOARD_NAV: NavGroup[] = [
-  {
-    id: "home",
-    items: [{ title: "Home", url: "/dashboard", icon: House }],
-  },
   {
     id: "drive",
     label: "Drive",
     items: [
-      {
-        title: "Overview",
-        url: "/simracing",
-        icon: Gauge,
-        // Every other /simracing/* page has its own item below.
-        exclude: [
-          "/simracing/live",
-          "/simracing/sessions",
-          "/simracing/analysis",
-          "/simracing/coach",
-          "/simracing/leaderboards",
-          "/simracing/drivers",
-          "/simracing/spectate",
-          "/simracing/streamer",
-          "/simracing/download",
-          "/simracing/beta",
-        ],
-      },
+      { title: "Home", url: "/dashboard", icon: House },
       { title: "Live cockpit", url: "/simracing/live", icon: Activity },
       { title: "Sessions", url: "/simracing/sessions", icon: History },
+    ],
+  },
+  {
+    id: "improve",
+    label: "Improve",
+    items: [
       { title: "Analysis", url: "/simracing/analysis", icon: LineChart },
       { title: "Coach", url: "/simracing/coach", icon: Sparkles, plan: "PRO" },
     ],
@@ -95,12 +85,8 @@ export const DASHBOARD_NAV: NavGroup[] = [
       { title: "Leaderboards", url: "/simracing/leaderboards", icon: ListOrdered },
       { title: "My driver page", url: DRIVER_PAGE_URL, icon: UserRound, match: ["/simracing/drivers"] },
       { title: "Spectate", url: "/simracing/spectate", icon: Eye, plan: "PRO" },
+      { title: "OBS overlays", url: "/simracing/streamer", icon: MonitorPlay, plan: "PRO" },
     ],
-  },
-  {
-    id: "broadcast",
-    label: "Broadcast",
-    items: [{ title: "OBS overlays", url: "/simracing/streamer", icon: MonitorPlay, plan: "PRO" }],
   },
   {
     id: "link",
@@ -108,24 +94,17 @@ export const DASHBOARD_NAV: NavGroup[] = [
     items: [
       { title: "Download and setup", url: "/simracing/download", icon: Download },
       { title: "Devices", url: "/link", icon: Laptop },
-      { title: "Closed beta", url: "/simracing/beta", icon: Rocket },
+      { title: "Closed beta", url: "/simracing/beta", icon: Rocket, hideWhenBetaAccepted: true },
     ],
   },
   {
-    id: "community",
-    label: "Community",
+    id: "more",
+    label: "More",
     collapsible: true,
     items: [
       { title: "Rewards", url: "/rewards", icon: Gift },
       { title: "Coin store", url: "/store", icon: Store },
-    ],
-  },
-  {
-    id: "archive",
-    label: "F1 Archive",
-    collapsible: true,
-    items: [
-      { title: "Past sessions", url: "/f1", icon: Flag },
+      { title: "F1 Archive", url: "/f1", icon: Flag },
       { title: "Plot generator", url: "/generator", icon: ChartNoAxesCombined },
       { title: "Docs", url: "/docs", icon: BookOpen },
     ],
@@ -148,16 +127,27 @@ export const ADMIN_NAV_GROUP: NavGroup = {
   ],
 }
 
-/** Fills `{username}`; items that need a username are dropped when there is none. */
-export function resolveNavItems(groups: NavGroup[], username: string | null | undefined): NavGroup[] {
+/** Fills `{username}`; drops items that need a username when there is none, and the beta item once accepted. */
+export function resolveNavItems(
+  groups: NavGroup[],
+  username: string | null | undefined,
+  options: { betaAccepted?: boolean } = {},
+): NavGroup[] {
   return groups.map((group) => ({
     ...group,
     items: group.items.flatMap((item) => {
+      if (item.hideWhenBetaAccepted && options.betaAccepted) return []
       if (!item.url.includes("{username}")) return [item]
       if (!username) return []
       return [{ ...item, url: item.url.replace("{username}", encodeURIComponent(username)) }]
     }),
   }))
+}
+
+/** One plan badge per group stays visible (the first); the rest show on hover. */
+export function alwaysVisibleBadges(group: NavGroup): Set<string> {
+  const first = group.items.find((item) => item.plan)
+  return new Set(first ? [first.url] : [])
 }
 
 /** Exact match or a `/`-bounded prefix, so `/live2` never lights up `/live`. */

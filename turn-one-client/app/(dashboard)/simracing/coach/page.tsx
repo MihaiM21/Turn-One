@@ -139,10 +139,10 @@ export default function AiCoachPage() {
                 description="Ask anything about your driving — pace, technique, setup direction."
                 actions={
                     <Link
-                        href="/simracing"
+                        href="/dashboard"
                         className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-primary"
                     >
-                        Back to cockpit <ArrowRight className="h-3 w-3" />
+                        Back to Home <ArrowRight className="h-3 w-3" />
                     </Link>
                 }
             />

@@ -88,11 +88,11 @@ export default function StreamerPage() {
     return (
         <main className="w-full space-y-4 px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
             <Link
-                href="/simracing"
+                href="/dashboard"
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-primary"
             >
                 <ArrowLeft className="h-3.5 w-3.5" />
-                Back to cockpit
+                Back to Home
             </Link>
 
             <PageHeader

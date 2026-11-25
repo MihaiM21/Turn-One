@@ -19,6 +19,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import { useAuth } from "@/components/auth/auth-provider"
+import { useBetaStatus } from "@/hooks/use-beta-status"
 import { ADMIN_NAV_GROUP, DASHBOARD_NAV, resolveNavItems } from "@/lib/navigation/dashboard-nav"
 
 const SECONDARY_NAV = [{ title: "Support", url: "/contact", icon: LifeBuoy }]
@@ -55,10 +56,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [isAdmin, setIsAdmin] = React.useState(false)
   React.useEffect(() => setIsAdmin(user?.role === "ADMIN" || tokenIsAdmin()), [user])
 
+  const betaAccepted = useBetaStatus() === "accepted"
+
   const groups = React.useMemo(() => {
-    const base = isAdmin ? [...DASHBOARD_NAV, ADMIN_NAV_GROUP] : DASHBOARD_NAV
-    return resolveNavItems(base, user?.username)
-  }, [isAdmin, user?.username])
+    // Admin sits above "More", which stays the last group.
+    const base = isAdmin
+      ? [...DASHBOARD_NAV.filter((g) => g.id !== "more"), ADMIN_NAV_GROUP, ...DASHBOARD_NAV.filter((g) => g.id === "more")]
+      : DASHBOARD_NAV
+    return resolveNavItems(base, user?.username, { betaAccepted })
+  }, [isAdmin, user?.username, betaAccepted])
 
   return (
     <Sidebar variant="inset" collapsible="icon" {...props}>
