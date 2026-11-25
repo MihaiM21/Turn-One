@@ -107,6 +107,7 @@ export default function LeaderboardsPage() {
             </div>
 
             <SectionCard
+                variant="quiet"
                 label="Standings"
                 title={`Ranked by ${active.label.toLowerCase()}`}
                 icon={Trophy}
@@ -189,7 +190,7 @@ export default function LeaderboardsPage() {
             </SectionCard>
 
             {showPinnedRank ? (
-                <SectionCard label="Your position" title={`#${myRank.index + 1} of ${sorted.length}`} icon={Trophy}>
+                <SectionCard variant="quiet" label="Your position" title={`#${myRank.index + 1} of ${sorted.length}`} icon={Trophy}>
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <span className="font-bold text-white">{myRank.row.username}</span>
                         <span className="font-mono text-lg font-black tabular-nums text-primary">

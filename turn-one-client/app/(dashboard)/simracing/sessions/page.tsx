@@ -271,9 +271,11 @@ export default function MySessionsPage() {
                 <SectionCard emptyIcon={Search} empty={`Nothing matches "${query}".`} />
             ) : (
                 <div className="space-y-4">
-                    {groups.map(group => (
+                    {groups.map((group, i) => (
                         <SectionCard
                             key={group.key}
+                            // The top group in the current order leads; the rest stay quiet (PBI-072).
+                            variant={i === 0 ? "card" : "quiet"}
                             label={group.source ? SIM_SOURCE_LABEL[group.source] : undefined}
                             title={group.trackName || "Unknown track"}
                             actions={
