@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { generateSEO, SITE_CONFIG } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { MainNav } from "@/components/navigation/main-nav";
-import { WindTunnelHero } from "@/components/landing/hero";
-import { LapBezel } from "@/components/landing/lap-bezel";
+import { DotHero } from "@/components/landing/dot-hero";
 import { Broadcast, ChannelSection, HowItWorks, LeaderboardTeaser, SupportedSims } from "@/components/landing/sim-sections";
-import { Eyebrow, Faq, FinalCta, container, faqJsonLd, softwareJsonLd } from "@/components/landing/sections";
+import { Faq, FinalCta, faqJsonLd, softwareJsonLd } from "@/components/landing/sections";
 import { channelUrl, getLatestChannelVideos } from "@/lib/server/youtube-feed";
+import { Bento } from "@/components/landing/bento";
 
 // Leaderboard and channel sections are fetched server-side; refresh every 5 minutes.
 export const revalidate = 300;
@@ -34,19 +34,10 @@ export default async function RootPage() {
       <JsonLd data={[softwareJsonLd(SITE_CONFIG.url), faqJsonLd()]} />
       <MainNav />
       <main>
-        <WindTunnelHero />
+        <DotHero />
         <HowItWorks />
 
-        {/* The product, from a real lap — the thing the hero is selling */}
-        <section id="lap" aria-labelledby="lap-title" className={`${container} scroll-mt-20 pb-16 md:pb-24`}>
-          <div className="mx-auto max-w-3xl text-center">
-            <Eyebrow>Inside Turn One</Eyebrow>
-            <h2 id="lap-title" className="font-display mt-3 text-balance text-4xl leading-[0.95] sm:text-5xl">
-              See exactly where the time went.
-            </h2>
-          </div>
-          <LapBezel className="mt-10" />
-        </section>
+        <Bento />
 
         <SupportedSims />
         <LeaderboardTeaser />
