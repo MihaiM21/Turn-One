@@ -70,7 +70,7 @@ export function NavUser({ user }: { user: { name: string; email: string; avatar:
                   {user.name}
                   <span className="font-display text-[10px] tracking-wider text-muted-foreground">{plan}</span>
                 </span>
-                <Balance coins={coins} tokens={tokens} />
+                {user.email ? <span className="truncate text-[11px] text-muted-foreground">{user.email}</span> : null}
               </div>
               <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
             </SidebarMenuButton>
@@ -85,6 +85,10 @@ export function NavUser({ user }: { user: { name: string; email: string; avatar:
               <div className="grid leading-tight">
                 <span className="truncate text-sm font-semibold">{user.name}</span>
                 {user.email ? <span className="truncate text-[11px] text-muted-foreground">{user.email}</span> : null}
+                {/* The balance lives here and on Rewards, not on every page (PBI-067). */}
+                <span className="mt-1.5">
+                  <Balance coins={coins} tokens={tokens} />
+                </span>
               </div>
             </DropdownMenuLabel>
             {plan === "BASIC" ? (

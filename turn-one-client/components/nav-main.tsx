@@ -16,9 +16,10 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { isNavItemActive, type NavGroup, type NavItem } from "@/lib/navigation/dashboard-nav"
+import { alwaysVisibleBadges, isNavItemActive, type NavGroup, type NavItem } from "@/lib/navigation/dashboard-nav"
+import { cn } from "@/lib/utils"
 
-function NavItemRow({ item, active }: { item: NavItem; active: boolean }) {
+function NavItemRow({ item, active, badgeOnHover }: { item: NavItem; active: boolean; badgeOnHover: boolean }) {
   const { isMobile, setOpenMobile } = useSidebar()
   return (
     <SidebarMenuItem>
@@ -34,7 +35,13 @@ function NavItemRow({ item, active }: { item: NavItem; active: boolean }) {
         </Link>
       </SidebarMenuButton>
       {item.plan ? (
-        <SidebarMenuBadge className="font-display text-[10px] tracking-wider text-muted-foreground">
+        <SidebarMenuBadge
+          className={cn(
+            "font-display text-[10px] tracking-wider text-muted-foreground",
+            // One badge per group stays visible; the others appear on hover or focus.
+            badgeOnHover && "opacity-0 transition-opacity group-hover/menu-item:opacity-100 group-focus-within/menu-item:opacity-100",
+          )}
+        >
           {item.plan}
         </SidebarMenuBadge>
       ) : null}
@@ -43,10 +50,16 @@ function NavItemRow({ item, active }: { item: NavItem; active: boolean }) {
 }
 
 function GroupItems({ group, path }: { group: NavGroup; path: string }) {
+  const visible = alwaysVisibleBadges(group)
   return (
     <SidebarMenu>
       {group.items.map((item) => (
-        <NavItemRow key={item.url} item={item} active={isNavItemActive(item, path)} />
+        <NavItemRow
+          key={item.url}
+          item={item}
+          active={isNavItemActive(item, path)}
+          badgeOnHover={!!item.plan && !visible.has(item.url)}
+        />
       ))}
     </SidebarMenu>
   )

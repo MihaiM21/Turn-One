@@ -98,6 +98,13 @@ const nextConfig: NextConfig = {
         destination: '/',
         permanent: true,
       },
+      // /simracing ("Cockpit") merged into the one Home page (PBI-065, 2026-11).
+      // Not permanent while the dashboard layout is still settling.
+      {
+        source: '/simracing',
+        destination: '/dashboard',
+        permanent: false,
+      },
       // Retired after F1 put its timing archive behind F1 TV (2026-10): the public
       // API wishlist and the live-timing desktop app both depended on that feed.
       {

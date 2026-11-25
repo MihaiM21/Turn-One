@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bell, Coins } from "lucide-react"
+import { Bell } from "lucide-react"
 
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
@@ -15,14 +15,13 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useBalance } from "@/components/providers/balance-provider"
 import { useNotificationStats } from "@/hooks/use-notification-stats"
 import { DASHBOARD_NAV, findActiveNav, pathMatches } from "@/lib/navigation/dashboard-nav"
 import { useSimFilter } from "@/lib/simracing/sim-filter"
 import { SIM_FILTERS, type SimFilter } from "@/lib/simracing/sims"
 
 /** Pages where the sim filter changes what you see (exact match, or a prefix for sections). */
-const SIM_FILTERED_EXACT = ["/dashboard", "/simracing"]
+const SIM_FILTERED_EXACT = ["/dashboard"]
 const SIM_FILTERED_PREFIXES = ["/simracing/sessions", "/simracing/leaderboards"]
 
 /** Fallback titles for routes that aren't in the sidebar. */
@@ -67,7 +66,6 @@ export function SimFilterSelect() {
 export function AppTopbar() {
   const path = usePathname() ?? ""
   const crumbs = useCrumbs(path)
-  const { coins } = useBalance()
   const { stats } = useNotificationStats()
   const showSimFilter =
     SIM_FILTERED_EXACT.includes(path) || SIM_FILTERED_PREFIXES.some((p) => pathMatches(path, p))
@@ -92,14 +90,6 @@ export function AppTopbar() {
 
       <div className="flex items-center gap-1.5">
         {showSimFilter ? <SimFilterSelect /> : null}
-        <Link
-          href="/rewards"
-          className="hidden h-8 items-center gap-1 rounded-md px-2 font-mono text-xs tabular-nums text-instrument hover:bg-accent sm:flex"
-          aria-label={`${coins} coins, open rewards`}
-        >
-          <Coins className="size-3.5" aria-hidden />
-          {coins.toLocaleString()}
-        </Link>
         <Link
           href="/notifications"
           className="relative flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"

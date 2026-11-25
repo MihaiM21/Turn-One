@@ -106,7 +106,7 @@ const sections: GuideSection[] = [
       { icon: Radio, title: "Go live", description: "Use Streamer Mode to overlay live telemetry on stream, or let others Spectate your session." },
     ],
     illustration: <SimRacingIllustration />,
-    ctaHref: "/simracing",
+    ctaHref: "/dashboard",
     ctaLabel: "Open sim racing",
   },
 ];
