@@ -1,3 +1,4 @@
+using Domain.Telemetry;
 using API.Hubs;
 using Application.DTOs;
 using Application.Interfaces;
@@ -836,13 +837,8 @@ public class TelemetryIngestionService
             int? lastTime = graphicsPayload.TryGetProperty("iLastTime", out var lt) ? lt.GetInt32() : null;
             if (lastTime == 2147483647) lastTime = null;
 
-            // Only valid laps count towards the session best.
-            if (lastTime.HasValue && lastTime.Value > 0 && context.CurrentLapValid)
-            {
-                context.BestLapMs = context.BestLapMs == 0
-                    ? lastTime.Value
-                    : Math.Min(context.BestLapMs, lastTime.Value);
-            }
+            // Only valid, believable laps count towards the session best (BUG-019).
+            context.BestLapMs = LapPlausibility.NextSessionBest(context.BestLapMs, lastTime, context.CurrentLapValid);
 
             var lap = new TelemetryLap
             {

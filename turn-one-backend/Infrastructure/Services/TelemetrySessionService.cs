@@ -1,3 +1,4 @@
+using Domain.Telemetry;
 using Application.DTOs;
 using Application.Interfaces;
 using Application.Telemetry;
@@ -208,7 +209,11 @@ public class TelemetrySessionService : ITelemetrySessionService
             session.IsActive = false;
             session.EndedAt = endedAt;
             if (completedLaps > 0) session.LapCount = completedLaps;
-            if (bestLapMs > 0) session.BestLapMs = bestLapMs;
+            // The server keeps its own best from the lap records; the client's figure only fills a gap,
+            // and only when it is a believable lap (BUG-019).
+            if (!LapPlausibility.IsPlausible(session.BestLapMs, session.TrackLengthM)
+                && LapPlausibility.IsPlausible(bestLapMs, session.TrackLengthM))
+                session.BestLapMs = bestLapMs;
             await _context.SaveChangesAsync();
         }
     }
@@ -341,12 +346,7 @@ public class TelemetrySessionService : ITelemetrySessionService
         if (session != null)
         {
             session.LapCount = Math.Max(session.LapCount, lap.LapNumber);
-            if (lap.LapTimeMs.HasValue && lap.LapTimeMs.Value > 0)
-            {
-                session.BestLapMs = session.BestLapMs == 0
-                    ? lap.LapTimeMs.Value
-                    : Math.Min(session.BestLapMs, lap.LapTimeMs.Value);
-            }
+            session.BestLapMs = LapPlausibility.NextSessionBest(session.BestLapMs, lap.LapTimeMs, lap.IsValid, session.TrackLengthM);
         }
 
         await _context.SaveChangesAsync();

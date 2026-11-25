@@ -25,16 +25,6 @@ import { matchesSimFilter, simLabel } from "@/lib/simracing/sims"
 const linkClass =
   "inline-flex items-center gap-1 text-xs font-semibold text-primary underline-offset-4 hover:underline"
 
-/**
- * No circuit in the supported sims has a lap under 20 s, so a shorter "best lap"
- * is bad data (seen: 30 ms on an old ACC session) and must not headline Home.
- */
-const MIN_REAL_LAP_MS = 20_000
-
-function bestLap(ms: number | null | undefined): string {
-  return ms != null && ms >= MIN_REAL_LAP_MS ? formatLapTime(ms) : "—"
-}
-
 const primaryButtonClass =
   "inline-flex h-10 items-center justify-center gap-1.5 rounded-md bg-primary px-5 font-display text-sm text-primary-foreground transition-colors hover:bg-primary/90"
 
@@ -72,7 +62,7 @@ function LeadSession({ session, live }: { session: SimSession | undefined; live:
         <div className="shrink-0 sm:text-right">
           <p className="eyebrow text-[10px]">Best lap</p>
           <p className="mt-1 font-mono text-4xl leading-none tabular-nums text-primary">
-            {bestLap(session.bestLapMs)}
+            {formatLapTime(session.bestLapMs)}
           </p>
         </div>
       </div>
@@ -180,7 +170,7 @@ function RecentSessions({ sessions }: { sessions: SimSession[] }) {
                 </span>
                 <span className="min-w-0 truncate">{s.track}</span>
                 <span className="ml-auto shrink-0 font-mono tabular-nums">
-                  {s.bestLapMs >= MIN_REAL_LAP_MS ? formatLapTime(s.bestLapMs) : `${s.lapCount} laps`}
+                  {s.bestLapMs > 0 ? formatLapTime(s.bestLapMs) : `${s.lapCount} laps`}
                 </span>
               </Link>
             </li>
