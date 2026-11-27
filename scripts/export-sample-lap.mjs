@@ -29,7 +29,7 @@ if (!args.file) {
 const step = Number(args.step ?? 10);
 const out = args.out ?? path.join("turn-one-client", "public", "samples", "sample-lap.json");
 
-const SIM_LABEL = { acc: "ACC", ac: "Assetto Corsa", iracing: "iRacing", f1_25: "F1 25", f1_26: "F1 26" };
+const SIM_LABEL = { acc: "ACC", ac: "Assetto Corsa", iracing: "iRacing", f1_25: "F1 25", f1_26: "F1 25 · 2026 Season Pack" };
 
 let start = null;
 const laps = new Map(); // lap -> ticks
